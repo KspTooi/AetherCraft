@@ -135,6 +135,10 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     transform: scale(1);
     transform-origin: center center; /* 从中心缩放, 避免放大时推移布局 */
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
   }
 
   .app-icon:hover {
@@ -202,13 +206,41 @@
     }
   }
 
+  /* 修复 .app-kind-tag 样式干扰问题，同时保持基本紧凑样式 */
+  .app-kind-tag {
+    position: absolute !important;
+    top: 2px !important;
+    right: 2px !important;
+    color: #fff !important;
+    font-size: 10px !important;  /* 使用最小字体 */
+    padding: 1px 3px !important; /* 更紧凑的内边距 */
+    border-radius: 3px !important;
+    line-height: 1 !important;
+    z-index: 9999 !important;
+    /* 默认背景色 */
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* EXE 类型 tag 的背景颜色 */
+  .exe-tag {
+      background-color: #4efff766 !important; /* 绿色 */
+  }
+  
+  /* BAT 类型 tag 的背景颜色 */
+  .bat-tag {
+      background-color: #ff8d008a !important /* 红色 */
+  }
+
   /* 后续可能还有其他响应式或状态样式 ... */
 </style>
-
+<div th:replace="~{/components/com-scripts}"></div>
 <div th:replace="~{/components/com-styles}"></div>
 
 <body>
 <div class="background-image"></div>
+
+<div th:replace="~{components/com-top-nav}"></div>
+
 <div class="glass-container">
   <div class="app-count">全部应用(<span id="appCount" th:text="${data.appCount}"></span>)</div>
   <div class="header">
@@ -222,6 +254,10 @@
       <div class="app-icon" th:each="app : ${data.appList}" th:attr="data-app-id=${app.id}">
         <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
         <span th:text="${app.name}">应用名称</span>
+        <!-- 根据 app.kind 添加不同的背景颜色 -->
+        <span class="app-kind-tag" 
+              th:text="${app.kind == 0 ? 'EXE' : 'BAT'}" 
+              th:classappend="${app.kind == 0 ? ' exe-tag' : ' bat-tag'}"></span>
       </div>
     </div>
     <!--<div class="app-list">
@@ -234,12 +270,13 @@
 
 </body>
 
-<div th:replace="~{/components/com-scripts}"></div>
+
 
 <!--通用通知组件-->
 <div th:replace="~{/components/mvc-toasts}"></div>
 <div th:replace="~{/components/com-toasts}"></div>
 <div th:replace="~{/components/app-options}"></div>
+
 
 <script>
 

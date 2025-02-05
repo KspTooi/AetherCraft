@@ -1,0 +1,126 @@
+<nav class="navbar my-vista-taskbar navbar-expand-md">
+  <div class="container-fluid">
+    <!-- 使用 div 代替 a.navbar-brand 且让其高度铺满整个任务栏 -->
+    <div class="navbar-brand">
+      OxygenLauncher
+    </div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+            data-bs-target="#navbarContent" aria-controls="navbarContent" 
+            aria-expanded="false" aria-label="切换导航">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- 使用 div 布局左右导航项 -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="nav-left d-flex align-items-center">
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/home}">应用</a>
+        </div>
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/features}">配置项</a>
+        </div>
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/about}">功能</a>
+        </div>
+      </div>
+      <div class="nav-right d-flex align-items-center ms-auto">
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/profile}">管理台</a>
+        </div>
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/logout}">注销</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+    /* 修改后的 Windows Vista 风格任务栏样式：
+       将 z-index 从 2000 调整到 1000，确保 toasts 与 modal 能够显示在其上方 */
+    .my-vista-taskbar {
+      position: relative;
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(200,230,255,0.1) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      padding: 0.2rem 0.5rem;
+      transition: background 0.3s ease;
+    }
+    /* 导航品牌采用 div 填满整个任务栏高度，并居中显示 */
+    .my-vista-taskbar .navbar-brand {
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding: 0.3rem 0.6rem;
+    }
+    .my-vista-taskbar .navbar-brand:hover {
+      transform: scale(1.05);
+    }
+    .my-vista-taskbar .nav-left, 
+    .my-vista-taskbar .nav-right {
+      display: flex;
+      align-items: center;
+    }
+    .my-vista-taskbar .nav-item {
+      padding: 0.2rem 0.3rem;
+      transition: transform 0.3s ease;
+    }
+    .my-vista-taskbar .nav-item:hover {
+      transform: scale(1.05);
+    }
+    .my-vista-taskbar .nav-link {
+      color: #ffffff;
+      font-size: 0.9rem;
+      text-decoration: none;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+      padding: 0.2rem 0.3rem;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .my-vista-taskbar .nav-link:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+    /* 响应式设计：移动端样式紧凑，同时隐藏默认的导航按钮 */
+    @media (max-width: 576px) {
+      .my-vista-taskbar .navbar-brand {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.2rem;
+        padding: 0.3rem 0;
+      }
+      .my-vista-taskbar .nav-left,
+      .my-vista-taskbar .nav-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .my-vista-taskbar .nav-item {
+        margin: 0.1rem;
+        padding: 0.2rem 0.3rem;
+      }
+      .navbar-toggler {
+        display: none !important;
+      }
+    }
+  </style>
+  <script>
+    $(document).ready(function() {
+      // 初始化 Collapse 实例，取消自动切换
+      var bsCollapse = new bootstrap.Collapse($('#navbarContent')[0], { toggle: false });
+      
+      // 在移动端（宽度 <= 576px）点击 .navbar-brand 时切换导航栏显示
+      $('.navbar-brand').on('click', function(event){
+        if($(window).width() <= 576){
+          event.preventDefault();
+          bsCollapse.toggle();
+        }
+      });
+    });
+  </script>
+</nav>
