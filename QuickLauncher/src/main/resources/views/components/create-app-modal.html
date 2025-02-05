@@ -1,0 +1,39 @@
+<div class="modal fade" id="createAppModal" tabindex="-1" aria-labelledby="createAppModalLabel" aria-hidden="true">
+  <form th:action="@{/ssr/createApp}" method="post" novalidate>
+
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createAppModalLabel">创建应用</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="container">
+
+            <div class="mb-3">
+              <label for="name" class="form-label">应用名称</label>
+              <input type="text" class="form-control" id="name" name="name" placeholder="请输入应用名称" required>
+            </div>
+            <div class="mb-3">
+              <label for="kind" class="form-label">应用类型</label>
+              <select class="form-select" id="kind" name="kind" required>
+                <option value="0" selected>EXE</option>
+                <option value="1">BAT</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="execPath" class="form-label">程序路径</label>
+              <input type="text" class="form-control" id="execPath" name="execPath" placeholder="请输入程序路径" required>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">添加应用</button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>

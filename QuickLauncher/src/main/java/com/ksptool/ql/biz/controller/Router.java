@@ -2,12 +2,14 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.WebUtils;
+import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class Router {
@@ -40,7 +42,13 @@ public class Router {
 
     @GetMapping("/appCenter")
     public String appCenter() {
-        return "app-center";
+        return "forward:/ssr/appCenter";
+    }
+
+    @GetMapping("/version")
+    @ResponseBody
+    public Result<String> getVersion(){
+        return Result.success("1.0-A");
     }
 
 }

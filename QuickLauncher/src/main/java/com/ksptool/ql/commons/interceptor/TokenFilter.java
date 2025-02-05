@@ -55,6 +55,7 @@ public class TokenFilter implements Filter {
             return;
         }
 
+
         chain.doFilter(request, response);
     }
 

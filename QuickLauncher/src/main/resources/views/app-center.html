@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
   .glass-container {
     box-sizing: border-box;
     margin: 60px auto;      /* 上下各留 60px，左右自动居中 */
-    padding: 40px;
+    padding: 20px;
     width: calc(100% - 120px);/* 屏幕宽度减去左右边距 */
     max-height: calc(100vh - 120px); /* 最大高度为视口高度减去上下边距 */
     background: rgba(255, 255, 255, 0.25);
@@ -122,7 +122,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 80px;      /* 固定宽度，便于排版 */
+    width: 80px; /* 固定宽度，便于排版 */
+    /* 使用线性渐变背景实现 AERO 效果，并降低背景透明度 */
+    background: radial-gradient(rgb(205 205 205 / 10%), rgb(255 255 255 / 0%));
+    border: 1px solid rgb(255 255 255 / 11%); /* 添加白色边框，强化玻璃效果 */
+    border-radius: 10px; /* 边角圆润 */
+    padding: 10px; /* 内边距，可根据实际效果调整 */
+    -webkit-backdrop-filter: blur(8px); /* 兼容 webkit 内核浏览器 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 添加阴影增强 AERO 效果 */
+    position: relative; /* 用于水波效果和定位 */
+    overflow: hidden;   /* 防止水波溢出 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform: scale(1);
+    transform-origin: center center; /* 从中心缩放, 避免放大时推移布局 */
+  }
+
+  .app-icon:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 10; /* 提升图标堆叠层级，不影响周围布局 */
   }
 
   .app-icon img {
@@ -138,251 +156,135 @@
     text-align: center;
     font-size: 14px;
   }
+
+  .app-count {
+    position: relative;
+    z-index: 100; /* 提高层级，确保高 z-index 的 app-icon 不覆盖该区域 */
+    border-radius: 5px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  /* 修改新应用按钮样式，添加华丽的渐变特效 */
+  .new-app-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    /* 使用线性渐变作为背景，从蓝色过渡到淡蓝色 */
+    background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
+    color: white;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .new-app-btn:hover {
+    transform: scale(1.05);
+    /* 悬停时更换为另一种渐变效果 */
+    background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
+  }
+
+  /* 水波效果 */
+  .ripple {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-effect 0.6s linear;
+    pointer-events: none;
+  }
+  @keyframes ripple-effect {
+    to {
+      transform: scale(10);
+      opacity: 0;
+    }
+  }
+
+  /* 后续可能还有其他响应式或状态样式 ... */
 </style>
 
+<div th:replace="~{/components/com-styles}"></div>
 
 <body>
 <div class="background-image"></div>
 <div class="glass-container">
+  <div class="app-count">全部应用(<span id="appCount" th:text="${data.appCount}"></span>)</div>
   <div class="header">
     <div class="search-box">
-      <input type="text" placeholder="查询应用">
-      <button>创建应用</button>
+      <input type="text" placeholder="过滤器表达式">
+      <button class="new-app-btn" onclick="openCreateAppModal()">新应用</button>
     </div>
   </div>
   <div class="scrollable-content">
-    <div class="app-icons">
-      <!-- 添加50个示例应用 -->
-      <div class="app-icon">
-        <img src="icon1.png" alt="应用1">
-        <span>应用1</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon2.png" alt="应用2">
-        <span>应用2</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon3.png" alt="应用3">
-        <span>应用3</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon4.png" alt="应用4">
-        <span>应用4</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon5.png" alt="应用5">
-        <span>应用5</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon6.png" alt="应用6">
-        <span>应用6</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon7.png" alt="应用7">
-        <span>应用7</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon8.png" alt="应用8">
-        <span>应用8</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon9.png" alt="应用9">
-        <span>应用9</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon10.png" alt="应用10">
-        <span>应用10</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon11.png" alt="应用11">
-        <span>应用11</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon12.png" alt="应用12">
-        <span>应用12</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon13.png" alt="应用13">
-        <span>应用13</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon14.png" alt="应用14">
-        <span>应用14</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon15.png" alt="应用15">
-        <span>应用15</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon16.png" alt="应用16">
-        <span>应用16</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon17.png" alt="应用17">
-        <span>应用17</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon18.png" alt="应用18">
-        <span>应用18</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon19.png" alt="应用19">
-        <span>应用19</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon20.png" alt="应用20">
-        <span>应用20</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon21.png" alt="应用21">
-        <span>应用21</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon22.png" alt="应用22">
-        <span>应用22</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon23.png" alt="应用23">
-        <span>应用23</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon24.png" alt="应用24">
-        <span>应用24</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon25.png" alt="应用25">
-        <span>应用25</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon26.png" alt="应用26">
-        <span>应用26</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon27.png" alt="应用27">
-        <span>应用27</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon28.png" alt="应用28">
-        <span>应用28</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon29.png" alt="应用29">
-        <span>应用29</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon30.png" alt="应用30">
-        <span>应用30</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon31.png" alt="应用31">
-        <span>应用31</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon32.png" alt="应用32">
-        <span>应用32</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon33.png" alt="应用33">
-        <span>应用33</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon34.png" alt="应用34">
-        <span>应用34</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon35.png" alt="应用35">
-        <span>应用35</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon36.png" alt="应用36">
-        <span>应用36</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon37.png" alt="应用37">
-        <span>应用37</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon38.png" alt="应用38">
-        <span>应用38</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon39.png" alt="应用39">
-        <span>应用39</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon40.png" alt="应用40">
-        <span>应用40</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon41.png" alt="应用41">
-        <span>应用41</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon42.png" alt="应用42">
-        <span>应用42</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon43.png" alt="应用43">
-        <span>应用43</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon44.png" alt="应用44">
-        <span>应用44</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon45.png" alt="应用45">
-        <span>应用45</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon46.png" alt="应用46">
-        <span>应用46</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon47.png" alt="应用47">
-        <span>应用47</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon48.png" alt="应用48">
-        <span>应用48</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon49.png" alt="应用49">
-        <span>应用49</span>
-      </div>
-      <div class="app-icon">
-        <img src="icon50.png" alt="应用50">
-        <span>应用50</span>
+    <div class="app-icons" th:if="${data.appList != null}">
+      <div class="app-icon" th:each="app : ${data.appList}">
+        <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
+        <span th:text="${app.name}">应用名称</span>
       </div>
     </div>
-    <div class="app-list">
-    </div>
+    <!--<div class="app-list">
+    </div>-->
   </div>
 </div>
 
-<!-- 利用 JavaScript 实现响应式的动画效果，并对 resize 事件做防抖处理 -->
-<script>
-  function updateContainerStyle() {
-    const container = document.querySelector('.glass-container');
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    if (viewportWidth < 768) {
-      container.style.margin = "20px auto";
-      container.style.padding = "20px";
-      container.style.width = (viewportWidth - 40) + "px";
-      container.style.maxHeight = (viewportHeight - 40) + "px";
-    } else {
-      container.style.margin = "60px auto";
-      container.style.padding = "40px";
-      container.style.width = (viewportWidth - 120) + "px";
-      container.style.maxHeight = (viewportHeight - 120) + "px";
-    }
-  }
-  let resizeTimer;
-  window.addEventListener('resize', function() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(updateContainerStyle, 100);
-  });
-  window.addEventListener('DOMContentLoaded', updateContainerStyle);
-</script>
+<!-- Bootstrap 模态框 -->
+<div th:replace="~{/components/create-app-modal}"></div>
+
 </body>
+
+<div th:replace="~{/components/com-scripts}"></div>
+
+<!--通用通知组件-->
+<div th:replace="~{/components/msg-toasts}"></div>
+
+
+<div th:replace="~{/components/app-options}"></div>
+
+<script>
+
+  function openCreateAppModal(){
+    $("#createAppModal").modal('show')
+  }
+
+  $(document).ready(function() {
+    // 为所有 app-icon 添加指针样式
+    $('.app-icon').css('cursor', 'pointer');
+    
+    // 右键点击 app-icon 时触发水波效果和右键菜单
+    $('.app-icon').on('contextmenu', function(event) {
+      // 阻止默认右键菜单和事件冒泡
+      event.preventDefault();
+      event.stopPropagation();
+      
+      var $icon = $(this);
+      // 移除之前的水波（如果存在）
+      $icon.find('.ripple').remove();
+
+      // 计算点击位置相对当前 app-icon 的坐标
+      var offset = $icon.offset();
+      var posX = event.pageX - offset.left;
+      var posY = event.pageY - offset.top;
+
+      // 创建水波元素
+      var $ripple = $('<span class="ripple"></span>');
+      $ripple.css({
+        top: posY + 'px',
+        left: posX + 'px'
+      });
+      $icon.append($ripple);
+
+      // 动画结束后移除水波元素
+      setTimeout(function() {
+          $ripple.remove();
+      }, 600);
+
+      // 获取当前应用名称（假设存放在内部 <span> 中）
+      var appName = $icon.find('span').text();
+      openAppContextMenu(event, appName);
+    });
+  });
+</script>
+
 </html>

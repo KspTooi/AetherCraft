@@ -1,0 +1,101 @@
+<div id="app-context-menu" class="context-menu" style="display: none;">
+  <div class="context-menu-header">
+    <span id="cm_txt_current">应用名称</span>
+  </div>
+  <div class="context-menu-item" id="cm_opt_start">启动</div>
+  <div class="context-menu-item" id="cm_opt_edit">配置</div>
+  <div class="context-menu-item" id="cm_opt_remove">移除</div>
+</div>
+
+<style>
+  /* 整个右键菜单容器，采用 Windows Vista Aero 毛玻璃和绚丽彩色效果 */
+  .context-menu {
+    width: 200px;
+    /* 多停点渐变，带来鲜艳彩色视觉效果 */
+    background: linear-gradient(135deg, rgb(1 159 255 / 23%) 0%, rgb(255 255 255 / 8%) 80%);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    font-family: "Segoe UI", Tahoma, sans-serif;
+  }
+  /* 顶部显示当前选择的应用 */
+  .context-menu-header {
+    padding: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    /* 使用鲜艳的蓝色渐变作为 header 背景 */
+    background: linear-gradient(135deg, #0078d700 0%, #00ceef1f 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.4);
+  }
+  /* 每个选项 */
+  .context-menu-item {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    transition: background 0.3s;
+  }
+  .context-menu-item:last-child {
+    border-bottom: none;
+  }
+  /* 鼠标悬停效果 - 绚丽彩色渐变 */
+  .context-menu-item:hover {
+    background: linear-gradient(135deg, rgba(89, 189, 255, 0.6), rgba(0, 204, 255, 0.68));
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  function openAppContextMenu(event, appName) {
+      // 阻止默认事件和冒泡
+      event.preventDefault();
+      event.stopPropagation();
+      
+      var $menu = $("#app-context-menu");
+      if (!$menu.length) return;
+      
+      // 更新菜单头部显示当前应用名称
+      $("#cm_txt_current").text(appName);
+
+      // 设置为绝对定位，并获取菜单尺寸以便于边界判断
+      $menu.css("position", "absolute");
+      var menuWidth = $menu.outerWidth();
+      var menuHeight = $menu.outerHeight();
+      var posX = event.pageX;
+      var posY = event.pageY;
+
+      // 如果菜单超出屏幕右边缘，则调整位置
+      if (posX + menuWidth > $(window).width()) {
+          posX = $(window).width() - menuWidth;
+      }
+      // 如果菜单超出屏幕下边缘，则调整位置
+      if (posY + menuHeight > $(window).height()) {
+          posY = $(window).height() - menuHeight;
+      }
+
+      $menu.css({
+          left: posX + "px",
+          top: posY + "px"
+      });
+
+      // 使用淡入动画显示菜单（300毫秒动画时长）
+      $menu.fadeIn(300);
+  }
+
+  function closeAppContextMenu() {
+      $("#app-context-menu").fadeOut(300);
+  }
+
+  // 点击页面其他区域时关闭菜单
+  $(document).on("click", function(e) {
+      var $menu = $("#app-context-menu");
+      if (!$menu.is(e.target) && $menu.has(e.target).length === 0) {
+          closeAppContextMenu();
+      }
+  });
+</script>

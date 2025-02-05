@@ -1,0 +1,47 @@
+/* Bootstrap 模态框优化样式 */
+.modal-header {
+    padding: 0.5rem; /* 减小头部内边距 */
+}
+
+.modal-body {
+    padding: 0.5rem; /* 减小主体内边距 */
+}
+
+.modal-footer {
+    padding: 0.5rem; /* 减小底部内边距 */
+}
+
+.modal-title {
+    font-size: 1rem; /* 减小标题字体大小 */
+}
+
+.modal-body {
+    font-size: 0.875rem; /* 减小内容字体大小 */
+}
+
+.btn {
+    padding: 0.25rem 0.5rem; /* 减小按钮内边距 */
+    font-size: 0.875rem; /* 减小按钮字体大小 */
+    border-radius: 0.2rem; /* 减小按钮边框圆角 */
+}
+
+.modal-content {
+    border: none; /* 移除边框 */
+    /* 或者减小边框宽度 */
+    /* border: 1px solid rgba(0, 0, 0, 0.1); */
+    border-radius: 0.3rem; /* 减小圆角 */
+}
+
+.form-control {
+    padding: 0.25rem 0.5rem; /* 减小输入框内边距 */
+    font-size: 0.875rem; /* 减小输入框字体大小 */
+    border-radius: 0.2rem; /* 减小输入框边框圆角 */
+}
+
+/* 更新：强制覆盖 Bootstrap 默认样式，使 .form-select 与 .form-control 保持一致 */
+.form-select {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.2rem !important;
+    height: calc(2rem) !important;
+}

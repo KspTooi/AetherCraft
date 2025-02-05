@@ -1,0 +1,79 @@
+<div th:if="${vo != null and vo.code != null}">
+
+    <div aria-live="polite" aria-atomic="true"
+         class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+
+        <!-- 内联样式覆盖 Bootstrap Toast 默认样式，并增加漂亮的边框、毛玻璃与镜面特效 -->
+        <style>
+            /* 自定义 Toast 基本样式及漂亮边框与毛玻璃效果 */
+            #notificationToast {
+                border: 1px solid rgb(80 80 80 / 10%) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                backdrop-filter: blur(12px) !important;
+                -webkit-backdrop-filter: blur(12px) !important;
+                overflow: hidden !important;
+                /* 使用线性渐变作为背景，并使颜色比原来更浅 */
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05)) !important;
+            }
+            /* 自定义 Toast 头部 */
+            #notificationToast .toast-header {
+                background: transparent !important;
+                border-bottom: none !important;
+                padding: 10px 15px !important;
+            }
+            #notificationToast .toast-header strong {
+                font-weight: 600 !important;
+                color: #ECEFF1 !important;
+            }
+            #notificationToast .toast-header small {
+                color: #fbfbfb !important;
+                text-shadow: 3px 3px 6px rgb(18 18 18 / 25%) !important;
+            }
+            /* 自定义 Toast 主体 */
+            #notificationToast .toast-body {
+                background: transparent !important;
+                padding: 15px !important;
+                color: #ECEFF1 !important;
+                font-size: 0.95rem !important;
+            }
+            /* 根据状态设置背景色 */
+            #notificationToast.text-bg-success {
+                /* 原来的成功背景是 rgb(26 219 183 / 15%)，这里通过渐变并降低透明度来让颜色更浅 */
+                background: linear-gradient(235deg, hsla(162, 75%, 47%, 0.3), hsl(161.13deg 25.02% 71.64% / 15%)) !important;
+            }
+            #notificationToast.text-bg-danger {
+                /* 原来的错误背景是 hsl(346.67deg 57.39% 61.19% / 51%)，这里调整渐变的透明度，使效果更柔和 */
+                background: linear-gradient(135deg, hsla(346.67, 57.39%, 61.19%, 0.3), hsla(346.67, 57.39%, 61.19%, 0.15)) !important;
+            }
+            /* 自定义关闭按钮 */
+            #notificationToast .btn-close {
+                filter: invert(25%) !important;
+            }
+        </style>
+
+        <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-autohide="true" data-bs-delay="2500"
+             th:classappend="${vo.code == 0 ? ' text-bg-success' : ' text-bg-danger'}">
+            <div class="toast-header">
+                <strong class="me-auto" th:text="${vo.code == 0 ? '成功' : '错误'}">通知</strong>
+                <!--<small>刚刚</small>-->
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="关闭"></button>
+            </div>
+            <div class="toast-body" th:text="${vo.message}">
+                这里显示通知内容
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // 页面加载后初始化并自动显示 Toast
+        var toastEl = document.getElementById("notificationToast");
+        var toastInstance = new bootstrap.Toast(toastEl);
+        toastInstance.show();
+    </script>
+
+</div>
+
+
+
