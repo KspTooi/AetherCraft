@@ -45,7 +45,7 @@ public class Router {
         return "forward:/ssr/appCenter";
     }
 
-    @GetMapping("/version")
+    @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){
         return Result.success("1.0-A");

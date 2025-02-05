@@ -1,0 +1,102 @@
+<div id="toast-container" aria-live="polite" aria-atomic="true" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+    <style>
+        /* 自定义 Toast 基本样式及漂亮边框与毛玻璃效果 */
+        #notificationToast {
+            border: 1px solid rgb(80 80 80 / 10%) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            overflow: hidden !important;
+            /* 使用线性渐变作为背景，并使颜色比原来更浅 */
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05)) !important;
+        }
+        /* 自定义 Toast 头部 */
+        #notificationToast .toast-header {
+            background: transparent !important;
+            border-bottom: none !important;
+            padding: 10px 15px !important;
+        }
+        #notificationToast .toast-header strong {
+            font-weight: 600 !important;
+            color: #ECEFF1 !important;
+        }
+        #notificationToast .toast-header small {
+            color: #fbfbfb !important;
+            text-shadow: 3px 3px 6px rgb(18 18 18 / 25%) !important;
+        }
+        /* 自定义 Toast 主体 */
+        #notificationToast .toast-body {
+            background: transparent !important;
+            padding: 15px !important;
+            color: #ECEFF1 !important;
+            font-size: 0.95rem !important;
+        }
+        /* 根据状态设置背景色 */
+        #notificationToast.text-bg-success {
+            background: linear-gradient(235deg, hsla(162, 75%, 47%, 0.3), hsl(161.13deg 25.02% 71.64% / 15%)) !important;
+        }
+        #notificationToast.text-bg-danger {
+            background: linear-gradient(135deg, hsla(346.67, 57.39%, 61.19%, 0.3), hsla(346.67, 57.39%, 61.19%, 0.15)) !important;
+        }
+        /* 自定义关闭按钮 */
+        #notificationToast .btn-close {
+            filter: invert(25%) !important;
+        }
+    </style>
+
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+         data-bs-autohide="true" data-bs-delay="2500">
+        <div class="toast-header">
+            <strong class="me-auto">通知</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="关闭"></button>
+        </div>
+        <div class="toast-body">
+            这里显示通知内容
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * 显示 Toast 通知
+     * @param {string} toastType - 通知类型，可取值 "success"（成功）或 "danger"（错误），其他值为普通通知
+     * @param {string} message - 显示的通知内容
+     */
+    function showToast(toastType, message) {
+        var toastEl = document.getElementById("notificationToast");
+        var headerText = toastEl.querySelector(".toast-header strong");
+        if (toastType === "success") {
+            headerText.textContent = "成功";
+            toastEl.classList.remove("text-bg-danger");
+            toastEl.classList.add("text-bg-success");
+        } else if (toastType === "danger") {
+            headerText.textContent = "错误";
+            toastEl.classList.remove("text-bg-success");
+            toastEl.classList.add("text-bg-danger");
+        } else {
+            headerText.textContent = "通知";
+            toastEl.classList.remove("text-bg-success", "text-bg-danger");
+        }
+        var toastBody = toastEl.querySelector(".toast-body");
+        toastBody.textContent = message;
+        // 初始化并显示 Toast
+        var toastInstance = new bootstrap.Toast(toastEl);
+        toastInstance.show();
+    }
+
+    /**
+     * 隐藏 Toast 通知
+     */
+    function hideToast() {
+        var toastEl = document.getElementById("notificationToast");
+        var toastInstance = bootstrap.Toast.getInstance(toastEl);
+        if (!toastInstance) {
+            toastInstance = new bootstrap.Toast(toastEl);
+        }
+        toastInstance.hide();
+    }
+</script>
+
+
+

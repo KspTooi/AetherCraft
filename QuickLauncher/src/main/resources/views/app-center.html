@@ -219,7 +219,7 @@
   </div>
   <div class="scrollable-content">
     <div class="app-icons" th:if="${data.appList != null}">
-      <div class="app-icon" th:each="app : ${data.appList}">
+      <div class="app-icon" th:each="app : ${data.appList}" th:attr="data-app-id=${app.id}">
         <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
         <span th:text="${app.name}">应用名称</span>
       </div>
@@ -237,7 +237,7 @@
 <div th:replace="~{/components/com-scripts}"></div>
 
 <!--通用通知组件-->
-<div th:replace="~{/components/msg-toasts}"></div>
+<div th:replace="~{/components/mvc-toasts}"></div>
 
 
 <div th:replace="~{/components/app-options}"></div>
@@ -280,9 +280,10 @@
           $ripple.remove();
       }, 600);
 
-      // 获取当前应用名称（假设存放在内部 <span> 中）
+      // 获取当前应用名称（假设存放在内部 <span> 中）及应用ID
       var appName = $icon.find('span').text();
-      openAppContextMenu(event, appName);
+      var appId = $icon.data("app-id");
+      openAppContextMenu(event, appName, appId);
     });
   });
 </script>

@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CreateAppDto;
+import com.ksptool.ql.biz.model.dto.RunAppDto;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.AppCenterVo;
 import com.ksptool.ql.biz.model.vo.AppItemVo;
@@ -14,10 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -70,4 +68,33 @@ public class AppCenterController {
 
         return "redirect:/appCenter";
     }
+
+    @PostMapping("/removeApp")
+    public String removeApp(@RequestParam("appId") Long appId, HttpServletRequest hsr, RedirectAttributes ra) {
+        if (appId == null) {
+            ra.addFlashAttribute("vo", Result.error("缺少应用ID！"));
+            return "redirect:/appCenter";
+        }
+        try {
+            // 根据当前用户和应用 ID 移除指定的应用
+            appService.removeApp(authService.verifyUser(hsr), appId);
+            ra.addFlashAttribute("vo", Result.success("已移除应用", null));
+        } catch (BizException ex) {
+            ra.addFlashAttribute("vo", Result.error(ex));
+        }
+        return "redirect:/appCenter";
+    }
+
+    @PostMapping("/runApp")
+    @ResponseBody
+    public Result<String> runApp(@RequestBody @Valid RunAppDto dto, HttpServletRequest hsr) {
+        try {
+            UserPo user = authService.verifyUser(hsr);
+            String message = appService.runApp(user, dto);
+            return Result.success(message, null);
+        } catch (BizException ex) {
+            return Result.error(ex);
+        }
+    }
+
 }

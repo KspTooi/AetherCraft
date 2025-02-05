@@ -51,29 +51,30 @@
 </style>
 
 <script>
-  function openAppContextMenu(event, appName) {
+  // 修改 openAppContextMenu 为接收 appName 和 appId 两个参数
+  function openAppContextMenu(event, appName, appId) {
       // 阻止默认事件和冒泡
       event.preventDefault();
       event.stopPropagation();
-      
+
       var $menu = $("#app-context-menu");
       if (!$menu.length) return;
-      
+
       // 更新菜单头部显示当前应用名称
       $("#cm_txt_current").text(appName);
+      // 将当前应用ID存储在菜单上，供后续操作使用
+      $menu.data("app-id", appId);
 
-      // 设置为绝对定位，并获取菜单尺寸以便于边界判断
+      // 设置菜单为绝对定位，并根据页面位置做边界判断
       $menu.css("position", "absolute");
       var menuWidth = $menu.outerWidth();
       var menuHeight = $menu.outerHeight();
       var posX = event.pageX;
       var posY = event.pageY;
 
-      // 如果菜单超出屏幕右边缘，则调整位置
       if (posX + menuWidth > $(window).width()) {
           posX = $(window).width() - menuWidth;
       }
-      // 如果菜单超出屏幕下边缘，则调整位置
       if (posY + menuHeight > $(window).height()) {
           posY = $(window).height() - menuHeight;
       }
@@ -83,7 +84,7 @@
           top: posY + "px"
       });
 
-      // 使用淡入动画显示菜单（300毫秒动画时长）
+      // 使用淡入动画显示菜单
       $menu.fadeIn(300);
   }
 
@@ -97,5 +98,38 @@
       if (!$menu.is(e.target) && $menu.has(e.target).length === 0) {
           closeAppContextMenu();
       }
+  });
+
+  // 为“启动”菜单项添加点击事件
+  $("#cm_opt_start").on("click", function() {
+      var appId = $("#app-context-menu").data("app-id");
+      $.ajax({
+          url: "/ssr/runApp",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ appId: appId }),
+          success: function(response) {
+              alert(response.data);
+          },
+          error: function() {
+              alert("启动应用失败");
+          },
+          complete: function() {
+              closeAppContextMenu();
+          }
+      });
+  });
+
+  // 为“移除”菜单项添加点击事件
+  $("#cm_opt_remove").on("click", function() {
+      var appId = $("#app-context-menu").data("app-id");
+      if (confirm("确定要删除该应用吗？")) {
+          $.post("/ssr/removeApp", { appId: appId }, function(response) {
+              location.reload();
+          }).fail(function() {
+              alert("删除应用失败");
+          });
+      }
+      closeAppContextMenu();
   });
 </script>
