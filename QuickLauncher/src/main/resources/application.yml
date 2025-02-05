@@ -1,0 +1,21 @@
+server:
+  port: 30000  # 设置应用端口号
+
+spring:
+  datasource:
+    url: jdbc:h2:tcp://127.0.0.1:30001/./QuickLauncher
+    driver-class-name: org.h2.Driver
+    username:
+    password:
+
+  thymeleaf:
+    cache: false  # 开发环境禁用模板缓存
+    prefix: classpath:/views/
+    suffix: .html
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+session:
+  expires: 86400

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用中心</title>
+  <link rel="stylesheet" href="css/app-center.css">
+</head>
+
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    overflow: hidden; /* 防止整个页面出现滚动条 */
+  }
+
+  .background-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 背景图片加载失败时，使用备用颜色 */
+    background: #333 url('img/bg1.jpg') no-repeat center center;
+    background-size: cover;
+    z-index: -1; /* 背景置于底层 */
+  }
+
+  /* glass-container 居中显示，四周保留较大边距，并设置最大高度以保证滚动 */
+  .glass-container {
+    box-sizing: border-box;
+    margin: 60px auto;      /* 上下各留 60px，左右自动居中 */
+    padding: 40px;
+    width: calc(100% - 120px);/* 屏幕宽度减去左右边距 */
+    max-height: calc(100vh - 120px); /* 最大高度为视口高度减去上下边距 */
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 固定在顶部的搜索区域 */
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-box input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.5);
+    margin-right: 10px;
+  }
+
+  .search-box button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+  }
+
+  /* 滚动内容区域，只滚动应用列表 */
+  .scrollable-content {
+    overflow-y: auto;
+    flex: 1; /* 占据除 header 外剩余空间 */
+  }
+
+  /* 自定义滚动条 —— Chrome, Edge, Safari */
+  .scrollable-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollable-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+  .scrollable-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  .scrollable-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  /* 自定义滚动条 —— Firefox */
+  .scrollable-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.3) rgba(255,255,255,0.2);
+  }
+
+  /* 响应式调整：屏幕宽度较小时 */
+  @media (max-width: 768px) {
+    .glass-container {
+      margin: 20px auto;
+      padding: 20px;
+      width: calc(100% - 40px);
+      max-height: calc(100vh - 40px); /* 更新最大高度 */
+    }
+  }
+
+  .app-icons {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;  /* 多个应用自动换行 */
+  }
+
+  .app-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;      /* 固定宽度，便于排版 */
+  }
+
+  .app-icon img {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    object-fit: cover;
+    background-color: #ccc; /* 图片加载失败时的占位背景 */
+  }
+
+  .app-icon span {
+    margin-top: 5px;
+    text-align: center;
+    font-size: 14px;
+  }
+</style>
+
+
+<body>
+<div class="background-image"></div>
+<div class="glass-container">
+  <div class="header">
+    <div class="search-box">
+      <input type="text" placeholder="查询应用">
+      <button>创建应用</button>
+    </div>
+  </div>
+  <div class="scrollable-content">
+    <div class="app-icons">
+      <!-- 添加50个示例应用 -->
+      <div class="app-icon">
+        <img src="icon1.png" alt="应用1">
+        <span>应用1</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon2.png" alt="应用2">
+        <span>应用2</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon3.png" alt="应用3">
+        <span>应用3</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon4.png" alt="应用4">
+        <span>应用4</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon5.png" alt="应用5">
+        <span>应用5</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon6.png" alt="应用6">
+        <span>应用6</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon7.png" alt="应用7">
+        <span>应用7</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon8.png" alt="应用8">
+        <span>应用8</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon9.png" alt="应用9">
+        <span>应用9</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon10.png" alt="应用10">
+        <span>应用10</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon11.png" alt="应用11">
+        <span>应用11</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon12.png" alt="应用12">
+        <span>应用12</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon13.png" alt="应用13">
+        <span>应用13</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon14.png" alt="应用14">
+        <span>应用14</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon15.png" alt="应用15">
+        <span>应用15</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon16.png" alt="应用16">
+        <span>应用16</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon17.png" alt="应用17">
+        <span>应用17</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon18.png" alt="应用18">
+        <span>应用18</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon19.png" alt="应用19">
+        <span>应用19</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon20.png" alt="应用20">
+        <span>应用20</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon21.png" alt="应用21">
+        <span>应用21</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon22.png" alt="应用22">
+        <span>应用22</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon23.png" alt="应用23">
+        <span>应用23</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon24.png" alt="应用24">
+        <span>应用24</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon25.png" alt="应用25">
+        <span>应用25</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon26.png" alt="应用26">
+        <span>应用26</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon27.png" alt="应用27">
+        <span>应用27</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon28.png" alt="应用28">
+        <span>应用28</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon29.png" alt="应用29">
+        <span>应用29</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon30.png" alt="应用30">
+        <span>应用30</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon31.png" alt="应用31">
+        <span>应用31</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon32.png" alt="应用32">
+        <span>应用32</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon33.png" alt="应用33">
+        <span>应用33</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon34.png" alt="应用34">
+        <span>应用34</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon35.png" alt="应用35">
+        <span>应用35</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon36.png" alt="应用36">
+        <span>应用36</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon37.png" alt="应用37">
+        <span>应用37</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon38.png" alt="应用38">
+        <span>应用38</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon39.png" alt="应用39">
+        <span>应用39</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon40.png" alt="应用40">
+        <span>应用40</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon41.png" alt="应用41">
+        <span>应用41</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon42.png" alt="应用42">
+        <span>应用42</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon43.png" alt="应用43">
+        <span>应用43</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon44.png" alt="应用44">
+        <span>应用44</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon45.png" alt="应用45">
+        <span>应用45</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon46.png" alt="应用46">
+        <span>应用46</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon47.png" alt="应用47">
+        <span>应用47</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon48.png" alt="应用48">
+        <span>应用48</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon49.png" alt="应用49">
+        <span>应用49</span>
+      </div>
+      <div class="app-icon">
+        <img src="icon50.png" alt="应用50">
+        <span>应用50</span>
+      </div>
+    </div>
+    <div class="app-list">
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickLauncher Login</title>
+
+    <style>
+        /* 通用页面样式 */
+        .page {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('img/bg1.jpg') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f2f2f2;
+        }
+
+        /* 登录框 */
+        .login-box {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: left;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+
+        /* 登录框标题 */
+        .login-box__header {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        /* 表单组 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group__label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 2px;
+        }
+
+        .input-group__input {
+            width: calc(100% - 20px); /* 占满整行，左右预留 10px 间隔 */
+            margin: 0 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        /* 按钮 */
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            display: table;
+            margin: 15px auto;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 350px) {
+            .login-box {
+                width: 90%;
+            }
+        }
+    </style>
+
+
+</head>
+
+<body class="page">
+    <div class="login-box">
+        <h2 class="login-box__header">QuickLauncher</h2>
+        <div class="input-group">
+            <label class="input-group__label" for="username">账户:</label>
+            <input class="input-group__input" type="text" id="username" name="username">
+        </div>
+        <div class="input-group">
+            <label class="input-group__label" for="password">密码:</label>
+            <input class="input-group__input" type="password" id="password" name="password">
+        </div>
+        <button class="btn" type="submit">继续</button>
+    </div>
+    <script src="/commons/jquery-3.7.1.min.js"></script>
+</body>
+
+</html>
