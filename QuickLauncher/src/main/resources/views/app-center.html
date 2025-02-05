@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>应用中心</title>
-  <link rel="stylesheet" href="css/app-center.css">
 </head>
 
 <style>
@@ -21,7 +20,7 @@
     width: 100%;
     height: 100%;
     /* 背景图片加载失败时，使用备用颜色 */
-    background: #333 url('img/bg1.jpg') no-repeat center center;
+    background: #333 url('/img/bg1.jpg') no-repeat center center;
     background-size: cover;
     z-index: -1; /* 背景置于底层 */
   }
@@ -38,7 +37,11 @@
     border-radius: 15px;
     box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(12px);
-    transition: all 0.3s ease;
+    transition: margin 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
+                padding 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
+                width 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
+                max-height 0.5s cubic-bezier(0.25, 0.8, 0.5, 1);
+    will-change: margin, padding, width, max-height;
     display: flex;
     flex-direction: column;
   }
@@ -75,6 +78,7 @@
   .scrollable-content {
     overflow-y: auto;
     flex: 1; /* 占据除 header 外剩余空间 */
+    text-align: center; /* 将内联元素居中 */
   }
 
   /* 自定义滚动条 —— Chrome, Edge, Safari */
@@ -354,5 +358,31 @@
     </div>
   </div>
 </div>
+
+<!-- 利用 JavaScript 实现响应式的动画效果，并对 resize 事件做防抖处理 -->
+<script>
+  function updateContainerStyle() {
+    const container = document.querySelector('.glass-container');
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    if (viewportWidth < 768) {
+      container.style.margin = "20px auto";
+      container.style.padding = "20px";
+      container.style.width = (viewportWidth - 40) + "px";
+      container.style.maxHeight = (viewportHeight - 40) + "px";
+    } else {
+      container.style.margin = "60px auto";
+      container.style.padding = "40px";
+      container.style.width = (viewportWidth - 120) + "px";
+      container.style.maxHeight = (viewportHeight - 120) + "px";
+    }
+  }
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(updateContainerStyle, 100);
+  });
+  window.addEventListener('DOMContentLoaded', updateContainerStyle);
+</script>
 </body>
 </html>

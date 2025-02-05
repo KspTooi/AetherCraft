@@ -129,6 +129,7 @@
                     <include>**/**.css</include>
                     <include>**/**.jpg</include>
                     <include>**/**.png</include>
+                    <include>**/**.ico</include>
                 </includes>
             </resource>
         </resources>

@@ -24,10 +24,13 @@ public class GlobalExceptionHandler {
     /**
      * 处理其他Exception
      */
-    @ExceptionHandler(Exception.class)
-    @ResponseBody
-    public ResponseEntity<Result<Void>> handleException(Exception ex) {
-        log.error(ex.getMessage(),ex);
-        return new ResponseEntity<>(Result.internalError(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    //@ExceptionHandler(Exception.class)
+    //@ResponseBody
+    //public ResponseEntity<Result<Void>> handleException(Exception ex) {
+    //    log.error(ex.getMessage(),ex);
+    //    return new ResponseEntity<>(Result.internalError(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    //}
+
+
+
 }

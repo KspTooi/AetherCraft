@@ -4,7 +4,9 @@ import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
+import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.exception.BizException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,29 @@ public class AuthService {
 
     @Value("${session.expires}")
     private long expiresInSeconds;
+
+    public UserPo verifyUser(HttpServletRequest hsr){
+
+        String token = WebUtils.getCookieValue(hsr, "token");
+
+        if (token == null) {
+            return null; // Cookie中没有token
+        }
+
+        Long userId = verifyToken(token);
+
+        if (userId == null) {
+            return null; // Token无效
+        }
+
+        UserPo user = userRepository.findById(userId).orElse(null);
+
+        if (user == null) {
+            return null; // 用户不存在
+        }
+
+        return user; // Token有效，返回用户实例
+    }
 
 
     public String loginByPassword(String username, String password) throws BizException {

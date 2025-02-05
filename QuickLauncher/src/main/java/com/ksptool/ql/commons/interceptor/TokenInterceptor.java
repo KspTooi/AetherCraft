@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-@Component
+//@Component
 public class TokenInterceptor implements HandlerInterceptor {
 
     private final List<String> whitelist = Arrays.asList(
@@ -25,7 +25,7 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    @Autowired
+    //@Autowired
     private AuthService authService;
 
     @Override
@@ -39,7 +39,6 @@ public class TokenInterceptor implements HandlerInterceptor {
                 return true;
             }
         }
-
 
         String token = request.getHeader("token");
         if (token == null ||!isValidToken(token)) {
