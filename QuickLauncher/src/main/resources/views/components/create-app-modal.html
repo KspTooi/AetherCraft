@@ -23,7 +23,11 @@
             </div>
             <div class="mb-3">
               <label for="execPath" class="form-label">程序路径</label>
-              <input type="text" class="form-control" id="execPath" name="execPath" placeholder="请输入程序路径" required>
+              <div class="input-group">
+                <input type="text" class="form-control" id="execPath" name="execPath" placeholder="请选择程序路径" required>
+                <button type="button" class="btn btn-outline-secondary" id="btn-select-file">选择文件</button>
+                <button type="button" class="btn btn-outline-secondary" id="btn-select-folder">选择文件夹</button>
+              </div>
             </div>
 
           </div>
@@ -37,3 +41,35 @@
 
   </form>
 </div>
+
+<script>
+  // 为"选择文件"按钮绑定点击事件（利用 File System Access API 选择文件）
+  document.getElementById('btn-select-file').addEventListener('click', async function() {
+      if (window.showOpenFilePicker) {
+          try {
+              const [fileHandle] = await window.showOpenFilePicker();
+              // 注意：出于安全限制，无法获取完整本地路径，此处示例中仅填入文件名
+              document.getElementById('execPath').value = fileHandle.name;
+          } catch (err) {
+              console.error("选择文件失败", err);
+          }
+      } else {
+          alert("当前浏览器不支持文件选择");
+      }
+  });
+
+  // 为"选择文件夹"按钮绑定点击事件（利用 File System Access API 选择文件夹）
+  document.getElementById('btn-select-folder').addEventListener('click', async function() {
+      if (window.showDirectoryPicker) {
+          try {
+              const directoryHandle = await window.showDirectoryPicker();
+              // 注意：出于安全限制，此处示例中仅填入文件夹名称
+              document.getElementById('execPath').value = directoryHandle.name;
+          } catch (err) {
+              console.error("选择文件夹失败", err);
+          }
+      } else {
+          alert("当前浏览器不支持文件夹选择");
+      }
+  });
+</script>

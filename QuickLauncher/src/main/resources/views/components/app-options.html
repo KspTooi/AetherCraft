@@ -100,7 +100,7 @@
       }
   });
 
-  // 为“启动”菜单项添加点击事件
+  // 为"启动"菜单项添加点击事件——使用 com-toasts 显示启动结果
   $("#cm_opt_start").on("click", function() {
       var appId = $("#app-context-menu").data("app-id");
       $.ajax({
@@ -109,10 +109,20 @@
           contentType: "application/json",
           data: JSON.stringify({ appId: appId }),
           success: function(response) {
-              alert(response.data);
+              // 正确解析返回的 JSON 数据结构，判断返回码
+              if(response.code === 0){
+                  showToast("success", response.message);
+              } else {
+                  showToast("danger", response.message);
+              }
           },
-          error: function() {
-              alert("启动应用失败");
+          error: function(xhr) {
+              // 获取错误信息，若返回中包含 message 字段则优先使用
+              var msg = "启动应用失败";
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                  msg = xhr.responseJSON.message;
+              }
+              showToast("danger", msg);
           },
           complete: function() {
               closeAppContextMenu();
@@ -120,7 +130,7 @@
       });
   });
 
-  // 为“移除”菜单项添加点击事件
+  // 为"移除"菜单项添加点击事件
   $("#cm_opt_remove").on("click", function() {
       var appId = $("#app-context-menu").data("app-id");
       if (confirm("确定要删除该应用吗？")) {
