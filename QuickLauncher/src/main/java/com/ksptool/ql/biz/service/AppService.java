@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.AppRepository;
 import com.ksptool.ql.biz.model.dto.CreateAppDto;
+import com.ksptool.ql.biz.model.dto.EditAppDto;
 import com.ksptool.ql.biz.model.dto.RunAppDto;
 import com.ksptool.ql.biz.model.po.AppPo;
 import com.ksptool.ql.biz.model.po.UserPo;
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class AppService {
@@ -110,5 +113,31 @@ public class AppService {
         } catch (IOException e) {
             throw new BizException("启动应用失败: " + e.getMessage(), e);
         }
+    }
+
+    // 根据用户和应用ID获取应用详情
+    public AppPo getAppById(UserPo user, Long appId) throws BizException {
+        if (user == null || appId == null) {
+            throw new BizException("参数无效");
+        }
+        AppPo app = appRepository.findByIdAndUserId(appId, user.getId())
+                .orElseThrow(() -> new BizException("应用不存在或无权限访问"));
+        return app;
+    }
+
+    // 更新应用信息
+    public AppPo editApp(UserPo user, EditAppDto dto) throws BizException {
+        // 检查应用是否存在且属于当前用户
+        AppPo app = getAppById(user, dto.getId());
+        
+        // 检查新名称是否与其他应用重复
+        if (!app.getName().equals(dto.getName()) && existsAppByNameForUser(user, dto.getName())) {
+            throw new BizException("应用名称已存在，请使用其他名称: " + dto.getName());
+        }
+
+        assign(dto, app);
+        app.setUpdateTime(new Date());
+        
+        return appRepository.save(app);
     }
 }

@@ -2,9 +2,12 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CreateAppDto;
 import com.ksptool.ql.biz.model.dto.RunAppDto;
+import com.ksptool.ql.biz.model.dto.EditAppDto;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.po.AppPo;
 import com.ksptool.ql.biz.model.vo.AppCenterVo;
 import com.ksptool.ql.biz.model.vo.AppItemVo;
+import com.ksptool.ql.biz.model.vo.GetAppDetailsVo;
 import com.ksptool.ql.biz.service.AppService;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.UserService;
@@ -20,8 +23,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.ksptool.entities.Entities.as;
+import static com.ksptool.entities.Entities.assign;
 
 @Controller
 @RequestMapping("/ssr")
@@ -43,7 +49,9 @@ public class AppCenterController {
 
         var data = new HashMap<String,Object>();
         data.put("appCount",appService.getAppCountByUser(userPo));
-        data.put("appList",as(appService.getAppListByUserId(userPo.getId()), AppItemVo.class));
+
+        List<AppItemVo> appList = as(appService.getAppListByUserId(userPo.getId()),AppItemVo.class);
+        data.put("appList", appList);
 
         mav.addObject("data", data);
         return mav;
@@ -95,6 +103,38 @@ public class AppCenterController {
         } catch (BizException ex) {
             return Result.error(ex);
         }
+    }
+
+    @GetMapping("/getAppDetails")
+    @ResponseBody
+    public Result<GetAppDetailsVo> getAppDetails(@RequestParam("appId") Long appId, HttpServletRequest hsr) {
+        try {
+            UserPo user = authService.verifyUser(hsr);
+            AppPo app = appService.getAppById(user, appId);
+            GetAppDetailsVo vo = new GetAppDetailsVo();
+            assign(app, vo);
+            return Result.success(vo);
+        } catch (BizException ex) {
+            return Result.error(ex);
+        }
+    }
+
+    @PostMapping("/editApp")
+    public String editApp(@Valid EditAppDto dto, BindingResult br, HttpServletRequest hsr, RedirectAttributes ra) {
+        // 当表单数据校验失败时返回应用中心页面
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("vo", Result.error("表单校验失败!"));
+            return "redirect:/appCenter";
+        }
+
+        try {
+            UserPo user = authService.verifyUser(hsr);
+            appService.editApp(user, dto);
+            ra.addFlashAttribute("vo", Result.success("应用更新成功：" + dto.getName(), null));
+        } catch (BizException ex) {
+            ra.addFlashAttribute("vo", Result.error(ex));
+        }
+        return "redirect:/appCenter";
     }
 
 }

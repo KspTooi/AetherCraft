@@ -64,24 +64,23 @@
      * @param {string} message - 显示的通知内容
      */
     function showToast(toastType, message) {
-        var toastEl = document.getElementById("notificationToast");
-        var headerText = toastEl.querySelector(".toast-header strong");
+        const $toast = $('#notificationToast');
+        const $headerText = $toast.find('.toast-header strong');
+        
         if (toastType === "success") {
-            headerText.textContent = "成功";
-            toastEl.classList.remove("text-bg-danger");
-            toastEl.classList.add("text-bg-success");
+            $headerText.text("成功");
+            $toast.removeClass("text-bg-danger").addClass("text-bg-success");
         } else if (toastType === "danger") {
-            headerText.textContent = "错误";
-            toastEl.classList.remove("text-bg-success");
-            toastEl.classList.add("text-bg-danger");
+            $headerText.text("错误");
+            $toast.removeClass("text-bg-success").addClass("text-bg-danger");
         } else {
-            headerText.textContent = "通知";
-            toastEl.classList.remove("text-bg-success", "text-bg-danger");
+            $headerText.text("通知");
+            $toast.removeClass("text-bg-success text-bg-danger");
         }
-        var toastBody = toastEl.querySelector(".toast-body");
-        toastBody.textContent = message;
+        
+        $toast.find('.toast-body').text(message);
         // 初始化并显示 Toast
-        var toastInstance = new bootstrap.Toast(toastEl);
+        const toastInstance = new bootstrap.Toast($toast[0]);
         toastInstance.show();
     }
 
@@ -89,12 +88,13 @@
      * 隐藏 Toast 通知
      */
     function hideToast() {
-        var toastEl = document.getElementById("notificationToast");
-        var toastInstance = bootstrap.Toast.getInstance(toastEl);
+        const $toast = $('#notificationToast');
+        const toastInstance = bootstrap.Toast.getInstance($toast[0]);
         if (!toastInstance) {
-            toastInstance = new bootstrap.Toast(toastEl);
+            new bootstrap.Toast($toast[0]).hide();
+        } else {
+            toastInstance.hide();
         }
-        toastInstance.hide();
     }
 </script>
 

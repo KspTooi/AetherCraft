@@ -255,9 +255,11 @@
         <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
         <span th:text="${app.name}">应用名称</span>
         <!-- 根据 app.kind 添加不同的背景颜色 -->
-        <span class="app-kind-tag" 
-              th:text="${app.kind == 0 ? 'EXE' : 'BAT'}" 
-              th:classappend="${app.kind == 0 ? ' exe-tag' : ' bat-tag'}"></span>
+        <span class="app-kind-tag"
+              th:text="${app.kind == 0 ? 'EXE' : 'BAT'}"
+              th:classappend="${app.kind == 0 ? ' exe-tag' : ' bat-tag'}"
+        >
+        </span>
       </div>
     </div>
     <!--<div class="app-list">
@@ -267,6 +269,8 @@
 
 <!-- Bootstrap 模态框 -->
 <div th:replace="~{/components/create-app-modal}"></div>
+<div th:replace="~{/components/edit-app-modal}"></div>
+
 
 </body>
 

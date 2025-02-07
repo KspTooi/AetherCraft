@@ -143,4 +143,30 @@
       }
       closeAppContextMenu();
   });
+
+  // 为"编辑"菜单项添加点击事件
+  $("#cm_opt_edit").on("click", function() {
+      var appId = $("#app-context-menu").data("app-id");
+      
+      // 发送 AJAX 请求获取应用详细信息
+      $.ajax({
+          url: "/ssr/getAppDetails",
+          method: "GET",
+          data: { appId: appId },
+          success: function(response) {
+              if(response.code === 0 && response.data) {
+                  // 调用编辑模态框的打开函数
+                  openEditAppModal(response.data);
+              } else {
+                  showToast("danger", response.message || "获取应用信息失败");
+              }
+          },
+          error: function() {
+              showToast("danger", "获取应用信息失败");
+          },
+          complete: function() {
+              closeAppContextMenu();
+          }
+      });
+  });
 </script>

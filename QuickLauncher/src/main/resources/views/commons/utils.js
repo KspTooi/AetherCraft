@@ -5,7 +5,7 @@ const utils = {
      * @param {object} data - 要发送的 JSON 数据
      * @returns {Promise<object>} - 返回 Promise 对象，resolve 包含响应的 JSON 数据，reject 包含错误信息
      */
-    postJson: async function(url, data) {
+    postJson: async (url, data) => {
         return new Promise((resolve, reject) => {
             $.ajax({
                 type: 'POST',
@@ -13,10 +13,10 @@ const utils = {
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 dataType: 'json',
-                success: function(response) {
+                success: (response)=> {
                     resolve(response);
                 },
-                error: function(xhr, status, error) {
+                error: (xhr, status, error) => {
                     reject(error);
                 }
             });
