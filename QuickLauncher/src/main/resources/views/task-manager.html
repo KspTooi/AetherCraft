@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理器</title>
+    <!-- 引入公共样式组件 -->
+    <div th:replace="~{/components/com-styles}"></div>
+    <div th:replace="~{/components/com-scripts}"></div>
+</head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: sans-serif;
+        overflow: hidden;
+    }
+
+    .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #333 url('/img/bg1.jpg') no-repeat center center;
+        background-size: cover;
+        z-index: -1;
+    }
+
+    .glass-container {
+        box-sizing: border-box;
+        margin: 60px auto;
+        padding: 20px;
+        width: calc(100% - 120px);
+        max-height: calc(100vh - 120px);
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(12px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 0 5px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        padding: 4px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 13px;
+        width: 200px;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    }
+
+    .header h1 {
+        color: #fff;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .update-time {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .refresh-btn {
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        font-size: 13px;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        transition: transform 0.2s ease;
+    }
+
+    .refresh-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .scrollable-content {
+        overflow-y: auto;
+        flex: 1;
+        position: relative;
+        height: calc(100vh - 250px); /* 设置固定高度 */
+    }
+
+    .process-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        font-size: 13px;
+        table-layout: fixed;
+        contain: content;
+    }
+
+    .process-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .process-table th {
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        white-space: nowrap;
+        position: relative;
+    }
+
+    .process-table th:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        cursor: col-resize;
+        background: transparent;
+    }
+
+    .process-table th:not(:last-child):hover::after {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .process-table th.resizing::after {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .process-table td {
+        padding: 6px 10px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        contain: content; /* 隔离内容 */
+    }
+
+    /* 设置默认列宽 */
+    .process-table th:nth-child(1) { width: 40%; } /* 进程名称 */
+    .process-table th:nth-child(2) { width: 20%; } /* PID */
+    .process-table th:nth-child(3) { width: 25%; } /* 状态 */
+    .process-table th:nth-child(4) { width: 15%; } /* 操作 */
+
+    /* 自定义滚动条样式 */
+    .scrollable-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scrollable-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+    }
+
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* 拖动把手样式 */
+    .column-resizer {
+        position: absolute;
+        top: 0;
+        right: -4px;
+        width: 8px;
+        height: 100%;
+        cursor: col-resize;
+        z-index: 3;
+    }
+
+    .column-resizer:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* 排序容器样式 */
+    .sort-container {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 4px 8px;
+    }
+
+    .sort-container:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* 排序图标样式 */
+    .sort-icon {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        margin-left: 5px;
+        vertical-align: middle;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+    }
+
+    .sort-container.active .sort-icon.sort-asc {
+        border-bottom: 4px solid #fff;
+    }
+
+    .sort-container.active .sort-icon.sort-desc {
+        border-top: 4px solid #fff;
+    }
+
+    /* 拖动指示器 */
+    .resize-indicator {
+        position: fixed; /* 改用fixed定位减少重排 */
+        top: 0;
+        width: 2px;
+        height: 100vh; /* 使用视口高度 */
+        background: rgba(255, 255, 255, 0.5);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateX(-50%); /* 使用transform代替left */
+        contain: strict; /* 完全隔离 */
+        will-change: transform; /* 创建独立的合成层 */
+    }
+
+    /* 拖动时的视觉反馈 */
+    .resizing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        cursor: col-resize;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .glass-container {
+            margin: 20px auto;
+            padding: 15px;
+            width: calc(100% - 40px);
+            max-height: calc(100vh - 40px);
+        }
+    }
+</style>
+
+<body>
+<div class="background-image"></div>
+
+<div th:replace="~{/components/com-top-nav}"></div>
+
+<div class="glass-container">
+    <div class="header">
+        <div class="header-left">
+            <h1>任务管理器</h1>
+            <div class="search-box">
+                <input type="text" class="search-input" id="processSearch" 
+                       placeholder="搜索进程..." autocomplete="off">
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="update-time">刚刚更新</span>
+            <button class="refresh-btn" onclick="window.manualRefresh()">刷新</button>
+        </div>
+    </div>
+    <div class="scrollable-content">
+        <table class="process-table">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="sort-container" data-column="name">
+                            进程名称 <span class="sort-icon"></span>
+                        </div>
+                        <div class="column-resizer"></div>
+                    </th>
+                    <th>
+                        <div class="sort-container" data-column="pid">
+                            PID <span class="sort-icon"></span>
+                        </div>
+                        <div class="column-resizer"></div>
+                    </th>
+                    <th>
+                        <div class="sort-container" data-column="status">
+                            状态 <span class="sort-icon"></span>
+                        </div>
+                        <div class="column-resizer"></div>
+                    </th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="processTableBody">
+                <tr th:each="process : ${processes}">
+                    <td th:text="${process.name}">explorer.exe</td>
+                    <td th:text="${process.pid}">1234</td>
+                    <td th:text="${process.status}">运行中</td>
+                    <td>
+                        <button onclick="terminateProcess(this)" th:data-pid="${process.pid}"
+                                style="background: none; border: none; color: #ff4444; cursor: pointer;">终止</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="~{/components/com-toasts}"></div>
+
+<script>
+$(document).ready(function() {
+    let currentSortColumn = 'name';
+    let isAscending = true;
+    let isAutoRefresh = true;
+    let searchTimeout;
+    let currentProcesses = [];
+    let isResizing = false;
+    let currentResizer = null;
+    let startX = 0;
+    let startWidth = 0;
+    let lastUpdateTime = Date.now();
+
+    // 节流函数
+    function throttle(func, limit) {
+        let inThrottle;
+        return function(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
+    }
+
+    // 防抖函数
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        }
+    }
+
+    // 更新时间显示
+    function updateTimeDisplay() {
+        const now = Date.now();
+        const diff = Math.floor((now - lastUpdateTime) / 1000);
+        let timeText;
+
+        if (diff < 1) {
+            timeText = '刚刚更新';
+        } else if (diff < 60) {
+            timeText = `${diff}秒前更新`;
+        } else if (diff < 3600) {
+            timeText = `${Math.floor(diff / 60)}分钟前更新`;
+        } else {
+            timeText = `${Math.floor(diff / 3600)}小时前更新`;
+        }
+
+        $('.update-time').text(timeText);
+    }
+
+    // 定时更新时间显示
+    setInterval(updateTimeDisplay, 1000);
+
+    // 进程列表刷新函数
+    function refreshProcessList(isManualRefresh = false) {
+        const searchTerm = $('#processSearch').val().trim();
+        $.get('/ssr/getProcessList', { keyword: searchTerm }, function(response) {
+            if (response.code === 0) {
+                currentProcesses = response.data;
+                updateProcessTable();
+                lastUpdateTime = Date.now();
+                updateTimeDisplay();
+                if (isManualRefresh) {
+                    showToast('success', '进程列表已更新');
+                }
+            } else {
+                showToast('danger', '更新失败：' + response.message);
+            }
+        });
+    }
+
+    // 表格更新函数
+    function updateProcessTable() {
+        const tbody = $('#processTableBody');
+        const sortedProcesses = sortProcesses(currentProcesses);
+        
+        // 使用文档片段优化DOM操作
+        const fragment = document.createDocumentFragment();
+        sortedProcesses.forEach(process => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${process.name || 'N/A'}</td>
+                <td>${process.pid || 'N/A'}</td>
+                <td>${process.status || 'N/A'}</td>
+                <td>
+                    <button onclick="terminateProcess(this)" data-pid="${process.pid}"
+                            style="background: none; border: none; color: #ff4444; cursor: pointer;">终止</button>
+                </td>
+            `;
+            fragment.appendChild(tr);
+        });
+
+        tbody.empty().append(fragment);
+        updateSortIcons();
+    }
+
+    // 排序函数
+    function sortProcesses(processes) {
+        if (!Array.isArray(processes)) return [];
+        
+        return [...processes].sort((a, b) => {
+            let aValue = a[currentSortColumn];
+            let bValue = b[currentSortColumn];
+            
+            if (!aValue) return isAscending ? 1 : -1;
+            if (!bValue) return isAscending ? -1 : 1;
+            
+            if (currentSortColumn === 'pid') {
+                return (aValue - bValue) * (isAscending ? 1 : -1);
+            }
+            
+            return String(aValue).localeCompare(String(bValue)) * (isAscending ? 1 : -1);
+        });
+    }
+
+    // 更新排序图标
+    function updateSortIcons() {
+        $('.sort-container').removeClass('active');
+        $('.sort-icon').removeClass('sort-asc sort-desc');
+        
+        const currentHeader = $(`.sort-container[data-column="${currentSortColumn}"]`);
+        currentHeader.addClass('active');
+        currentHeader.find('.sort-icon').addClass(isAscending ? 'sort-asc' : 'sort-desc');
+    }
+
+    // 列宽调整相关事件
+    $('.column-resizer').on('mousedown', function(e) {
+        isResizing = true;
+        currentResizer = this;
+        const th = $(this).closest('th');
+        startX = e.pageX;
+        startWidth = th.width();
+        
+        $('body').css('user-select', 'none');
+        e.preventDefault();
+    });
+
+    $(document).on('mousemove', throttle(function(e) {
+        if (!isResizing) return;
+
+        const th = $(currentResizer).closest('th');
+        const width = Math.max(50, startWidth + (e.pageX - startX));
+        
+        requestAnimationFrame(() => {
+            const index = th.index() + 1;
+            $(`.process-table th:nth-child(${index})`).width(width);
+            $(`.process-table td:nth-child(${index})`).width(width);
+        });
+    }, 16));
+
+    $(document).on('mouseup', function() {
+        if (isResizing) {
+            isResizing = false;
+            currentResizer = null;
+            $('body').css('user-select', '');
+        }
+    });
+
+    // 排序事件
+    $('.sort-container').on('click', function() {
+        if (isResizing) return;
+        
+        const column = $(this).data('column');
+        if (currentSortColumn === column) {
+            isAscending = !isAscending;
+        } else {
+            currentSortColumn = column;
+            isAscending = true;
+        }
+        
+        updateProcessTable();
+    });
+
+    // 搜索框输入事件
+    $('#processSearch').on('input', debounce(() => refreshProcessList(false), 300));
+
+    // 自动刷新
+    setInterval(() => {
+        if (isAutoRefresh && !isResizing) {
+            refreshProcessList(false);
+        }
+    }, 5000);
+
+    // 暴露刷新函数到全局
+    window.manualRefresh = function() {
+        refreshProcessList(true);
+    };
+
+    // 修复全局刷新函数
+    window.refreshProcessList = function(isManualRefresh) {
+        refreshProcessList(isManualRefresh);
+    };
+
+    // 初始化
+    refreshProcessList();
+});
+
+// 全局函数
+window.terminateProcess = function(button) {
+    const pid = $(button).data('pid');
+    if (confirm('确定要终止此进程吗？')) {
+        $.ajax({
+            url: '/ssr/terminateProcess',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ pid: pid }),
+            success: function(response) {
+                if (response.code === 0) {
+                    showToast('success', '进程已终止');
+                    refreshProcessList(false);
+                } else {
+                    showToast('danger', '终止失败：' + response.message);
+                }
+            },
+            error: function(xhr) {
+                showToast('danger', '终止失败：' + (xhr.responseJSON?.message || '未知错误'));
+            }
+        });
+    }
+}
+</script>
+
+</body>
+</html> 

@@ -45,6 +45,11 @@ public class Router {
         return "forward:/ssr/appCenter";
     }
 
+    @GetMapping("/taskManager")
+    public String taskManager() {
+        return "task-manager";
+    }
+
     @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){
