@@ -54,6 +54,14 @@
   .search-box {
     display: flex;
     align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .search-box form {
+    display: flex;
+    width: 100%;
+    gap: 10px;
   }
 
   .search-box input {
@@ -62,7 +70,7 @@
     border: none;
     border-radius: 5px;
     background-color: rgba(255, 255, 255, 0.5);
-    margin-right: 10px;
+    width: 100%;
   }
 
   .search-box button {
@@ -116,29 +124,47 @@
     display: flex;
     gap: 20px;
     flex-wrap: wrap;  /* 多个应用自动换行 */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  /* 添加淡出动画的类 */
+  .app-icons.fade-out {
+    opacity: 0;
+  }
+
+  /* 添加淡入动画的类 */
+  .app-icons.fade-in {
+    opacity: 1;
   }
 
   .app-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 80px; /* 固定宽度，便于排版 */
-    /* 使用线性渐变背景实现 AERO 效果，并降低背景透明度 */
+    width: 80px;
     background: radial-gradient(rgb(205 205 205 / 10%), rgb(255 255 255 / 0%));
-    border: 1px solid rgb(255 255 255 / 11%); /* 添加白色边框，强化玻璃效果 */
-    border-radius: 10px; /* 边角圆润 */
-    padding: 10px; /* 内边距，可根据实际效果调整 */
-    -webkit-backdrop-filter: blur(8px); /* 兼容 webkit 内核浏览器 */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 添加阴影增强 AERO 效果 */
-    position: relative; /* 用于水波效果和定位 */
-    overflow: hidden;   /* 防止水波溢出 */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgb(255 255 255 / 11%);
+    border-radius: 10px;
+    padding: 10px;
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform: scale(1);
-    transform-origin: center center; /* 从中心缩放, 避免放大时推移布局 */
+    transform-origin: center center;
     user-select: none !important;
     -webkit-user-select: none !important;
     -moz-user-select: none !important;
     -ms-user-select: none !important;
+  }
+
+  /* 添加点击反馈动画的类 */
+  .app-icon.launching {
+    background: radial-gradient(rgb(79 172 254 / 30%), rgb(0 255 184 / 20%));
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .app-icon:hover {
@@ -180,6 +206,7 @@
     cursor: pointer;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    white-space: nowrap;
   }
 
   .new-app-btn:hover {
@@ -245,8 +272,10 @@
   <div class="app-count">全部应用(<span id="appCount" th:text="${data.appCount}"></span>)</div>
   <div class="header">
     <div class="search-box">
-      <input type="text" placeholder="过滤器表达式">
-      <button class="new-app-btn" onclick="openCreateAppModal()">新应用</button>
+      <form id="searchForm" th:action="@{/ssr/appCenter}" method="get">
+        <input type="text" name="keyword" th:value="${param.keyword}" placeholder="过滤器表达式" autocomplete="off">
+        <button type="button" class="new-app-btn" onclick="openCreateAppModal()">新应用</button>
+      </form>
     </div>
   </div>
   <div class="scrollable-content">
@@ -289,11 +318,35 @@
   }
 
   $(document).ready(function() {
-    // 为所有 app-icon 添加指针样式
-    $('.app-icon').css('cursor', 'pointer');
+    // 自动聚焦到搜索框，并将光标移到末尾
+    const $searchInput = $('input[name="keyword"]');
+    $searchInput.focus();
+    const len = $searchInput.val().length;
+    $searchInput[0].setSelectionRange(len, len);
     
-    // 右键点击 app-icon 时触发水波效果和右键菜单
-    $('.app-icon').on('contextmenu', function(event) {
+    // 添加全局键盘事件监听
+    $(document).on('keydown', function(e) {
+        // 如果当前焦点已经在搜索框，或者正在输入框/文本框中，则不处理
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        // 忽略功能键（如Ctrl、Alt等）和特殊键（如F1-F12等）
+        if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) {
+            return;
+        }
+        
+        // 将焦点设置到搜索框
+        $searchInput.focus();
+    });
+    
+    // 为所有 app-icon 添加指针样式（使用事件委托）
+    $(document).on('mouseover', '.app-icon', function() {
+        $(this).css('cursor', 'pointer');
+    });
+    
+    // 使用事件委托绑定右键点击事件
+    $(document).on('contextmenu', '.app-icon', function(event) {
       // 阻止默认右键菜单和事件冒泡
       event.preventDefault();
       event.stopPropagation();
@@ -321,9 +374,116 @@
       }, 600);
 
       // 获取当前应用名称（假设存放在内部 <span> 中）及应用ID
-      var appName = $icon.find('span').text();
+      var appName = $icon.find('span:not(.app-kind-tag)').first().text();
       var appId = $icon.data("app-id");
       openAppContextMenu(event, appName, appId);
+    });
+
+    // 监听输入框变化，延迟 300ms 后自动提交表单
+    let searchTimer;
+    $('input[name="keyword"]').on('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            const $form = $('#searchForm');
+            const url = $form.attr('action');
+            const keyword = $form.find('input[name="keyword"]').val();
+
+            // 先添加淡出动画
+            $('.app-icons').addClass('fade-out');
+
+            // 等待淡出动画完成后再请求新数据
+            setTimeout(() => {
+                // 使用 AJAX 获取搜索结果
+                $.get(url, { keyword: keyword }, function(response) {
+                    // 从返回的 HTML 中提取需要的部分
+                    const $content = $(response);
+                    const $newIcons = $content.find('.app-icons');
+                    
+                    // 确保新内容初始时是透明的
+                    $newIcons.addClass('fade-out');
+                    $('.app-icons').replaceWith($newIcons);
+                    $('#appCount').text($content.find('#appCount').text());
+                    
+                    // 更新浏览器地址栏，但不触发页面刷新
+                    const newUrl = url + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
+                    window.history.pushState({}, '', newUrl);
+
+                    // 触发重排后添加淡入动画
+                    requestAnimationFrame(() => {
+                        $newIcons.removeClass('fade-out');
+                    });
+                });
+            }, 300);
+        }, 300);
+    });
+
+    // 处理浏览器前进/后退按钮
+    window.onpopstate = function(event) {
+        // 从 URL 中获取关键字
+        const urlParams = new URLSearchParams(window.location.search);
+        const keyword = urlParams.get('keyword') || '';
+        
+        // 更新搜索框的值
+        $('input[name="keyword"]').val(keyword);
+        
+        // 添加淡出动画
+        $('.app-icons').addClass('fade-out');
+        
+        // 等待淡出动画完成后再请求新数据
+        setTimeout(() => {
+            // 触发搜索
+            $.get($('#searchForm').attr('action'), { keyword: keyword }, function(response) {
+                const $content = $(response);
+                const $newIcons = $content.find('.app-icons');
+                
+                // 确保新内容初始时是透明的
+                $newIcons.addClass('fade-out');
+                $('.app-icons').replaceWith($newIcons);
+                $('#appCount').text($content.find('#appCount').text());
+                
+                // 触发重排后添加淡入动画
+                requestAnimationFrame(() => {
+                    $newIcons.removeClass('fade-out');
+                });
+            });
+        }, 300);
+    };
+
+    // 修改双击处理部分
+    $(document).on('dblclick', '.app-icon', function(event) {
+      const $icon = $(this);
+      const appId = $icon.data('app-id');
+
+      // 添加启动动画效果
+      $icon.addClass('launching');
+
+      // 调用启动接口
+      $.ajax({
+          url: '/ssr/runApp',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ appId: appId }),
+          success: function(response) {
+              if (response.code === 0) {
+                  showToast('success', response.message);
+              } else {
+                  showToast('danger', response.message);
+              }
+          },
+          error: function(xhr) {
+              let msg = '启动应用失败';
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                  msg = xhr.responseJSON.message;
+              }
+              showToast('danger', msg);
+          },
+          complete: function() {
+              // 移除启动动画效果
+              setTimeout(() => {
+                  $icon.removeClass('launching');
+              }, 500); // 增加延迟时间以确保动画效果完整显示
+          }
+      });
     });
   });
 </script>

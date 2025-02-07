@@ -43,15 +43,23 @@ public class AppCenterController {
     private AppService appService;
 
     @GetMapping("/appCenter")
-    public ModelAndView appCenter(HttpServletRequest hsr) {
+    public ModelAndView appCenter(HttpServletRequest hsr, @RequestParam(value = "keyword", required = false) String keyword) {
         UserPo userPo = authService.verifyUser(hsr);
         ModelAndView mav = new ModelAndView("app-center");
 
         var data = new HashMap<String,Object>();
-        data.put("appCount",appService.getAppCountByUser(userPo));
-
-        List<AppItemVo> appList = as(appService.getAppListByUserId(userPo.getId()),AppItemVo.class);
-        data.put("appList", appList);
+        List<AppPo> appList;
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 如果有关键字，执行搜索
+            appList = appService.searchApps(userPo.getId(), keyword.trim());
+        } else {
+            // 否则获取所有应用
+            appList = appService.getAppListByUserId(userPo.getId());
+        }
+        
+        data.put("appCount", appList.size());
+        data.put("appList", as(appList, AppItemVo.class));
 
         mav.addObject("data", data);
         return mav;

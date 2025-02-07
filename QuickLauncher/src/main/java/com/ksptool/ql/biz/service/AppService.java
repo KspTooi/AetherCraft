@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.ksptool.entities.Entities.assign;
 
@@ -139,5 +140,25 @@ public class AppService {
         app.setUpdateTime(new Date());
         
         return appRepository.save(app);
+    }
+
+    // 根据关键字搜索应用
+    public List<AppPo> searchApps(Long userId, String keyword) {
+        AppPo query = new AppPo();
+        query.setUserId(userId);
+        Example<AppPo> example = Example.of(query);
+        
+        // 获取所有用户的应用，然后在内存中过滤
+        return appRepository.findAll(example, Sort.by(Sort.Direction.DESC, "updateTime"))
+                .stream()
+                .filter(app -> matchesKeyword(app, keyword))
+                .collect(Collectors.toList());
+    }
+
+    // 检查应用是否匹配关键字
+    private boolean matchesKeyword(AppPo app, String keyword) {
+        keyword = keyword.toLowerCase();
+        return app.getName().toLowerCase().contains(keyword) ||
+               app.getExecPath().toLowerCase().contains(keyword);
     }
 }

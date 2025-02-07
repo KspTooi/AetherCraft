@@ -117,63 +117,23 @@
 <body class="page">
     <div class="login-box">
         <h2 class="login-box__header">Oxygen Launcher</h2>
-        <div class="input-group">
-            <label class="input-group__label" for="username">账户:</label>
-            <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入账户">
-        </div>
-        <div class="input-group">
-            <label class="input-group__label" for="password">密码:</label>
-            <input class="input-group__input" type="password" id="password" name="password" placeholder="请输入密码">
-        </div>
-        <button class="btn" type="submit">继续</button>
+        <form action="/login" method="post">
+            <div class="input-group">
+                <label class="input-group__label" for="username">账户:</label>
+                <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入账户" required>
+            </div>
+            <div class="input-group">
+                <label class="input-group__label" for="password">密码:</label>
+                <input class="input-group__input" type="password" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
+            </div>
+            <button class="btn" type="submit">继续</button>
+        </form>
     </div>
 
 </body>
 
 <div th:replace="/components/com-scripts"></div>
-
-<script>
-    $(document).ready(function() {
-        $('.btn').click(async function() {
-            // 表单校验
-            var username = $('#username').val();
-            var password = $('#password').val();
-
-            if (username === '' || password === '') {
-                alert('请输入用户名和密码');
-                return;
-            }
-
-            // 准备要发送的 JSON 数据
-            var userData = {
-                username: username,
-                password: password
-            };
-
-            try {
-                // 使用 utils.postJson 发送请求
-                const response = await utils.postJson('/login', userData);
-
-                // 处理登录成功的逻辑
-                if (response.code === 0) {
-                    // 登录成功
-                    console.log('登录成功，Token: ' + response.data.token);
-                    // 可以将 token 存储到 localStorage 或 cookie 中
-                    // localStorage.setItem('token', response.data.token);
-                    utils.setCookie('token', response.data.token, 7);
-                    // 跳转到应用中心页面
-                    window.location.href = '/appCenter';
-                } else {
-                    // 登录失败，显示错误消息
-                    alert('登录失败: ' + response.message);
-                }
-            } catch (error) {
-                // 处理登录失败的逻辑
-                console.error('登录失败: ' + error);
-                alert('登录失败，请检查网络或服务器');
-            }
-        });
-    });
-</script>
 
 </html>

@@ -9,12 +9,15 @@ import com.ksptool.ql.commons.exception.BizException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import java.util.Date;
-import java.util.UUID;
+import org.springframework.util.DigestUtils;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -121,6 +124,18 @@ public class AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new BizException("密码加密失败", e);
         }
+    }
+
+    /**
+     * 用户注销，清除数据库中的 session
+     * @param user 当前用户
+     */
+    public void logout(UserPo user) {
+        // 清除用户的 session
+        UserSessionPo query = new UserSessionPo();
+        query.setUserId(user.getId());
+        Example<UserSessionPo> example = Example.of(query);
+        userSessionRepository.deleteAll(userSessionRepository.findAll(example));
     }
 
 }

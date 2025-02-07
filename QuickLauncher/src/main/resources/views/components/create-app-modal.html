@@ -57,7 +57,21 @@
       if (window.showOpenFilePicker) {
           try {
               const [fileHandle] = await window.showOpenFilePicker();
-              $('#execPath').val(fileHandle.name);
+              const $execPath = $('#execPath');
+              const currentPath = $execPath.val().trim();
+              const fileName = fileHandle.name;
+              
+              if (currentPath) {
+                  // 如果当前路径不为空，检查是否需要添加分隔符
+                  if (!currentPath.endsWith('\\')) {
+                      $execPath.val(currentPath + '\\' + fileName);
+                  } else {
+                      $execPath.val(currentPath + fileName);
+                  }
+              } else {
+                  // 如果当前路径为空，直接设置文件名
+                  $execPath.val(fileName);
+              }
           } catch (err) {
               console.error("选择文件失败", err);
               showToast("danger", "选择文件失败");
@@ -72,7 +86,21 @@
       if (window.showDirectoryPicker) {
           try {
               const directoryHandle = await window.showDirectoryPicker();
-              $('#execPath').val(directoryHandle.name);
+              const $execPath = $('#execPath');
+              const currentPath = $execPath.val().trim();
+              const folderName = directoryHandle.name;
+              
+              if (currentPath) {
+                  // 如果当前路径不为空，检查是否需要添加分隔符
+                  if (!currentPath.endsWith('\\')) {
+                      $execPath.val(currentPath + '\\' + folderName + '\\');
+                  } else {
+                      $execPath.val(currentPath + folderName + '\\');
+                  }
+              } else {
+                  // 如果当前路径为空，直接设置文件夹名并添加分隔符
+                  $execPath.val(folderName + '\\');
+              }
           } catch (err) {
               console.error("选择文件夹失败", err);
               showToast("danger", "选择文件夹失败");
