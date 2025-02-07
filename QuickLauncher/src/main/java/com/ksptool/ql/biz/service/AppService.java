@@ -12,6 +12,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -52,9 +53,30 @@ public class AppService {
         return count > 0;
     }
 
+    // 根据文件路径判断应用类型
+    private String determineAppKind(String execPath) {
+        File file = new File(execPath);
+        
+        // 检查是否为文件夹
+        if (file.isDirectory()) {
+            return "F";
+        }
+        
+        // 获取文件名
+        String fileName = file.getName();
+        int lastDotIndex = fileName.lastIndexOf('.');
+        
+        // 如果没有后缀名
+        if (lastDotIndex == -1) {
+            return "未知";
+        }
+        
+        // 返回大写的后缀名
+        return fileName.substring(lastDotIndex + 1).toUpperCase();
+    }
+
     // 创建新的应用
     public AppPo createApp(UserPo user, CreateAppDto dto) throws BizException {
-
         AppPo query = new AppPo();
         query.setUserId(user.getId());
         query.setName(dto.getName());
@@ -66,8 +88,9 @@ public class AppService {
         AppPo app = new AppPo();
         app.setUserId(user.getId());
         app.setName(dto.getName());
-        app.setKind(dto.getKind());
         app.setExecPath(dto.getExecPath());
+        // 自动判断应用类型
+        app.setKind(determineAppKind(dto.getExecPath()));
         app.setLaunchCount(0);
         Date now = new Date();
         app.setCreateTime(now);
@@ -91,9 +114,10 @@ public class AppService {
         }
         AppPo app = appOpt.get();
 
-        // 判断应用类型，0 表示 EXE 才支持启动
-        if (app.getKind() != 0 && app.getKind() != 1) {
-            throw new BizException("仅支持EXE和BAT类型应用启动");
+        // 检查文件路径是否存在
+        File file = new File(app.getExecPath());
+        if (!file.exists()) {
+            throw new BizException("应用路径不存在: " + app.getExecPath());
         }
 
         try {
@@ -138,6 +162,8 @@ public class AppService {
         }
 
         assign(dto, app);
+        // 自动判断应用类型
+        app.setKind(determineAppKind(dto.getExecPath()));
         app.setUpdateTime(new Date());
         
         return appRepository.save(app);

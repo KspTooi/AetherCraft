@@ -23,9 +23,9 @@ public class AppPo {
     @Comment("应用名称")
     private String name;
 
-    @Column(nullable = false, length = 100)
-    @Comment("应用类型 0:EXE 1:BAT")
-    private Integer kind;
+    @Column(nullable = false, length = 20)
+    @Comment("应用类型，如：EXE/BAT/F(文件夹)/未知")
+    private String kind;
 
     @Column(length = 255)
     @Comment("应用描述")

@@ -6,7 +6,9 @@ import lombok.Data;
 public class GetAppDetailsVo {
     private Long id;
     private String name;
-    private Integer kind;
+    private String kind;
     private String execPath;
+    private String iconPath;
+    private String description;
     private Integer launchCount;
 } 

@@ -6,15 +6,17 @@ import lombok.Data;
 
 @Data
 public class EditAppDto {
-    @NotNull
+    @NotNull(message = "应用ID不能为空")
     private Long id;
 
-    @NotBlank
+    @NotBlank(message = "应用名称不能为空")
     private String name;
 
     @NotNull
     private Integer kind;
 
-    @NotBlank
+    @NotBlank(message = "程序路径不能为空")
     private String execPath;
+
+    private String description;
 } 

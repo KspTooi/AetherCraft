@@ -244,8 +244,8 @@
     border-radius: 3px !important;
     line-height: 1 !important;
     z-index: 9999 !important;
-    /* 默认背景色 */
-    background-color: rgba(0, 0, 0, 0.5) !important;
+    /* 默认背景色（灰色，用于"未知"类型） */
+    background-color: rgba(128, 128, 128, 0.7) !important;
   }
   
   /* EXE 类型 tag 的背景颜色 */
@@ -255,7 +255,17 @@
   
   /* BAT 类型 tag 的背景颜色 */
   .bat-tag {
-      background-color: #ff8d008a !important /* 红色 */
+      background-color: #ff8d008a !important; /* 橙色 */
+  }
+
+  /* 文件夹类型 tag 的背景颜色 */
+  .f-tag {
+      background-color: #ffd70080 !important; /* 金色 */
+  }
+
+  /* 其他类型 tag 的背景颜色 */
+  .other-tag {
+      background-color: #4a90e2aa !important; /* 蓝色 */
   }
 
   /* 后续可能还有其他响应式或状态样式 ... */
@@ -285,8 +295,13 @@
         <span th:text="${app.name}">应用名称</span>
         <!-- 根据 app.kind 添加不同的背景颜色 -->
         <span class="app-kind-tag"
-              th:text="${app.kind == 0 ? 'EXE' : 'BAT'}"
-              th:classappend="${app.kind == 0 ? ' exe-tag' : ' bat-tag'}"
+              th:text="${app.kind}"
+              th:classappend="${
+                app.kind == 'EXE' ? ' exe-tag' : 
+                app.kind == 'BAT' ? ' bat-tag' : 
+                app.kind == 'F' ? ' f-tag' : 
+                app.kind == '未知' ? '' : ' other-tag'
+              }"
         >
         </span>
       </div>
