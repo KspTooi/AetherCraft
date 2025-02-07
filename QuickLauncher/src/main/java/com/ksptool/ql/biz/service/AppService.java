@@ -27,8 +27,6 @@ public class AppService {
     private AppRepository appRepository;
 
 
-
-
     public List<AppPo> getAppListByUserId(long userId) {
         AppPo query = new AppPo();
         query.setUserId(userId);
@@ -94,13 +92,16 @@ public class AppService {
         AppPo app = appOpt.get();
 
         // 判断应用类型，0 表示 EXE 才支持启动
-        if (app.getKind() != 0) {
-            throw new BizException("仅支持EXE类型应用启动");
+        if (app.getKind() != 0 && app.getKind() != 1) {
+            throw new BizException("仅支持EXE和BAT类型应用启动");
         }
 
         try {
-            // 调用 Java Runtime 执行应用
-            Process process = Runtime.getRuntime().exec(app.getExecPath());
+            // 统一使用explorer启动所有应用
+            String[] command = {"explorer", app.getExecPath()};
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
 
             // 更新应用启动信息
             Integer launchCount = app.getLaunchCount();
