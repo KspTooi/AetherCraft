@@ -12,8 +12,7 @@ public class EditAppDto {
     @NotBlank(message = "应用名称不能为空")
     private String name;
 
-    @NotNull
-    private Integer kind;
+    private String kind;
 
     @NotBlank(message = "程序路径不能为空")
     private String execPath;

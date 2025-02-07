@@ -18,14 +18,9 @@
               </div>
             </div>
             <div class="mb-3">
-              <label for="kind" class="form-label">应用类型</label>
-              <select class="form-select" id="kind" name="kind" required>
-                <option value="0" selected>EXE</option>
-                <option value="1">BAT</option>
-              </select>
-              <div class="invalid-feedback">
-                请选择应用类型
-              </div>
+              <label for="kind" class="form-label">应用类型（可选，留空则自动推断）</label>
+              <input type="text" class="form-control" id="kind" name="kind" placeholder="留空则自动推断">
+              <div class="form-text">常见类型：EXE、BAT、文件夹等，不填写则根据文件后缀自动推断</div>
             </div>
             <div class="mb-3">
               <label for="execPath" class="form-label">程序路径</label>

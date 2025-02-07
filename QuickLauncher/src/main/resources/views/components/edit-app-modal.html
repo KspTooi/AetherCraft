@@ -15,11 +15,9 @@
               <input type="text" class="form-control" id="editName" name="name" placeholder="请输入应用名称" required>
             </div>
             <div class="mb-3">
-              <label for="editKind" class="form-label">应用类型</label>
-              <select class="form-select" id="editKind" name="kind" required>
-                <option value="0">EXE</option>
-                <option value="1">BAT</option>
-              </select>
+              <label for="editKind" class="form-label">应用类型（可选，留空则自动推断）</label>
+              <input type="text" class="form-control" id="editKind" name="kind" placeholder="留空则自动推断">
+              <div class="form-text">常见类型：EXE、BAT、文件夹等，不填写则根据文件后缀自动推断</div>
             </div>
             <div class="mb-3">
               <label for="editExecPath" class="form-label">程序路径</label>

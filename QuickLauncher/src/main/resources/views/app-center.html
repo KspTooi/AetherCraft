@@ -259,7 +259,7 @@
   }
 
   /* 文件夹类型 tag 的背景颜色 */
-  .f-tag {
+  .folder-tag {
       background-color: #ffd70080 !important; /* 金色 */
   }
 
@@ -299,7 +299,7 @@
               th:classappend="${
                 app.kind == 'EXE' ? ' exe-tag' : 
                 app.kind == 'BAT' ? ' bat-tag' : 
-                app.kind == 'F' ? ' f-tag' : 
+                app.kind == '文件夹' ? ' folder-tag' : 
                 app.kind == '未知' ? '' : ' other-tag'
               }"
         >

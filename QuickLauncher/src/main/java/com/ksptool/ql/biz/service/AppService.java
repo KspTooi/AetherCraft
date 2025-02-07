@@ -59,7 +59,7 @@ public class AppService {
         
         // 检查是否为文件夹
         if (file.isDirectory()) {
-            return "F";
+            return "文件夹";
         }
         
         // 获取文件名
@@ -89,8 +89,11 @@ public class AppService {
         app.setUserId(user.getId());
         app.setName(dto.getName());
         app.setExecPath(dto.getExecPath());
-        // 自动判断应用类型
-        app.setKind(determineAppKind(dto.getExecPath()));
+        app.setDescription(dto.getDescription());
+        // 如果用户指定了类型就使用用户指定的，否则自动推断
+        app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
+            ? dto.getKind().trim() 
+            : determineAppKind(dto.getExecPath()));
         app.setLaunchCount(0);
         Date now = new Date();
         app.setCreateTime(now);
@@ -162,8 +165,10 @@ public class AppService {
         }
 
         assign(dto, app);
-        // 自动判断应用类型
-        app.setKind(determineAppKind(dto.getExecPath()));
+        // 如果用户指定了类型就使用用户指定的，否则自动推断
+        app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
+            ? dto.getKind().trim() 
+            : determineAppKind(dto.getExecPath()));
         app.setUpdateTime(new Date());
         
         return appRepository.save(app);
