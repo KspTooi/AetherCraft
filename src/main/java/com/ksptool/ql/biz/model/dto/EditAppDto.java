@@ -17,5 +17,7 @@ public class EditAppDto {
     @NotBlank(message = "程序路径不能为空")
     private String execPath;
 
+    private String command; //快捷启动命令
+
     private String description;
 } 

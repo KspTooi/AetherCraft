@@ -77,6 +77,7 @@ public class AppService {
 
     // 创建新的应用
     public AppPo createApp(UserPo user, CreateAppDto dto) throws BizException {
+        // 检查应用名称是否重复
         AppPo query = new AppPo();
         query.setUserId(user.getId());
         query.setName(dto.getName());
@@ -85,11 +86,21 @@ public class AppService {
             throw new BizException("应用名称已存在，请使用其他名称 " + dto.getName());
         }
 
+        // 如果指定了command,检查是否重复
+        if(dto.getCommand() != null && !dto.getCommand().trim().isEmpty()) {
+            AppPo commandQuery = new AppPo();
+            commandQuery.setCommand(dto.getCommand().trim());
+            if(appRepository.count(Example.of(commandQuery)) > 0) {
+                throw new BizException("快捷启动命令已存在，请使用其他命令: " + dto.getCommand());
+            }
+        }
+
         AppPo app = new AppPo();
         app.setUserId(user.getId());
         app.setName(dto.getName());
         app.setExecPath(dto.getExecPath());
         app.setDescription(dto.getDescription());
+        app.setCommand(dto.getCommand() != null ? dto.getCommand().trim() : null);
         // 如果用户指定了类型就使用用户指定的，否则自动推断
         app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
             ? dto.getKind().trim() 
@@ -164,7 +175,18 @@ public class AppService {
             throw new BizException("应用名称已存在，请使用其他名称: " + dto.getName());
         }
 
+        // 检查新command是否与其他应用重复
+        String newCommand = dto.getCommand() != null ? dto.getCommand().trim() : null;
+        if (newCommand != null && !newCommand.equals(app.getCommand())) {
+            AppPo commandQuery = new AppPo();
+            commandQuery.setCommand(newCommand);
+            if(appRepository.count(Example.of(commandQuery)) > 0) {
+                throw new BizException("快捷启动命令已存在，请使用其他命令: " + newCommand);
+            }
+        }
+
         assign(dto, app);
+        app.setCommand(newCommand);
         // 如果用户指定了类型就使用用户指定的，否则自动推断
         app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
             ? dto.getKind().trim() 

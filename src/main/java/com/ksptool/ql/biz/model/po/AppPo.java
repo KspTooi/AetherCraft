@@ -39,6 +39,10 @@ public class AppPo {
     @Comment("图标路径")
     private String iconPath;
 
+    @Column(length = 50, unique = true)
+    @Comment("快捷启动命令")
+    private String command;
+
     @Comment("运行次数")
     private Integer launchCount;
 

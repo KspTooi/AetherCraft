@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>文件浏览器 - Quick Launcher</title>
+    
+    <div th:replace="~{/components/com-styles}"></div>
+    <div th:replace="~{/components/com-scripts}"></div>
+    <div th:replace="~{/components/com-toasts}"></div>
+
+    <style>
+        /* 全局样式 */
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #333 url('/img/bg1.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        /* 文件浏览器容器 */
+        .file-explorer-wrapper {
+            position: fixed;
+            top: 56px; /* 导航栏高度 */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 主容器样式 */
+        .file-explorer-wrapper .container-fluid {
+            box-sizing: border-box;
+            margin: 8px;
+            padding: 12px;
+            flex: 1;
+            min-height: 0;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 面包屑和路径区域 */
+        .file-explorer-wrapper .breadcrumb,
+        .file-explorer-wrapper .alert-light {
+            flex-shrink: 0;
+            margin-bottom: 8px;
+        }
+
+        /* 面包屑导航 */
+        .file-explorer-wrapper .breadcrumb {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .file-explorer-wrapper .breadcrumb-item a {
+            text-decoration: none;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+
+        .file-explorer-wrapper .breadcrumb-item a:hover {
+            color: #4facfe;
+        }
+
+        /* 当前路径提示 */
+        .file-explorer-wrapper .alert-light {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        /* 文件列表区域 */
+        .file-explorer-wrapper .file-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            border-radius: 6px;
+        }
+
+        /* 自定义滚动条 */
+        .file-explorer-wrapper .file-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .file-explorer-wrapper .file-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .file-explorer-wrapper .file-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        .file-explorer-wrapper .file-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* 文件项样式 */
+        .file-explorer-wrapper .file-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s ease;
+            color: #fff;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .file-explorer-wrapper .file-item.directory,
+        .file-explorer-wrapper .file-item:first-child {
+            cursor: pointer;
+        }
+
+        .file-explorer-wrapper .file-item.directory:hover,
+        .file-explorer-wrapper .file-item:first-child:hover {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.15) 0%, 
+                rgba(255, 255, 255, 0.1) 100%
+            );
+        }
+
+        .file-explorer-wrapper .file-item.directory:active,
+        .file-explorer-wrapper .file-item:first-child:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-explorer-wrapper .file-item:not(.directory):not(:first-child) {
+            cursor: default;
+        }
+
+        .file-explorer-wrapper .file-item:not(.directory):not(:first-child):hover {
+            background: none;
+        }
+
+        .file-explorer-wrapper .file-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            vertical-align: middle;
+            object-fit: contain;
+        }
+
+        .file-explorer-wrapper .file-size,
+        .file-explorer-wrapper .file-time {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        /* 文件夹名称加粗显示 */
+        .file-explorer-wrapper .file-item.directory .col-5 span,
+        .file-explorer-wrapper .file-item:first-child .col-5 span {
+            font-weight: 500;
+            color: #fff;
+        }
+
+        /* 文件名称普通显示 */
+        .file-explorer-wrapper .file-item:not(.directory):not(:first-child) .col-5 span {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 文件列表卡片 */
+        .file-explorer-wrapper .card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .file-explorer-wrapper .card-header {
+            flex-shrink: 0; /* 防止头部被压缩 */
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-weight: 500;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+
+        .file-explorer-wrapper .card-body {
+            flex: 1;
+            min-height: 0; /* 关键：允许内容区域收缩 */
+            padding: 0;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .file-explorer-wrapper {
+                top: 48px;
+            }
+            .file-explorer-wrapper .container-fluid {
+                margin: 4px;
+                padding: 8px;
+            }
+            .file-explorer-wrapper .breadcrumb,
+            .file-explorer-wrapper .alert-light {
+                padding: 4px 8px;
+                margin-bottom: 4px;
+            }
+            .file-explorer-wrapper .col-5,
+            .file-explorer-wrapper .col-3,
+            .file-explorer-wrapper .col-2 {
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            .file-explorer-wrapper .file-time,
+            .file-explorer-wrapper .file-size {
+                font-size: 0.75rem;
+            }
+            .file-explorer-wrapper .file-item {
+                padding: 6px 8px;
+            }
+            .file-explorer-wrapper .card-header {
+                padding: 8px 10px;
+            }
+        }
+
+        /* 路径输入框样式 */
+        .path-input-container {
+            margin-bottom: 16px;
+        }
+
+        .path-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .path-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+        }
+
+        .path-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .input-group .btn-outline-secondary {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .input-group .btn-outline-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-image"></div>
+    <div th:replace="~{/components/com-top-nav}"></div>
+
+    <div class="file-explorer-wrapper">
+        <div class="container-fluid mt-4">
+            <!-- 路径导航输入框 -->
+            <div class="path-input-container">
+                <div class="input-group">
+                    <input type="text" class="form-control path-input" id="pathInput" 
+                           th:value="${currentPath}"
+                           placeholder="请输入或选择路径">
+                    <button class="btn btn-outline-secondary" type="button" id="goButton">
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 文件列表 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-5">名称</div>
+                        <div class="col-3">修改日期</div>
+                        <div class="col-2">类型</div>
+                        <div class="col-2">大小</div>
+                    </div>
+                </div>
+                <div class="card-body file-list p-0">
+                    <!-- 返回上级目录 -->
+                    <div class="file-item" th:if="${currentPath != null && !currentPath.isEmpty()}"
+                         th:data-path="${parentPath}">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <img src="/static/img/folder.png" class="file-icon" alt="folder">
+                                <span>..</span>
+                            </div>
+                            <div class="col-3"></div>
+                            <div class="col-2">文件夹</div>
+                            <div class="col-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- 文件列表 -->
+                    <div th:each="file : ${files}" class="file-item"
+                         th:data-path="${file.path}"
+                         th:class="${'file-item' + (file.directory ? ' directory' : '')}">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <img th:src="${file.directory} ? '/static/img/folder.png' : '/static/img/file.png'" 
+                                     class="file-icon" alt="icon">
+                                <span th:text="${file.name}"></span>
+                            </div>
+                            <div class="col-3">
+                                <span class="file-time" 
+                                      th:text="${#dates.format(new java.util.Date(file.lastModified), 'yyyy-MM-dd HH:mm')}">
+                                </span>
+                            </div>
+                            <div class="col-2" th:text="${file.directory} ? '文件夹' : '文件'"></div>
+                            <div class="col-2">
+                                <span class="file-size" th:if="${!file.directory}"
+                                      th:text="${T(com.ksptool.ql.commons.utils.FileUtils).formatFileSize(file.size)}">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // 显示错误提示（如果有）
+        const error = '[[${error}]]';
+        if (error && error.trim() !== '') {
+            showToast('danger', error);
+        }
+
+        // 路径输入框处理
+        $('#pathInput').on('keypress', function(e) {
+            if (e.which === 13) { // Enter 键
+                e.preventDefault();
+                navigateToPath();
+            }
+        });
+
+        $('#goButton').on('click', function() {
+            navigateToPath();
+        });
+
+        function navigateToPath() {
+            const path = $('#pathInput').val().trim();
+            if (!path) return;
+
+            try {
+                // 使用 encodeURI 而不是 encodeURIComponent，以保留路径分隔符
+                const encodedPath = encodeURI(path).replace(/#/g, '%23');
+                window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
+            } catch (err) {
+                showToast('danger', '路径格式无效，请检查输入');
+            }
+        }
+
+        // 文件项点击事件处理
+        $('.file-item').on('click', function() {
+            const $item = $(this);
+            const path = $item.data('path');
+            // 只有文件夹和返回上级目录可以点击
+            if (path && ($item.hasClass('directory') || $item.find('span').text() === '..')) {
+                const encodedPath = encodeURI(path).replace(/#/g, '%23');
+                window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
+            }
+        });
+
+        // 添加键盘导航支持
+        $(document).keyup(function(e) {
+            if (e.key === "Backspace" && !$('#pathInput').is(':focus')) {
+                // 返回上级目录（仅在输入框未获得焦点时）
+                const $firstItem = $('.file-item:first');
+                const path = $firstItem.data('path');
+                if (path) {
+                    const encodedPath = encodeURI(path).replace(/#/g, '%23');
+                    window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
+                }
+            }
+        });
+
+        // 选中输入框时自动全选内容
+        $('#pathInput').on('focus', function() {
+            $(this).select();
+        });
+
+        // 添加鼠标悬停效果
+        $('.file-item').hover(
+            function() {
+                const $item = $(this);
+                if ($item.hasClass('directory') || $item.find('span').text() === '..') {
+                    $item.css('cursor', 'pointer');
+                }
+            },
+            function() {
+                $(this).css('cursor', '');
+            }
+        );
+    });
+    </script>
+</body>
+</html> 

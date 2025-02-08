@@ -15,6 +15,8 @@ public class CreateAppDto {
     @NotBlank(message = "程序路径不能为空")
     private String execPath; //程序路径
 
+    private String command; //快捷启动命令
+
     private String description;
 
 }

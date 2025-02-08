@@ -9,6 +9,7 @@ public class GetAppDetailsVo {
     private String kind;
     private String execPath;
     private String iconPath;
+    private String command;
     private String description;
     private Integer launchCount;
 } 
