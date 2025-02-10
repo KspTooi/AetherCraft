@@ -2,9 +2,13 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.vo.FileItemVo;
 import com.ksptool.ql.biz.model.dto.RenameFileDto;
+import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.service.FileExplorerService;
+import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.web.Result;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -18,16 +22,38 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/ssr")
+@RequiredArgsConstructor
 public class FileExplorerController {
 
-    @Autowired
-    private FileExplorerService fileExplorerService;
+    private final FileExplorerService fileExplorerService;
+    private final ConfigService configService;
+    private final AuthService authService;
+
+    private String getConfigKey(Long userId) {
+        return String.format("explorer.%d.path", userId);
+    }
 
     @GetMapping("/fileExplorer")
-    public ModelAndView fileExplorer(@RequestParam(value = "path", required = false) String path, RedirectAttributes redirectAttributes) {
+    public ModelAndView fileExplorer(@RequestParam(value = "path", required = false) String path,
+                                   HttpServletRequest request,
+                                   RedirectAttributes redirectAttributes) {
         ModelAndView mav = new ModelAndView("file-explorer");
         
         try {
+            // 获取当前用户
+            UserPo user = authService.verifyUser(request);
+            if (user == null) {
+                return new ModelAndView("redirect:/login");
+            }
+            
+            // 如果没有指定路径，尝试从配置中获取
+            if (path == null) {
+                path = configService.getConfigValue(getConfigKey(user.getId()));
+                if (path == null) {
+                    path = "@"; // 如果没有保存的路径，默认到根目录
+                }
+            }
+            
             // URL解码
             String decodedPath = path;
             if (path != null) {
@@ -45,6 +71,10 @@ public class FileExplorerController {
                 mav.addObject("parentPath", "");
                 mav.addObject("files", files);
                 mav.addObject("breadcrumbs", List.of(new FileItemVo("计算机", "@", 0)));
+                
+                // 保存当前路径到配置
+                configService.setConfigValue(getConfigKey(user.getId()), "@");
+                
                 return mav;
             }
             
@@ -76,6 +106,9 @@ public class FileExplorerController {
             // 获取父目录路径
             String parentPath = fileExplorerService.getParentPath(currentPath);
             
+            // 保存当前路径到配置
+            configService.setConfigValue(getConfigKey(user.getId()), currentPath);
+            
             mav.addObject("currentPath", currentPath);
             mav.addObject("parentPath", parentPath);
             mav.addObject("files", files);
@@ -84,13 +117,11 @@ public class FileExplorerController {
         } catch (Exception e) {
             // 发生异常时重定向到用户主目录
             String userHome = System.getProperty("user.home");
-            // 对重定向路径进行编码
             try {
                 String encodedPath = UriUtils.encodePath(userHome, StandardCharsets.UTF_8.name());
                 redirectAttributes.addFlashAttribute("error", "访问路径时发生错误：" + e.getMessage());
                 return new ModelAndView("redirect:/ssr/fileExplorer?path=" + encodedPath);
             } catch (Exception ex) {
-                // 如果编码失败，使用默认编码
                 return new ModelAndView("redirect:/ssr/fileExplorer");
             }
         }
