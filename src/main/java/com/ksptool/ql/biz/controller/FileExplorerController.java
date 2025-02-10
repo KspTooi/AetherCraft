@@ -39,6 +39,17 @@ public class FileExplorerController {
                 }
             }
             
+            // 处理特殊的ROOT标记
+            if ("ROOT".equals(decodedPath)) {
+                // 直接列出盘符
+                List<FileItemVo> files = fileExplorerService.listFiles(null);
+                mav.addObject("currentPath", "@");
+                mav.addObject("parentPath", "");
+                mav.addObject("files", files);
+                mav.addObject("breadcrumbs", List.of(new FileItemVo("根目录", "", true)));
+                return mav;
+            }
+            
             // 规范化路径
             String currentPath = fileExplorerService.normalizePath(decodedPath);
             
@@ -47,6 +58,11 @@ public class FileExplorerController {
             if (!dir.exists() || !dir.isDirectory()) {
                 // 如果路径不存在或不是目录，重定向到父目录
                 String parentPath = fileExplorerService.getParentPath(currentPath);
+                if ("ROOT".equals(parentPath)) {
+                    // 如果父目录是ROOT标记，重定向到根目录视图
+                    redirectAttributes.addFlashAttribute("error", "路径不存在或不是有效的目录：" + currentPath);
+                    return new ModelAndView("redirect:/ssr/fileExplorer?path=ROOT");
+                }
                 if (parentPath == null || parentPath.isEmpty()) {
                     // 如果没有父目录，则返回用户主目录
                     parentPath = System.getProperty("user.home");

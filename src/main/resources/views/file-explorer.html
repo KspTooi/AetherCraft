@@ -7,7 +7,7 @@
     <div th:replace="~{/components/com-styles}"></div>
     <div th:replace="~{/components/com-scripts}"></div>
     <div th:replace="~{/components/com-toasts}"></div>
-
+    
     <style>
         /* 全局样式 */
         body {
@@ -287,15 +287,24 @@
 
     <div class="file-explorer-wrapper">
         <div class="container-fluid mt-4">
-            <!-- 路径导航输入框 -->
+            <!-- 路径导航和搜索框 -->
             <div class="path-input-container">
-                <div class="input-group">
-                    <input type="text" class="form-control path-input" id="pathInput" 
-                           th:value="${currentPath}"
-                           placeholder="请输入或选择路径">
-                    <button class="btn btn-outline-secondary" type="button" id="goButton">
-                        <i class="bi bi-arrow-right"></i>
-                    </button>
+                <div class="d-flex gap-3">
+                    <div class="input-group" style="width: 80%;">
+                        <input type="text" class="form-control path-input" id="pathInput" 
+                               th:value="${currentPath}"
+                               placeholder="请输入或选择路径">
+                        <button class="btn btn-outline-secondary px-3" type="button" id="goButton">
+                            转到
+                        </button>
+                    </div>
+                    <div class="input-group" style="width: 20%;">
+                        <input type="text" class="form-control path-input" id="searchInput" 
+                               placeholder="搜索当前目录">
+                        <button class="btn btn-outline-secondary px-3" type="button" id="searchButton">
+                            查询
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -311,11 +320,11 @@
                 </div>
                 <div class="card-body file-list p-0">
                     <!-- 返回上级目录 -->
-                    <div class="file-item" th:if="${currentPath != null && !currentPath.isEmpty()}"
+                    <div class="file-item" th:if="${currentPath != '@' && currentPath != null && !currentPath.isEmpty()}"
                          th:data-path="${parentPath}">
                         <div class="row align-items-center">
                             <div class="col-5">
-                                <img src="/static/img/folder.png" class="file-icon" alt="folder">
+                                <img src="/img/explorer_icon_dir.png" class="file-icon" alt="folder">
                                 <span>..</span>
                             </div>
                             <div class="col-3"></div>
@@ -330,18 +339,18 @@
                          th:class="${'file-item' + (file.directory ? ' directory' : '')}">
                         <div class="row align-items-center">
                             <div class="col-5">
-                                <img th:src="${file.directory} ? '/static/img/folder.png' : '/static/img/file.png'" 
+                                <img th:src="${file.drive ? '/img/explorer_icon_drive.png' : (file.directory ? '/img/explorer_icon_dir.png' : '/img/explorer_icon_file.png')}"
                                      class="file-icon" alt="icon">
                                 <span th:text="${file.name}"></span>
                             </div>
                             <div class="col-3">
-                                <span class="file-time" 
+                                <span class="file-time" th:if="${!file.drive}"
                                       th:text="${#dates.format(new java.util.Date(file.lastModified), 'yyyy-MM-dd HH:mm')}">
                                 </span>
                             </div>
-                            <div class="col-2" th:text="${file.directory} ? '文件夹' : '文件'"></div>
+                            <div class="col-2" th:text="${file.drive ? '驱动器' : (file.directory ? '文件夹' : '文件')}"></div>
                             <div class="col-2">
-                                <span class="file-size" th:if="${!file.directory}"
+                                <span class="file-size" th:if="${!file.drive && !file.directory}"
                                       th:text="${T(com.ksptool.ql.commons.utils.FileUtils).formatFileSize(file.size)}">
                                 </span>
                             </div>
@@ -372,11 +381,50 @@
             navigateToPath();
         });
 
+        // 搜索框处理
+        $('#searchInput').on('keypress', function(e) {
+            if (e.which === 13) { // Enter 键
+                e.preventDefault();
+                searchFiles();
+            }
+        });
+
+        $('#searchButton').on('click', function() {
+            searchFiles();
+        });
+
+        function searchFiles() {
+            const searchText = $('#searchInput').val().trim().toLowerCase();
+            if (!searchText) {
+                // 如果搜索框为空，显示所有文件
+                $('.file-item').show();
+                return;
+            }
+
+            // 遍历所有文件项
+            $('.file-item').each(function() {
+                const fileName = $(this).find('.col-5 span').text().toLowerCase();
+                if (fileName === '..') {
+                    // 始终显示返回上级目录
+                    $(this).show();
+                } else if (fileName.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
         function navigateToPath() {
             const path = $('#pathInput').val().trim();
             if (!path) return;
 
             try {
+                // 如果是@，直接跳转到根目录
+                if (path === '@') {
+                    window.location.href = '/ssr/fileExplorer?path=ROOT';
+                    return;
+                }
                 // 使用 encodeURI 而不是 encodeURIComponent，以保留路径分隔符
                 const encodedPath = encodeURI(path).replace(/#/g, '%23');
                 window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
@@ -398,8 +446,10 @@
 
         // 添加键盘导航支持
         $(document).keyup(function(e) {
-            if (e.key === "Backspace" && !$('#pathInput').is(':focus')) {
-                // 返回上级目录（仅在输入框未获得焦点时）
+            if (e.key === "Backspace" && 
+                !$('#pathInput').is(':focus') && 
+                !$('#searchInput').is(':focus')) {
+                // 返回上级目录（仅在两个输入框都未获得焦点时）
                 const $firstItem = $('.file-item:first');
                 const path = $firstItem.data('path');
                 if (path) {
