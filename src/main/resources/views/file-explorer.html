@@ -451,6 +451,11 @@
 
         // 添加键盘导航支持
         $(document).keyup(function(e) {
+            // 检查是否有模态框处于打开状态
+            if ($('.modal.show').length > 0) {
+                return;  // 如果有模态框打开，不处理键盘导航
+            }
+            
             if (e.key === "Backspace" && 
                 !$('#pathInput').is(':focus') && 
                 !$('#searchInput').is(':focus')) {
@@ -489,6 +494,7 @@
     </script>
     
     <div th:replace="~{/components/create-app-modal}"></div>
+    <div th:replace="~{/components/explorer-rename-modal}"></div>
 
 </body>
 </html> 

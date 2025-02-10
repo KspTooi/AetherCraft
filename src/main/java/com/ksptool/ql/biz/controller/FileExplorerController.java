@@ -1,7 +1,9 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.vo.FileItemVo;
+import com.ksptool.ql.biz.model.dto.RenameFileDto;
 import com.ksptool.ql.biz.service.FileExplorerService;
+import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -105,6 +107,69 @@ public class FileExplorerController {
             return file.exists() && file.isDirectory();
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    @PostMapping("/renameFile")
+    @ResponseBody
+    public Result<String> renameFile(@RequestBody RenameFileDto dto) {
+        try {
+            // 参数验证
+            if (dto.getNewName() == null || dto.getNewName().trim().isEmpty()) {
+                return Result.error("新文件名不能为空");
+            }
+            
+            File oldFile = new File(dto.getOldPath());
+            if (!oldFile.exists()) {
+                return Result.error("原文件不存在：" + dto.getOldPath());
+            }
+
+            // 获取父目录路径
+            String parentPath = oldFile.getParent();
+            if (parentPath == null) {
+                return Result.error("无法获取父目录路径");
+            }
+
+            // 构建新文件路径
+            File newFile = new File(parentPath, dto.getNewName());
+            
+            // 检查新文件名是否已存在
+            if (newFile.exists()) {
+                return Result.error("该名称已存在，请使用其他名称：" + dto.getNewName());
+            }
+
+            // 检查父目录是否可写
+            File parentDir = new File(parentPath);
+            if (!parentDir.exists()) {
+                return Result.error("父目录不存在：" + parentPath);
+            }
+            if (!parentDir.canWrite()) {
+                return Result.error("没有写入权限，请检查目录权限：" + parentPath);
+            }
+
+            // 检查文件是否可写
+            if (!oldFile.canWrite()) {
+                return Result.error("文件被占用或没有写入权限：" + dto.getOldPath());
+            }
+
+            // 验证新文件名格式
+            if (dto.getNewName().contains("/") || dto.getNewName().contains("\\")) {
+                return Result.error("新文件名不能包含路径分隔符：" + dto.getNewName());
+            }
+            if (dto.getNewName().matches(".*[<>:\"|?*].*")) {
+                return Result.error("新文件名包含非法字符 (<>:\"|?*)：" + dto.getNewName());
+            }
+
+            // 执行重命名
+            if (!oldFile.renameTo(newFile)) {
+                return Result.error("重命名操作失败，可能是文件被占用或系统限制");
+            }
+            
+            return Result.success("重命名成功");
+        } catch (SecurityException e) {
+            return Result.error("安全限制，无法重命名：" + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("重命名失败：" + e.getMessage());
         }
     }
 } 
