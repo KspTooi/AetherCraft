@@ -31,7 +31,8 @@ public class TokenFilter implements Filter {
             "/commons/**",
             "/res/**",
             "/h2-console/**",
-            "/error"
+            "/error",
+            "/register"
     );
 
     @Override
