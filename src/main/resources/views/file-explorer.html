@@ -128,36 +128,38 @@
         .file-explorer-wrapper .file-item {
             padding: 8px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
             color: #fff;
             font-size: 0.9rem;
             position: relative;
+            cursor: default;
         }
 
-        .file-explorer-wrapper .file-item.directory,
-        .file-explorer-wrapper .file-item:first-child {
+        /* 可点击项的样式（文件夹、驱动器和返回上级） */
+        .file-explorer-wrapper .file-item[data-clickable="true"] {
             cursor: pointer;
         }
 
-        .file-explorer-wrapper .file-item.directory:hover,
-        .file-explorer-wrapper .file-item:first-child:hover {
+        .file-explorer-wrapper .file-item[data-clickable="true"]:hover {
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.15) 0%, 
                 rgba(255, 255, 255, 0.1) 100%
             );
         }
 
-        .file-explorer-wrapper .file-item.directory:active,
-        .file-explorer-wrapper .file-item:first-child:active {
+        .file-explorer-wrapper .file-item[data-clickable="true"]:active {
             background: rgba(255, 255, 255, 0.2);
         }
 
-        .file-explorer-wrapper .file-item:not(.directory):not(:first-child) {
-            cursor: default;
+        /* 文件夹和驱动器名称加粗显示 */
+        .file-explorer-wrapper .file-item[data-clickable="true"] .col-5 span {
+            font-weight: 500;
+            color: #fff;
         }
 
-        .file-explorer-wrapper .file-item:not(.directory):not(:first-child):hover {
-            background: none;
+        /* 普通文件名称显示 */
+        .file-explorer-wrapper .file-item:not([data-clickable="true"]) .col-5 span {
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .file-explorer-wrapper .file-icon {
@@ -172,18 +174,6 @@
         .file-explorer-wrapper .file-time {
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.8rem;
-        }
-
-        /* 文件夹名称加粗显示 */
-        .file-explorer-wrapper .file-item.directory .col-5 span,
-        .file-explorer-wrapper .file-item:first-child .col-5 span {
-            font-weight: 500;
-            color: #fff;
-        }
-
-        /* 文件名称普通显示 */
-        .file-explorer-wrapper .file-item:not(.directory):not(:first-child) .col-5 span {
-            color: rgba(255, 255, 255, 0.9);
         }
 
         /* 文件列表卡片 */
@@ -322,7 +312,8 @@
                 <div class="card-body file-list p-0">
                     <!-- 返回上级目录 -->
                     <div class="file-item" th:if="${currentPath != '@' && currentPath != null && !currentPath.isEmpty()}"
-                         th:data-path="${parentPath}">
+                         th:data-path="${parentPath}"
+                         data-clickable="true">
                         <div class="row align-items-center">
                             <div class="col-5">
                                 <img src="/img/explorer_icon_dir.png" class="file-icon" alt="folder">
@@ -337,22 +328,22 @@
                     <!-- 文件列表 -->
                     <div th:each="file : ${files}" class="file-item"
                          th:data-path="${file.path}"
-                         th:class="${'file-item' + (file.directory ? ' directory' : '')}">
+                         th:data-clickable="${file.kind == 0 || file.kind == 1}">
                         <div class="row align-items-center">
                             <div class="col-5">
-                                <img th:src="${file.drive ? '/img/explorer_icon_drive.png' : (file.directory ? '/img/explorer_icon_dir.png' : '/img/explorer_icon_file.png')}"
+                                <img th:src="${file.kind == 0 ? '/img/explorer_icon_drive.png' : (file.kind == 1 ? '/img/explorer_icon_dir.png' : '/img/explorer_icon_file.png')}"
                                      class="file-icon" alt="icon">
                                 <span th:text="${file.name}"></span>
                             </div>
                             <div class="col-3">
-                                <span class="file-time" th:if="${!file.drive}"
-                                      th:text="${#dates.format(new java.util.Date(file.lastModified), 'yyyy-MM-dd HH:mm')}">
+                                <span class="file-time" th:if="${file.kind != 0}"
+                                      th:text="${file.lastModified}">
                                 </span>
                             </div>
-                            <div class="col-2" th:text="${file.drive ? '驱动器' : (file.directory ? '文件夹' : '文件')}"></div>
+                            <div class="col-2" th:text="${file.kind == 0 ? '驱动器' : (file.kind == 1 ? '文件夹' : '文件')}"></div>
                             <div class="col-2">
-                                <span class="file-size" th:if="${!file.drive && !file.directory}"
-                                      th:text="${T(com.ksptool.ql.commons.utils.FileUtils).formatFileSize(file.size)}">
+                                <span class="file-size" th:if="${file.kind == 2}"
+                                      th:text="${file.size}">
                                 </span>
                             </div>
                         </div>
@@ -421,12 +412,6 @@
             if (!path) return;
 
             try {
-                // 如果是@，直接跳转到根目录
-                if (path === '@') {
-                    window.location.href = '/ssr/fileExplorer?path=ROOT';
-                    return;
-                }
-                // 使用 encodeURI 而不是 encodeURIComponent，以保留路径分隔符
                 const encodedPath = encodeURI(path).replace(/#/g, '%23');
                 window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
             } catch (err) {
@@ -438,8 +423,9 @@
         $('.file-item').on('click', function() {
             const $item = $(this);
             const path = $item.data('path');
-            // 只有文件夹和返回上级目录可以点击
-            if (path && ($item.hasClass('directory') || $item.find('span').text() === '..')) {
+            const isClickable = $item.data('clickable');
+            
+            if (path && isClickable) {
                 const encodedPath = encodeURI(path).replace(/#/g, '%23');
                 window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
             }
@@ -451,7 +437,7 @@
                 !$('#pathInput').is(':focus') && 
                 !$('#searchInput').is(':focus')) {
                 // 返回上级目录（仅在两个输入框都未获得焦点时）
-                const $firstItem = $('.file-item:first');
+                const $firstItem = $('.file-item[data-clickable="true"]:first');
                 const path = $firstItem.data('path');
                 if (path) {
                     const encodedPath = encodeURI(path).replace(/#/g, '%23');
@@ -469,7 +455,7 @@
         $('.file-item').hover(
             function() {
                 const $item = $(this);
-                if ($item.hasClass('directory') || $item.find('span').text() === '..') {
+                if ($item.data('clickable')) {
                     $item.css('cursor', 'pointer');
                 }
             },
@@ -483,9 +469,10 @@
             const $item = $(this);
             const fileName = $item.find('.col-5 span').text();
             const filePath = $item.data('path');
-            const isDirectory = $item.hasClass('directory');
+            const fileType = $item.find('.col-2').text();
+            const kind = fileType === '驱动器' ? 0 : (fileType === '文件夹' ? 1 : 2);
             
-            openExplorerContextMenu(event, fileName, filePath, isDirectory);
+            openExplorerContextMenu(event, fileName, filePath, kind);
         });
     });
     </script>

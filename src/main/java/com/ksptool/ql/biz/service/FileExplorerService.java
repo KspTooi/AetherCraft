@@ -1,18 +1,22 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.model.vo.FileItemVo;
+import com.ksptool.ql.commons.utils.FileUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class FileExplorerService {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     /**
      * 规范化路径
@@ -57,9 +61,9 @@ public class FileExplorerService {
         return Arrays.stream(files)
                 .map(this::convertToFileItem)
                 .sorted((a, b) -> {
-                    // 文件夹排在前面
-                    if (a.isDirectory() != b.isDirectory()) {
-                        return a.isDirectory() ? -1 : 1;
+                    // 先按类型排序（文件夹在前）
+                    if (a.getKind() != b.getKind()) {
+                        return a.getKind() - b.getKind();
                     }
                     // 同类型按名称排序
                     return a.getName().compareToIgnoreCase(b.getName());
@@ -85,12 +89,7 @@ public class FileExplorerService {
                     }
                     String name = path.replace("\\", "");
                     // 创建特殊的盘符FileItemVo
-                    FileItemVo item = new FileItemVo();
-                    item.setName(name);
-                    item.setPath(name);
-                    item.setDirectory(true);
-                    item.setDrive(true); // 标记为驱动器
-                    return item;
+                    return new FileItemVo(name, name, 0); // kind=0 表示驱动器
                 })
                 .collect(Collectors.toList());
     }
@@ -119,11 +118,11 @@ public class FileExplorerService {
      */
     public List<FileItemVo> getBreadcrumbs(String path) {
         if (path == null || path.trim().isEmpty() || "@".equals(path)) {
-            return List.of(new FileItemVo("计算机", "@", true));
+            return List.of(new FileItemVo("计算机", "@", 0));
         }
 
         List<FileItemVo> breadcrumbs = new ArrayList<>();
-        breadcrumbs.add(new FileItemVo("计算机", "@", true));
+        breadcrumbs.add(new FileItemVo("计算机", "@", 0));
         
         Path currentPath = Paths.get(path).normalize();
         if (currentPath.getRoot() != null) {
@@ -131,7 +130,7 @@ public class FileExplorerService {
             if (rootPath.endsWith("\\")) {
                 rootPath = rootPath.substring(0, rootPath.length() - 1);
             }
-            breadcrumbs.add(new FileItemVo(rootPath, rootPath, true));
+            breadcrumbs.add(new FileItemVo(rootPath, rootPath, 0));
         }
         
         // 添加每一级目录
@@ -140,7 +139,7 @@ public class FileExplorerService {
                 continue; // 跳过根目录，因为已经添加过了
             }
             String fullPath = currentPath.getRoot().toString() + component;
-            breadcrumbs.add(new FileItemVo(component.toString(), fullPath, true));
+            breadcrumbs.add(new FileItemVo(component.toString(), fullPath, 1)); // kind=1 表示目录
         }
         
         return breadcrumbs;
@@ -153,12 +152,24 @@ public class FileExplorerService {
         FileItemVo item = new FileItemVo();
         item.setName(file.getName().isEmpty() ? file.getPath() : file.getName());
         item.setPath(file.getAbsolutePath());
-        item.setDirectory(file.isDirectory());
-        item.setDrive(false); // 标记为非驱动器
-        if (!item.isDrive()) { // 只有非驱动器才设置这些属性
-            item.setSize(file.length());
-            item.setLastModified(file.lastModified());
+        
+        // 设置文件类型
+        if (file.isDirectory()) {
+            item.setKind(1); // 目录
+        } else {
+            item.setKind(2); // 文件
         }
+        
+        // 设置大小（仅对文件有效）
+        if (item.getKind() == 2) {
+            item.setSize(FileUtils.formatFileSize(file.length()));
+        }
+        
+        // 设置修改时间
+        if (item.getKind() != 0) { // 非驱动器才设置时间
+            item.setLastModified(DATE_FORMAT.format(new Date(file.lastModified())));
+        }
+        
         return item;
     }
 
@@ -167,10 +178,10 @@ public class FileExplorerService {
      */
     public String getParentPath(String currentPath) {
         if (isRootPath(currentPath)) {
-            return "ROOT"; // 特殊标记，表示需要显示盘符列表
+            return "@";
         }
         Path path = Paths.get(currentPath);
         Path parent = path.getParent();
-        return parent != null ? parent.toString() : "ROOT";
+        return parent != null ? parent.toString() : "@";
     }
 } 

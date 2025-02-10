@@ -22,9 +22,7 @@ public class FileExplorerController {
     private FileExplorerService fileExplorerService;
 
     @GetMapping("/fileExplorer")
-    public ModelAndView fileExplorer(
-            @RequestParam(value = "path", required = false) String path,
-            RedirectAttributes redirectAttributes) {
+    public ModelAndView fileExplorer(@RequestParam(value = "path", required = false) String path, RedirectAttributes redirectAttributes) {
         ModelAndView mav = new ModelAndView("file-explorer");
         
         try {
@@ -32,21 +30,19 @@ public class FileExplorerController {
             String decodedPath = path;
             if (path != null) {
                 try {
-                    decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+                    decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
                 } catch (Exception e) {
-                    // 如果解码失败，使用原始路径
                     decodedPath = path;
                 }
             }
             
-            // 处理特殊的ROOT标记
-            if ("ROOT".equals(decodedPath)) {
-                // 直接列出盘符
+            // 处理@符号（根目录）
+            if ("@".equals(decodedPath)) {
                 List<FileItemVo> files = fileExplorerService.listFiles(null);
                 mav.addObject("currentPath", "@");
                 mav.addObject("parentPath", "");
                 mav.addObject("files", files);
-                mav.addObject("breadcrumbs", List.of(new FileItemVo("根目录", "", true)));
+                mav.addObject("breadcrumbs", List.of(new FileItemVo("计算机", "@", 0)));
                 return mav;
             }
             
@@ -56,18 +52,14 @@ public class FileExplorerController {
             // 验证路径是否存在
             File dir = new File(currentPath);
             if (!dir.exists() || !dir.isDirectory()) {
-                // 如果路径不存在或不是目录，重定向到父目录
                 String parentPath = fileExplorerService.getParentPath(currentPath);
-                if ("ROOT".equals(parentPath)) {
-                    // 如果父目录是ROOT标记，重定向到根目录视图
+                if ("@".equals(parentPath)) {
                     redirectAttributes.addFlashAttribute("error", "路径不存在或不是有效的目录：" + currentPath);
-                    return new ModelAndView("redirect:/ssr/fileExplorer?path=ROOT");
+                    return new ModelAndView("redirect:/ssr/fileExplorer?path=@");
                 }
                 if (parentPath == null || parentPath.isEmpty()) {
-                    // 如果没有父目录，则返回用户主目录
                     parentPath = System.getProperty("user.home");
                 }
-                // 对重定向路径进行编码
                 String encodedPath = UriUtils.encodePath(parentPath, StandardCharsets.UTF_8.name());
                 redirectAttributes.addFlashAttribute("error", "路径不存在或不是有效的目录：" + currentPath);
                 return new ModelAndView("redirect:/ssr/fileExplorer?path=" + encodedPath);
