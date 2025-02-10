@@ -284,6 +284,7 @@
 <body>
     <div class="background-image"></div>
     <div th:replace="~{/components/com-top-nav}"></div>
+    <div th:replace="~{/components/explorer-options}"></div>
 
     <div class="file-explorer-wrapper">
         <div class="container-fluid mt-4">
@@ -476,6 +477,16 @@
                 $(this).css('cursor', '');
             }
         );
+
+        // 为文件项添加右键点击事件
+        $('.file-item').on('contextmenu', function(event) {
+            const $item = $(this);
+            const fileName = $item.find('.col-5 span').text();
+            const filePath = $item.data('path');
+            const isDirectory = $item.hasClass('directory');
+            
+            openExplorerContextMenu(event, fileName, filePath, isDirectory);
+        });
     });
     </script>
 </body>
