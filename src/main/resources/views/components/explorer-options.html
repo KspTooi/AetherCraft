@@ -1,12 +1,12 @@
 <!-- 文件资源管理器右键菜单 -->
 <div id="explorer-context-menu" class="context-menu" style="display: none;">
     <div class="context-menu-item" id="ecm_opt_open">打开</div>
-    <div class="context-menu-item" id="ecm_opt_cut">剪切</div>
-    <div class="context-menu-item" id="ecm_opt_copy">复制</div>
-    <div class="context-menu-item" id="ecm_opt_delete">删除</div>
+<!--    <div class="context-menu-item" id="ecm_opt_cut">剪切</div>
+    <div class="context-menu-item" id="ecm_opt_copy">复制</div>-->
+    <!--<div class="context-menu-item" id="ecm_opt_delete">删除</div>-->
     <div class="context-menu-item" id="ecm_opt_rename">重命名</div>
     <div class="context-menu-item" id="ecm_opt_create_app">创建为应用</div>
-    <div class="context-menu-item" id="ecm_opt_properties">属性</div>
+    <!--<div class="context-menu-item" id="ecm_opt_properties">属性</div>-->
 </div>
 
 <style>
@@ -104,6 +104,34 @@
         const menuItemId = $(this).attr('id');
         
         switch(menuItemId) {
+            case 'ecm_opt_open':
+                // 调用后端打开文件
+                $.ajax({
+                    url: '/ssr/openPath',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        path: filePath,
+                        isDirectory: isDirectory === 1
+                    }),
+                    success: function(result) {
+                        console.log('Response:', result);
+                        if (result.code === 0) {  // 0表示业务正常
+                            showToast('success', result.message);
+                        } else {
+                            showToast('danger', result.message || '打开失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.log('Error:', xhr);
+                        let errorMsg = '打开失败';
+                        if (xhr.responseJSON) {
+                            errorMsg = xhr.responseJSON.message || errorMsg;
+                        }
+                        showToast('danger', errorMsg);
+                    }
+                });
+                break;
             case 'ecm_opt_rename':
                 // 打开重命名模态框
                 const $renameModal = $('#renameModal');

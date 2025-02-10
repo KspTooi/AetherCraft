@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.vo.FileItemVo;
 import com.ksptool.ql.biz.model.dto.RenameFileDto;
+import com.ksptool.ql.biz.model.dto.OpenPathDto;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.service.FileExplorerService;
 import com.ksptool.ql.biz.service.ConfigService;
@@ -14,11 +15,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
+import org.springframework.util.StringUtils;
+import java.io.IOException;
 
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.awt.Desktop;
+import java.awt.Desktop.Action;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 @Controller
 @RequestMapping("/ssr")
@@ -201,6 +209,67 @@ public class FileExplorerController {
             return Result.error("安全限制，无法重命名：" + e.getMessage());
         } catch (Exception e) {
             return Result.error("重命名失败：" + e.getMessage());
+        }
+    }
+
+    @PostMapping("/openPath")
+    @ResponseBody
+    public Result<String> openPath(@RequestBody OpenPathDto dto) {
+        try {
+            Path path = Paths.get(dto.getPath());
+            File file = path.toFile();
+
+            if (!file.exists()) {
+                return Result.error("文件或目录不存在：" + dto.getPath());
+            }
+
+            String fileName = file.getName();
+            // 获取自定义命令
+            String command = configService.getConfigValue("explorer.default.run");
+            
+            // 如果没有自定义命令，先尝试使用Desktop API
+            if (!StringUtils.hasText(command)) {
+                // 检查是否支持Desktop操作
+                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Action.OPEN)) {
+                    Desktop desktop = Desktop.getDesktop();
+                    if (dto.isDirectory()) {
+                        if (desktop.isSupported(Action.BROWSE_FILE_DIR)) {
+                            desktop.browseFileDirectory(file);
+                            return Result.success(String.format("已打开目录：%s", fileName), null);
+                        }
+                    } else {
+                        desktop.open(file);
+                        return Result.success(String.format("已打开文件：%s", fileName), null);
+                    }
+                }
+                // 如果Desktop不支持，使用默认的explorer命令
+                command = "explorer #{path}";
+            }
+
+            // 使用ProcessBuilder运行命令
+            command = command.replace("#{path}", dto.getPath());
+            List<String> commands = Arrays.asList(command.split("\\s+"));
+            ProcessBuilder processBuilder = new ProcessBuilder(commands);
+            processBuilder.directory(file.getParentFile()); // 设置工作目录为文件所在目录
+            processBuilder.start();
+            
+            return Result.success(String.format("已使用默认程序打开%s：%s", 
+                dto.isDirectory() ? "目录" : "文件", 
+                fileName), null);
+            
+        } catch (IOException e) {
+            return Result.error(String.format("打开失败：%s（%s）", 
+                Paths.get(dto.getPath()).getFileName(),
+                e.getMessage()));
+        } catch (SecurityException e) {
+            return Result.error(String.format("安全限制，无法打开%s：%s（%s）", 
+                dto.isDirectory() ? "目录" : "文件",
+                Paths.get(dto.getPath()).getFileName(),
+                e.getMessage()));
+        } catch (Exception e) {
+            return Result.error(String.format("操作失败：%s（%s）", 
+                Paths.get(dto.getPath()).getFileName(),
+                e.getMessage()));
         }
     }
 } 
