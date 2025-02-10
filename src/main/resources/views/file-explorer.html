@@ -39,13 +39,14 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            padding: 16px 24px; /* 添加内边距 */
         }
 
         /* 主容器样式 */
         .file-explorer-wrapper .container-fluid {
             box-sizing: border-box;
-            margin: 8px;
-            padding: 12px;
+            margin: 0;  /* 重置margin */
+            padding: 16px;
             flex: 1;
             min-height: 0;
             background: rgba(255, 255, 255, 0.25);
@@ -217,10 +218,11 @@
         @media (max-width: 768px) {
             .file-explorer-wrapper {
                 top: 48px;
+                padding: 8px 12px; /* 移动端减小内边距 */
             }
             .file-explorer-wrapper .container-fluid {
-                margin: 4px;
-                padding: 8px;
+                margin: 0;
+                padding: 12px;
             }
             .file-explorer-wrapper .breadcrumb,
             .file-explorer-wrapper .alert-light {
