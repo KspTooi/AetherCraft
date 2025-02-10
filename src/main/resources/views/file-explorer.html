@@ -132,7 +132,18 @@
             color: #fff;
             font-size: 0.9rem;
             position: relative;
-            cursor: default;
+        }
+
+        /* 所有文件项的hover效果 */
+        .file-explorer-wrapper .file-item:hover {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.15) 0%, 
+                rgba(255, 255, 255, 0.1) 100%
+            );
+        }
+
+        .file-explorer-wrapper .file-item:active {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* 可点击项的样式（文件夹、驱动器和返回上级） */
@@ -140,26 +151,15 @@
             cursor: pointer;
         }
 
-        .file-explorer-wrapper .file-item[data-clickable="true"]:hover {
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.15) 0%, 
-                rgba(255, 255, 255, 0.1) 100%
-            );
-        }
-
-        .file-explorer-wrapper .file-item[data-clickable="true"]:active {
-            background: rgba(255, 255, 255, 0.2);
+        /* 文件名称样式 */
+        .file-explorer-wrapper .file-item .col-5 span {
+            color: rgba(255, 255, 255, 0.9);
         }
 
         /* 文件夹和驱动器名称加粗显示 */
         .file-explorer-wrapper .file-item[data-clickable="true"] .col-5 span {
             font-weight: 500;
             color: #fff;
-        }
-
-        /* 普通文件名称显示 */
-        .file-explorer-wrapper .file-item:not([data-clickable="true"]) .col-5 span {
-            color: rgba(255, 255, 255, 0.9);
         }
 
         .file-explorer-wrapper .file-icon {
@@ -313,6 +313,7 @@
                     <!-- 返回上级目录 -->
                     <div class="file-item" th:if="${currentPath != '@' && currentPath != null && !currentPath.isEmpty()}"
                          th:data-path="${parentPath}"
+                         th:data-kind="1"
                          data-clickable="true">
                         <div class="row align-items-center">
                             <div class="col-5">
@@ -325,10 +326,12 @@
                         </div>
                     </div>
 
+
                     <!-- 文件列表 -->
                     <div th:each="file : ${files}" class="file-item"
                          th:data-path="${file.path}"
-                         th:data-clickable="${file.kind == 0 || file.kind == 1}">
+                         th:data-kind="${file.kind}"
+                         th:data-clickable="true">
                         <div class="row align-items-center">
                             <div class="col-5">
                                 <img th:src="${file.kind == 0 ? '/img/explorer_icon_drive.png' : (file.kind == 1 ? '/img/explorer_icon_dir.png' : '/img/explorer_icon_file.png')}"
@@ -359,6 +362,33 @@
         const error = '[[${error}]]';
         if (error && error.trim() !== '') {
             showToast('danger', error);
+        }
+
+        // 为所有文件项添加点击事件（使用事件委托）
+        $('.file-list').on('click', '.file-item[data-clickable="true"]', function() {
+            const path = $(this).data('path');
+            const kind = $(this).data('kind');
+            openPath(path, kind);
+        });
+
+        // 统一的路径打开函数
+        window.openPath = function(path, kind) {
+            if (kind === 2) {  // 文件
+                openFile(path);
+            } else {  // 文件夹或驱动器
+                try {
+                    const encodedPath = encodeURI(path).replace(/#/g, '%23');
+                    window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
+                } catch (err) {
+                    showToast('danger', '路径格式无效，请检查输入');
+                }
+            }
+        }
+
+
+        // 文件打开函数
+        window.openFile = function(path) {
+            console.log('Opening file:', path);
         }
 
         // 路径输入框处理
@@ -419,18 +449,6 @@
             }
         }
 
-        // 文件项点击事件处理
-        $('.file-item').on('click', function() {
-            const $item = $(this);
-            const path = $item.data('path');
-            const isClickable = $item.data('clickable');
-            
-            if (path && isClickable) {
-                const encodedPath = encodeURI(path).replace(/#/g, '%23');
-                window.location.href = '/ssr/fileExplorer?path=' + encodedPath;
-            }
-        });
-
         // 添加键盘导航支持
         $(document).keyup(function(e) {
             if (e.key === "Backspace" && 
@@ -451,30 +469,26 @@
             $(this).select();
         });
 
-        // 添加鼠标悬停效果
-        $('.file-item').hover(
-            function() {
-                const $item = $(this);
-                if ($item.data('clickable')) {
-                    $item.css('cursor', 'pointer');
-                }
-            },
-            function() {
-                $(this).css('cursor', '');
-            }
-        );
-
         // 为文件项添加右键点击事件
         $('.file-item').on('contextmenu', function(event) {
             const $item = $(this);
+            const kind = $item.data('kind');
+            
+            // 如果是驱动器，不显示右键菜单
+            if (kind === 0) {
+                return;
+            }
+            
             const fileName = $item.find('.col-5 span').text();
             const filePath = $item.data('path');
-            const fileType = $item.find('.col-2').text();
-            const kind = fileType === '驱动器' ? 0 : (fileType === '文件夹' ? 1 : 2);
             
             openExplorerContextMenu(event, fileName, filePath, kind);
+            event.preventDefault();  // 阻止默认的右键菜单
         });
     });
     </script>
+    
+    <div th:replace="~{/components/create-app-modal}"></div>
+
 </body>
 </html> 

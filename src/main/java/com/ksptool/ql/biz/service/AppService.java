@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.dto.RunAppDto;
 import com.ksptool.ql.biz.model.po.AppPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.commons.exception.BizException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -86,13 +87,18 @@ public class AppService {
             throw new BizException("应用名称已存在，请使用其他名称 " + dto.getName());
         }
 
-        // 如果指定了command,检查是否重复
-        if(dto.getCommand() != null && !dto.getCommand().trim().isEmpty()) {
+        // 处理command字段
+        String command = dto.getCommand();
+        if (!StringUtils.isBlank(command)) {
+            command = command.trim();
+            // 如果指定了command,检查是否重复
             AppPo commandQuery = new AppPo();
-            commandQuery.setCommand(dto.getCommand().trim());
+            commandQuery.setCommand(command);
             if(appRepository.count(Example.of(commandQuery)) > 0) {
-                throw new BizException("快捷启动命令已存在，请使用其他命令: " + dto.getCommand());
+                throw new BizException("快捷启动命令已存在，请使用其他命令: " + command);
             }
+        } else {
+            command = null;
         }
 
         AppPo app = new AppPo();
@@ -100,11 +106,11 @@ public class AppService {
         app.setName(dto.getName());
         app.setExecPath(dto.getExecPath());
         app.setDescription(dto.getDescription());
-        app.setCommand(dto.getCommand() != null ? dto.getCommand().trim() : null);
+        app.setCommand(command);
         // 如果用户指定了类型就使用用户指定的，否则自动推断
-        app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
-            ? dto.getKind().trim() 
-            : determineAppKind(dto.getExecPath()));
+        app.setKind(StringUtils.isBlank(dto.getKind()) 
+            ? determineAppKind(dto.getExecPath())
+            : dto.getKind().trim());
         app.setLaunchCount(0);
         Date now = new Date();
         app.setCreateTime(now);
@@ -175,22 +181,28 @@ public class AppService {
             throw new BizException("应用名称已存在，请使用其他名称: " + dto.getName());
         }
 
-        // 检查新command是否与其他应用重复
-        String newCommand = dto.getCommand() != null ? dto.getCommand().trim() : null;
-        if (newCommand != null && !newCommand.equals(app.getCommand())) {
-            AppPo commandQuery = new AppPo();
-            commandQuery.setCommand(newCommand);
-            if(appRepository.count(Example.of(commandQuery)) > 0) {
-                throw new BizException("快捷启动命令已存在，请使用其他命令: " + newCommand);
+        // 处理command字段
+        String newCommand = dto.getCommand();
+        if (!StringUtils.isBlank(newCommand)) {
+            newCommand = newCommand.trim();
+            if (!newCommand.equals(app.getCommand())) {
+                // 检查新command是否与其他应用重复
+                AppPo commandQuery = new AppPo();
+                commandQuery.setCommand(newCommand);
+                if(appRepository.count(Example.of(commandQuery)) > 0) {
+                    throw new BizException("快捷启动命令已存在，请使用其他命令: " + newCommand);
+                }
             }
+        } else {
+            newCommand = null;
         }
 
         assign(dto, app);
         app.setCommand(newCommand);
         // 如果用户指定了类型就使用用户指定的，否则自动推断
-        app.setKind(dto.getKind() != null && !dto.getKind().trim().isEmpty() 
-            ? dto.getKind().trim() 
-            : determineAppKind(dto.getExecPath()));
+        app.setKind(StringUtils.isBlank(dto.getKind())
+            ? determineAppKind(dto.getExecPath())
+            : dto.getKind().trim());
         app.setUpdateTime(new Date());
         
         return appRepository.save(app);
@@ -211,6 +223,9 @@ public class AppService {
 
     // 检查应用是否匹配关键字
     private boolean matchesKeyword(AppPo app, String keyword) {
+        if (StringUtils.isBlank(keyword)) {
+            return true;
+        }
         keyword = keyword.toLowerCase();
         return app.getName().toLowerCase().contains(keyword) ||
                app.getExecPath().toLowerCase().contains(keyword);

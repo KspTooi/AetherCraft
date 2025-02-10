@@ -56,6 +56,7 @@
         // 存储文件信息供后续使用
         $menu.data("file-path", filePath);
         $menu.data("is-directory", isDirectory);
+        $menu.data("file-name", fileName);
 
         // 设置菜单位置
         $menu.css("position", "absolute");
@@ -93,8 +94,32 @@
         }
     });
 
-    // 为每个菜单项添加点击事件（暂时只关闭菜单）
-    $("#explorer-context-menu .context-menu-item").on("click", function() {
+    // 为每个菜单项添加点击事件
+    $("#explorer-context-menu .context-menu-item").on("click", function(e) {
+        const $menu = $("#explorer-context-menu");
+        const filePath = $menu.data("file-path");
+        const fileName = $menu.data("file-name");
+        const isDirectory = $menu.data("is-directory");
+        
+        const menuItemId = $(this).attr('id');
+        
+        switch(menuItemId) {
+            case 'ecm_opt_create_app':
+                // 打开创建应用模态框
+                const $createAppModal = $('#createAppModal');
+                if ($createAppModal.length) {
+                    // 自动填充表单
+                    $createAppModal.find('#name').val(fileName);
+                    $createAppModal.find('#execPath').val(filePath);
+                    
+                    // 显示模态框
+                    const createAppModal = new bootstrap.Modal($createAppModal);
+                    createAppModal.show();
+                }
+                break;
+            // 可以在这里添加其他菜单项的处理...
+        }
+        
         closeExplorerContextMenu();
     });
 </script> 
