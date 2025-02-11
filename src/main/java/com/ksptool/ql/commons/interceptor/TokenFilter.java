@@ -2,6 +2,8 @@ package com.ksptool.ql.commons.interceptor;
 
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.WebUtils;
+import com.ksptool.ql.commons.AuthContext;
+import com.ksptool.ql.biz.model.po.UserPo;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,13 +53,27 @@ public class TokenFilter implements Filter {
         }
 
         String token = WebUtils.getCookieValue(req, "token");
-        if (token == null || authService.verifyToken(token) == null) {
-            res.sendRedirect("/login"); // 跳转到登录页面
+        if (token == null) {
+            res.sendRedirect("/login");
             return;
         }
 
+        // 验证token并获取用户
+        UserPo user = authService.verifyUser(req);
+        if (user == null) {
+            res.sendRedirect("/login");
+            return;
+        }
 
-        chain.doFilter(request, response);
+        // 将token和user存储到RequestContext中
+        AuthContext.setToken(token);
+        AuthContext.setCurrentUser(user);
+
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            // 这里不需要清除，因为RequestAttributes.SCOPE_REQUEST范围的属性会在请求结束时自动清除
+        }
     }
 
 }
