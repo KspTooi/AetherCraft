@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>用户管理 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="h-100">
+    <!-- 引入控制台框架 -->
+    <div th:replace="~{components/com-frame-control-panel :: control-panel(~{::content})}">
+        <div th:fragment="content">
+            <!-- 页面内容 -->
+            <div class="container-fluid p-0">
+                <!-- 顶部操作栏 -->
+                <div class="row mb-4">
+                    <div class="col">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">用户管理</h4>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+                                <i class="bi bi-plus-lg me-1"></i>添加用户
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户列表 -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>用户名</th>
+                                        <th>姓名</th>
+                                        <th>邮箱</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user : ${users}">
+                                        <td th:text="${user.id}">1</td>
+                                        <td th:text="${user.username}">admin</td>
+                                        <td th:text="${user.nickname}">管理员</td>
+                                        <td th:text="${user.email}">admin@example.com</td>
+                                        <td th:text="${#dates.format(user.createTime, 'yyyy-MM-dd HH:mm:ss')}">2024-03-20 10:00:00</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        th:onclick="'editUser(' + ${user.id} + ')'">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger"
+                                                        th:onclick="'deleteUser(' + ${user.id} + ')'">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分页 -->
+                <nav class="mt-4" th:if="${totalPages > 0}">
+                    <ul class="pagination justify-content-center">
+                        <li th:class="${currentPage == 1} ? 'page-item disabled' : 'page-item'">
+                            <a class="page-link" th:href="@{/ssr/system/users(page=${currentPage - 1})}" tabindex="-1">上一页</a>
+                        </li>
+                        <li th:each="pageNumber : ${#numbers.sequence(1, totalPages)}"
+                            th:class="${pageNumber == currentPage} ? 'page-item active' : 'page-item'">
+                            <a class="page-link" th:href="@{/ssr/system/users(page=${pageNumber})}" th:text="${pageNumber}">1</a>
+                        </li>
+                        <li th:class="${currentPage == totalPages} ? 'page-item disabled' : 'page-item'">
+                            <a class="page-link" th:href="@{/ssr/system/users(page=${currentPage + 1})}">下一页</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- 用户编辑模态框 -->
+            <div class="modal fade" id="userModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">添加/编辑用户</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="userForm">
+                                <div class="mb-3">
+                                    <label class="form-label">用户名</label>
+                                    <input type="text" class="form-control" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">姓名</label>
+                                    <input type="text" class="form-control" name="nickname" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">密码</label>
+                                    <input type="password" class="form-control" name="password">
+                                    <div class="form-text">编辑时留空表示不修改密码</div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 编辑用户
+        function editUser(userId) {
+            // 获取用户数据
+            fetch('/ssr/system/users/' + userId)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 0) {
+                        const user = result.data;
+                        // 填充表单
+                        document.querySelector('[name="username"]').value = user.username;
+                        document.querySelector('[name="nickname"]').value = user.nickname;
+                        document.querySelector('[name="email"]').value = user.email;
+                        
+                        // 设置用户ID
+                        document.getElementById('userForm').dataset.userId = user.id;
+                        
+                        // 打开模态框
+                        new bootstrap.Modal(document.getElementById('userModal')).show();
+                    } else {
+                        showToast('danger', result.message);
+                    }
+                });
+        }
+
+        // 保存用户
+        function saveUser() {
+            // 获取表单数据
+            const form = document.getElementById('userForm');
+            const formData = new FormData(form);
+            const userData = Object.fromEntries(formData.entries());
+            
+            // 添加用户ID（如果是编辑模式）
+            if (form.dataset.userId) {
+                userData.id = form.dataset.userId;
+            }
+            
+            // 发送到后端API
+            fetch('/ssr/system/users/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 0) {
+                    // 关闭模态框
+                    bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+                    // 刷新页面
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            })
+            .catch(error => {
+                showToast('danger', error.message);
+            });
+        }
+
+        // 删除用户
+        function deleteUser(userId) {
+            if (confirm('确定要删除该用户吗？')) {
+                fetch('/ssr/system/users/delete/' + userId, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 0) {
+                        // 刷新页面
+                        window.location.reload();
+                    } else {
+                        throw new Error(result.message);
+                    }
+                })
+                .catch(error => {
+                    showToast('danger', error.message);
+                });
+            }
+        }
+
+        // 显示提示消息
+        function showToast(type, message) {
+            const toast = new bootstrap.Toast(document.createElement('div'));
+            toast._element.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast._element.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toast._element);
+            toast.show();
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                document.body.removeChild(toast._element);
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

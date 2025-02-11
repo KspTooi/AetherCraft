@@ -161,22 +161,6 @@
                 
                 <div class="sidebar-menu flex-grow-1">
                     <div class="menu-group">
-                        <div class="menu-title">快速访问</div>
-                        <a href="/ssr/dashboard" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-speedometer2"></i>
-                            <span>管理台</span>
-                        </a>
-                        <a href="/ssr/fileExplorer" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-folder2-open"></i>
-                            <span>文件浏览器</span>
-                        </a>
-                        <a href="/ssr/appCenter" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-grid-3x3-gap"></i>
-                            <span>应用中心</span>
-                        </a>
-                    </div>
-                    
-                    <div class="menu-group">
                         <div class="menu-title">系统管理</div>
                         <a href="/ssr/system/users" class="menu-item d-flex align-items-center rounded">
                             <i class="bi bi-people"></i>
@@ -184,35 +168,11 @@
                         </a>
                         <a href="/ssr/system/roles" class="menu-item d-flex align-items-center rounded">
                             <i class="bi bi-shield-lock"></i>
-                            <span>角色权限</span>
+                            <span>角色管理</span>
                         </a>
                         <a href="/ssr/system/configs" class="menu-item d-flex align-items-center rounded">
                             <i class="bi bi-gear"></i>
-                            <span>系统配置</span>
-                        </a>
-                    </div>
-                    
-                    <div class="menu-group">
-                        <div class="menu-title">应用管理</div>
-                        <a href="/ssr/apps/list" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-grid"></i>
-                            <span>应用列表</span>
-                        </a>
-                        <a href="/ssr/apps/categories" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-folder"></i>
-                            <span>分类管理</span>
-                        </a>
-                    </div>
-                    
-                    <div class="menu-group">
-                        <div class="menu-title">服务管理</div>
-                        <a href="/ssr/services/windows" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-windows"></i>
-                            <span>Windows服务</span>
-                        </a>
-                        <a href="/ssr/services/docker" class="menu-item d-flex align-items-center rounded">
-                            <i class="bi bi-boxes"></i>
-                            <span>Docker容器</span>
+                            <span>配置项管理</span>
                         </a>
                     </div>
                 </div>
@@ -251,6 +211,11 @@
                 </div>
             </div>
         </div>
+
+
+        <div th:replace="~{/components/mvc-toasts}"></div>
+        <div th:replace="~{/components/com-toasts}"></div>
+        
     </div>
 
     <script th:fragment="control-panel-script">
