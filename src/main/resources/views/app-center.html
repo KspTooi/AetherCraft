@@ -9,14 +9,19 @@
 <style>
     .app-center {
         color: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     .app-count {
         margin-bottom: 16px;
+        flex-shrink: 0;
     }
 
     .search-box {
         margin-bottom: 16px;
+        flex-shrink: 0;
     }
 
     .search-box form {
@@ -67,6 +72,10 @@
         flex-wrap: wrap;
         opacity: 1;
         transition: opacity 0.3s ease;
+        overflow-y: auto;
+        flex: 1;
+        align-content: flex-start;
+        padding-right: 10px; /* 为滚动条预留空间 */
     }
 
     .app-icons.fade-out {
@@ -116,10 +125,18 @@
         background-color: #ccc;
     }
 
-    .app-icon span {
+    /* 应用名称样式 */
+    .app-icon .app-name {
         margin-top: 5px;
         text-align: center;
         font-size: 14px;
+        width: 100%;
+        word-wrap: break-word;
+        word-break: break-all;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     .app-kind-tag {
@@ -168,6 +185,31 @@
             opacity: 0;
         }
     }
+
+    /* 自定义滚动条样式 - Chrome, Edge, Safari */
+    .app-icons::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .app-icons::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    .app-icons::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
+
+    .app-icons::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    /* 自定义滚动条样式 - Firefox */
+    .app-icons {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.3) rgba(255,255,255,0.2);
+    }
 </style>
 
 <body>
@@ -188,7 +230,7 @@
             <div class="app-icons" th:if="${data.appList != null}">
                 <div class="app-icon" th:each="app : ${data.appList}" th:attr="data-app-id=${app.id}">
                     <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
-                    <span th:text="${app.name}">应用名称</span>
+                    <span th:text="${app.name}" class="app-name">应用名称</span>
                     <span class="app-kind-tag"
                           th:text="${app.kind}"
                           th:classappend="${
