@@ -9,5 +9,9 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
     
     ConfigPo findByConfigKey(String configKey);
     
+    ConfigPo findByUserIdAndConfigKey(Long userId, String configKey);
+    
     boolean existsByConfigKey(String configKey);
+    
+    boolean existsByUserIdAndConfigKey(Long userId, String configKey);
 } 
