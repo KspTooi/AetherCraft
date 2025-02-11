@@ -1,506 +1,344 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>应用中心</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用中心</title>
 </head>
 
 <style>
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    overflow: hidden; /* 防止整个页面出现滚动条 */
-  }
-
-  .background-image {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* 背景图片加载失败时，使用备用颜色 */
-    background: #333 url('/img/bg1.jpg') no-repeat center center;
-    background-size: cover;
-    z-index: -1; /* 背景置于底层 */
-  }
-
-  /* glass-container 居中显示，四周保留较大边距，并设置最大高度以保证滚动 */
-  .glass-container {
-    box-sizing: border-box;
-    margin: 60px auto;      /* 上下各留 60px，左右自动居中 */
-    padding: 20px;
-    width: calc(100% - 120px);/* 屏幕宽度减去左右边距 */
-    max-height: calc(100vh - 120px); /* 最大高度为视口高度减去上下边距 */
-    background: rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    backdrop-filter: blur(12px);
-    transition: margin 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
-                padding 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
-                width 0.5s cubic-bezier(0.25, 0.8, 0.5, 1),
-                max-height 0.5s cubic-bezier(0.25, 0.8, 0.5, 1);
-    will-change: margin, padding, width, max-height;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* 固定在顶部的搜索区域 */
-  .header {
-    margin-bottom: 20px;
-  }
-
-  .search-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .search-box form {
-    display: flex;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .search-box input {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.5);
-    width: 100%;
-  }
-
-  .search-box button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-  }
-
-  /* 滚动内容区域，只滚动应用列表 */
-  .scrollable-content {
-    overflow-y: auto;
-    flex: 1; /* 占据除 header 外剩余空间 */
-    text-align: center; /* 将内联元素居中 */
-  }
-
-  /* 自定义滚动条 —— Chrome, Edge, Safari */
-  .scrollable-content::-webkit-scrollbar {
-    width: 8px;
-  }
-  .scrollable-content::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-  }
-  .scrollable-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-  }
-  .scrollable-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.5);
-  }
-  /* 自定义滚动条 —— Firefox */
-  .scrollable-content {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0,0,0,0.3) rgba(255,255,255,0.2);
-  }
-
-  /* 响应式调整：屏幕宽度较小时 */
-  @media (max-width: 768px) {
-    .glass-container {
-      margin: 20px auto;
-      padding: 20px;
-      width: calc(100% - 40px);
-      max-height: calc(100vh - 40px); /* 更新最大高度 */
+    .app-center {
+        color: #fff;
     }
-  }
 
-  .app-icons {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;  /* 多个应用自动换行 */
-    opacity: 1;
-    transition: opacity 0.3s ease;
-  }
-
-  /* 添加淡出动画的类 */
-  .app-icons.fade-out {
-    opacity: 0;
-  }
-
-  /* 添加淡入动画的类 */
-  .app-icons.fade-in {
-    opacity: 1;
-  }
-
-  .app-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 80px;
-    background: radial-gradient(rgb(205 205 205 / 10%), rgb(255 255 255 / 0%));
-    border: 1px solid rgb(255 255 255 / 11%);
-    border-radius: 10px;
-    padding: 10px;
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: scale(1);
-    transform-origin: center center;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-  }
-
-  /* 添加点击反馈动画的类 */
-  .app-icon.launching {
-    background: radial-gradient(rgb(79 172 254 / 30%), rgb(0 255 184 / 20%));
-    transform: scale(0.95);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .app-icon:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    z-index: 10; /* 提升图标堆叠层级，不影响周围布局 */
-  }
-
-  .app-icon img {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    object-fit: cover;
-    background-color: #ccc; /* 图片加载失败时的占位背景 */
-  }
-
-  .app-icon span {
-    margin-top: 5px;
-    text-align: center;
-    font-size: 14px;
-  }
-
-  .app-count {
-    position: relative;
-    z-index: 100; /* 提高层级，确保高 z-index 的 app-icon 不覆盖该区域 */
-    border-radius: 5px;
-    color: #fff;
-    margin-bottom: 10px;
-  }
-
-  /* 修改新应用按钮样式，添加华丽的渐变特效 */
-  .new-app-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    /* 使用线性渐变作为背景，从蓝色过渡到淡蓝色 */
-    background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
-    color: white;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    white-space: nowrap;
-  }
-
-  .new-app-btn:hover {
-    transform: scale(1.05);
-    /* 悬停时更换为另一种渐变效果 */
-    background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
-  }
-
-  /* 水波效果 */
-  .ripple {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 50%;
-    transform: scale(0);
-    animation: ripple-effect 0.6s linear;
-    pointer-events: none;
-  }
-  @keyframes ripple-effect {
-    to {
-      transform: scale(10);
-      opacity: 0;
+    .app-count {
+        margin-bottom: 16px;
     }
-  }
 
-  /* 修复 .app-kind-tag 样式干扰问题，同时保持基本紧凑样式 */
-  .app-kind-tag {
-    position: absolute !important;
-    top: 2px !important;
-    right: 2px !important;
-    color: #fff !important;
-    font-size: 10px !important;  /* 使用最小字体 */
-    padding: 1px 3px !important; /* 更紧凑的内边距 */
-    border-radius: 3px !important;
-    line-height: 1 !important;
-    z-index: 9999 !important;
-    /* 默认背景色（灰色，用于"未知"类型） */
-    background-color: rgba(128, 128, 128, 0.7) !important;
-  }
-  
-  /* EXE 类型 tag 的背景颜色 */
-  .exe-tag {
-      background-color: #4efff766 !important; /* 绿色 */
-  }
-  
-  /* BAT 类型 tag 的背景颜色 */
-  .bat-tag {
-      background-color: #ff8d008a !important; /* 橙色 */
-  }
+    .search-box {
+        margin-bottom: 16px;
+    }
 
-  /* 文件夹类型 tag 的背景颜色 */
-  .folder-tag {
-      background-color: #ffd70080 !important; /* 金色 */
-  }
+    .search-box form {
+        display: flex;
+        gap: 10px;
+    }
 
-  /* 其他类型 tag 的背景颜色 */
-  .other-tag {
-      background-color: #4a90e2aa !important; /* 蓝色 */
-  }
+    .search-box input {
+        flex: 1;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
 
-  /* 后续可能还有其他响应式或状态样式 ... */
+    .search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .search-box input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .new-app-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
+        color: white;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        white-space: nowrap;
+        transition: transform 0.2s;
+    }
+
+    .new-app-btn:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
+    }
+
+    .app-icons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    .app-icons.fade-out {
+        opacity: 0;
+    }
+
+    .app-icons.fade-in {
+        opacity: 1;
+    }
+
+    .app-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 80px;
+        background: radial-gradient(rgb(205 205 205 / 10%), rgb(255 255 255 / 0%));
+        border: 1px solid rgb(255 255 255 / 11%);
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: scale(1);
+        transform-origin: center center;
+        user-select: none !important;
+    }
+
+    .app-icon.launching {
+        background: radial-gradient(rgb(79 172 254 / 30%), rgb(0 255 184 / 20%));
+        transform: scale(0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .app-icon:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+    }
+
+    .app-icon img {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        object-fit: cover;
+        background-color: #ccc;
+    }
+
+    .app-icon span {
+        margin-top: 5px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .app-kind-tag {
+        position: absolute !important;
+        top: 2px !important;
+        right: 2px !important;
+        color: #fff !important;
+        font-size: 10px !important;
+        padding: 1px 3px !important;
+        border-radius: 3px !important;
+        line-height: 1 !important;
+        z-index: 9999 !important;
+        background-color: rgba(128, 128, 128, 0.7) !important;
+    }
+
+    .exe-tag {
+        background-color: #4efff766 !important;
+    }
+
+    .bat-tag {
+        background-color: #ff8d008a !important;
+    }
+
+    .folder-tag {
+        background-color: #ffd70080 !important;
+    }
+
+    .other-tag {
+        background-color: #4a90e2aa !important;
+    }
+
+    .ripple {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple-effect 0.6s linear;
+        pointer-events: none;
+    }
+
+    @keyframes ripple-effect {
+        to {
+            transform: scale(10);
+            opacity: 0;
+        }
+    }
 </style>
-<div th:replace="~{/components/com-scripts}"></div>
-<div th:replace="~{/components/com-styles}"></div>
 
 <body>
-<div class="background-image"></div>
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="app-center">
+            <div class="app-count">全部应用(<span id="appCount" th:text="${data.appCount}"></span>)</div>
+            
+            <div class="search-box">
+                <form id="searchForm" th:action="@{/ssr/appCenter}" method="get">
+                    <input type="text" name="keyword" th:value="${param.keyword}" 
+                           placeholder="过滤器表达式" autocomplete="off">
+                    <button type="button" class="new-app-btn" onclick="openCreateAppModal()">新应用</button>
+                </form>
+            </div>
 
-<div th:replace="~{components/com-top-nav}"></div>
-
-<div class="glass-container">
-  <div class="app-count">全部应用(<span id="appCount" th:text="${data.appCount}"></span>)</div>
-  <div class="header">
-    <div class="search-box">
-      <form id="searchForm" th:action="@{/ssr/appCenter}" method="get">
-        <input type="text" name="keyword" th:value="${param.keyword}" placeholder="过滤器表达式" autocomplete="off">
-        <button type="button" class="new-app-btn" onclick="openCreateAppModal()">新应用</button>
-      </form>
+            <div class="app-icons" th:if="${data.appList != null}">
+                <div class="app-icon" th:each="app : ${data.appList}" th:attr="data-app-id=${app.id}">
+                    <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
+                    <span th:text="${app.name}">应用名称</span>
+                    <span class="app-kind-tag"
+                          th:text="${app.kind}"
+                          th:classappend="${
+                            app.kind == 'EXE' ? ' exe-tag' : 
+                            app.kind == 'BAT' ? ' bat-tag' : 
+                            app.kind == '文件夹' ? ' folder-tag' : 
+                            app.kind == '未知' ? '' : ' other-tag'
+                          }">
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="scrollable-content">
-    <div class="app-icons" th:if="${data.appList != null}">
-      <div class="app-icon" th:each="app : ${data.appList}" th:attr="data-app-id=${app.id}">
-        <img src="/img/app_icon_exe6.jpg" th:alt="${app.name}" />
-        <span th:text="${app.name}">应用名称</span>
-        <!-- 根据 app.kind 添加不同的背景颜色 -->
-        <span class="app-kind-tag"
-              th:text="${app.kind}"
-              th:classappend="${
-                app.kind == 'EXE' ? ' exe-tag' : 
-                app.kind == 'BAT' ? ' bat-tag' : 
-                app.kind == '文件夹' ? ' folder-tag' : 
-                app.kind == '未知' ? '' : ' other-tag'
-              }"
-        >
-        </span>
-      </div>
-    </div>
-    <!--<div class="app-list">
-    </div>-->
-  </div>
-</div>
 
-<!-- Bootstrap 模态框 -->
-<div th:replace="~{/components/create-app-modal}"></div>
-<div th:replace="~{/components/edit-app-modal}"></div>
+    <!-- 模态框和通知组件 -->
+    <div th:replace="~{/components/create-app-modal}"></div>
+    <div th:replace="~{/components/edit-app-modal}"></div>
+    <div th:replace="~{/components/app-options}"></div>
 
+    <script>
+        $(document).ready(function() {
+            // 自动聚焦到搜索框，并将光标移到末尾
+            const $searchInput = $('input[name="keyword"]');
+            $searchInput.focus();
+            const len = $searchInput.val().length;
+            $searchInput[0].setSelectionRange(len, len);
+            
+            // 监听输入框变化，延迟 300ms 后自动提交表单
+            let searchTimer;
+            $searchInput.on('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    const $form = $('#searchForm');
+                    const url = $form.attr('action');
+                    const keyword = $form.find('input[name="keyword"]').val();
 
-</body>
+                    // 先添加淡出动画
+                    $('.app-icons').addClass('fade-out');
 
+                    // 等待淡出动画完成后再请求新数据
+                    setTimeout(() => {
+                        // 使用 AJAX 获取搜索结果
+                        $.get(url, { keyword: keyword }, function(response) {
+                            const $content = $(response);
+                            const $newIcons = $content.find('.app-icons');
+                            
+                            $newIcons.addClass('fade-out');
+                            $('.app-icons').replaceWith($newIcons);
+                            $('#appCount').text($content.find('#appCount').text());
+                            
+                            const newUrl = url + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
+                            window.history.pushState({}, '', newUrl);
 
+                            requestAnimationFrame(() => {
+                                $newIcons.removeClass('fade-out');
+                            });
+                        });
+                    }, 300);
+                }, 300);
+            });
 
-<!--通用通知组件-->
-<div th:replace="~{/components/mvc-toasts}"></div>
-<div th:replace="~{/components/com-toasts}"></div>
-<div th:replace="~{/components/app-options}"></div>
-
-
-<script>
-
-  function openCreateAppModal(){
-    $("#createAppModal").modal('show')
-  }
-
-  $(document).ready(function() {
-    // 自动聚焦到搜索框，并将光标移到末尾
-    const $searchInput = $('input[name="keyword"]');
-    $searchInput.focus();
-    const len = $searchInput.val().length;
-    $searchInput[0].setSelectionRange(len, len);
-    
-    // 添加全局键盘事件监听
-    $(document).on('keydown', function(e) {
-        // 如果当前焦点已经在搜索框，或者正在输入框/文本框中，则不处理
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            return;
-        }
-        
-        // 忽略功能键（如Ctrl、Alt等）和特殊键（如F1-F12等）
-        if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) {
-            return;
-        }
-        
-        // 将焦点设置到搜索框
-        $searchInput.focus();
-    });
-    
-    // 为所有 app-icon 添加指针样式（使用事件委托）
-    $(document).on('mouseover', '.app-icon', function() {
-        $(this).css('cursor', 'pointer');
-    });
-    
-    // 使用事件委托绑定右键点击事件
-    $(document).on('contextmenu', '.app-icon', function(event) {
-      // 阻止默认右键菜单和事件冒泡
-      event.preventDefault();
-      event.stopPropagation();
-      
-      var $icon = $(this);
-      // 移除之前的水波（如果存在）
-      $icon.find('.ripple').remove();
-
-      // 计算点击位置相对当前 app-icon 的坐标
-      var offset = $icon.offset();
-      var posX = event.pageX - offset.left;
-      var posY = event.pageY - offset.top;
-
-      // 创建水波元素
-      var $ripple = $('<span class="ripple"></span>');
-      $ripple.css({
-        top: posY + 'px',
-        left: posX + 'px'
-      });
-      $icon.append($ripple);
-
-      // 动画结束后移除水波元素
-      setTimeout(function() {
-          $ripple.remove();
-      }, 600);
-
-      // 获取当前应用名称（假设存放在内部 <span> 中）及应用ID
-      var appName = $icon.find('span:not(.app-kind-tag)').first().text();
-      var appId = $icon.data("app-id");
-      openAppContextMenu(event, appName, appId);
-    });
-
-    // 监听输入框变化，延迟 300ms 后自动提交表单
-    let searchTimer;
-    $('input[name="keyword"]').on('input', function() {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(function() {
-            const $form = $('#searchForm');
-            const url = $form.attr('action');
-            const keyword = $form.find('input[name="keyword"]').val();
-
-            // 先添加淡出动画
-            $('.app-icons').addClass('fade-out');
-
-            // 等待淡出动画完成后再请求新数据
-            setTimeout(() => {
-                // 使用 AJAX 获取搜索结果
-                $.get(url, { keyword: keyword }, function(response) {
-                    // 从返回的 HTML 中提取需要的部分
-                    const $content = $(response);
-                    const $newIcons = $content.find('.app-icons');
-                    
-                    // 确保新内容初始时是透明的
-                    $newIcons.addClass('fade-out');
-                    $('.app-icons').replaceWith($newIcons);
-                    $('#appCount').text($content.find('#appCount').text());
-                    
-                    // 更新浏览器地址栏，但不触发页面刷新
-                    const newUrl = url + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
-                    window.history.pushState({}, '', newUrl);
-
-                    // 触发重排后添加淡入动画
-                    requestAnimationFrame(() => {
-                        $newIcons.removeClass('fade-out');
+            // 处理浏览器前进/后退按钮
+            window.onpopstate = function(event) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const keyword = urlParams.get('keyword') || '';
+                
+                $('input[name="keyword"]').val(keyword);
+                
+                $('.app-icons').addClass('fade-out');
+                
+                setTimeout(() => {
+                    $.get($('#searchForm').attr('action'), { keyword: keyword }, function(response) {
+                        const $content = $(response);
+                        const $newIcons = $content.find('.app-icons');
+                        
+                        $newIcons.addClass('fade-out');
+                        $('.app-icons').replaceWith($newIcons);
+                        $('#appCount').text($content.find('#appCount').text());
+                        
+                        requestAnimationFrame(() => {
+                            $newIcons.removeClass('fade-out');
+                        });
                     });
-                });
-            }, 300);
-        }, 300);
-    });
+                }, 300);
+            };
 
-    // 处理浏览器前进/后退按钮
-    window.onpopstate = function(event) {
-        // 从 URL 中获取关键字
-        const urlParams = new URLSearchParams(window.location.search);
-        const keyword = urlParams.get('keyword') || '';
-        
-        // 更新搜索框的值
-        $('input[name="keyword"]').val(keyword);
-        
-        // 添加淡出动画
-        $('.app-icons').addClass('fade-out');
-        
-        // 等待淡出动画完成后再请求新数据
-        setTimeout(() => {
-            // 触发搜索
-            $.get($('#searchForm').attr('action'), { keyword: keyword }, function(response) {
-                const $content = $(response);
-                const $newIcons = $content.find('.app-icons');
-                
-                // 确保新内容初始时是透明的
-                $newIcons.addClass('fade-out');
-                $('.app-icons').replaceWith($newIcons);
-                $('#appCount').text($content.find('#appCount').text());
-                
-                // 触发重排后添加淡入动画
-                requestAnimationFrame(() => {
-                    $newIcons.removeClass('fade-out');
+            // 双击启动应用
+            $(document).on('dblclick', '.app-icon', function(event) {
+                const $icon = $(this);
+                const appId = $icon.data('app-id');
+
+                $icon.addClass('launching');
+
+                $.ajax({
+                    url: '/ssr/runApp',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ appId: appId }),
+                    success: function(response) {
+                        if (response.code === 0) {
+                            showToast('success', response.message);
+                        } else {
+                            showToast('danger', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = '启动应用失败';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        showToast('danger', msg);
+                    },
+                    complete: function() {
+                        setTimeout(() => {
+                            $icon.removeClass('launching');
+                        }, 500);
+                    }
                 });
             });
-        }, 300);
-    };
 
-    // 修改双击处理部分
-    $(document).on('dblclick', '.app-icon', function(event) {
-      const $icon = $(this);
-      const appId = $icon.data('app-id');
+            // 右键菜单
+            $(document).on('contextmenu', '.app-icon', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                var $icon = $(this);
+                $icon.find('.ripple').remove();
 
-      // 添加启动动画效果
-      $icon.addClass('launching');
+                var offset = $icon.offset();
+                var posX = event.pageX - offset.left;
+                var posY = event.pageY - offset.top;
 
-      // 调用启动接口
-      $.ajax({
-          url: '/ssr/runApp',
-          method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ appId: appId }),
-          success: function(response) {
-              if (response.code === 0) {
-                  showToast('success', response.message);
-              } else {
-                  showToast('danger', response.message);
-              }
-          },
-          error: function(xhr) {
-              let msg = '启动应用失败';
-              if (xhr.responseJSON && xhr.responseJSON.message) {
-                  msg = xhr.responseJSON.message;
-              }
-              showToast('danger', msg);
-          },
-          complete: function() {
-              // 移除启动动画效果
-              setTimeout(() => {
-                  $icon.removeClass('launching');
-              }, 500); // 增加延迟时间以确保动画效果完整显示
-          }
-      });
-    });
-  });
-</script>
+                var $ripple = $('<span class="ripple"></span>');
+                $ripple.css({
+                    top: posY + 'px',
+                    left: posX + 'px'
+                });
+                $icon.append($ripple);
 
+                setTimeout(function() {
+                    $ripple.remove();
+                }, 600);
+
+                var appName = $icon.find('span:not(.app-kind-tag)').first().text();
+                var appId = $icon.data("app-id");
+                openAppContextMenu(event, appName, appId);
+            });
+        });
+
+        function openCreateAppModal() {
+            $("#createAppModal").modal('show');
+        }
+    </script>
+</body>
 </html>
