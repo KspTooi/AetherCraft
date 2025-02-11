@@ -21,6 +21,7 @@ import com.sun.jna.platform.win32.Winsvc;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.Structure;
 import com.sun.jna.Pointer;
+import com.sun.jna.Memory;
 
 @Service
 public class WindowsNativeService {
@@ -86,17 +87,18 @@ public class WindowsNativeService {
      */
     public List<WindowsServiceVo> getNativeServiceList(ServiceQueryDto dto) throws BizException {
         List<WindowsServiceVo> services = new ArrayList<>();
-        
-        // 打开服务控制管理器
-        Winsvc.SC_HANDLE scManager = Advapi32.INSTANCE.OpenSCManager(null, null, 
-                Winsvc.SC_MANAGER_ENUMERATE_SERVICE);
-        
-        if (scManager == null) {
-            throw new BizException("打开服务管理器失败，错误码：" + Native.getLastError());
-        }
+        Winsvc.SC_HANDLE scManager = null;
+        Memory buffer = null;
         
         try {
-            // 首先获取需要的缓冲区大小
+            // 打开服务控制管理器
+            scManager = Advapi32.INSTANCE.OpenSCManager(null, null, 
+                    Winsvc.SC_MANAGER_ENUMERATE_SERVICE);
+            
+            if (scManager == null) {
+                throw new BizException("打开服务管理器失败，错误码：" + Native.getLastError());
+            }
+            
             IntByReference pcbBytesNeeded = new IntByReference();
             IntByReference lpServicesReturned = new IntByReference();
             IntByReference lpResumeHandle = new IntByReference(0);
@@ -114,11 +116,8 @@ public class WindowsNativeService {
                     lpResumeHandle,
                     null);
             
-            // 分配内存
             int bytesNeeded = pcbBytesNeeded.getValue();
-            Winsvc.ENUM_SERVICE_STATUS_PROCESS[] serviceStatus = 
-                    (Winsvc.ENUM_SERVICE_STATUS_PROCESS[]) new Winsvc.ENUM_SERVICE_STATUS_PROCESS()
-                    .toArray(bytesNeeded / new Winsvc.ENUM_SERVICE_STATUS_PROCESS().size());
+            buffer = new Memory(bytesNeeded);
             
             // 再次调用以获取实际的服务信息
             boolean success = Advapi32.INSTANCE.EnumServicesStatusEx(
@@ -126,7 +125,7 @@ public class WindowsNativeService {
                     Winsvc.SC_ENUM_PROCESS_INFO,
                     WinNT.SERVICE_WIN32,
                     Winsvc.SERVICE_STATE_ALL,
-                    serviceStatus[0].getPointer(),
+                    buffer,
                     bytesNeeded,
                     pcbBytesNeeded,
                     lpServicesReturned,
@@ -139,26 +138,25 @@ public class WindowsNativeService {
             
             // 处理返回的服务信息
             int numServices = lpServicesReturned.getValue();
-            Pointer pointer = serviceStatus[0].getPointer();
+            Winsvc.ENUM_SERVICE_STATUS_PROCESS service = new Winsvc.ENUM_SERVICE_STATUS_PROCESS();
+            int serviceSize = service.size();
             
-            // 检查查询条件是否有效
-            boolean hasValidFilter = dto != null && 
-                                  dto.getServiceName() != null && 
-                                  !dto.getServiceName().trim().isEmpty();
-            String keyword = hasValidFilter ? dto.getServiceName().toLowerCase().trim() : null;
+            // 检查查询条件
+            String keyword = (dto != null && dto.getServiceName() != null) ? 
+                           dto.getServiceName().toLowerCase().trim() : null;
             
             for (int i = 0; i < numServices; i++) {
-                Winsvc.ENUM_SERVICE_STATUS_PROCESS service = Structure.newInstance(
-                    Winsvc.ENUM_SERVICE_STATUS_PROCESS.class, 
-                    pointer.share((long)i * new Winsvc.ENUM_SERVICE_STATUS_PROCESS().size())
+                service = Structure.newInstance(
+                    Winsvc.ENUM_SERVICE_STATUS_PROCESS.class,
+                    buffer.share(i * serviceSize)
                 );
                 service.read();
                 
-                String serviceName = service.lpServiceName != null ? service.lpServiceName : "";
-                String displayName = service.lpDisplayName != null ? service.lpDisplayName : "";
+                String serviceName = service.lpServiceName;
+                String displayName = service.lpDisplayName;
                 
-                // 如果有有效的过滤条件才进行过滤，否则添加所有服务
-                if (keyword != null) {
+                // 如果有关键字，进行过滤
+                if (keyword != null && !keyword.isEmpty()) {
                     if (!serviceName.toLowerCase().contains(keyword) && 
                         !displayName.toLowerCase().contains(keyword)) {
                         continue;
@@ -172,13 +170,16 @@ public class WindowsNativeService {
                 ));
             }
             
+            return services;
+            
         } finally {
-            // 关闭服务管理器句柄
+            // 确保资源被正确释放
             if (scManager != null) {
                 Advapi32.INSTANCE.CloseServiceHandle(scManager);
             }
+            if (buffer != null) {
+                buffer.clear();
+            }
         }
-        
-        return services;
     }
 } 
