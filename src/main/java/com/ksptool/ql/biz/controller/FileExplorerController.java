@@ -61,10 +61,7 @@ public class FileExplorerController {
             
             // 如果没有指定路径，尝试从配置中获取
             if (path == null) {
-                path = configService.getConfigValue(getConfigKey(user.getId()));
-                if (path == null) {
-                    path = "@"; // 如果没有保存的路径，默认到根目录
-                }
+                path = fileExplorerService.getLastPath();
             }
             
             // URL解码
@@ -86,7 +83,7 @@ public class FileExplorerController {
                 mav.addObject("breadcrumbs", List.of(new FileItemVo("计算机", "@", 0)));
                 
                 // 保存当前路径到配置
-                configService.setConfigValue(getConfigKey(user.getId()), "@");
+                fileExplorerService.saveCurrentPath("@");
                 
                 return mav;
             }
@@ -120,7 +117,7 @@ public class FileExplorerController {
             String parentPath = fileExplorerService.getParentPath(currentPath);
             
             // 保存当前路径到配置
-            configService.setConfigValue(getConfigKey(user.getId()), currentPath);
+            fileExplorerService.saveCurrentPath(currentPath);
             
             mav.addObject("currentPath", currentPath);
             mav.addObject("parentPath", parentPath);

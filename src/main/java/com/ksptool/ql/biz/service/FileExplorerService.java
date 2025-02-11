@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.ql.biz.model.vo.FileItemVo;
 import com.ksptool.ql.commons.utils.FileUtils;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.AuthContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -28,14 +29,32 @@ public class FileExplorerService {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final String DEFAULT_EXPLORER_CMD = "explorer";
     private static final String EXPLORER_CONFIG_KEY = "explorer.default.run";
+    private static final String EXPLORER_PATH_KEY = "explorer.path";
+
+    /**
+     * 获取用户的上次访问路径
+     */
+    public String getLastPath() {
+        Long userId = AuthContext.getCurrentUserId();
+        String path = configService.getConfigValue(EXPLORER_PATH_KEY, userId);
+        return StringUtils.hasText(path) ? path : "@";
+    }
+
+    /**
+     * 保存用户的当前访问路径
+     */
+    public void saveCurrentPath(String path) {
+        Long userId = AuthContext.getCurrentUserId();
+        configService.setConfigValue(EXPLORER_PATH_KEY, path, userId);
+    }
 
     /**
      * 规范化路径
      */
     public String normalizePath(String path) {
         if (path == null || path.trim().isEmpty()) {
-            // 如果路径为空,返回用户目录
-            return System.getProperty("user.home");
+            // 如果路径为空，获取用户上次访问的路径
+            return getLastPath();
         }
         if ("@".equals(path.trim())) {
             // 如果是@，表示根目录，返回null让listFiles处理盘符列表
@@ -207,12 +226,15 @@ public class FileExplorerService {
             throw new BizException("文件或目录不存在：" + path);
         }
 
-        // 获取自定义运行命令
-        String command = configService.getConfigValue(EXPLORER_CONFIG_KEY);
+        // 获取当前用户ID
+        Long userId = AuthContext.getCurrentUserId();
+        
+        // 获取用户自定义运行命令，如果没有则尝试获取全局配置
+        String command = configService.getConfigValue(EXPLORER_CONFIG_KEY, userId);
         if (!StringUtils.hasText(command)) {
-            // 如果没有配置，添加默认配置
+            // 如果没有配置，添加默认配置到用户作用域
             command = DEFAULT_EXPLORER_CMD + " #{path}";
-            configService.setConfigValue(EXPLORER_CONFIG_KEY, command);
+            configService.setConfigValue(EXPLORER_CONFIG_KEY, command, userId);
         }
 
         // 替换路径占位符并执行命令
