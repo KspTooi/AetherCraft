@@ -147,6 +147,8 @@
                     <include>**/**.jpg</include>
                     <include>**/**.png</include>
                     <include>**/**.ico</include>
+                    <include>**/**.woff</include>
+                    <include>**/**.woff2</include>
                 </includes>
             </resource>
         </resources>
