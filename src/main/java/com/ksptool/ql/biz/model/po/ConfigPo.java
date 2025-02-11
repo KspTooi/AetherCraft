@@ -15,8 +15,9 @@ public class ConfigPo {
     @Comment("主键ID")
     private Long id;
 
+    @Column(nullable = false)
     @Comment("用户ID，-1表示全局配置")
-    private Long userId = -1L;
+    private Long userId;
 
     @Column(name = "config_key", nullable = false, length = 100)
     @Comment("配置键")
