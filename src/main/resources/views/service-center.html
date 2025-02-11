@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 服务管理</title>
+    <div th:replace="~{/components/com-scripts}"></div>
+    <div th:replace="~{/components/com-styles}"></div>
+</head>
+
+<style>
+    /* 基础布局样式 */
+    body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+    }
+
+    .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #333 url('/img/bg1.jpg') no-repeat center center;
+        background-size: cover;
+        z-index: -1;
+    }
+
+    /* 容器样式 */
+    .glass-container {
+        box-sizing: border-box;
+        position: fixed;
+        top: 56px;  /* 导航栏高度 */
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    /* 页面头部样式 */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .page-title {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .service-count {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+
+    /* 搜索框样式 */
+    .search-box {
+        margin-bottom: 16px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .search-box input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 表格容器和滚动条 */
+    .table-container {
+        flex: 1;
+        min-height: 0;
+        border-radius: 8px;
+        background: rgba(165, 165, 165, 0.2);
+        overflow-y: auto;
+    }
+
+    /* 服务列表表格样式 */
+    .service-list {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        table-layout: fixed;
+    }
+
+    .service-list thead {
+        background: rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .service-list tbody {
+        overflow-y: auto;
+    }
+
+    .service-list th,
+    .service-list td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .service-list th {
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .service-list td {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .service-list tr:hover td {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* 设置列宽 */
+    .service-list th:nth-child(1),
+    .service-list td:nth-child(1) {
+        width: 25%;
+    }
+
+    .service-list th:nth-child(2),
+    .service-list td:nth-child(2) {
+        width: 55%;
+    }
+
+    .service-list th:nth-child(3),
+    .service-list td:nth-child(3) {
+        width: 20%;
+    }
+
+    /* 自定义滚动条 */
+    .table-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 服务状态标签样式 */
+    .service-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .status-running {
+        background: rgba(40, 167, 69, 0.3);
+        color: #98ffa8;
+    }
+
+    .status-stopped {
+        background: rgba(220, 53, 69, 0.3);
+        color: #ffb3b3;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.3);
+        color: #ffe5a8;
+    }
+
+    /* 响应式布局 */
+    @media (min-width: 768px) {
+        .glass-container {
+            left: 40px;
+            right: 40px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .glass-container {
+            padding: 16px;
+        }
+
+        .service-list th,
+        .service-list td {
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+
+        .service-status {
+            min-width: 60px;
+            padding: 3px 6px;
+        }
+    }
+</style>
+
+<body>
+    <div class="background-image"></div>
+    <div th:replace="~{components/com-top-nav}"></div>
+
+    <div class="glass-container mt-4">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <h1 class="page-title">Windows 服务管理</h1>
+            <div class="service-count">
+                共 <span th:text="${services != null ? services.size() : 0}"></span> 个服务
+            </div>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <form id="searchForm" th:action="@{/ssr/serviceCenter}" method="get">
+                <input type="text" name="keyword" th:value="${param.keyword}" 
+                       placeholder="搜索服务名称或显示名称..." autocomplete="off">
+            </form>
+        </div>
+
+        <!-- 服务列表 -->
+        <div class="table-container">
+            <table class="service-list">
+                <thead>
+                    <tr>
+                        <th>服务名称</th>
+                        <th>显示名称</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${services == null || services.empty}">
+                        <td colspan="3" style="text-align: center; padding: 20px;">
+                            暂无服务信息
+                        </td>
+                    </tr>
+                    <tr th:each="service : ${services}">
+                        <td th:text="${service.serviceName}"></td>
+                        <td th:text="${service.displayName}"></td>
+                        <td>
+                            <span class="service-status" 
+                                  th:text="${service.stateDesc}"
+                                  th:classappend="${
+                                    service.state == 4 ? 'status-running' : 
+                                    service.state == 1 ? 'status-stopped' : 
+                                    'status-pending'
+                                  }">
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            // 自动聚焦到搜索框，并将光标移到末尾
+            const $searchInput = $('input[name="keyword"]');
+            $searchInput.focus();
+            const len = $searchInput.val().length;
+            $searchInput[0].setSelectionRange(len, len);
+            
+            // 监听输入框变化，延迟 300ms 后自动提交表单
+            let searchTimer;
+            $searchInput.on('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    $('#searchForm').submit();
+                }, 300);
+            });
+
+            // 显示错误消息（如果有）
+            const error = /*[[${error}]]*/ null;
+            if (error) {
+                showToast('danger', error);
+            }
+        });
+    </script>
+</body>
+</html> 

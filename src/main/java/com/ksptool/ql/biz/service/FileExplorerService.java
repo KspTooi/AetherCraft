@@ -2,9 +2,13 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.model.vo.FileItemVo;
 import com.ksptool.ql.commons.utils.FileUtils;
+import com.ksptool.ql.commons.exception.BizException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -16,7 +20,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class FileExplorerService {
+    @Autowired
+    private ConfigService configService;
+    @Autowired
+    private WindowsNativeService windowsNativeService;
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private static final String DEFAULT_EXPLORER_CMD = "explorer";
+    private static final String EXPLORER_CONFIG_KEY = "explorer.default.run";
 
     /**
      * 规范化路径
@@ -183,5 +194,32 @@ public class FileExplorerService {
         Path path = Paths.get(currentPath);
         Path parent = path.getParent();
         return parent != null ? parent.toString() : "@";
+    }
+
+    /**
+     * 打开指定路径
+     * @param path 要打开的文件或目录路径
+     * @return 进程ID
+     */
+    public long openPath(String path) throws BizException, IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            throw new BizException("文件或目录不存在：" + path);
+        }
+
+        // 获取自定义运行命令
+        String command = configService.getConfigValue(EXPLORER_CONFIG_KEY);
+        if (!StringUtils.hasText(command)) {
+            // 如果没有配置，添加默认配置
+            command = DEFAULT_EXPLORER_CMD + " #{path}";
+            configService.setConfigValue(EXPLORER_CONFIG_KEY, command);
+        }
+
+        // 替换路径占位符并执行命令
+        command = command.replace("#{path}", path);
+        ProcessBuilder processBuilder = new ProcessBuilder(command.split("\\s+"));
+        processBuilder.directory(file.getParentFile());
+        Process process = processBuilder.start();
+        return process.pid();
     }
 } 

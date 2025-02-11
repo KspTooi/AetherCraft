@@ -27,6 +27,9 @@ import java.awt.Desktop.Action;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.ksptool.ql.biz.service.WindowsNativeService;
+import com.ksptool.ql.commons.exception.BizException;
 
 @Controller
 @RequestMapping("/ssr")
@@ -36,6 +39,8 @@ public class FileExplorerController {
     private final FileExplorerService fileExplorerService;
     private final ConfigService configService;
     private final AuthService authService;
+    @Autowired
+    private WindowsNativeService windowsNativeService;
 
     private String getConfigKey(Long userId) {
         return String.format("explorer.%d.path", userId);
@@ -214,56 +219,22 @@ public class FileExplorerController {
 
     @PostMapping("/openPath")
     @ResponseBody
-    public Result<String> openPath(@RequestBody OpenPathDto dto) {
+    public Result<Long> openPath(@RequestBody OpenPathDto dto) {
         try {
             Path path = Paths.get(dto.getPath());
             File file = path.toFile();
-
-            if (!file.exists()) {
-                return Result.error("文件或目录不存在：" + dto.getPath());
-            }
-
             String fileName = file.getName();
-            // 获取自定义命令
-            String command = configService.getConfigValue("explorer.default.run");
             
-            // 如果没有自定义命令，先尝试使用Desktop API
-            if (!StringUtils.hasText(command)) {
-                // 检查是否支持Desktop操作
-                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Action.OPEN)) {
-                    Desktop desktop = Desktop.getDesktop();
-                    if (dto.isDirectory()) {
-                        if (desktop.isSupported(Action.BROWSE_FILE_DIR)) {
-                            desktop.browseFileDirectory(file);
-                            return Result.success(String.format("已打开目录：%s", fileName), null);
-                        }
-                    } else {
-                        desktop.open(file);
-                        return Result.success(String.format("已打开文件：%s", fileName), null);
-                    }
-                }
-                // 如果Desktop不支持，使用默认的explorer命令
-                command = "explorer #{path}";
-            }
+            // 调用服务层方法打开文件
+            long pid = fileExplorerService.openPath(dto.getPath());
 
-            // 使用ProcessBuilder运行命令
-            command = command.replace("#{path}", dto.getPath());
-            List<String> commands = Arrays.asList(command.split("\\s+"));
-            ProcessBuilder processBuilder = new ProcessBuilder(commands);
-            processBuilder.directory(file.getParentFile()); // 设置工作目录为文件所在目录
-            processBuilder.start();
+            String message = String.format("已打开：%s (pid:%s)", fileName,pid);
+            return Result.success(message, pid);
             
-            return Result.success(String.format("已使用默认程序打开%s：%s", 
-                dto.isDirectory() ? "目录" : "文件", 
-                fileName), null);
-            
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
         } catch (IOException e) {
             return Result.error(String.format("打开失败：%s（%s）", 
-                Paths.get(dto.getPath()).getFileName(),
-                e.getMessage()));
-        } catch (SecurityException e) {
-            return Result.error(String.format("安全限制，无法打开%s：%s（%s）", 
-                dto.isDirectory() ? "目录" : "文件",
                 Paths.get(dto.getPath()).getFileName(),
                 e.getMessage()));
         } catch (Exception e) {
