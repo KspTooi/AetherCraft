@@ -4,28 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>组件展示 - Quick Launcher</title>
-    <div th:replace="~{/components/com-scripts}"></div>
-    <div th:replace="~{/components/com-styles}"></div>
 </head>
 
 <style>
-    body {
-        margin: 0;
-        font-family: system-ui, -apple-system, sans-serif;
-        overflow: hidden;
-    }
-
-    .background-image {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #333 url('/img/bg1.jpg') no-repeat center center;
-        background-size: cover;
-        z-index: -1;
-    }
-
     .demo-content {
         color: #fff;
     }
@@ -59,15 +40,35 @@
 </style>
 
 <body>
-    <div class="background-image"></div>
-    <div th:replace="~{components/com-top-nav}"></div>
-
-    <!-- Glass Box 组件示例 -->
-    <div th:replace="~{components/com-glass-box :: glass-box(
-        content=~{::content}
-    )}">
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
         <!-- 主要内容 -->
         <div th:fragment="content" class="demo-content">
+            <!-- 标题区域 -->
+            <div class="header">
+                <h2>框架主题组件展示</h2>
+                <span>基础示例</span>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content">
+                <h2>组件功能说明</h2>
+                <p>这是一个整合了导航栏和玻璃盒子的框架主题组件，提供了：</p>
+                <p>1. 统一的背景图样式</p>
+                <p>2. 顶部导航栏</p>
+                <p>3. 玻璃效果内容区域</p>
+                
+                <!-- 添加一些额外的内容来演示滚动效果 -->
+                <div style="margin-top: 20px;">
+                    <h2>滚动演示</h2>
+                    <p>这是一些额外的内容，用于演示内容区域的滚动效果...</p>
+                    <p>向下滚动可以看到更多内容...</p>
+                    <!-- 重复20次来产生滚动效果 -->
+                    <p th:each="i : ${#numbers.sequence(1, 20)}">
+                        这是第 <span th:text="${i}"></span> 行演示文本
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </body>
