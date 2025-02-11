@@ -1,7 +1,8 @@
-<div id="toast-container" aria-live="polite" aria-atomic="true" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+<div id="toast-container" aria-live="polite" aria-atomic="true" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055; pointer-events: none;">
     <style>
         /* 自定义 Toast 基本样式及漂亮边框与毛玻璃效果 */
         #notificationToast {
+            pointer-events: auto;  /* 恢复Toast本身的点击事件 */
             border: 1px solid rgb(80 80 80 / 10%) !important;
             border-radius: 10px !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
