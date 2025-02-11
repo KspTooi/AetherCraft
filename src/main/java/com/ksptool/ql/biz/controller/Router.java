@@ -50,6 +50,11 @@ public class Router {
         return "task-manager";
     }
 
+    @GetMapping("/ssr/demo")
+    public String demo() {
+        return "demo";
+    }
+
     @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){

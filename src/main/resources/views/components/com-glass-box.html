@@ -1,0 +1,71 @@
+<!-- 玻璃效果盒子组件 -->
+<div th:fragment="glass-box(content)">
+    <!-- 引入样式 -->
+    <div th:replace="~{::glass-box-style}"></div>
+    
+    <div class="glass-box">
+        <div class="glass-box-content">
+            <div th:replace="${content}"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 玻璃盒子样式 -->
+<style th:fragment="glass-box-style">
+    /* 玻璃盒子基础样式 */
+    .glass-box {
+        box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    /* 内容区域样式 */
+    .glass-box-content {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        position: relative;
+    }
+
+    /* 自定义滚动条样式 - Chrome, Edge, Safari */
+    .glass-box-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .glass-box-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    .glass-box-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
+
+    .glass-box-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    /* 自定义滚动条样式 - Firefox */
+    .glass-box-content {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.3) rgba(255,255,255,0.2);
+    }
+
+    /* 响应式布局调整 */
+    @media (max-width: 768px) {
+        .glass-box {
+            left: 20px;
+            right: 20px;
+            top: 48px; /* 移动端导航栏高度较小 */
+        }
+    }
+</style>

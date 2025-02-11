@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组件展示 - Quick Launcher</title>
+    <div th:replace="~{/components/com-scripts}"></div>
+    <div th:replace="~{/components/com-styles}"></div>
+</head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+    }
+
+    .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #333 url('/img/bg1.jpg') no-repeat center center;
+        background-size: cover;
+        z-index: -1;
+    }
+
+    .demo-content {
+        color: #fff;
+    }
+
+    .demo-content .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .demo-content .content {
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .demo-content h2 {
+        margin: 0 0 15px 0;
+        font-size: 1.1rem;
+    }
+
+    .demo-content p {
+        margin: 0 0 15px 0;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+</style>
+
+<body>
+    <div class="background-image"></div>
+    <div th:replace="~{components/com-top-nav}"></div>
+
+    <!-- Glass Box 组件示例 -->
+    <div th:replace="~{components/com-glass-box :: glass-box(
+        content=~{::content}
+    )}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="demo-content">
+        </div>
+    </div>
+</body>
+</html> 
