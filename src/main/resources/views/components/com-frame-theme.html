@@ -21,6 +21,9 @@
             </div>
         </div>
     </div>
+
+    <div th:replace="~{/components/mvc-toasts}"></div>
+    <div th:replace="~{/components/com-toasts}"></div>
 </div>
 
 <!-- 框架主题样式 -->
@@ -47,10 +50,11 @@
     /* 玻璃容器样式 */
     .glass-container {
         position: fixed;
-        top: 56px;  /* 导航栏高度 */
+        top: 100px;  /* 导航栏高度(56px) + 边距(20px) */
         left: 40px;
         right: 40px;
         bottom: 20px;
+        transition: all 0.3s ease;
     }
 
     /* 玻璃盒子样式 */
@@ -105,9 +109,9 @@
     /* 响应式布局调整 */
     @media (max-width: 768px) {
         .glass-container {
+            top: 68px; /* 移动端导航栏高度(48px) + 边距(20px) */
             left: 20px;
             right: 20px;
-            top: 48px; /* 移动端导航栏高度较小 */
         }
     }
 </style> 
