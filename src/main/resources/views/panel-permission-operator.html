@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>权限操作 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="h-100">
+    <!-- 引入控制台框架 -->
+    <div th:replace="~{components/com-frame-control-panel :: control-panel(~{::content})}">
+        <div th:fragment="content">
+            <!-- 页面内容 -->
+            <div class="container-fluid p-0">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center px-3">
+                            <h5 class="card-title mb-0 fw-bold text-dark" th:text="${permission != null ? '编辑权限' : '创建权限'}">创建权限</h5>
+                            <a href="/ssr/system/permissions" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>返回列表
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <form id="permissionForm" class="needs-validation" novalidate>
+                            <input type="hidden" name="id" th:value="${permission != null ? permission.id : ''}">
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="code" class="form-label small">权限标识</label>
+                                    <input type="text" class="form-control form-control-sm" id="code" name="code" 
+                                           th:value="${permission != null ? permission.code : ''}"
+                                           placeholder="如：system:user:view"
+                                           required>
+                                    <div class="form-text small">使用冒号分隔的小写字母组合</div>
+                                    <div class="invalid-feedback">请输入权限标识</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="name" class="form-label small">权限名称</label>
+                                    <input type="text" class="form-control form-control-sm" id="name" name="name" 
+                                           th:value="${permission != null ? permission.name : ''}"
+                                           placeholder="如：查看用户"
+                                           required>
+                                    <div class="invalid-feedback">请输入权限名称</div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="description" class="form-label small">权限描述</label>
+                                    <textarea class="form-control form-control-sm" id="description" name="description" 
+                                              rows="2" placeholder="请输入权限描述"
+                                              th:text="${permission != null ? permission.description : ''}"></textarea>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="sortOrder" class="form-label small">排序号</label>
+                                    <input type="number" class="form-control form-control-sm" id="sortOrder" name="sortOrder" 
+                                           th:value="${permission != null ? permission.sortOrder : 0}"
+                                           required>
+                                    <div class="invalid-feedback">请输入排序号</div>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-3">
+                                <button type="button" class="btn btn-light btn-sm me-2" onclick="window.location.href='/ssr/system/permissions'">取消</button>
+                                <button type="submit" class="btn btn-primary btn-sm">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('permissionForm');
+            
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                if (!form.checkValidity()) {
+                    event.stopPropagation();
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                // 收集表单数据
+                const formData = new FormData(form);
+                const permissionData = {};
+                formData.forEach((value, key) => {
+                    if (value.trim() !== '') {  // 只包含非空值
+                        permissionData[key] = value;
+                    }
+                });
+
+                // 发送到后端API
+                fetch('/ssr/system/permissions/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(permissionData)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 0) {
+                        // 保存成功，返回列表页
+                        showToast('success', '保存成功');
+                        setTimeout(() => {
+                            window.location.href = '/ssr/system/permissions';
+                        }, 500);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                })
+                .catch(error => {
+                    showToast('danger', '保存失败：' + error.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
