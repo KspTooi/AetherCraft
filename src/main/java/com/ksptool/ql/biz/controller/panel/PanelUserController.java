@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.vo.PanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
@@ -26,7 +27,7 @@ public class PanelUserController {
                             @RequestParam(name = "page", defaultValue = "1") int page,
                             @RequestParam(name = "size", defaultValue = "10") int size) {
         // 获取用户列表
-        Page<UserPo> userPage = panelUserService.getUserList(PageRequest.of(page - 1, size));
+        Page<PanelUserVo> userPage = panelUserService.getUserList(PageRequest.of(page - 1, size));
         
         // 添加数据到模型
         model.addAttribute("users", userPage.getContent());
@@ -35,6 +36,24 @@ public class PanelUserController {
         model.addAttribute("totalElements", userPage.getTotalElements());
         
         return "panel-user-manager";
+    }
+
+    /**
+     * 用户操作页面（创建/编辑）
+     */
+    @GetMapping("/operator")
+    public String userOperator(Model model, @RequestParam(name = "id", required = false) Long id) {
+        if (id != null) {
+            // 编辑模式：获取用户信息
+            try {
+                UserPo user = panelUserService.getUserPo(id);
+                model.addAttribute("user", user);
+            } catch (BizException e) {
+                // 用户不存在时返回列表页
+                return "redirect:/ssr/system/users";
+            }
+        }
+        return "panel-user-operator";
     }
 
     /**
@@ -70,9 +89,9 @@ public class PanelUserController {
      */
     @GetMapping("/{id}")
     @ResponseBody
-    public Result<UserPo> getUser(@PathVariable Long id) {
+    public Result<PanelUserVo> getUser(@PathVariable Long id) {
         try {
-            UserPo user = panelUserService.getUser(id);
+            PanelUserVo user = panelUserService.getUser(id);
             return Result.success(user);
         } catch (BizException e) {
             return Result.error(e);

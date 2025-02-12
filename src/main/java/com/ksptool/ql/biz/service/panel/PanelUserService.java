@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.vo.PanelUserVo;
 import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 
 @Service
 public class PanelUserService {
@@ -18,11 +20,14 @@ public class PanelUserService {
     @Autowired
     private UserRepository userRepository;
 
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     /**
      * 获取用户列表
      */
-    public Page<UserPo> getUserList(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    public Page<PanelUserVo> getUserList(Pageable pageable) {
+        Page<UserPo> userPoPage = userRepository.findAll(pageable);
+        return userPoPage.map(this::convertToVo);
     }
 
     /**
@@ -70,11 +75,34 @@ public class PanelUserService {
     }
 
     /**
-     * 获取用户信息
+     * 获取用户信息（VO）
      * @throws BizException 用户不存在时抛出异常
      */
-    public UserPo getUser(Long id) throws BizException {
+    public PanelUserVo getUser(Long id) throws BizException {
+        UserPo userPo = getUserPo(id);
+        return convertToVo(userPo);
+    }
+
+    /**
+     * 获取用户信息（PO）
+     * @throws BizException 用户不存在时抛出异常
+     */
+    public UserPo getUserPo(Long id) throws BizException {
         return userRepository.findById(id)
                 .orElseThrow(() -> new BizException("用户不存在"));
+    }
+
+    /**
+     * 将UserPo转换为PanelUserVo
+     */
+    private PanelUserVo convertToVo(UserPo po) {
+        if (po == null) {
+            return null;
+        }
+        PanelUserVo vo = new PanelUserVo();
+        vo.setId(po.getId());
+        vo.setUsername(po.getUsername());
+        vo.setCreateTime(dateFormat.format(po.getCreateTime()));
+        return vo;
     }
 } 
