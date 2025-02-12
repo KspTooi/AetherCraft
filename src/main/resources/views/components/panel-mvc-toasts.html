@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:if="${vo != null and vo.code != null}">
+    <div aria-live="polite" aria-atomic="true"
+         class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060; pointer-events: none;">
+
+        <style>
+            /* 控制面板风格的Toast样式 */
+            #panelNotificationToast {
+                pointer-events: auto;
+                border-radius: 8px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+                overflow: hidden !important;
+                min-width: 300px;
+            }
+
+            /* 成功状态样式 */
+            #panelNotificationToast.toast-success {
+                background: linear-gradient(135deg, #ffffff, #f8f9fa) !important;
+                border-left: 4px solid var(--bs-success) !important;
+            }
+
+            /* 错误状态样式 */
+            #panelNotificationToast.toast-danger {
+                background: linear-gradient(135deg, #ffffff, #f8f9fa) !important;
+                border-left: 4px solid var(--bs-danger) !important;
+            }
+
+            /* Toast头部样式 */
+            #panelNotificationToast .toast-header {
+                background: transparent !important;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+                padding: 0.75rem 1rem !important;
+            }
+
+            #panelNotificationToast .toast-header strong {
+                font-weight: 600 !important;
+                font-size: 0.9rem !important;
+            }
+
+            #panelNotificationToast.toast-success .toast-header strong {
+                color: var(--bs-success) !important;
+            }
+
+            #panelNotificationToast.toast-danger .toast-header strong {
+                color: var(--bs-danger) !important;
+            }
+
+            /* Toast内容样式 */
+            #panelNotificationToast .toast-body {
+                padding: 1rem !important;
+                color: var(--bs-gray-700) !important;
+                font-size: 0.875rem !important;
+                line-height: 1.5 !important;
+            }
+
+            /* 关闭按钮样式 */
+            #panelNotificationToast .btn-close {
+                opacity: 0.5;
+                transition: opacity 0.2s;
+            }
+
+            #panelNotificationToast .btn-close:hover {
+                opacity: 0.75;
+            }
+        </style>
+
+        <div id="panelNotificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-autohide="true" data-bs-delay="3000"
+             th:classappend="${vo.code == 0 ? 'toast-success' : 'toast-danger'}">
+            <div class="toast-header">
+                <strong class="me-auto" th:text="${vo.code == 0 ? '成功' : '错误'}">通知</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="关闭"></button>
+            </div>
+            <div class="toast-body" th:text="${vo.message}">
+                这里显示通知内容
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // 页面加载后初始化并自动显示 Toast
+        var toastEl = document.getElementById("panelNotificationToast");
+        var toastInstance = new bootstrap.Toast(toastEl);
+        toastInstance.show();
+    </script>
+</div>
+</html> 

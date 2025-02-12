@@ -46,10 +46,13 @@
                                                    class="btn btn-outline-primary">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger"
-                                                        th:onclick="'deletePermission(' + ${permission.id} + ')'">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <form th:action="@{/ssr/system/permissions/delete/{id}(id=${permission.id})}" 
+                                                      method="post" class="d-inline" 
+                                                      onsubmit="return confirm('确定要删除该权限吗？');">
+                                                    <button type="submit" class="btn btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -77,32 +80,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function deletePermission(id) {
-            if (confirm('确定要删除该权限吗？')) {
-                fetch('/ssr/system/permissions/delete/' + id, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 0) {
-                        showToast('success', '删除成功');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else {
-                        throw new Error(result.message);
-                    }
-                })
-                .catch(error => {
-                    showToast('danger', '删除失败：' + error.message);
-                });
-            }
-        }
-    </script>
 </body>
 </html> 

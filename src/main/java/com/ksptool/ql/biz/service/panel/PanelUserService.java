@@ -37,7 +37,7 @@ public class PanelUserService {
     public void saveUser(UserPo user) throws BizException {
         // 如果是新用户或密码有更新，则加密密码
         if (user.getId() == null || user.getPassword() != null && !user.getPassword().isEmpty()) {
-            user.setPassword(encryptPassword(user.getPassword()));
+            user.setPassword(encryptPassword(user.getPassword(), user.getUsername()));
         } else {
             // 如果是编辑用户且密码为空，则保持原密码不变
             UserPo existingUser = userRepository.findById(user.getId())
@@ -56,12 +56,16 @@ public class PanelUserService {
 
     /**
      * 密码加密
+     * @param password 密码
+     * @param username 用户名（用作盐值）
      * @throws BizException 加密失败时抛出异常
      */
-    private String encryptPassword(String password) throws BizException {
+    private String encryptPassword(String password, String username) throws BizException {
         try {
+            // 使用用户名作为盐，加密密码：password + username
+            String salted = password + username;
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(salted.getBytes(StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);

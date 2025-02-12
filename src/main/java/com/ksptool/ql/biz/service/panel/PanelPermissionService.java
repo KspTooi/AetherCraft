@@ -73,4 +73,12 @@ public class PanelPermissionService {
         return permissionRepository.findById(id)
                 .orElseThrow(() -> new BizException("权限不存在"));
     }
+
+    /**
+     * 获取下一个可用的排序号
+     * @return 下一个排序号
+     */
+    public Integer getNextSortOrder() {
+        return permissionRepository.findMaxSortOrder() + 1;
+    }
 } 
