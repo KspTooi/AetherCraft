@@ -75,7 +75,7 @@ public class PanelUserController {
      */
     @PostMapping("/delete/{id}")
     @ResponseBody
-    public Result<String> deleteUser(@PathVariable Long id) {
+    public Result<String> deleteUser(@PathVariable(name = "id") Long id) {
         try {
             panelUserService.deleteUser(id);
             return Result.success("删除成功");
