@@ -1,0 +1,12 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+*.mv.db
+*.log
+.idea/**
+.vscode/**
+*.jar
+*.war
+*.zip
+*.tar
+*.gz
+*.bz2
+target/**
