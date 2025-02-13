@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,12 +25,9 @@ public class PanelGroupController {
     private PanelPermissionService permissionService;
 
     @GetMapping("/list")
-    public ModelAndView list(@RequestParam(name = "page", defaultValue = "1") int page,
-                           @RequestParam(name = "size", defaultValue = "10") int size) {
+    public ModelAndView list(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size) {
         ModelAndView mv = new ModelAndView("panel-group-manager");
-        mv.addObject("groups", groupService.findAll(page, size));
-        mv.addObject("currentPage", page);
-        mv.addObject("totalPages", groupService.getTotalPages(size));
+        mv.addObject("data", groupService.findAll(page, size));
         return mv;
     }
 
@@ -66,9 +64,7 @@ public class PanelGroupController {
     }
 
     @PostMapping("/save")
-    public ModelAndView save(GroupPo group, 
-                           @RequestParam(name = "permissionIds", required = false) Long[] permissionIds,
-                           RedirectAttributes redirectAttributes) {
+    public ModelAndView save(GroupPo group, @RequestParam(name = "permissionIds", required = false) Long[] permissionIds, RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView();
         
         try {
@@ -80,19 +76,19 @@ public class PanelGroupController {
             
             // 设置成功消息
             if (isCreate) {
-                redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已创建用户组:%s", group.getName()), null));
+                ra.addFlashAttribute("vo", Result.success(String.format("已创建用户组:%s", group.getName()), null));
                 // 创建模式：清空表单，返回创建页面继续创建
-                redirectAttributes.addFlashAttribute("group", new GroupPo());
+                ra.addFlashAttribute("group", new GroupPo());
                 mv.setViewName("redirect:/panel/group/create");
             } else {
-                redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已更新用户组:%s", group.getName()), null));
+                ra.addFlashAttribute("vo", Result.success(String.format("已更新用户组:%s", group.getName()), null));
                 // 编辑模式：返回列表页
                 mv.setViewName("redirect:/panel/group/list");
             }
         } catch (BizException e) {
-            redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
             // 保持原有数据，返回对应页面
-            redirectAttributes.addFlashAttribute("group", group);
+            ra.addFlashAttribute("group", group);
             
             if (group.getId() != null) {
                 mv.setViewName("redirect:/panel/group/edit/" + group.getId());

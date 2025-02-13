@@ -31,6 +31,16 @@ public class PageableView<T> {
      */
     private int pageSize;
 
+    /**
+     * 是否有下一页
+     */
+    private boolean hasNext;
+
+    /**
+     * 是否有上一页
+     */
+    private boolean hasPrev;
+
     public PageableView() {
     }
 
@@ -39,6 +49,11 @@ public class PageableView<T> {
         this.count = count;
         this.currentPage = currentPage;
         this.pageSize = pageSize;
+        
+        // 计算是否有上一页和下一页
+        this.hasPrev = currentPage > 1;
+        int totalPages = (int) Math.ceil(count * 1.0 / pageSize);
+        this.hasNext = currentPage < totalPages;
     }
 
 }

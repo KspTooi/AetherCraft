@@ -4,7 +4,9 @@ import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
+import com.ksptool.ql.biz.model.vo.PanelGroupVo;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class PanelGroupService {
@@ -25,16 +29,18 @@ public class PanelGroupService {
     /**
      * 分页查询所有用户组
      */
-    public List<GroupPo> findAll(int page, int size) {
-        return groupRepository.findAllByOrderBySortOrderAsc(PageRequest.of(page - 1, size));
-    }
-
-    /**
-     * 获取总页数
-     */
-    public int getTotalPages(int size) {
+    public PageableView<PanelGroupVo> findAll(int page, int size) {
+        List<GroupPo> groups = groupRepository.findAllByOrderBySortOrderAsc(PageRequest.of(page - 1, size));
+        List<PanelGroupVo> vos = groups.stream().map(group -> {
+            PanelGroupVo vo = new PanelGroupVo();
+            assign(group, vo);
+            // 设置成员数量（这里需要根据实际关联关系设置）
+            vo.setMemberCount(0L); // 暂时设置为0，后续根据实际需求实现
+            return vo;
+        }).collect(Collectors.toList());
+        
         long total = groupRepository.count();
-        return (int) Math.ceil((double) total / size);
+        return new PageableView<>(vos, total, page, size);
     }
 
     /**
