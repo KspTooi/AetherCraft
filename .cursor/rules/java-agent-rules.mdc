@@ -6,5 +6,7 @@ SpringBoot版本3.4.1
 优先使用import static com.ksptool.entities.Entities.assign; assign(source,target)映射对象的同名属性
 尽量不使用三元表达式(除非必须使用)，使用普通IF
 接口为后端渲染视图统一使用ModelAndView响应
+使用ModelAndView响应带有分页的列表数据时应使用com.ksptool.ql.commons.web.PageableView作为data
+需要为接口创建单独的Dto用于接收数据，Vo用于响应数据
 接口为JSON响应时使用com.ksptool.ql.commons.web.Result类进行响应
 后端校验参数使用HibernateValidation注解
