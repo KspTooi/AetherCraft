@@ -35,15 +35,21 @@ public class PanelUserService {
      * @throws BizException 业务异常
      */
     public void saveUser(UserPo user) throws BizException {
+        // 检查用户名是否已存在
+        UserPo existingUserByName = userRepository.findByUsername(user.getUsername());
+        
+        if (existingUserByName != null) {
+            // 如果找到同名用户，且不是当前编辑的用户（新建时id为null）
+            if (user.getId() == null || !existingUserByName.getId().equals(user.getId())) {
+                throw new BizException("用户名 '" + user.getUsername() + "' 已被使用");
+            }
+        }
+
         // 如果是新用户或密码有更新，则加密密码
         if (user.getId() == null || user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(encryptPassword(user.getPassword(), user.getUsername()));
-        } else {
-            // 如果是编辑用户且密码为空，则保持原密码不变
-            UserPo existingUser = userRepository.findById(user.getId())
-                    .orElseThrow(() -> new BizException("用户不存在"));
-            user.setPassword(existingUser.getPassword());
         }
+        
         userRepository.save(user);
     }
 

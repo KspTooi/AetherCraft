@@ -42,10 +42,13 @@
                                                    th:href="@{/ssr/system/users/operator(id=${user.id})}">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger"
-                                                        th:onclick="'deleteUser(' + ${user.id} + ')'">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <form th:action="@{/ssr/system/users/delete/{id}(id=${user.id})}" 
+                                                      method="post" class="d-inline" 
+                                                      onsubmit="return confirm('确定要删除该用户吗？');">
+                                                    <button type="submit" class="btn btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -170,27 +173,6 @@
             .catch(error => {
                 showToast('danger', error.message);
             });
-        }
-
-        // 删除用户
-        function deleteUser(userId) {
-            if (confirm('确定要删除该用户吗？')) {
-                fetch('/ssr/system/users/delete/' + userId, {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 0) {
-                        // 刷新页面
-                        window.location.reload();
-                    } else {
-                        throw new Error(result.message);
-                    }
-                })
-                .catch(error => {
-                    showToast('danger', error.message);
-                });
-            }
         }
 
         // 显示提示消息

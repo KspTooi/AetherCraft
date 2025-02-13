@@ -21,7 +21,7 @@
                         </div>
                     </div>
                     <div class="card-body p-3">
-                        <form id="userForm" class="needs-validation" novalidate>
+                        <form th:action="@{/ssr/system/users/save}" method="post" class="needs-validation" novalidate>
                             <input type="hidden" name="id" th:value="${user != null ? user.id : ''}">
                             
                             <div class="row g-3">
@@ -29,37 +29,43 @@
                                     <label for="username" class="form-label small">用户名</label>
                                     <input type="text" class="form-control form-control-sm" id="username" name="username" 
                                            th:value="${user != null ? user.username : ''}"
+                                           minlength="3" maxlength="50"
                                            required>
-                                    <div class="invalid-feedback">请输入用户名</div>
+                                    <div class="invalid-feedback">用户名长度必须在3-50个字符之间</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="nickname" class="form-label small">姓名</label>
+                                    <label for="nickname" class="form-label small">昵称</label>
                                     <input type="text" class="form-control form-control-sm" id="nickname" name="nickname" 
                                            th:value="${user != null ? user.nickname : ''}"
+                                           maxlength="50"
                                            required>
-                                    <div class="invalid-feedback">请输入姓名</div>
+                                    <div class="invalid-feedback">昵称不能为空且长度不能超过50个字符</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="email" class="form-label small">邮箱</label>
                                     <input type="email" class="form-control form-control-sm" id="email" name="email" 
                                            th:value="${user != null ? user.email : ''}"
-                                           required>
-                                    <div class="invalid-feedback">请输入有效的邮箱地址</div>
+                                           maxlength="100">
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="password" class="form-label small">密码</label>
                                     <input type="password" class="form-control form-control-sm" id="password" name="password"
-                                           th:required="${user == null}">
+                                           th:value="${user != null ? user.password : ''}"
+                                           th:required="${user == null}"
+                                           th:placeholder="${user == null ? '请输入6-100位密码' : '密码已隐藏'}"
+                                           minlength="6" maxlength="100">
                                     <div class="form-text small" th:if="${user != null}">留空表示不修改密码</div>
-                                    <div class="invalid-feedback">请输入密码</div>
+                                    <div class="invalid-feedback" th:text="${user == null ? '新建用户时密码不能为空且长度必须在6-100个字符之间' : '密码长度必须在6-100个字符之间'}">
+                                        密码长度必须在6-100个字符之间
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="text-end mt-3">
-                                <button type="button" class="btn btn-light btn-sm me-2" onclick="window.location.href='/ssr/system/users'">取消</button>
+                                <a href="/ssr/system/users" class="btn btn-light btn-sm me-2">取消</a>
                                 <button type="submit" class="btn btn-primary btn-sm">保存</button>
                             </div>
                         </form>
@@ -70,64 +76,20 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('userForm');
-            
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                
-                if (!form.checkValidity()) {
-                    event.stopPropagation();
+        // 表单验证
+        (function() {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
                     form.classList.add('was-validated');
-                    return;
-                }
-
-                // 收集表单数据
-                const formData = new FormData(form);
-                const userData = {};
-                formData.forEach((value, key) => {
-                    if (value.trim() !== '') {  // 只包含非空值
-                        userData[key] = value;
-                    }
-                });
-
-                // 发送到后端API
-                fetch('/ssr/system/users/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.code === 0) {
-                        // 保存成功，返回列表页
-                        window.location.href = '/ssr/system/users';
-                    } else {
-                        throw new Error(result.message);
-                    }
-                })
-                .catch(error => {
-                    // 显示错误消息
-                    const toast = new bootstrap.Toast(document.createElement('div'));
-                    toast._element.className = 'toast align-items-center text-white bg-danger border-0';
-                    toast._element.innerHTML = `
-                        <div class="d-flex">
-                            <div class="toast-body">${error.message}</div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                        </div>
-                    `;
-                    document.body.appendChild(toast._element);
-                    toast.show();
-                    
-                    // 3秒后移除提示
-                    setTimeout(() => {
-                        document.body.removeChild(toast._element);
-                    }, 3000);
-                });
+                }, false);
             });
-        });
+        })();
     </script>
 </body>
 </html> 

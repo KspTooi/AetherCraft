@@ -121,6 +121,7 @@ public class PanelPermissionController {
             redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
             // 保持原有数据，返回对应页面
             redirectAttributes.addFlashAttribute("permission", saveVo);
+
             if (saveVo.getId() != null) {
                 mav.setViewName("redirect:/ssr/system/permissions/edit/" + saveVo.getId());
             } else {
