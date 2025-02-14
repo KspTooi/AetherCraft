@@ -2,6 +2,8 @@ package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.CreatePermissionDto;
 import com.ksptool.ql.biz.model.po.PermissionPo;
+import com.ksptool.ql.biz.model.vo.EditPanelPermissionVo;
+import com.ksptool.ql.biz.model.vo.ListPanelPermissionVo;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -38,7 +40,7 @@ public class PanelPermissionController {
         
         // 获取权限列表，按排序号升序
         Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
-        PageableView<PermissionPo> pageableView = panelPermissionService.getPermissionList(PageRequest.of(page - 1, size, sort));
+        PageableView<ListPanelPermissionVo> pageableView = panelPermissionService.getPermissionList(PageRequest.of(page - 1, size, sort));
         mav.addObject("data", pageableView);
         
         return mav;
@@ -68,10 +70,8 @@ public class PanelPermissionController {
         ModelAndView mav = new ModelAndView();
         
         try {
-            PermissionPo permission = panelPermissionService.getPermission(id);
-            CreatePermissionDto dto = new CreatePermissionDto();
-            assign(permission, dto);
-            mav.addObject("data", dto);
+            EditPanelPermissionVo vo = panelPermissionService.getPermissionForEdit(id);
+            mav.addObject("data", vo);
             mav.setViewName("panel-permission-operator");
         } catch (BizException e) {
             mav.setViewName("redirect:/panel/permission/list");
