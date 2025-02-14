@@ -149,18 +149,4 @@ public class PanelPermissionController {
         
         return mav;
     }
-
-    /**
-     * 获取权限信息
-     */
-    @GetMapping("/detail/{id}")
-    @ResponseBody
-    public Result<PermissionPo> getPermission(@PathVariable(name = "id") Long id) {
-        try {
-            PermissionPo permission = panelPermissionService.getPermission(id);
-            return Result.success("获取成功", permission);
-        } catch (BizException e) {
-            return Result.error(e.getMessage());
-        }
-    }
 } 
