@@ -51,9 +51,7 @@ public class PanelPermissionController {
     public ModelAndView createPermission(@ModelAttribute("data") CreatePermissionDto dto) {
         ModelAndView mav = new ModelAndView("panel-permission-operator");
         
-        if (dto != null && dto.getCode() != null) {
-            mav.addObject("data", dto);
-        } else {
+        if (dto == null || dto.getCode() == null) {
             CreatePermissionDto newDto = new CreatePermissionDto();
             newDto.setSortOrder(panelPermissionService.getNextSortOrder());
             mav.addObject("data", newDto);
