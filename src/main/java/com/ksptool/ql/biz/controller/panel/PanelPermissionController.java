@@ -1,16 +1,17 @@
 package com.ksptool.ql.biz.controller.panel;
 
+import com.ksptool.ql.biz.model.dto.CreatePermissionDto;
 import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.model.vo.SavePermissionVo;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
-import org.springframework.beans.BeanUtils;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -21,29 +22,24 @@ import static com.ksptool.entities.Entities.assign;
  * 权限节点管理控制器
  */
 @Controller
-@RequestMapping("/ssr/system/permissions")
+@RequestMapping("/panel/permission")
 public class PanelPermissionController {
 
     @Autowired
     private PanelPermissionService panelPermissionService;
 
     /**
-     * 权限管理页面
+     * 权限管理列表页面
      */
-    @GetMapping("")
+    @GetMapping("/list")
     public ModelAndView permissionManager(@RequestParam(name = "page", defaultValue = "1") int page,
                                         @RequestParam(name = "size", defaultValue = "10") int size) {
         ModelAndView mav = new ModelAndView("panel-permission-manager");
         
         // 获取权限列表，按排序号升序
         Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
-        Page<PermissionPo> permissionPage = panelPermissionService.getPermissionList(PageRequest.of(page - 1, size, sort));
-        
-        // 添加数据到模型
-        mav.addObject("permissions", permissionPage.getContent());
-        mav.addObject("currentPage", page);
-        mav.addObject("totalPages", permissionPage.getTotalPages());
-        mav.addObject("totalElements", permissionPage.getTotalElements());
+        PageableView<PermissionPo> pageableView = panelPermissionService.getPermissionList(PageRequest.of(page - 1, size, sort));
+        mav.addObject("data", pageableView);
         
         return mav;
     }
@@ -52,17 +48,15 @@ public class PanelPermissionController {
      * 创建权限页面
      */
     @GetMapping("/create")
-    public ModelAndView createPermission(@ModelAttribute("permission") PermissionPo permission) {
+    public ModelAndView createPermission(@ModelAttribute("data") CreatePermissionDto dto) {
         ModelAndView mav = new ModelAndView("panel-permission-operator");
         
-        // 如果Flash属性中有permission数据，使用它
-        if (permission != null && permission.getCode() != null) {
-            mav.addObject("permission", permission);
+        if (dto != null && dto.getCode() != null) {
+            mav.addObject("data", dto);
         } else {
-            // 新建权限时，自动设置下一个可用的排序号
-            PermissionPo newPermission = new PermissionPo();
-            newPermission.setSortOrder(panelPermissionService.getNextSortOrder());
-            mav.addObject("permission", newPermission);
+            CreatePermissionDto newDto = new CreatePermissionDto();
+            newDto.setSortOrder(panelPermissionService.getNextSortOrder());
+            mav.addObject("data", newDto);
         }
         
         return mav;
@@ -77,10 +71,12 @@ public class PanelPermissionController {
         
         try {
             PermissionPo permission = panelPermissionService.getPermission(id);
-            mav.addObject("permission", permission);
+            CreatePermissionDto dto = new CreatePermissionDto();
+            assign(permission, dto);
+            mav.addObject("data", dto);
             mav.setViewName("panel-permission-operator");
         } catch (BizException e) {
-            mav.setViewName("redirect:/ssr/system/permissions");
+            mav.setViewName("redirect:/panel/permission/list");
         }
         
         return mav;
@@ -90,42 +86,48 @@ public class PanelPermissionController {
      * 保存权限
      */
     @PostMapping("/save")
-    public ModelAndView savePermission(SavePermissionVo saveVo, RedirectAttributes redirectAttributes) {
+    public ModelAndView savePermission(@Valid @ModelAttribute("data") CreatePermissionDto dto, 
+                                     BindingResult bindingResult,
+                                     RedirectAttributes redirectAttributes) {
         ModelAndView mav = new ModelAndView();
         
+        // 如果有验证错误，返回表单页面
+        if (bindingResult.hasErrors()) {
+            mav.addObject("data", dto);
+            if (dto.getId() != null) {
+                mav.setViewName("redirect:/panel/permission/edit/" + dto.getId());
+            } else {
+                mav.setViewName("redirect:/panel/permission/create");
+            }
+            return mav;
+        }
+        
         try {
-            // 转换VO到PO
             PermissionPo permission = new PermissionPo();
-            assign(saveVo, permission);
+            assign(dto, permission);
             
-            // 判断是否为创建模式
             boolean isCreate = permission.getId() == null;
             
-            // 保存权限
             panelPermissionService.savePermission(permission);
             
-            // 设置成功消息
             if (isCreate) {
                 redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已创建权限节点:%s", permission.getCode()), null));
-                // 创建模式：清空表单，返回创建页面继续创建
-                PermissionPo newPermission = new PermissionPo();
-                newPermission.setSortOrder(panelPermissionService.getNextSortOrder());
-                redirectAttributes.addFlashAttribute("permission", newPermission);
-                mav.setViewName("redirect:/ssr/system/permissions/create");
+                CreatePermissionDto newDto = new CreatePermissionDto();
+                newDto.setSortOrder(panelPermissionService.getNextSortOrder());
+                redirectAttributes.addFlashAttribute("data", newDto);
+                mav.setViewName("redirect:/panel/permission/create");
             } else {
                 redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已更新权限节点:%s", permission.getCode()), null));
-                // 编辑模式：返回列表页
-                mav.setViewName("redirect:/ssr/system/permissions");
+                mav.setViewName("redirect:/panel/permission/list");
             }
         } catch (BizException e) {
             redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
-            // 保持原有数据，返回对应页面
-            redirectAttributes.addFlashAttribute("permission", saveVo);
+            redirectAttributes.addFlashAttribute("data", dto);
 
-            if (saveVo.getId() != null) {
-                mav.setViewName("redirect:/ssr/system/permissions/edit/" + saveVo.getId());
+            if (dto.getId() != null) {
+                mav.setViewName("redirect:/panel/permission/edit/" + dto.getId());
             } else {
-                mav.setViewName("redirect:/ssr/system/permissions/create");
+                mav.setViewName("redirect:/panel/permission/create");
             }
         }
         
@@ -135,9 +137,9 @@ public class PanelPermissionController {
     /**
      * 删除权限
      */
-    @PostMapping("/delete/{id}")
+    @PostMapping("/remove/{id}")
     public ModelAndView deletePermission(@PathVariable(name = "id") Long id, RedirectAttributes redirectAttributes) {
-        ModelAndView mav = new ModelAndView("redirect:/ssr/system/permissions");
+        ModelAndView mav = new ModelAndView("redirect:/panel/permission/list");
         
         try {
             PermissionPo permission = panelPermissionService.getPermission(id);
@@ -153,7 +155,7 @@ public class PanelPermissionController {
     /**
      * 获取权限信息
      */
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
     @ResponseBody
     public Result<PermissionPo> getPermission(@PathVariable(name = "id") Long id) {
         try {

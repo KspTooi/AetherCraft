@@ -40,7 +40,7 @@ public class PanelGroupController {
             mv.addObject("group", group);
         }
         
-        mv.addObject("permissions", permissionService.getPermissionList(PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "sortOrder"))).getContent());
+        //mv.addObject("permissions", permissionService.getPermissionList(PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "sortOrder"))).getContent());
         return mv;
     }
 
@@ -54,7 +54,7 @@ public class PanelGroupController {
                 throw new BizException("用户组不存在");
             }
             mv.addObject("group", group);
-            mv.addObject("permissions", permissionService.getPermissionList(PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "sortOrder"))).getContent());
+            //mv.addObject("permissions", permissionService.getPermissionList(PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "sortOrder"))).getContent());
             mv.setViewName("panel-group-operator");
         } catch (BizException e) {
             mv.setViewName("redirect:/panel/group/list");

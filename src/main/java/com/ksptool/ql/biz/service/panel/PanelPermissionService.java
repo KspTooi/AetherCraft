@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.service.panel;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +22,14 @@ public class PanelPermissionService {
     /**
      * 获取权限列表
      */
-    public Page<PermissionPo> getPermissionList(Pageable pageable) {
-        return permissionRepository.findAll(pageable);
+    public PageableView<PermissionPo> getPermissionList(Pageable pageable) {
+        Page<PermissionPo> page = permissionRepository.findAll(pageable);
+        return new PageableView<>(
+            page.getContent(),
+            page.getTotalElements(),
+            pageable.getPageNumber() + 1,
+            pageable.getPageSize()
+        );
     }
 
     /**
