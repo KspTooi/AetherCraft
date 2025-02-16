@@ -21,3 +21,4 @@ Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
 Service中的简单查询统一使用Example，复杂查询使用JPQL投影到一个单独的Vo
 Rep中使用@QUERY注解的JPQL请使用多行字符串编写
 未接到明确指令，不随意拆分任何函数
+Service不需要创建接口，直接创建实现类。
