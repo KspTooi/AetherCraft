@@ -19,3 +19,4 @@ Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
 不允许使用Optinal
 不使用else而使用多个if与return组合
 Service中的简单查询统一使用Example，复杂查询使用JPQL投影到一个单独的Vo
+Rep中使用@QUERY注解的JPQL请使用多行字符串编写
