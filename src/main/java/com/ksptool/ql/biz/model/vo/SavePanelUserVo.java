@@ -21,4 +21,7 @@ public class SavePanelUserVo {
     
     // 用户组列表
     private List<SavePanelUserGroupVo> groups;
+
+    // 权限列表
+    private List<SavePanelUserPermissionVo> permissions;
 } 

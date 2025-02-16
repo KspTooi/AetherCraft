@@ -5,9 +5,11 @@ import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
 import com.ksptool.ql.biz.model.dto.SavePanelUserDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
+import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.ListPanelUserVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
+import com.ksptool.ql.biz.model.vo.SavePanelUserPermissionVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 @Service
@@ -97,42 +100,29 @@ public class PanelUserService {
      * 获取编辑视图
      */
     public SavePanelUserVo getEditView(Long id) throws BizException {
-        if (id == null) {
-            throw new BizException("用户ID不能为空");
-        }
-        
-        // 获取用户信息（包含用户组）
-        UserPo userPo = userRepository.getEditView(id);
-        if (userPo == null) {
-            throw new BizException("用户不存在");
+        UserPo user = userRepository.findById(id).orElseThrow(() -> new BizException("用户不存在"));
+        SavePanelUserVo vo = new SavePanelUserVo();
+        assign(user, vo);
+
+        // 获取所有组并标记用户所属的组
+        List<GroupPo> allGroups = groupRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"));
+        List<SavePanelUserGroupVo> groups = new ArrayList<>();
+        HashSet<Long> userGroupIds = new HashSet<>();
+        for (GroupPo group : user.getGroups()) {
+            userGroupIds.add(group.getId());
         }
 
-        // 转换为视图对象
-        SavePanelUserVo vo = new SavePanelUserVo();
-        assign(userPo, vo);
-        
-        // 获取所有用户组并标记用户所在的组
-        List<GroupPo> allGroups = groupRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"));
-        List<SavePanelUserGroupVo> groupVos = new ArrayList<>();
-        
         for (GroupPo group : allGroups) {
             SavePanelUserGroupVo groupVo = new SavePanelUserGroupVo();
             assign(group, groupVo);
-            
-            // 检查用户是否在该组中
-            boolean hasGroup = false;
-            for (GroupPo userGroup : userPo.getGroups()) {
-                if (userGroup.getId().equals(group.getId())) {
-                    hasGroup = true;
-                    break;
-                }
-            }
-            groupVo.setHasGroup(hasGroup);
-            
-            groupVos.add(groupVo);
+            groupVo.setHasGroup(userGroupIds.contains(group.getId()));
+            groups.add(groupVo);
         }
-        
-        vo.setGroups(groupVos);
+        vo.setGroups(groups);
+
+        // 获取用户的所有权限
+        List<PermissionPo> userPermissions = userRepository.findUserPermissions(id);
+        vo.setPermissions(as(userPermissions,SavePanelUserPermissionVo.class));
         return vo;
     }
 
