@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.service.panel.PanelGroupService;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
+import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
@@ -22,13 +23,11 @@ public class PanelGroupController {
     @Autowired
     private PanelGroupService groupService;
 
-    @Autowired
-    private PanelPermissionService permissionService;
-
     @GetMapping("/list")
-    public ModelAndView list(@RequestParam(name = "page", defaultValue = "1") int page, @RequestParam(name = "size", defaultValue = "10") int size) {
+    public ModelAndView list(@Valid ListPanelGroupDto dto) {
         ModelAndView mv = new ModelAndView("panel-group-manager");
-        mv.addObject("data", groupService.findAll(page, size));
+        mv.addObject("data", groupService.getListView(dto));
+        mv.addObject("query", dto);
         return mv;
     }
 
@@ -99,18 +98,14 @@ public class PanelGroupController {
     }
 
     @PostMapping("/remove/{id}")
-    public ModelAndView remove(@PathVariable(name = "id") Long id, RedirectAttributes redirectAttributes) {
+    public ModelAndView remove(@PathVariable(name = "id") Long id, RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView("redirect:/panel/group/list");
         
         try {
-            GroupPo group = groupService.findById(id);
-            if (group == null) {
-                throw new BizException("用户组不存在");
-            }
-            groupService.remove(id);
-            redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已删除用户组:%s", group.getName()), null));
+            String groupName = groupService.removeGroup(id);
+            ra.addFlashAttribute("vo", Result.success(String.format("已删除用户组:%s", groupName), null));
         } catch (BizException e) {
-            redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
         }
         
         return mv;

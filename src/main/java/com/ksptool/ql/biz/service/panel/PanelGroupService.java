@@ -8,11 +8,14 @@ import com.ksptool.ql.biz.model.vo.PanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupPermissionVo;
 import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
+import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,17 +73,6 @@ public class PanelGroupService {
         vo.setNextOrder(null);
         
         return vo;
-    }
-
-    /**
-     * 分页查询所有用户组
-     */
-    public PageableView<PanelGroupVo> findAll(int page, int size) {
-        // 使用Repository的分页查询
-        List<GroupPo> pos = groupRepository.findAllByOrderBySortOrderAsc(PageRequest.of(page - 1, size));
-        List<PanelGroupVo> vos = as(pos,PanelGroupVo.class);
-        long total = groupRepository.count();
-        return new PageableView<>(vos, total, page, size);
     }
 
     /**
@@ -143,9 +135,11 @@ public class PanelGroupService {
 
     /**
      * 删除用户组
+     * @param id 用户组ID
+     * @return 被删除的用户组名称
      */
     @Transactional
-    public void remove(Long id) throws BizException {
+    public String removeGroup(Long id) throws BizException {
         GroupPo group = groupRepository.findById(id)
                 .orElseThrow(() -> new BizException("用户组不存在"));
         
@@ -153,7 +147,9 @@ public class PanelGroupService {
             throw new BizException("系统用户组不能删除");
         }
         
+        String groupName = group.getName();
         groupRepository.deleteById(id);
+        return groupName;
     }
 
     /**
@@ -198,5 +194,36 @@ public class PanelGroupService {
         vo.setPermissions(permissions);
         
         return vo;
+    }
+
+    /**
+     * 获取用户组列表视图数据
+     */
+    public PageableView<PanelGroupVo> getListView(ListPanelGroupDto dto) {
+        // 创建查询实体
+        GroupPo po = as(dto, GroupPo.class);
+
+        // 创建匹配器，设置字符串属性为模糊匹配
+        ExampleMatcher matcher = ExampleMatcher.matching()
+            .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
+            .withIgnoreCase()
+            .withIgnoreNullValues();
+        
+        // 创建Example查询条件
+        Example<GroupPo> query = Example.of(po, matcher);
+        
+        // 创建分页和排序
+        PageRequest pageRequest = PageRequest.of(
+            dto.getPage() - 1, dto.getPageSize(),
+            Sort.by(Sort.Direction.ASC, "sortOrder")
+        );
+
+        // 查询数据
+        List<GroupPo> pos = groupRepository.findAll(query, pageRequest).getContent();
+        List<PanelGroupVo> vos = as(pos, PanelGroupVo.class);
+        
+        // 查询总数
+        long total = groupRepository.count(query);
+        return new PageableView<>(vos, total, dto.getPage(), dto.getPageSize());
     }
 } 
