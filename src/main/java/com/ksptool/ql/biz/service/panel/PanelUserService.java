@@ -1,10 +1,12 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
+import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.ListPanelUserVo;
-import com.ksptool.ql.biz.model.vo.PanelUserVo;
+import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -27,6 +29,9 @@ public class PanelUserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private GroupRepository groupRepository;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -80,12 +85,38 @@ public class PanelUserService {
             throw new BizException("用户ID不能为空");
         }
         
-        // 获取用户信息
-        UserPo userPo = userRepository.getReferenceById(id);
+        // 获取用户信息（包含用户组）
+        UserPo userPo = userRepository.getEditView(id);
+        if (userPo == null) {
+            throw new BizException("用户不存在");
+        }
 
         // 转换为视图对象
         SavePanelUserVo vo = new SavePanelUserVo();
         assign(userPo, vo);
+        
+        // 获取所有用户组并标记用户所在的组
+        List<GroupPo> allGroups = groupRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"));
+        List<SavePanelUserGroupVo> groupVos = new ArrayList<>();
+        
+        for (GroupPo group : allGroups) {
+            SavePanelUserGroupVo groupVo = new SavePanelUserGroupVo();
+            assign(group, groupVo);
+            
+            // 检查用户是否在该组中
+            boolean hasGroup = false;
+            for (GroupPo userGroup : userPo.getGroups()) {
+                if (userGroup.getId().equals(group.getId())) {
+                    hasGroup = true;
+                    break;
+                }
+            }
+            groupVo.setHasGroup(hasGroup);
+            
+            groupVos.add(groupVo);
+        }
+        
+        vo.setGroups(groupVos);
         return vo;
     }
 
