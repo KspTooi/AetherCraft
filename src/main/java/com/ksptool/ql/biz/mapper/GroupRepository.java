@@ -16,7 +16,7 @@ import java.util.List;
 
 @Repository
 public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecificationExecutor<GroupPo> {
-    
+
     /**
      * 检查用户组标识是否存在
      */
@@ -35,7 +35,7 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
     /**
      * 查询用户组列表，并统计权限数量
      */
-    @Query("""
+    @Query(""" 
             SELECT new com.ksptool.ql.biz.model.vo.ListPanelGroupVo(
                 g.id,
                 g.name,
@@ -44,18 +44,15 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
                 g.status,
                 g.isSystem,
                 g.sortOrder,
-                0,
-                CAST((SELECT COUNT(p.id) FROM g.permissions p) as integer)
+                CAST(0 AS int),
+                CAST((SELECT COUNT(p) t FROM g.permissions p) AS int),
+                CAST((SELECT COUNT(p) t FROM g.users p) AS int)
             )
             FROM GroupPo g
             WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
             AND (:#{#dto.code} IS NULL OR g.code LIKE %:#{#dto.code}%)
             AND (:#{#dto.description} IS NULL OR g.description LIKE %:#{#dto.description}%)
-            ORDER BY g.updateTime DESC
     """)
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
-
-
-
 
 }

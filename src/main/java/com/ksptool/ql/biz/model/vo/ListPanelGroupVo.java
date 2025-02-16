@@ -14,15 +14,8 @@ import lombok.Data;
 @Data
 public class ListPanelGroupVo {
 
-    public ListPanelGroupVo(Long id,
-                            String name,
-                            String code,
-                            String description,
-                            Integer status,
-                            Boolean isSystem,
-                            Integer sortOrder,
-                            Integer memberCount,
-                            Integer permissionCount) {
+
+    public ListPanelGroupVo(Long id, String name, String code, String description, Integer status, Boolean isSystem, Integer sortOrder, Integer memberCount, Integer permissionCount, Integer userCount) {
         this.id = id;
         this.name = name;
         this.code = code;
@@ -32,6 +25,7 @@ public class ListPanelGroupVo {
         this.sortOrder = sortOrder;
         this.memberCount = memberCount;
         this.permissionCount = permissionCount;
+        this.userCount = userCount;
     }
 
     // 用户组ID
@@ -60,4 +54,7 @@ public class ListPanelGroupVo {
 
     // 权限节点数量
     private Integer permissionCount;
+
+    // 用户数量
+    private Integer userCount;
 } 

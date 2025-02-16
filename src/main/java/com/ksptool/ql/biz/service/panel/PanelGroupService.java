@@ -200,9 +200,7 @@ public class PanelGroupService {
      */
     public PageableView<ListPanelGroupVo> getListView(ListPanelGroupDto dto) {
         // 创建分页和排序
-        PageRequest pr = PageRequest.of(
-            dto.getPage() - 1, dto.getPageSize()
-        );
+        PageRequest pr = PageRequest.of(dto.getPage() - 1, dto.getPageSize());
 
         Page<ListPanelGroupVo> pageResult = groupRepository.getListView(dto,pr);
 

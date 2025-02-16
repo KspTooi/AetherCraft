@@ -71,7 +71,7 @@ public class GroupPo {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "t_group_permission",
+        name = "group_permission",
         joinColumns = @JoinColumn(name = "group_id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
@@ -79,6 +79,12 @@ public class GroupPo {
     @EqualsAndHashCode.Exclude
     @Comment("用户组拥有的权限")
     private Set<PermissionPo> permissions = new HashSet<>();
+
+    @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户组中的用户")
+    private Set<UserPo> users = new HashSet<>();
 
     @PrePersist
     public void prePersist() {
