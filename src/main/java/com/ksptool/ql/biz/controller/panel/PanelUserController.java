@@ -19,7 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import static com.ksptool.entities.Entities.assign;
 
 @Controller
-@RequestMapping("/ssr/system/users")
+@RequestMapping("/panel/user")
 public class PanelUserController {
 
     @Autowired
@@ -28,7 +28,7 @@ public class PanelUserController {
     /**
      * 用户管理页面
      */
-    @GetMapping("")
+    @GetMapping("/list")
     public ModelAndView userManager(@RequestParam(name = "page", defaultValue = "1") int page,
                             @RequestParam(name = "size", defaultValue = "10") int size) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
@@ -48,7 +48,7 @@ public class PanelUserController {
     /**
      * 用户操作页面（创建/编辑）
      */
-    @GetMapping("/operator")
+    @GetMapping({"/create", "/edit"})
     public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id) {
         ModelAndView mav = new ModelAndView("panel-user-operator");
         
@@ -60,7 +60,7 @@ public class PanelUserController {
                 mav.addObject("user", user);
             } catch (BizException e) {
                 // 用户不存在时返回列表页
-                return new ModelAndView("redirect:/ssr/system/users");
+                return new ModelAndView("redirect:/panel/user/list");
             }
         }
         return mav;
@@ -116,7 +116,7 @@ public class PanelUserController {
                 mav.addObject("vo", Result.success("已创建用户:" + user.getUsername(), null));
             } else {
                 // 编辑成功：显示成功消息，返回列表页
-                mav.setViewName("redirect:/ssr/system/users");
+                mav.setViewName("redirect:/panel/user/list");
                 ra.addFlashAttribute("vo", Result.success("已更新用户:" + user.getUsername(), null));
             }
         } catch (BizException e) {
@@ -132,7 +132,7 @@ public class PanelUserController {
     /**
      * 删除用户
      */
-    @PostMapping("/delete/{id}")
+    @PostMapping("/remove/{id}")
     public ModelAndView deleteUser(@PathVariable(name = "id") Long id) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
         
@@ -156,7 +156,7 @@ public class PanelUserController {
     /**
      * 获取用户信息
      */
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     @ResponseBody
     public Result<PanelUserVo> getUser(@PathVariable Long id) {
         try {
