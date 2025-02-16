@@ -15,5 +15,6 @@ SpringBoot版本3.4.1
 接口为JSON响应时使用com.ksptool.ql.commons.web.Result类进行响应
 后端校验参数使用HibernateValidation注解
 Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
-简单的循环数据处理不应使用StreamAPI代替,只有复杂数据处理使用StreamApi.
-尽可能不使用OptinalAPI
+不允许使用StreamAPI,除非必须使用它.
+不允许使用Optinal
+不使用else而使用多个if与return组合
