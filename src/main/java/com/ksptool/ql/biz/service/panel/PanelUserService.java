@@ -76,7 +76,21 @@ public class PanelUserService {
      * 获取创建视图
      */
     public SavePanelUserVo getCreateView() {
-        return new SavePanelUserVo();
+        SavePanelUserVo vo = new SavePanelUserVo();
+        
+        // 获取所有用户组
+        List<GroupPo> allGroups = groupRepository.findAll(Sort.by(Sort.Direction.ASC, "sortOrder"));
+        List<SavePanelUserGroupVo> groupVos = new ArrayList<>();
+        
+        for (GroupPo group : allGroups) {
+            SavePanelUserGroupVo groupVo = new SavePanelUserGroupVo();
+            assign(group, groupVo);
+            groupVo.setHasGroup(false);
+            groupVos.add(groupVo);
+        }
+        
+        vo.setGroups(groupVos);
+        return vo;
     }
 
     /**
@@ -129,64 +143,45 @@ public class PanelUserService {
     public void saveUser(SavePanelUserDto dto) throws BizException {
         // 检查用户名是否已存在
         UserPo existingUserByName = userRepository.findByUsername(dto.getUsername());
-        
-        if (existingUserByName != null) {
-            // 如果找到同名用户，且不是当前编辑的用户（新建时id为null）
-            if (dto.getId() == null || !existingUserByName.getId().equals(dto.getId())) {
-                throw new BizException("用户名 '" + dto.getUsername() + "' 已被使用");
-            }
+        if (existingUserByName != null && (dto.getId() == null || !existingUserByName.getId().equals(dto.getId()))) {
+            throw new BizException("用户名 '" + dto.getUsername() + "' 已被使用");
         }
 
-        // 创建或获取用户对象
-        UserPo user;
-        if (dto.getId() != null) {
-            user = userRepository.getReferenceById(dto.getId());
-            if (user == null) {
-                throw new BizException("用户不存在");
-            }
-            // 如果密码为空，保持原密码不变
-            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-                dto.setPassword(user.getPassword());
-            } else {
-                dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
-            }
-        } else {
-            user = new UserPo();
-            // 新用户必须设置密码
+        // 处理新建用户
+        if (dto.getId() == null) {
             if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
                 throw new BizException("新建用户时密码不能为空");
             }
+            UserPo user = new UserPo();
+            assign(dto, user);
+            dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
+            user.setGroups(getGroupSet(dto.getGroupIds()));
+            userRepository.save(user);
+            return;
+        }
+
+        // 处理编辑用户
+        UserPo user = userRepository.findById(dto.getId()).orElseThrow(()->new BizException("用户不存在"));
+
+        // 处理密码
+        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+            dto.setPassword(user.getPassword());
+        }
+        if (!user.getPassword().equals(dto.getPassword())) {
             dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
         }
-        
-        // 映射基本信息
+
+        // 更新用户信息
         assign(dto, user);
-        
-        // 设置用户组
-        if (dto.getGroupIds() != null && !dto.getGroupIds().isEmpty()) {
-            List<GroupPo> groups = groupRepository.findAllById(dto.getGroupIds());
-            // 检查是否所有组都存在且启用
-            for (Long groupId : dto.getGroupIds()) {
-                boolean found = false;
-                for (GroupPo group : groups) {
-                    if (group.getId().equals(groupId)) {
-                        if (group.getStatus() == 0) {
-                            throw new BizException("用户组 '" + group.getName() + "' 已被禁用");
-                        }
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    throw new BizException("用户组不存在");
-                }
-            }
-            user.setGroups(new HashSet<>(groups));
-        } else {
-            user.setGroups(new HashSet<>());
-        }
-        
+        user.setGroups(getGroupSet(dto.getGroupIds()));
         userRepository.save(user);
+    }
+
+    private HashSet<GroupPo> getGroupSet(List<Long> groupIds) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(groupRepository.findAllById(groupIds));
     }
 
     /**

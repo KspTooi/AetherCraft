@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.controller.panel;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
 import com.ksptool.ql.biz.model.dto.SavePanelUserDto;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
 import com.ksptool.ql.commons.exception.BizException;
@@ -15,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 @Controller
@@ -38,14 +43,20 @@ public class PanelUserController {
      * 用户操作页面（创建/编辑）
      */
     @GetMapping({"/create", "/edit"})
-    public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id) {
+    public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id, @ModelAttribute("data") SavePanelUserVo flashData) {
         ModelAndView mav = new ModelAndView("panel-user-operator");
         
         try {
             SavePanelUserVo data;
-            if (id != null) {
+            if (flashData != null && flashData.getUsername() != null) {
+                // 使用flash中的数据，但需要重新获取用户组列表
+                data = panelUserService.getCreateView();
+                data = Any.of(flashData).val("groups",data.getGroups()).as(SavePanelUserVo.class);
+            } else if (id != null) {
+                // 编辑模式
                 data = panelUserService.getEditView(id);
             } else {
+                // 创建模式
                 data = panelUserService.getCreateView();
             }
             mav.addObject("data", data);
@@ -66,17 +77,17 @@ public class PanelUserController {
         try {
             // 处理验证错误
             if (bindingResult.hasErrors()) {
-                mav.setViewName("panel-user-operator");
-                mav.addObject("data", dto);
-                mav.addObject("vo", Result.error(bindingResult.getFieldError().getDefaultMessage()));
+                mav.setViewName("redirect:/panel/user/create");
+                ra.addFlashAttribute("data", as(dto, SavePanelUserVo.class));
+                ra.addFlashAttribute("vo", Result.error(bindingResult.getFieldError().getDefaultMessage()));
                 return mav;
             }
             
             // 验证新建用户时密码必填
             if (dto.getId() == null && (dto.getPassword() == null || dto.getPassword().trim().isEmpty())) {
-                mav.setViewName("panel-user-operator");
-                mav.addObject("data", dto);
-                mav.addObject("vo", Result.error("新建用户时密码不能为空"));
+                mav.setViewName("redirect:/panel/user/create");
+                ra.addFlashAttribute("data", as(dto, SavePanelUserVo.class));
+                ra.addFlashAttribute("vo", Result.error("新建用户时密码不能为空"));
                 return mav;
             }
             
@@ -94,12 +105,29 @@ public class PanelUserController {
             }
         } catch (BizException e) {
             // 保存失败，返回表单页面并显示错误信息
-            mav.setViewName("panel-user-operator");
-            mav.addObject("data", dto);
-            mav.addObject("vo", Result.error(e.getMessage()));
+            mav.setViewName("redirect:/panel/user/create");
+            ra.addFlashAttribute("data", as(dto, SavePanelUserVo.class));
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
         }
         
         return mav;
+    }
+
+    private SavePanelUserVo convertToVo(SavePanelUserDto dto) {
+        SavePanelUserVo vo = as(dto, SavePanelUserVo.class);
+        
+        // 获取所有用户组
+        List<SavePanelUserGroupVo> groups = panelUserService.getCreateView().getGroups();
+        
+        // 如果DTO中有选中的用户组，标记它们
+        if (dto.getGroupIds() != null) {
+            for (SavePanelUserGroupVo group : groups) {
+                group.setHasGroup(dto.getGroupIds().contains(group.getId()));
+            }
+        }
+        
+        vo.setGroups(groups);
+        return vo;
     }
 
     /**
