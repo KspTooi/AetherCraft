@@ -5,16 +5,20 @@ import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.vo.PanelGroupVo;
+import com.ksptool.ql.biz.model.vo.EditPanelGroupVo;
+import com.ksptool.ql.biz.model.vo.EditPanelGroupPermissionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 @Service
@@ -27,18 +31,50 @@ public class PanelGroupService {
     private PermissionRepository permissionRepository;
 
     /**
+     * 获取用户组详细信息
+     */
+    public EditPanelGroupVo getGroupDetails(Long id) throws BizException {
+        // 获取用户组信息
+        GroupPo groupPo = groupRepository.getGroupDetailsById(id);
+
+        if(groupPo == null){
+            throw new BizException("用户组不存在!");
+        }
+
+        // 创建并填充基本信息
+        EditPanelGroupVo vo = new EditPanelGroupVo();
+        assign(groupPo, vo);
+
+        // 获取所有权限
+        List<PermissionPo> allPermissions = permissionRepository.findAll(
+            Sort.by(Sort.Direction.ASC, "sortOrder")
+        );
+
+        // 获取用户组已有权限的ID集合
+        Set<Long> gPermIds = new HashSet<>();
+        for (PermissionPo permission : groupPo.getPermissions()) {
+            gPermIds.add(permission.getId());
+        }
+
+        // 转换权限列表
+        List<EditPanelGroupPermissionVo> permissions = new ArrayList<>();
+        for (PermissionPo permission : allPermissions) {
+            EditPanelGroupPermissionVo pVo = new EditPanelGroupPermissionVo();
+            assign(permission, pVo);
+            pVo.setHasPermission(gPermIds.contains(permission.getId()));
+            permissions.add(pVo);
+        }
+        vo.setPermissions(permissions);
+        return vo;
+    }
+
+    /**
      * 分页查询所有用户组
      */
     public PageableView<PanelGroupVo> findAll(int page, int size) {
-        List<GroupPo> groups = groupRepository.findAllByOrderBySortOrderAsc(PageRequest.of(page - 1, size));
-        List<PanelGroupVo> vos = groups.stream().map(group -> {
-            PanelGroupVo vo = new PanelGroupVo();
-            assign(group, vo);
-            // 设置成员数量（这里需要根据实际关联关系设置）
-            vo.setMemberCount(0L); // 暂时设置为0，后续根据实际需求实现
-            return vo;
-        }).collect(Collectors.toList());
-        
+        // 使用Repository的分页查询
+        List<GroupPo> pos = groupRepository.findAllByOrderBySortOrderAsc(PageRequest.of(page - 1, size));
+        List<PanelGroupVo> vos = as(pos,PanelGroupVo.class);
         long total = groupRepository.count();
         return new PageableView<>(vos, total, page, size);
     }
@@ -70,16 +106,6 @@ public class PanelGroupService {
             }
         }
 
-        // 设置权限
-        if (permissionIds != null) {
-            Set<PermissionPo> permissions = Arrays.stream(permissionIds)
-                .map(id -> permissionRepository.findById(id).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-            group.setPermissions(permissions);
-        } else {
-            group.setPermissions(new HashSet<>());
-        }
 
         // 设置默认值
         if (group.getStatus() == null) {

@@ -15,5 +15,4 @@ public class PanelGroupVo {
     private Boolean isSystem;
     private Integer sortOrder;
     private Long memberCount;
-    private Set<PermissionPo> permissions;
 } 

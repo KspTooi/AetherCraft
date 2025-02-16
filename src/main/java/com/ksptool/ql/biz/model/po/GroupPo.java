@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.Date;
 import java.util.Set;
@@ -14,6 +15,10 @@ import java.util.Set;
 @Entity
 @Table(name = "groups")
 @Data
+@NamedEntityGraph(
+        name = "with-permissions",
+        attributeNodes = {@NamedAttributeNode("permissions")
+})
 public class GroupPo {
 
     @Id

@@ -52,8 +52,8 @@ public class Result<T> {
     }
 
     // 内部服务器错误
-    public static <T> Result<T> internalError(String message) {
-        return new Result<>(2, message, null);
+    public static <T> Result<Object> internalError(String message,Object throwable) {
+        return new Result<>(2, message, throwable);
     }
 
     // Getter 方法

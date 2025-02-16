@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.biz.model.vo.EditPanelGroupVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -49,12 +50,8 @@ public class PanelGroupController {
         ModelAndView mv = new ModelAndView();
         
         try {
-            GroupPo group = groupService.findById(id);
-            if (group == null) {
-                throw new BizException("用户组不存在");
-            }
-            mv.addObject("group", group);
-            //mv.addObject("permissions", permissionService.getPermissionList(PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "sortOrder"))).getContent());
+            EditPanelGroupVo vo = groupService.getGroupDetails(id);
+            mv.addObject("group", vo);
             mv.setViewName("panel-group-operator");
         } catch (BizException e) {
             mv.setViewName("redirect:/panel/group/list");
