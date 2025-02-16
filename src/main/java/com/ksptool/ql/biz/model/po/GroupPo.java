@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.BatchSize;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * 用户组实体类
@@ -66,14 +69,16 @@ public class GroupPo {
     @Comment("修改时间")
     private Date updateTime;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "group_permission",
+        name = "t_group_permission",
         joinColumns = @JoinColumn(name = "group_id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
-    @Comment("组拥有的权限")
-    private Set<PermissionPo> permissions;
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户组拥有的权限")
+    private Set<PermissionPo> permissions = new HashSet<>();
 
     @PrePersist
     public void prePersist() {

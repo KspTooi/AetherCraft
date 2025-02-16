@@ -5,8 +5,9 @@ import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.vo.PanelGroupVo;
-import com.ksptool.ql.biz.model.vo.EditPanelGroupVo;
-import com.ksptool.ql.biz.model.vo.EditPanelGroupPermissionVo;
+import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
+import com.ksptool.ql.biz.model.vo.SavePanelGroupPermissionVo;
+import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
@@ -33,7 +33,7 @@ public class PanelGroupService {
     /**
      * 获取用户组详细信息
      */
-    public EditPanelGroupVo getGroupDetails(Long id) throws BizException {
+    public SavePanelGroupVo getEditView(Long id) throws BizException {
         // 获取用户组信息
         GroupPo groupPo = groupRepository.getGroupDetailsById(id);
 
@@ -42,7 +42,7 @@ public class PanelGroupService {
         }
 
         // 创建并填充基本信息
-        EditPanelGroupVo vo = new EditPanelGroupVo();
+        SavePanelGroupVo vo = new SavePanelGroupVo();
         assign(groupPo, vo);
 
         // 获取所有权限
@@ -57,14 +57,18 @@ public class PanelGroupService {
         }
 
         // 转换权限列表
-        List<EditPanelGroupPermissionVo> permissions = new ArrayList<>();
+        List<SavePanelGroupPermissionVo> permissions = new ArrayList<>();
         for (PermissionPo permission : allPermissions) {
-            EditPanelGroupPermissionVo pVo = new EditPanelGroupPermissionVo();
+            SavePanelGroupPermissionVo pVo = new SavePanelGroupPermissionVo();
             assign(permission, pVo);
             pVo.setHasPermission(gPermIds.contains(permission.getId()));
             permissions.add(pVo);
         }
         vo.setPermissions(permissions);
+        
+        // 编辑模式下不需要设置nextOrder
+        vo.setNextOrder(null);
+        
         return vo;
     }
 
@@ -88,36 +92,52 @@ public class PanelGroupService {
     }
 
     /**
-     * 保存或更新用户组
+     * 保存用户组信息
+     * 采用三步式保存：
+     * 1. 更新基础信息
+     * 2. 处理权限关联
+     * 3. 保存所有更改
      */
     @Transactional
-    public void save(GroupPo group, Long[] permissionIds) throws BizException {
-        // 检查code是否已存在
-        if (group.getId() == null) {
-            if (groupRepository.existsByCode(group.getCode())) {
+    public void savePanelGroup(SavePanelGroupDto dto) throws BizException {
+
+        // 1. 更新基础信息
+        GroupPo group;
+        if (dto.getId() == null) {
+            // 创建新用户组
+            group = new GroupPo();
+            if (groupRepository.existsByCode(dto.getCode())) {
                 throw new BizException("用户组标识已存在");
             }
         } else {
-            GroupPo existingGroup = groupRepository.findById(group.getId())
+            // 更新现有用户组
+            group = groupRepository.findById(dto.getId())
                     .orElseThrow(() -> new BizException("用户组不存在"));
-            if (!existingGroup.getCode().equals(group.getCode()) &&
-                groupRepository.existsByCode(group.getCode())) {
+            if (!group.getCode().equals(dto.getCode()) &&
+                groupRepository.existsByCode(dto.getCode())) {
                 throw new BizException("用户组标识已存在");
             }
         }
 
-
-        // 设置默认值
-        if (group.getStatus() == null) {
-            group.setStatus(1); // 默认启用
+        // 设置基础信息
+        group.setCode(dto.getCode());
+        group.setName(dto.getName());
+        group.setDescription(dto.getDescription());
+        group.setStatus(dto.getStatus());
+        group.setSortOrder(dto.getSortOrder());
+        
+        // 2. 处理权限关联
+        group.getPermissions().clear();
+        
+        // 3. 建立新的权限关联
+        if (dto.getPermissionIds() != null && !dto.getPermissionIds().isEmpty()) {
+            Set<PermissionPo> newPermissions = new HashSet<>(
+                permissionRepository.findAllById(dto.getPermissionIds())
+            );
+            group.getPermissions().addAll(newPermissions);
         }
-        if (group.getIsSystem() == null) {
-            group.setIsSystem(false); // 默认非系统组
-        }
-        if (group.getSortOrder() == null) {
-            group.setSortOrder(0); // 默认排序号
-        }
-
+        
+        // 4. 保存所有更改
         groupRepository.save(group);
     }
 
@@ -134,5 +154,49 @@ public class PanelGroupService {
         }
         
         groupRepository.deleteById(id);
+    }
+
+    /**
+     * 获取下一个排序号
+     * @return 当前最大排序号+1
+     */
+    public int getNextSortOrder() {
+        return groupRepository.findMaxSortOrder() + 1;
+    }
+
+    /**
+     * 获取创建用户组视图数据
+     */
+    public SavePanelGroupVo getCreateView() {
+        SavePanelGroupVo vo = new SavePanelGroupVo();
+        // 设置基本信息默认值
+        vo.setId(null);
+        vo.setCode("");
+        vo.setName("");
+        vo.setDescription("");
+        vo.setStatus(1);
+        vo.setIsSystem(false);
+        
+        // 设置排序号
+        int nextOrder = getNextSortOrder();
+        vo.setNextOrder(nextOrder);
+        vo.setSortOrder(nextOrder);
+        
+        // 获取所有权限列表
+        List<PermissionPo> allPermissions = permissionRepository.findAll(
+            Sort.by(Sort.Direction.ASC, "sortOrder")
+        );
+        
+        // 转换权限列表
+        List<SavePanelGroupPermissionVo> permissions = new ArrayList<>();
+        for (PermissionPo permission : allPermissions) {
+            SavePanelGroupPermissionVo pVo = new SavePanelGroupPermissionVo();
+            assign(permission, pVo);
+            pVo.setHasPermission(false);
+            permissions.add(pVo);
+        }
+        vo.setPermissions(permissions);
+        
+        return vo;
     }
 } 

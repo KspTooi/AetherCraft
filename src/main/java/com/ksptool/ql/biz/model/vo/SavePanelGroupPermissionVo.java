@@ -3,7 +3,7 @@ package com.ksptool.ql.biz.model.vo;
 import lombok.Data;
 
 @Data
-public class EditPanelGroupPermissionVo {
+public class SavePanelGroupPermissionVo {
     // 权限ID
     private Long id;
     // 权限标识

@@ -86,7 +86,7 @@ public class PanelPermissionController {
     @PostMapping("/save")
     public ModelAndView savePermission(@Valid @ModelAttribute("data") CreatePermissionDto dto, 
                                      BindingResult bindingResult,
-                                     RedirectAttributes redirectAttributes) {
+                                     RedirectAttributes ra) {
         ModelAndView mav = new ModelAndView();
         
         // 如果有验证错误，返回表单页面
@@ -109,18 +109,18 @@ public class PanelPermissionController {
             panelPermissionService.savePermission(permission);
             
             if (isCreate) {
-                redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已创建权限节点:%s", permission.getCode()), null));
+                ra.addFlashAttribute("vo", Result.success(String.format("已创建权限节点:%s", permission.getCode()), null));
                 CreatePermissionDto newDto = new CreatePermissionDto();
                 newDto.setSortOrder(panelPermissionService.getNextSortOrder());
-                redirectAttributes.addFlashAttribute("data", newDto);
+                ra.addFlashAttribute("data", newDto);
                 mav.setViewName("redirect:/panel/permission/create");
             } else {
-                redirectAttributes.addFlashAttribute("vo", Result.success(String.format("已更新权限节点:%s", permission.getCode()), null));
+                ra.addFlashAttribute("vo", Result.success(String.format("已更新权限节点:%s", permission.getCode()), null));
                 mav.setViewName("redirect:/panel/permission/list");
             }
         } catch (BizException e) {
-            redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
-            redirectAttributes.addFlashAttribute("data", dto);
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("data", dto);
 
             if (dto.getId() != null) {
                 mav.setViewName("redirect:/panel/permission/edit/" + dto.getId());

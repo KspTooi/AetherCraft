@@ -12,7 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.ksptool.entities.Entities.assign;
 
@@ -32,13 +33,12 @@ public class PanelPermissionService {
         Page<PermissionPo> page = permissionRepository.findAll(pageable);
         
         // 转换为VO
-        var voList = page.getContent().stream()
-            .map(po -> {
-                ListPanelPermissionVo vo = new ListPanelPermissionVo();
-                assign(po, vo);
-                return vo;
-            })
-            .collect(Collectors.toList());
+        List<ListPanelPermissionVo> voList = new ArrayList<>();
+        for (PermissionPo po : page.getContent()) {
+            ListPanelPermissionVo vo = new ListPanelPermissionVo();
+            assign(po, vo);
+            voList.add(vo);
+        }
         
         return new PageableView<>(
             voList,

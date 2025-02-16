@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<GroupPo, Long> {
@@ -25,4 +26,11 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long> {
 
     @EntityGraph(value = "with-permissions")
     GroupPo getGroupDetailsById(@Param("id") Long id);
+
+    /**
+     * 获取最大排序号
+     * @return 最大排序号，如果没有记录则返回0
+     */
+    @Query("SELECT COALESCE(MAX(g.sortOrder), 0) FROM GroupPo g")
+    Integer findMaxSortOrder();
 }

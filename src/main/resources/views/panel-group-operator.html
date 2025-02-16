@@ -129,9 +129,18 @@
                                 <div class="col-md-6">
                                     <label for="sortOrder" class="form-label small">排序号</label>
                                     <input type="number" class="form-control form-control-sm" id="sortOrder" name="sortOrder" 
-                                           th:value="${group != null ? group.sortOrder : 0}"
+                                           th:value="${group != null ? group.sortOrder : nextOrder}"
                                            required>
                                     <div class="invalid-feedback">请输入排序号</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label small">状态</label>
+                                    <select class="form-select form-select-sm" id="status" name="status" required>
+                                        <option value="1" th:selected="${group != null && group.status == 1}">启用</option>
+                                        <option value="0" th:selected="${group != null && group.status == 0}">禁用</option>
+                                    </select>
+                                    <div class="invalid-feedback">请选择状态</div>
                                 </div>
 
                                 <div class="col-md-12">
@@ -217,7 +226,7 @@
             const removeBtn = document.getElementById('removeBtn');
             const sourceSearch = document.getElementById('sourceSearch');
             const targetSearch = document.getElementById('targetSearch');
-            const selectedPermissionIds = document.getElementById('selectedPermissionIds');
+            const form = document.querySelector('form');
 
             // 更新选中状态和按钮状态
             function updateSelection() {
@@ -231,11 +240,6 @@
                 const targetCount = targetList.querySelectorAll('.transfer-item:not([style*="display: none"])').length;
                 sourceList.closest('.transfer-list').querySelector('.transfer-count').textContent = sourceCount + ' 项';
                 targetList.closest('.transfer-list').querySelector('.transfer-count').textContent = targetCount + ' 项';
-                
-                // 更新隐藏字段
-                const selectedIds = Array.from(targetList.querySelectorAll('.transfer-item'))
-                    .map(item => item.dataset.id);
-                selectedPermissionIds.value = selectedIds.join(',');
             }
 
             // 点击选中/取消选中
@@ -258,6 +262,8 @@
                     const visible = name.includes(value) || code.includes(value);
                     item.style.display = visible ? '' : 'none';
                 });
+                
+                updateSelection();
             }
 
             // 移动选中项
@@ -269,6 +275,25 @@
                 });
                 updateSelection();
             }
+
+            // 表单提交前处理
+            form.addEventListener('submit', function(event) {
+                // 获取已选权限ID
+                const selectedIds = Array.from(targetList.querySelectorAll('.transfer-item'))
+                    .map(item => item.dataset.id);
+                
+                // 清除旧的隐藏输入
+                form.querySelectorAll('input[name="permissionIds"]').forEach(input => input.remove());
+                
+                // 为每个选中的权限ID创建隐藏输入
+                selectedIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'permissionIds';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+            });
 
             // 绑定事件
             sourceList.addEventListener('click', toggleSelection);

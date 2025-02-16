@@ -2,6 +2,8 @@ package com.ksptool.ql.biz.model.po;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.Comment;
 
 import java.util.Date;
@@ -47,7 +49,9 @@ public class PermissionPo {
     @Comment("修改时间")
     private Date updateTime;
 
-    @ManyToMany(mappedBy = "permissions")
+    @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @Comment("拥有此权限的用户组")
     private Set<GroupPo> groups;
 
