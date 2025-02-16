@@ -228,26 +228,22 @@
             const targetSearch = document.getElementById('targetSearch');
             const form = document.querySelector('form');
 
-            // 更新选中状态和按钮状态
-            function updateSelection() {
-                const sourceSelected = sourceList.querySelectorAll('.selected').length > 0;
-                const targetSelected = targetList.querySelectorAll('.selected').length > 0;
-                addBtn.disabled = !sourceSelected;
-                removeBtn.disabled = !targetSelected;
-                
-                // 更新计数
+            // 更新计数
+            function updateCount() {
                 const sourceCount = sourceList.querySelectorAll('.transfer-item:not([style*="display: none"])').length;
                 const targetCount = targetList.querySelectorAll('.transfer-item:not([style*="display: none"])').length;
                 sourceList.closest('.transfer-list').querySelector('.transfer-count').textContent = sourceCount + ' 项';
                 targetList.closest('.transfer-list').querySelector('.transfer-count').textContent = targetCount + ' 项';
             }
 
-            // 点击选中/取消选中
-            function toggleSelection(event) {
+            // 点击直接移动项目
+            function handleItemClick(event) {
                 const item = event.target.closest('.transfer-item');
                 if (item) {
-                    item.classList.toggle('selected');
-                    updateSelection();
+                    const currentList = item.parentElement;
+                    const destinationList = currentList === sourceList ? targetList : sourceList;
+                    destinationList.appendChild(item);
+                    updateCount();
                 }
             }
 
@@ -263,17 +259,7 @@
                     item.style.display = visible ? '' : 'none';
                 });
                 
-                updateSelection();
-            }
-
-            // 移动选中项
-            function moveSelected(from, to) {
-                const selected = from.querySelectorAll('.transfer-item.selected');
-                selected.forEach(item => {
-                    item.classList.remove('selected');
-                    to.appendChild(item);
-                });
-                updateSelection();
+                updateCount();
             }
 
             // 表单提交前处理
@@ -296,15 +282,13 @@
             });
 
             // 绑定事件
-            sourceList.addEventListener('click', toggleSelection);
-            targetList.addEventListener('click', toggleSelection);
-            addBtn.addEventListener('click', () => moveSelected(sourceList, targetList));
-            removeBtn.addEventListener('click', () => moveSelected(targetList, sourceList));
+            sourceList.addEventListener('click', handleItemClick);
+            targetList.addEventListener('click', handleItemClick);
             sourceSearch.addEventListener('input', () => filterItems(sourceSearch, sourceList));
             targetSearch.addEventListener('input', () => filterItems(targetSearch, targetList));
 
             // 初始化
-            updateSelection();
+            updateCount();
         })();
 
         // 表单验证
