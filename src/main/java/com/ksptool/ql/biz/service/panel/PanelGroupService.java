@@ -17,10 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
-
-import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 @Service
@@ -33,7 +30,60 @@ public class PanelGroupService {
     private PermissionRepository permissionRepository;
 
     /**
-     * 获取用户组详细信息
+     * 获取用户组列表视图数据
+     */
+    public PageableView<ListPanelGroupVo> getListView(ListPanelGroupDto dto) {
+        // 创建分页和排序
+        PageRequest pr = PageRequest.of(dto.getPage() - 1, dto.getPageSize());
+
+        Page<ListPanelGroupVo> pageResult = groupRepository.getListView(dto,pr);
+
+        return new PageableView<>(
+                pageResult.getContent(),
+                pageResult.getTotalElements(),
+                dto.getPage(),
+                dto.getPageSize()
+        );
+    }
+
+    /**
+     * 获取创建用户组视图数据
+     */
+    public SavePanelGroupVo getCreateView() {
+        SavePanelGroupVo vo = new SavePanelGroupVo();
+        // 设置基本信息默认值
+        vo.setId(null);
+        vo.setCode("");
+        vo.setName("");
+        vo.setDescription("");
+        vo.setStatus(1);
+        vo.setIsSystem(false);
+
+        // 设置排序号
+        int nextOrder = groupRepository.findMaxSortOrder() + 1;
+        vo.setNextOrder(nextOrder);
+        vo.setSortOrder(nextOrder);
+
+        // 获取所有权限列表
+        List<PermissionPo> allPermissions = permissionRepository.findAll(
+                Sort.by(Sort.Direction.ASC, "sortOrder")
+        );
+
+        // 转换权限列表
+        List<SavePanelGroupPermissionVo> permissions = new ArrayList<>();
+        for (PermissionPo permission : allPermissions) {
+            SavePanelGroupPermissionVo pVo = new SavePanelGroupPermissionVo();
+            assign(permission, pVo);
+            pVo.setHasPermission(false);
+            permissions.add(pVo);
+        }
+        vo.setPermissions(permissions);
+
+        return vo;
+    }
+
+    /**
+     * 获取用户组编辑视图
      */
     public SavePanelGroupVo getEditView(Long id) throws BizException {
         // 获取用户组信息
@@ -74,13 +124,6 @@ public class PanelGroupService {
         return vo;
     }
 
-    /**
-     * 根据ID查询用户组
-     */
-    public GroupPo findById(Long id) {
-        Optional<GroupPo> group = groupRepository.findById(id);
-        return group.orElse(null);
-    }
 
     /**
      * 保存用户组信息
@@ -151,64 +194,4 @@ public class PanelGroupService {
         return groupName;
     }
 
-    /**
-     * 获取下一个排序号
-     * @return 当前最大排序号+1
-     */
-    public int getNextSortOrder() {
-        return groupRepository.findMaxSortOrder() + 1;
-    }
-
-    /**
-     * 获取创建用户组视图数据
-     */
-    public SavePanelGroupVo getCreateView() {
-        SavePanelGroupVo vo = new SavePanelGroupVo();
-        // 设置基本信息默认值
-        vo.setId(null);
-        vo.setCode("");
-        vo.setName("");
-        vo.setDescription("");
-        vo.setStatus(1);
-        vo.setIsSystem(false);
-        
-        // 设置排序号
-        int nextOrder = getNextSortOrder();
-        vo.setNextOrder(nextOrder);
-        vo.setSortOrder(nextOrder);
-        
-        // 获取所有权限列表
-        List<PermissionPo> allPermissions = permissionRepository.findAll(
-            Sort.by(Sort.Direction.ASC, "sortOrder")
-        );
-        
-        // 转换权限列表
-        List<SavePanelGroupPermissionVo> permissions = new ArrayList<>();
-        for (PermissionPo permission : allPermissions) {
-            SavePanelGroupPermissionVo pVo = new SavePanelGroupPermissionVo();
-            assign(permission, pVo);
-            pVo.setHasPermission(false);
-            permissions.add(pVo);
-        }
-        vo.setPermissions(permissions);
-        
-        return vo;
-    }
-
-    /**
-     * 获取用户组列表视图数据
-     */
-    public PageableView<ListPanelGroupVo> getListView(ListPanelGroupDto dto) {
-        // 创建分页和排序
-        PageRequest pr = PageRequest.of(dto.getPage() - 1, dto.getPageSize());
-
-        Page<ListPanelGroupVo> pageResult = groupRepository.getListView(dto,pr);
-
-        return new PageableView<>(
-            pageResult.getContent(),
-            pageResult.getTotalElements(),
-            dto.getPage(),
-            dto.getPageSize()
-        );
-    }
 } 

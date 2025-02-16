@@ -1,15 +1,14 @@
 package com.ksptool.ql.biz.controller.panel;
 
+import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
 import com.ksptool.ql.biz.model.dto.SaveUserDto;
 import com.ksptool.ql.biz.model.po.UserPo;
-import com.ksptool.ql.biz.model.vo.PanelUserVo;
+import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -29,19 +28,9 @@ public class PanelUserController {
      * 用户管理页面
      */
     @GetMapping("/list")
-    public ModelAndView userManager(@RequestParam(name = "page", defaultValue = "1") int page,
-                            @RequestParam(name = "size", defaultValue = "10") int size) {
+    public ModelAndView userManager(ListPanelUserDto dto) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
-        
-        // 获取用户列表
-        Page<PanelUserVo> userPage = panelUserService.getUserList(PageRequest.of(page - 1, size));
-        
-        // 添加数据到模型
-        mav.addObject("users", userPage.getContent());
-        mav.addObject("currentPage", page);
-        mav.addObject("totalPages", userPage.getTotalPages());
-        mav.addObject("totalElements", userPage.getTotalElements());
-        
+        mav.addObject("data", panelUserService.getListView(dto));
         return mav;
     }
 
@@ -52,16 +41,17 @@ public class PanelUserController {
     public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id) {
         ModelAndView mav = new ModelAndView("panel-user-operator");
         
-        if (id != null) {
-            // 编辑模式：获取用户信息
-            try {
-                UserPo user = panelUserService.getUserPo(id);
-                user.setPassword(null);
-                mav.addObject("user", user);
-            } catch (BizException e) {
-                // 用户不存在时返回列表页
-                return new ModelAndView("redirect:/panel/user/list");
+        try {
+            SavePanelUserVo data;
+            if (id != null) {
+                data = panelUserService.getEditView(id);
+            } else {
+                data = panelUserService.getCreateView();
             }
+            mav.addObject("data", data);
+        } catch (BizException e) {
+            // 用户不存在时返回列表页
+            return new ModelAndView("redirect:/panel/user/list");
         }
         return mav;
     }
@@ -77,7 +67,7 @@ public class PanelUserController {
             // 处理验证错误
             if (bindingResult.hasErrors()) {
                 mav.setViewName("panel-user-operator");
-                mav.addObject("user", dto);
+                mav.addObject("data", dto);
                 mav.addObject("vo", Result.error(bindingResult.getFieldError().getDefaultMessage()));
                 return mav;
             }
@@ -85,35 +75,22 @@ public class PanelUserController {
             // 验证新建用户时密码必填
             if (dto.getId() == null && (dto.getPassword() == null || dto.getPassword().trim().isEmpty())) {
                 mav.setViewName("panel-user-operator");
-                mav.addObject("user", dto);
+                mav.addObject("data", dto);
                 mav.addObject("vo", Result.error("新建用户时密码不能为空"));
                 return mav;
             }
             
-            // 获取或创建UserPo
-            UserPo user;
-            boolean isCreate = dto.getId() == null;
-            
-            if (isCreate) {
-                user = new UserPo();
-            } else {
-                user = panelUserService.getUserPo(dto.getId());
-                // 编辑时，如果密码为空，保持原密码不变
-                if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-                    dto.setPassword(user.getPassword());
-                }
-            }
-            
-            // 合并DTO数据到PO
+            // 创建UserPo
+            UserPo user = new UserPo();
             assign(dto, user);
             
             // 保存用户
             panelUserService.saveUser(user);
             
-            if (isCreate) {
+            if (dto.getId() == null) {
                 // 创建成功：显示成功消息，清空表单，返回创建页面继续创建
-                mav.setViewName("panel-user-operator");
-                mav.addObject("vo", Result.success("已创建用户:" + user.getUsername(), null));
+                mav.setViewName("redirect:/panel/user/create");
+                ra.addFlashAttribute("vo", Result.success("已创建用户:" + user.getUsername(), null));
             } else {
                 // 编辑成功：显示成功消息，返回列表页
                 mav.setViewName("redirect:/panel/user/list");
@@ -122,7 +99,7 @@ public class PanelUserController {
         } catch (BizException e) {
             // 保存失败，返回表单页面并显示错误信息
             mav.setViewName("panel-user-operator");
-            mav.addObject("user", dto);
+            mav.addObject("data", dto);
             mav.addObject("vo", Result.error(e.getMessage()));
         }
         
@@ -144,26 +121,11 @@ public class PanelUserController {
         }
         
         // 重新加载用户列表
-        Page<PanelUserVo> userPage = panelUserService.getUserList(PageRequest.of(0, 10));
-        mav.addObject("users", userPage.getContent());
-        mav.addObject("currentPage", 1);
-        mav.addObject("totalPages", userPage.getTotalPages());
-        mav.addObject("totalElements", userPage.getTotalElements());
+        ListPanelUserDto dto = new ListPanelUserDto();
+        dto.setPage(1);
+        dto.setSize(10);
+        mav.addObject("data", panelUserService.getListView(dto));
         
         return mav;
     }
-
-    /**
-     * 获取用户信息
-     */
-    @GetMapping("/get/{id}")
-    @ResponseBody
-    public Result<PanelUserVo> getUser(@PathVariable Long id) {
-        try {
-            PanelUserVo user = panelUserService.getUser(id);
-            return Result.success(user);
-        } catch (BizException e) {
-            return Result.error(e);
-        }
-    }
-} 
+}
