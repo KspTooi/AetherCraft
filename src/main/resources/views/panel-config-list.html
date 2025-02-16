@@ -15,9 +15,9 @@
                     <div class="card-header bg-white border-bottom pt-3 pb-2">
                         <div class="d-flex justify-content-between align-items-center px-3">
                             <h5 class="card-title mb-0 fw-bold text-dark">配置项管理</h5>
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#configModal">
+                            <a href="/panel/config/create" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-lg me-1"></i>添加配置
-                            </button>
+                            </a>
                         </div>
                     </div>
                     <div class="card-body p-3">
@@ -66,14 +66,11 @@
                                         <td th:text="${#dates.format(config.updateTime, 'yyyy-MM-dd HH:mm:ss')}">2024-03-20 10:00:00</td>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" 
-                                                        th:data-id="${config.id}"
-                                                        onclick="editConfig(this)">
+                                                <a th:href="@{/panel/config/edit(id=${config.id})}" class="btn btn-outline-primary">
                                                     <i class="bi bi-pencil"></i>
-                                                </button>
+                                                </a>
                                                 <button type="button" class="btn btn-outline-danger"
-                                                        th:data-id="${config.id}"
-                                                        onclick="deleteConfig(this)">
+                                                        th:onclick="'deleteConfig(' + ${config.id} + ')'">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -110,39 +107,44 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- 配置项编辑模态框 -->
-            <div class="modal fade" id="configModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">添加/编辑配置项</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="configForm">
-                                <div class="mb-3">
-                                    <label class="form-label">配置键</label>
-                                    <input type="text" class="form-control" name="configKey" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">配置值</label>
-                                    <input type="text" class="form-control" name="configValue" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">描述</label>
-                                    <textarea class="form-control" name="description" rows="3"></textarea>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                            <button type="button" class="btn btn-primary">保存</button>
-                        </div>
-                    </div>
+    <!-- 删除确认对话框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这个配置项吗？此操作不可恢复。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="bi bi-trash me-1"></i>删除
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        let deleteId = null;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        function deleteConfig(id) {
+            deleteId = id;
+            deleteModal.show();
+        }
+
+        function confirmDelete() {
+            if (deleteId) {
+                window.location.href = `/panel/config/remove/${deleteId}`;
+            }
+        }
+    </script>
 </body>
 </html> 
