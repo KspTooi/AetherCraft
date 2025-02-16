@@ -78,7 +78,6 @@ public class PanelGroupService {
             permissions.add(pVo);
         }
         vo.setPermissions(permissions);
-
         return vo;
     }
 
