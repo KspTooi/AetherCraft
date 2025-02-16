@@ -14,3 +14,6 @@ SpringBoot版本3.4.1
 需要为接口创建单独的Dto用于接收数据，Vo用于响应数据,请记住所有的Controller的输入都是Dto而响应都为Vo(包括ModelAndView中嵌入Vo)
 接口为JSON响应时使用com.ksptool.ql.commons.web.Result类进行响应
 后端校验参数使用HibernateValidation注解
+Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
+简单的循环数据处理不应使用StreamAPI代替,只有复杂数据处理使用StreamApi.
+尽可能不使用OptinalAPI
