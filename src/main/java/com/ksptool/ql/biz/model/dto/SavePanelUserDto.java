@@ -1,12 +1,11 @@
 package com.ksptool.ql.biz.model.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class SaveUserDto {
+public class SavePanelUserDto {
     /**
      * 用户ID
      */

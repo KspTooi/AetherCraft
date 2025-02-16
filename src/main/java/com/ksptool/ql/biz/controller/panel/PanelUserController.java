@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
-import com.ksptool.ql.biz.model.dto.SaveUserDto;
+import com.ksptool.ql.biz.model.dto.SavePanelUserDto;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
@@ -60,7 +60,7 @@ public class PanelUserController {
      * 保存用户
      */
     @PostMapping("/save")
-    public ModelAndView saveUser(@Valid SaveUserDto dto, BindingResult bindingResult, RedirectAttributes ra) {
+    public ModelAndView saveUser(@Valid SavePanelUserDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         ModelAndView mav = new ModelAndView();
 
         try {
