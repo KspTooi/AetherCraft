@@ -44,9 +44,8 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
                 g.status,
                 g.isSystem,
                 g.sortOrder,
-                CAST(0 AS int),
-                CAST((SELECT COUNT(p) t FROM g.permissions p) AS int),
-                CAST((SELECT COUNT(p) t FROM g.users p) AS int)
+                CAST((SELECT COUNT(u) t FROM g.users u) AS int),
+                CAST((SELECT COUNT(p) t FROM g.permissions p) AS int)
             )
             FROM GroupPo g
             WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
