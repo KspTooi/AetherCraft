@@ -52,6 +52,7 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
             WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
             AND (:#{#dto.code} IS NULL OR g.code LIKE %:#{#dto.code}%)
             AND (:#{#dto.description} IS NULL OR g.description LIKE %:#{#dto.description}%)
+            ORDER BY g.updateTime DESC
     """)
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
