@@ -80,21 +80,17 @@ public class PanelUserController {
                 return mav;
             }
             
-            // 创建UserPo
-            UserPo user = new UserPo();
-            assign(dto, user);
-            
             // 保存用户
-            panelUserService.saveUser(user);
+            panelUserService.saveUser(dto);
             
             if (dto.getId() == null) {
                 // 创建成功：显示成功消息，清空表单，返回创建页面继续创建
                 mav.setViewName("redirect:/panel/user/create");
-                ra.addFlashAttribute("vo", Result.success("已创建用户:" + user.getUsername(), null));
+                ra.addFlashAttribute("vo", Result.success("已创建用户:" + dto.getUsername(), null));
             } else {
                 // 编辑成功：显示成功消息，返回列表页
                 mav.setViewName("redirect:/panel/user/list");
-                ra.addFlashAttribute("vo", Result.success("已更新用户:" + user.getUsername(), null));
+                ra.addFlashAttribute("vo", Result.success("已更新用户:" + dto.getUsername(), null));
             }
         } catch (BizException e) {
             // 保存失败，返回表单页面并显示错误信息

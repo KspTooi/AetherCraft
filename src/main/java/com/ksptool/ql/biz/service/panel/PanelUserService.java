@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.service.panel;
 import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
+import com.ksptool.ql.biz.model.dto.SavePanelUserDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.ListPanelUserVo;
@@ -20,6 +21,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.assign;
@@ -124,27 +126,64 @@ public class PanelUserService {
      * 保存用户
      * @throws BizException 业务异常
      */
-    public void saveUser(UserPo user) throws BizException {
+    public void saveUser(SavePanelUserDto dto) throws BizException {
         // 检查用户名是否已存在
-        UserPo existingUserByName = userRepository.findByUsername(user.getUsername());
+        UserPo existingUserByName = userRepository.findByUsername(dto.getUsername());
         
         if (existingUserByName != null) {
             // 如果找到同名用户，且不是当前编辑的用户（新建时id为null）
-            if (user.getId() == null || !existingUserByName.getId().equals(user.getId())) {
-                throw new BizException("用户名 '" + user.getUsername() + "' 已被使用");
+            if (dto.getId() == null || !existingUserByName.getId().equals(dto.getId())) {
+                throw new BizException("用户名 '" + dto.getUsername() + "' 已被使用");
             }
         }
 
-        // 如果是新用户或密码有更新，则加密密码
-        if (user.getId() == null || user.getPassword() != null && !user.getPassword().isEmpty()) {
-            user.setPassword(encryptPassword(user.getPassword(), user.getUsername()));
-        } else {
-            // 编辑时，如果密码为空，获取原用户信息保持密码不变
-            UserPo existingUser = userRepository.getReferenceById(user.getId());
-            if (existingUser == null) {
+        // 创建或获取用户对象
+        UserPo user;
+        if (dto.getId() != null) {
+            user = userRepository.getReferenceById(dto.getId());
+            if (user == null) {
                 throw new BizException("用户不存在");
             }
-            user.setPassword(existingUser.getPassword());
+            // 如果密码为空，保持原密码不变
+            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+                dto.setPassword(user.getPassword());
+            } else {
+                dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
+            }
+        } else {
+            user = new UserPo();
+            // 新用户必须设置密码
+            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+                throw new BizException("新建用户时密码不能为空");
+            }
+            dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
+        }
+        
+        // 映射基本信息
+        assign(dto, user);
+        
+        // 设置用户组
+        if (dto.getGroupIds() != null && !dto.getGroupIds().isEmpty()) {
+            List<GroupPo> groups = groupRepository.findAllById(dto.getGroupIds());
+            // 检查是否所有组都存在且启用
+            for (Long groupId : dto.getGroupIds()) {
+                boolean found = false;
+                for (GroupPo group : groups) {
+                    if (group.getId().equals(groupId)) {
+                        if (group.getStatus() == 0) {
+                            throw new BizException("用户组 '" + group.getName() + "' 已被禁用");
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new BizException("用户组不存在");
+                }
+            }
+            user.setGroups(new HashSet<>(groups));
+        } else {
+            user.setGroups(new HashSet<>());
         }
         
         userRepository.save(user);
