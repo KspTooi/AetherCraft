@@ -4,6 +4,43 @@
     <title>用户操作 - Quick Launcher</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .group-select-container {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .group-select-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .group-select-item:last-child {
+            border-bottom: none;
+        }
+        .group-select-item:hover {
+            background-color: #f8f9fa;
+        }
+        .group-select-item.selected {
+            background-color: #e9ecef;
+        }
+        .group-select-item .group-name {
+            font-weight: 500;
+            flex: 1;
+        }
+        .group-select-item .group-code {
+            font-size: 0.75rem;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            border: 1px solid #dee2e6;
+        }
+    </style>
 </head>
 <body class="h-100">
     <!-- 引入控制台框架 -->
@@ -23,6 +60,7 @@
                     <div class="card-body p-3">
                         <form th:action="@{/panel/user/save}" method="post" class="needs-validation" novalidate>
                             <input type="hidden" name="id" th:value="${data != null ? data.id : ''}">
+                            <input type="hidden" name="groupIds" id="selectedGroupIds">
                             
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -61,6 +99,38 @@
                                         密码长度必须在6-100个字符之间
                                     </div>
                                 </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small">用户组</label>
+                                    <div class="group-select-container" id="groupContainer">
+                                        <!-- 静态演示数据 -->
+                                        <div class="group-select-item" data-id="1">
+                                            <input type="checkbox" class="form-check-input">
+                                            <div class="group-name">管理员组</div>
+                                            <div class="group-code">admin_group</div>
+                                        </div>
+                                        <div class="group-select-item" data-id="2">
+                                            <input type="checkbox" class="form-check-input">
+                                            <div class="group-name">普通用户组</div>
+                                            <div class="group-code">user_group</div>
+                                        </div>
+                                        <div class="group-select-item" data-id="3">
+                                            <input type="checkbox" class="form-check-input">
+                                            <div class="group-name">访客组</div>
+                                            <div class="group-code">guest_group</div>
+                                        </div>
+                                        <div class="group-select-item" data-id="4">
+                                            <input type="checkbox" class="form-check-input">
+                                            <div class="group-name">开发者组</div>
+                                            <div class="group-code">developer_group</div>
+                                        </div>
+                                        <div class="group-select-item" data-id="5">
+                                            <input type="checkbox" class="form-check-input">
+                                            <div class="group-name">测试组</div>
+                                            <div class="group-code">tester_group</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="text-end mt-3">
@@ -86,9 +156,28 @@
                         event.stopPropagation();
                     }
                     form.classList.add('was-validated');
+                    
+                    // 收集选中的用户组ID
+                    const selectedGroups = [];
+                    document.querySelectorAll('.group-select-item input[type="checkbox"]:checked').forEach(checkbox => {
+                        selectedGroups.push(checkbox.closest('.group-select-item').dataset.id);
+                    });
+                    document.getElementById('selectedGroupIds').value = selectedGroups.join(',');
                 }, false);
             });
         })();
+
+        // 用户组选择
+        document.getElementById('groupContainer').addEventListener('click', function(event) {
+            const item = event.target.closest('.group-select-item');
+            if (item) {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (event.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
+                item.classList.toggle('selected', checkbox.checked);
+            }
+        });
     </script>
 </body>
 </html> 
