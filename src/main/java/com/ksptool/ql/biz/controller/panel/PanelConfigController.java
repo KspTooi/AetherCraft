@@ -40,11 +40,14 @@ public class PanelConfigController {
     @GetMapping("/create")
     public ModelAndView getCreateView(@ModelAttribute("data") SavePanelConfigVo flashData) {
         ModelAndView mv = new ModelAndView("panel-config-operator");
-        if (flashData != null && flashData.getId() != null) {
+        
+        // 如果有表单验证错误或业务异常，使用flashData
+        if (flashData != null && flashData.getConfigKey() != null) {
             mv.addObject("data", flashData);
             return mv;
         }
         
+        // 第一次进入，初始化新的配置项
         mv.addObject("data", panelConfigService.getCreateView());
         return mv;
     }
@@ -73,13 +76,13 @@ public class PanelConfigController {
      * 保存配置项
      */
     @PostMapping("/save")
-    public String save(@Valid SavePanelConfigDto dto, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String save(@Valid SavePanelConfigDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         // 验证失败，返回表单页面
         if (bindingResult.hasErrors()) {
             SavePanelConfigVo vo = new SavePanelConfigVo();
             assign(dto, vo);
-            redirectAttributes.addFlashAttribute("data", vo);
-            redirectAttributes.addFlashAttribute("vo", Result.error(bindingResult.getAllErrors().get(0).getDefaultMessage()));
+            ra.addFlashAttribute("data", vo);
+            ra.addFlashAttribute("vo", Result.error(bindingResult.getAllErrors().get(0).getDefaultMessage()));
             if (dto.getId() == null) {
                 return "redirect:/panel/config/create";
             }
@@ -89,14 +92,23 @@ public class PanelConfigController {
         try {
             // 保存配置项
             panelConfigService.save(dto);
-            redirectAttributes.addFlashAttribute("vo", Result.success("保存成功", null));
-            return "redirect:/panel/config/list";
+            
+            // 判断是创建还是编辑模式
+            if (dto.getId() == null) {
+                // 创建成功：显示成功消息，清空表单，返回创建页面继续创建
+                ra.addFlashAttribute("vo", Result.success(String.format("已创建配置项:%s", dto.getConfigKey()), null));
+                return "redirect:/panel/config/create";
+            } else {
+                // 编辑成功：显示成功消息，返回列表页
+                ra.addFlashAttribute("vo", Result.success(String.format("已更新配置项:%s", dto.getConfigKey()), null));
+                return "redirect:/panel/config/list";
+            }
         } catch (BizException e) {
             // 业务异常，返回表单页面并显示错误信息
             SavePanelConfigVo vo = new SavePanelConfigVo();
             assign(dto, vo);
-            redirectAttributes.addFlashAttribute("data", vo);
-            redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("data", vo);
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
             if (dto.getId() == null) {
                 return "redirect:/panel/config/create";
             }
