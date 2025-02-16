@@ -4,7 +4,7 @@ import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.model.vo.PanelGroupVo;
+import com.ksptool.ql.biz.model.vo.ListPanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupPermissionVo;
 import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
@@ -14,8 +14,7 @@ import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -199,31 +198,19 @@ public class PanelGroupService {
     /**
      * 获取用户组列表视图数据
      */
-    public PageableView<PanelGroupVo> getListView(ListPanelGroupDto dto) {
-        // 创建查询实体
-        GroupPo po = as(dto, GroupPo.class);
-
-        // 创建匹配器，设置字符串属性为模糊匹配
-        ExampleMatcher matcher = ExampleMatcher.matching()
-            .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
-            .withIgnoreCase()
-            .withIgnoreNullValues();
-        
-        // 创建Example查询条件
-        Example<GroupPo> query = Example.of(po, matcher);
-        
+    public PageableView<ListPanelGroupVo> getListView(ListPanelGroupDto dto) {
         // 创建分页和排序
-        PageRequest pageRequest = PageRequest.of(
-            dto.getPage() - 1, dto.getPageSize(),
-            Sort.by(Sort.Direction.ASC, "sortOrder")
+        PageRequest pr = PageRequest.of(
+            dto.getPage() - 1, dto.getPageSize()
         );
 
-        // 查询数据
-        List<GroupPo> pos = groupRepository.findAll(query, pageRequest).getContent();
-        List<PanelGroupVo> vos = as(pos, PanelGroupVo.class);
-        
-        // 查询总数
-        long total = groupRepository.count(query);
-        return new PageableView<>(vos, total, dto.getPage(), dto.getPageSize());
+        Page<ListPanelGroupVo> pageResult = groupRepository.getListView(dto,pr);
+
+        return new PageableView<>(
+            pageResult.getContent(),
+            pageResult.getTotalElements(),
+            dto.getPage(),
+            dto.getPageSize()
+        );
     }
 } 
