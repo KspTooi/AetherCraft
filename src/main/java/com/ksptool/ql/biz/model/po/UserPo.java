@@ -3,8 +3,11 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
-
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import java.util.Date;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "users")
@@ -39,6 +42,17 @@ public class UserPo {
     @Column(name = "update_time", nullable = false)
     @Comment("修改时间")
     private Date updateTime;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_group",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户所属的用户组")
+    private Set<GroupPo> groups = new HashSet<>();
 
     @PrePersist
     public void prePersist() {

@@ -15,7 +15,7 @@
                     <div class="card-header bg-white border-bottom pt-3 pb-2">
                         <div class="d-flex justify-content-between align-items-center px-3">
                             <h5 class="card-title mb-0 fw-bold text-dark">用户管理</h5>
-                            <a href="/ssr/system/users/operator" class="btn btn-primary btn-sm">
+                            <a href="/panel/user/create" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-lg me-1"></i>添加用户
                             </a>
                         </div>
@@ -32,17 +32,17 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="user : ${users}">
+                                    <tr th:each="user : ${data.rows}">
                                         <td class="text-center" th:text="${user.id}">1</td>
                                         <td th:text="${user.username}">admin</td>
                                         <td th:text="${user.createTime}">2024-03-20 10:00:00</td>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
                                                 <a href="#" class="btn btn-outline-primary" 
-                                                   th:href="@{/ssr/system/users/operator(id=${user.id})}">
+                                                   th:href="@{/panel/user/edit(id=${user.id})}">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <form th:action="@{/ssr/system/users/delete/{id}(id=${user.id})}" 
+                                                <form th:action="@{/panel/user/remove/{id}(id=${user.id})}" 
                                                       method="post" class="d-inline" 
                                                       onsubmit="return confirm('确定要删除该用户吗？');">
                                                     <button type="submit" class="btn btn-outline-danger">
@@ -57,17 +57,19 @@
                         </div>
 
                         <!-- 分页 -->
-                        <nav class="mt-3" th:if="${totalPages > 0}">
+                        <nav class="mt-3" th:if="${data.count > 0}">
                             <ul class="pagination pagination-sm justify-content-center mb-0">
-                                <li th:class="${currentPage == 1} ? 'page-item disabled' : 'page-item'">
-                                    <a class="page-link" th:href="@{/ssr/system/users(page=${currentPage - 1})}" tabindex="-1">上一页</a>
+                                <li class="page-item" th:classappend="${!data.hasPrev} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/panel/user/list(page=${data.currentPage - 1})}" tabindex="-1">上一页</a>
                                 </li>
-                                <li th:each="pageNumber : ${#numbers.sequence(1, totalPages)}"
-                                    th:class="${pageNumber == currentPage} ? 'page-item active' : 'page-item'">
-                                    <a class="page-link" th:href="@{/ssr/system/users(page=${pageNumber})}" th:text="${pageNumber}">1</a>
+                                <li class="page-item" 
+                                    th:each="pageNumber : ${#numbers.sequence(1, T(java.lang.Math).ceil(data.count * 1.0 / data.pageSize))}"
+                                    th:classappend="${pageNumber == data.currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/panel/user/list(page=${pageNumber})}" th:text="${pageNumber}">1</a>
                                 </li>
-                                <li th:class="${currentPage == totalPages} ? 'page-item disabled' : 'page-item'">
-                                    <a class="page-link" th:href="@{/ssr/system/users(page=${currentPage + 1})}">下一页</a>
+                                <li class="page-item" 
+                                    th:classappend="${!data.hasNext} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/panel/user/list(page=${data.currentPage + 1})}">下一页</a>
                                 </li>
                             </ul>
                         </nav>
@@ -118,7 +120,7 @@
         // 编辑用户
         function editUser(userId) {
             // 获取用户数据
-            fetch('/ssr/system/users/' + userId)
+            fetch('/panel/user/get/' + userId)
                 .then(response => response.json())
                 .then(result => {
                     if (result.code === 0) {
@@ -152,7 +154,7 @@
             }
             
             // 发送到后端API
-            fetch('/ssr/system/users/save', {
+            fetch('/panel/user/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

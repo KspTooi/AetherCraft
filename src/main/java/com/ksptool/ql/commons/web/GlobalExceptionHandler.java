@@ -16,9 +16,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     @ResponseBody
-    public ResponseEntity<Result<Void>> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<Result<Object>> handleRuntimeException(RuntimeException ex) {
         log.error(ex.getMessage(),ex);
-        return new ResponseEntity<>(Result.internalError(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(Result.internalError(ex.getMessage(),null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**

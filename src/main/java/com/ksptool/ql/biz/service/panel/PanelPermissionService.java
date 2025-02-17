@@ -2,12 +2,20 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.PermissionPo;
+import com.ksptool.ql.biz.model.vo.EditPanelPermissionVo;
+import com.ksptool.ql.biz.model.vo.ListPanelPermissionVo;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.ksptool.entities.Entities.assign;
 
 /**
  * 权限节点管理服务
@@ -21,8 +29,36 @@ public class PanelPermissionService {
     /**
      * 获取权限列表
      */
-    public Page<PermissionPo> getPermissionList(Pageable pageable) {
-        return permissionRepository.findAll(pageable);
+    public PageableView<ListPanelPermissionVo> getPermissionList(Pageable pageable) {
+        Page<PermissionPo> page = permissionRepository.findAll(pageable);
+        
+        // 转换为VO
+        List<ListPanelPermissionVo> voList = new ArrayList<>();
+        for (PermissionPo po : page.getContent()) {
+            ListPanelPermissionVo vo = new ListPanelPermissionVo();
+            assign(po, vo);
+            voList.add(vo);
+        }
+        
+        return new PageableView<>(
+            voList,
+            page.getTotalElements(),
+            pageable.getPageNumber() + 1,
+            pageable.getPageSize()
+        );
+    }
+
+    /**
+     * 获取权限编辑信息
+     * @throws BizException 权限不存在时抛出异常
+     */
+    public EditPanelPermissionVo getPermissionForEdit(Long id) throws BizException {
+        PermissionPo po = permissionRepository.findById(id)
+                .orElseThrow(() -> new BizException("权限不存在"));
+        
+        EditPanelPermissionVo vo = new EditPanelPermissionVo();
+        assign(po, vo);
+        return vo;
     }
 
     /**
