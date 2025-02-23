@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.model.gemini;
 
 import lombok.Data;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -11,6 +12,7 @@ public class GeminiRequest {
 
     @Data
     public static class Content {
+        private String role;
         private List<Part> parts;
     }
 
@@ -35,14 +37,25 @@ public class GeminiRequest {
     }
 
     public static GeminiRequest of(String text, Double temperature, Double topP, Integer topK) {
+        return of(List.of(new ChatMessage("user", text)), temperature, topP, topK);
+    }
+    
+    public static GeminiRequest of(List<ChatMessage> messages, Double temperature, Double topP, Integer topK) {
         GeminiRequest request = new GeminiRequest();
         
-        // 设置内容
-        Content content = new Content();
-        Part part = new Part();
-        part.setText(text);
-        content.setParts(List.of(part));
-        request.setContents(List.of(content));
+        // 设置对话内容
+        List<Content> contents = new ArrayList<>();
+        for (ChatMessage message : messages) {
+            Content content = new Content();
+            content.setRole(message.getRole());
+            
+            Part part = new Part();
+            part.setText(message.getText());
+            content.setParts(List.of(part));
+            
+            contents.add(content);
+        }
+        request.setContents(contents);
         
         // 设置安全配置
         SafetySetting safetySetting = new SafetySetting();
@@ -59,5 +72,16 @@ public class GeminiRequest {
         request.setGenerationConfig(config);
         
         return request;
+    }
+    
+    @Data
+    public static class ChatMessage {
+        private String role;
+        private String text;
+        
+        public ChatMessage(String role, String text) {
+            this.role = role;
+            this.text = text;
+        }
     }
 } 
