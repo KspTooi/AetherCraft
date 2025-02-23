@@ -181,6 +181,10 @@ public class ModelChatService {
                 // 8. 保存AI响应
                 createHistory(thread, responseText, 1);
                 
+                // 9. 更新会话使用的模型
+                thread.setModelCode(modelEnum.getCode());
+                threadRepository.save(thread);
+                
                 vo.setContent(responseText);
                 vo.setConversationId(java.util.UUID.randomUUID().toString());
             }
