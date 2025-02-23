@@ -50,8 +50,7 @@ public class ModelChatService {
     @Autowired
     private ModelChatHistoryRepository historyRepository;
     
-    public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId) throws BizException{
-
+    public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
         if (threadId == null || threadId == -1) {
             // 创建新的会话
             long count = threadRepository.countByUserId(userId);
@@ -59,12 +58,17 @@ public class ModelChatService {
             ModelChatThreadPo thread = new ModelChatThreadPo();
             thread.setUserId(userId);
             thread.setTitle("新对话" + (count + 1));
-            thread.setModelCode("gemini-pro");
+            thread.setModelCode(modelCode);
             return threadRepository.save(thread);
         }
         
         // 获取已有会话
-        return threadRepository.findById(threadId).orElseThrow(() -> new BizException("会话不存在"));
+        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+        
+        return thread;
     }
     
     private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) {
@@ -73,7 +77,11 @@ public class ModelChatService {
         history.setUserId(thread.getUserId());
         history.setContent(content);
         history.setRole(role);
-        history.setSequence(thread.getHistories() != null ? thread.getHistories().size() + 1 : 1);
+        
+        // 获取当前最大序号并加1
+        int nextSequence = historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
+        history.setSequence(nextSequence);
+        
         return historyRepository.save(history);
     }
     
@@ -81,16 +89,15 @@ public class ModelChatService {
         ChatCompleteVo vo = new ChatCompleteVo();
         
         try {
-            // 1. 获取或创建会话
-            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), AuthContext.getCurrentUserId());
-            thread = threadRepository.findByIdWithHistories(thread.getId());
-            vo.setChatThread(thread.getId());
-            
-            // 2. 获取并验证模型配置
+            // 1. 获取并验证模型配置
             AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
             if (modelEnum == null) {
                 throw new BizException("无效的模型代码");
             }
+            
+            // 2. 获取或创建会话
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), AuthContext.getCurrentUserId(), modelEnum.getCode());
+            vo.setChatThread(thread.getId());
             
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent";
