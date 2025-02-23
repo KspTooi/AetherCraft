@@ -25,6 +25,14 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Comparator;
+import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
+import com.ksptool.ql.biz.model.vo.ModelChatViewThreadVo;
+import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
+import static com.ksptool.entities.Entities.assign;
 
 @Slf4j
 @Service
@@ -179,6 +187,82 @@ public class ModelChatService {
             
         } catch (Exception e) {
             throw new BizException("AI对话失败: " + e.getMessage());
+        }
+        
+        return vo;
+    }
+    
+    /**
+     * 获取聊天视图数据
+     * @param threadId 会话ID，可为null
+     * @return 聊天视图数据
+     */
+    public ModelChatViewVo getChatView(Long threadId) {
+        ModelChatViewVo vo = new ModelChatViewVo();
+        
+        // 获取当前用户ID
+        Long userId = AuthContext.getCurrentUserId();
+        
+        // 从枚举中获取所有可用的模型列表
+        List<String> models = new ArrayList<>();
+        for (AIModelEnum model : AIModelEnum.values()) {
+            models.add(model.getCode());
+        }
+        vo.setModels(models);
+        
+        // 获取用户的所有会话
+        List<ModelChatThreadPo> threads = threadRepository.findByUserIdOrderByUpdateTimeDesc(userId);
+        
+        // 转换会话列表
+        List<ModelChatViewThreadVo> threadVos = new ArrayList<>();
+        for (ModelChatThreadPo thread : threads) {
+            ModelChatViewThreadVo threadVo = new ModelChatViewThreadVo();
+            assign(thread, threadVo);
+            threadVos.add(threadVo);
+        }
+        
+        vo.setThreads(threadVos);
+        vo.setThreadCount(threadVos.size());
+        
+        // 如果指定了会话ID，则加载该会话的消息
+        if (threadId == null) {
+            vo.setMessages(new ArrayList<>());
+            vo.setCurrentThreadId(null);
+            return vo;
+        }
+        
+        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        if (thread == null) {
+            vo.setMessages(new ArrayList<>());
+            vo.setCurrentThreadId(null);
+            return vo;
+        }
+        
+        if (!thread.getUserId().equals(userId)) {
+            vo.setMessages(new ArrayList<>());
+            vo.setCurrentThreadId(null);
+            return vo;
+        }
+        
+        // 转换消息列表
+        List<ModelChatViewMessageVo> messages = new ArrayList<>();
+        for (ModelChatHistoryPo history : thread.getHistories()) {
+            ModelChatViewMessageVo messageVo = new ModelChatViewMessageVo();
+            assign(history, messageVo);
+            messages.add(messageVo);
+        }
+        
+        // 按序号排序
+        messages.sort((a, b) -> a.getSequence().compareTo(b.getSequence()));
+        
+        vo.setMessages(messages);
+        vo.setCurrentThreadId(threadId);
+        
+        // 设置当前会话信息
+        if (thread != null) {
+            ModelChatViewThreadVo currentThread = new ModelChatViewThreadVo();
+            assign(thread, currentThread);
+            vo.setCurrentThread(currentThread);
         }
         
         return vo;

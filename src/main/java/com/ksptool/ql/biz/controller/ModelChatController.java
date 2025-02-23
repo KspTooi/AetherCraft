@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
+import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -18,8 +19,10 @@ public class ModelChatController {
     private ModelChatService modelChatService;
 
     @GetMapping("/chat/view")
-    public ModelAndView chatView() {
-        return new ModelAndView("model-chat");
+    public ModelAndView chatView(@RequestParam(name = "threadId", required = false) Long threadId) {
+        ModelAndView mav = new ModelAndView("model-chat");
+        mav.addObject("data", modelChatService.getChatView(threadId));
+        return mav;
     }
 
     @PostMapping("/chat/complete")

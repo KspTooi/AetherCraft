@@ -7,6 +7,21 @@
 </head>
 
 <style>
+    /* 覆盖 frame-theme 的样式 */
+    .glass-container {
+        top: 45px !important;  /* 导航栏实际高度 */
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        padding: 0 !important; /* 移除内边距 */
+    }
+    
+    .glass-box {
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important; /* 移除外边距 */
+    }
+
     .chat-container {
         color: #fff;
         height: 100%;
@@ -16,14 +31,13 @@
 
     /* 会话列表区域 */
     .thread-list {
-        width: 200px;
+        width: 240px;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
         padding: 16px;
-        margin-right: 16px;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .new-chat-btn {
@@ -49,7 +63,7 @@
     }
 
     .thread-item {
-        padding: 8px 12px;
+        padding: 12px;
         border-radius: 6px;
         background: rgba(255, 255, 255, 0.1);
         cursor: pointer;
@@ -72,8 +86,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        background: transparent;
         overflow: hidden;
     }
 
@@ -91,6 +104,7 @@
         padding: 12px 16px;
         border-radius: 8px;
         line-height: 1.5;
+        font-size: 15px;
     }
 
     .message.user {
@@ -107,23 +121,69 @@
 
     /* 输入区域 */
     .chat-input {
-        padding: 16px;
+        padding: 20px;
         background: rgba(0, 0, 0, 0.2);
         display: flex;
-        gap: 10px;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* 模型选择区域 */
+    .model-select {
+        position: relative;
+        margin-bottom: 12px;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 12px;
+    }
+    
+    .model-select label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+    }
+    
+    .model-select select {
+        flex: 1;
+        padding: 6px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .model-select select:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .model-select select:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .model-select select option {
+        background: #2c2c2c;
+        color: #fff;
     }
 
     .chat-input textarea {
         flex: 1;
-        padding: 12px;
-        border: none;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.2);
+        padding: 12px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
         resize: none;
-        height: 40px;
-        line-height: 20px;
+        height: 24px;
+        line-height: 24px;
         max-height: 120px;
+        font-size: 15px;
+        transition: all 0.3s;
     }
 
     .chat-input textarea::placeholder {
@@ -132,18 +192,21 @@
 
     .chat-input textarea:focus {
         outline: none;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     .send-btn {
-        padding: 8px 20px;
+        padding: 8px 24px;
         border: none;
-        border-radius: 6px;
+        border-radius: 8px;
         background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
         color: white;
         cursor: pointer;
         transition: all 0.3s;
         align-self: flex-end;
+        font-size: 15px;
+        height: 48px;
     }
 
     .send-btn:hover {
@@ -179,7 +242,93 @@
     .chat-layout {
         display: flex;
         height: 100%;
-        gap: 16px;
+    }
+
+    /* 响应式布局 */
+    @media (max-width: 768px) {
+        .glass-container {
+            top: 40px !important; /* 移动端导航栏高度 */
+        }
+        
+        .chat-layout {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .thread-list {
+            position: absolute;
+            left: -240px;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .thread-list.show {
+            transform: translateX(240px);
+        }
+        
+        .message {
+            max-width: 90%;
+            font-size: 14px;
+        }
+        
+        .chat-input {
+            padding: 12px;
+        }
+        
+        .chat-input textarea {
+            font-size: 14px;
+        }
+        
+        .send-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        /* 添加移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: block;
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            z-index: 101;
+            background: rgba(79, 172, 254, 0.3);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .mobile-menu-btn.hide {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-20px);
+        }
+        
+        /* 添加遮罩层 */
+        .thread-list-mask {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+        
+        .thread-list-mask.show {
+            display: block;
+        }
     }
 </style>
 
@@ -189,18 +338,41 @@
         <!-- 主要内容 -->
         <div th:fragment="content" class="chat-container">
             <div class="chat-layout">
+                <!-- 移动端菜单按钮 -->
+                <button class="mobile-menu-btn d-md-none" onclick="toggleThreadList()">
+                    <i class="bi bi-chat-left-text"></i>
+                </button>
+                
+                <!-- 遮罩层 -->
+                <div class="thread-list-mask" onclick="toggleThreadList()"></div>
+                
                 <!-- 会话列表 -->
                 <div class="thread-list">
                     <button class="new-chat-btn" onclick="startNewChat()">新对话</button>
-                    <div class="thread-item active">新对话1</div>
-                    <div class="thread-item">新对话2</div>
-                    <div class="thread-item">新对话3</div>
+                    <div th:each="thread : ${data.threads}" 
+                         th:class="'thread-item' + (${thread.id == data.currentThreadId ? ' active' : ''})"
+                         th:onclick="'loadThread(' + ${thread.id} + ')'"
+                         th:text="${thread.title}">
+                    </div>
                 </div>
 
                 <!-- 主聊天区域 -->
                 <div class="chat-main">
+                    <div class="model-select">
+                        <label>选择模型：</label>
+                        <select id="modelSelect" onchange="changeModel()">
+                            <option th:each="model : ${data.models}" 
+                                    th:value="${model}"
+                                    th:text="${model}"
+                                    th:selected="${model == data.currentThread?.modelCode}">
+                            </option>
+                        </select>
+                    </div>
                     <div class="chat-messages" id="chatMessages">
-                        <!-- 消息内容将通过JS动态添加 -->
+                        <div th:each="message : ${data.messages}" 
+                             th:class="'message ' + (${message.role == 0 ? 'user' : 'assistant'})"
+                             th:text="${message.content}">
+                        </div>
                     </div>
                     <div class="chat-input">
                         <textarea 
@@ -215,15 +387,39 @@
     </div>
 
     <script th:inline="javascript">
-        let currentThreadId = null;
-        const defaultModel = 'gemini-pro';
+        let currentThreadId = [[${data.currentThreadId}]];
+        let currentModel = [[${data.currentThread?.modelCode}]] || 'gemini-pro';
+        let isMobileMenuOpen = false;
         
+        function toggleThreadList() {
+            const threadList = document.querySelector('.thread-list');
+            const mask = document.querySelector('.thread-list-mask');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            isMobileMenuOpen = !isMobileMenuOpen;
+            
+            if (isMobileMenuOpen) {
+                threadList.classList.add('show');
+                mask.classList.add('show');
+                menuBtn.classList.add('hide');
+                document.body.style.overflow = 'hidden';
+            } else {
+                threadList.classList.remove('show');
+                mask.classList.remove('show');
+                menuBtn.classList.remove('hide');
+                document.body.style.overflow = '';
+            }
+        }
+
         function startNewChat() {
-            currentThreadId = -1;
-            // 清空消息区域
-            document.getElementById('chatMessages').innerHTML = '';
-            // 更新会话列表UI
-            updateThreadListUI();
+            window.location.href = '/model/chat/view';
+        }
+
+        function loadThread(threadId) {
+            // 如果是移动端，加载新会话时关闭菜单
+            if (window.innerWidth <= 768) {
+                toggleThreadList();
+            }
+            window.location.href = '/model/chat/view?threadId=' + threadId;
         }
 
         function handleKeyPress(event) {
@@ -242,8 +438,8 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        function updateThreadListUI() {
-            // TODO: 实现会话列表更新逻辑
+        function changeModel() {
+            currentModel = document.getElementById('modelSelect').value;
         }
 
         function sendMessage() {
@@ -269,7 +465,7 @@
                 },
                 body: JSON.stringify({
                     chatThread: currentThreadId,
-                    model: defaultModel,
+                    model: currentModel,
                     message: message
                 })
             })
@@ -280,6 +476,10 @@
                     currentThreadId = data.data.chatThread;
                     // 显示AI响应
                     appendMessage(data.data.content, false);
+                    // 如果是新会话，刷新页面以更新会话列表
+                    if (!currentThreadId) {
+                        window.location.reload();
+                    }
                 } else {
                     throw new Error(data.message || '请求失败');
                 }
@@ -295,9 +495,18 @@
             });
         }
 
-        // 页面加载完成后自动聚焦到输入框
+        // 页面加载完成后自动聚焦到输入框和滚动到最新消息
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('messageInput').focus();
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // 添加窗口大小变化监听
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768 && isMobileMenuOpen) {
+                    toggleThreadList();
+                }
+            });
         });
     </script>
 </body>

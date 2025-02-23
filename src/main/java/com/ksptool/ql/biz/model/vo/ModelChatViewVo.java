@@ -28,4 +28,14 @@ public class ModelChatViewVo {
      * 当前会话ID
      */
     private Long currentThreadId;
+    
+    /**
+     * 当前会话信息
+     */
+    private ModelChatViewThreadVo currentThread;
+    
+    /**
+     * 可用的模型列表
+     */
+    private List<String> models;
 } 
