@@ -17,8 +17,8 @@ public class ModelConfigVo {
     // 模型名称
     private String modelName;
     
-    // API密钥
-    private String apiKey;
+    // 是否已保存API Key
+    private boolean hasApiKey;
     
     // 代理地址
     private String proxy;
@@ -28,6 +28,9 @@ public class ModelConfigVo {
     
     // 采样值
     private Double topP = 1.0;
+    
+    // Top K值
+    private Integer topK = 40;
     
     // 可用的模型列表
     private List<AIModelEnum> models = Arrays.asList(AIModelEnum.values());

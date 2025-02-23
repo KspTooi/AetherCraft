@@ -7,6 +7,7 @@ import com.ksptool.ql.commons.AuthContext;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class PanelModelConfigService {
@@ -41,7 +42,11 @@ public class PanelModelConfigService {
         
         // 从配置服务加载配置
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-        config.setApiKey(configService.getConfigValue(baseKey + "apiKey", userId));
+        
+        // 检查API Key是否已保存，但不返回具体值
+        String apiKey = configService.getConfigValue(baseKey + "apiKey", userId);
+        config.setHasApiKey(StringUtils.hasText(apiKey));
+        
         config.setProxy(configService.getConfigValue(baseKey + "proxy", userId));
         
         // 获取温度值，默认0.7
@@ -51,6 +56,10 @@ public class PanelModelConfigService {
         // 获取top_p值，默认1.0
         String topPStr = configService.getConfigValue(baseKey + "topP", userId);
         config.setTopP(topPStr != null ? Double.parseDouble(topPStr) : 1.0);
+        
+        // 获取top_k值，默认40
+        String topKStr = configService.getConfigValue(baseKey + "topK", userId);
+        config.setTopK(topKStr != null ? Integer.parseInt(topKStr) : 40);
         
         return config;
     }
@@ -71,10 +80,15 @@ public class PanelModelConfigService {
         // 构建配置键前缀
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
         
-        // 保存配置
-        configService.setConfigValue(baseKey + "apiKey", dto.getApiKey(), userId);
+        // 只在API Key不为空时保存
+        if (StringUtils.hasText(dto.getApiKey())) {
+            configService.setConfigValue(baseKey + "apiKey", dto.getApiKey(), userId);
+        }
+        
+        // 保存其他配置
         configService.setConfigValue(baseKey + "proxy", dto.getProxy(), userId);
         configService.setConfigValue(baseKey + "temperature", String.valueOf(dto.getTemperature()), userId);
         configService.setConfigValue(baseKey + "topP", String.valueOf(dto.getTopP()), userId);
+        configService.setConfigValue(baseKey + "topK", String.valueOf(dto.getTopK()), userId);
     }
 } 

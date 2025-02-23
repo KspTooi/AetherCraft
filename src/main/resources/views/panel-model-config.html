@@ -39,7 +39,8 @@
                                     <label for="apiKey" class="form-label small">API Key <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
                                         <input type="password" class="form-control form-control-sm" id="apiKey" name="apiKey" 
-                                               th:value="${data.apiKey}" required>
+                                               th:placeholder="${data.hasApiKey ? 'APIKEY已保存 你无法再次查看' : '请输入API Key'}"
+                                               th:required="${!data.hasApiKey}">
                                         <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKey()">
                                             <i class="bi bi-eye"></i>
                                         </button>
@@ -82,6 +83,20 @@
                                     <div class="form-text small">控制响应的多样性，范围0-1，默认1</div>
                                 </div>
 
+                                <div class="col-md-6">
+                                    <label for="topK" class="form-label small">Top K</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="topKRange" 
+                                               min="1" max="100" step="1" th:value="${data.topK}"
+                                               oninput="updateTopK(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="topK" name="topK" 
+                                               th:value="${data.topK}" min="1" max="100" step="1"
+                                               oninput="updateTopKRange(this.value)">
+                                    </div>
+                                    <div class="form-text small">控制响应的词汇量，范围1-100，默认40</div>
+                                </div>
+
                                 <div class="col-12">
                                     <div class="text-end mt-3">
                                         <button type="submit" class="btn btn-primary btn-sm">
@@ -104,6 +119,15 @@
             var forms = document.querySelectorAll('.needs-validation');
             Array.prototype.slice.call(forms).forEach(function(form) {
                 form.addEventListener('submit', function(event) {
+                    // 获取API Key输入框
+                    var apiKeyInput = form.querySelector('#apiKey');
+                    var hasApiKey = apiKeyInput.getAttribute('placeholder').includes('APIKEY已保存');
+                    
+                    // 如果API Key已保存且没有新输入，则不验证API Key
+                    if (hasApiKey && !apiKeyInput.value) {
+                        apiKeyInput.setCustomValidity('');
+                    }
+                    
                     if (!form.checkValidity()) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -139,6 +163,15 @@
 
         function updateTopPRange(value) {
             document.getElementById('topPRange').value = value;
+        }
+
+        // 更新Top K值
+        function updateTopK(value) {
+            document.getElementById('topK').value = value;
+        }
+
+        function updateTopKRange(value) {
+            document.getElementById('topKRange').value = value;
         }
 
         // 加载模型配置
