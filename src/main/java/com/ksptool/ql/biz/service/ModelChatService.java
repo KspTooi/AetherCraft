@@ -1,7 +1,6 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
@@ -26,13 +25,15 @@ import java.net.Proxy;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.Comparator;
 import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
 import com.ksptool.ql.biz.model.vo.ModelChatViewThreadVo;
 import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
 import static com.ksptool.entities.Entities.assign;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.function.Consumer;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -41,6 +42,10 @@ public class ModelChatService {
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final Pattern PROXY_PATTERN = Pattern.compile("^(http|socks5):(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}):(\\d{1,5})$");
+    
+    // SSE相关常量
+    private static final MediaType TEXT_EVENT_STREAM = MediaType.get("text/event-stream; charset=utf-8");
+    private static final String SSE_PARAM = "?alt=sse";
     
     // 默认模型参数
     private static final double DEFAULT_TEMPERATURE = 0.7;
@@ -277,5 +282,118 @@ public class ModelChatService {
         }
         
         return vo;
+    }
+    
+    /**
+     * 流式对话完成
+     * @param dto 对话请求参数
+     * @param userId 用户ID
+     * @param callback 流式响应回调
+     * @throws BizException 业务异常
+     */
+    public void chatCompleteSSE(ChatCompleteDto dto, Long userId, Consumer<String> callback) throws BizException {
+        try {
+            // 1. 获取并验证模型配置
+            AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+            if (modelEnum == null) {
+                throw new BizException("无效的模型代码");
+            }
+            
+            // 2. 获取或创建会话，使用传入的userId而不是从AuthContext获取
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, modelEnum.getCode());
+            
+            String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+            String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent" + SSE_PARAM;
+            
+            // 3. 获取所有配置 - 使用传入的userId
+            String apiKey = configService.get(baseKey + "apiKey", userId);
+            if (!StringUtils.hasText(apiKey)) {
+                throw new BizException("未配置API Key");
+            }
+            
+            String proxyConfig = configService.get(baseKey + "proxy", userId);
+            double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
+            double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
+            int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
+            
+            // 4. 保存用户消息
+            createHistory(thread, dto.getMessage(), 0);
+            
+            // 5. 配置HTTP客户端
+            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS); // 增加读取超时时间
+            
+            if (StringUtils.hasText(proxyConfig)) {
+                if (!PROXY_PATTERN.matcher(proxyConfig).matches()) {
+                    throw new BizException("代理配置格式错误，正确格式为: http:127.0.0.1:8080 或 socks5:127.0.0.1:1080");
+                }
+                
+                String[] parts = proxyConfig.split(":");
+                String proxyHost = parts[1];
+                int proxyPort = Integer.parseInt(parts[2]);
+                
+                if (proxyPort <= 0 || proxyPort > 65535) {
+                    throw new BizException("代理端口必须在1-65535之间");
+                }
+                
+                if (parts[0].equals("http")) {
+                    clientBuilder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
+                }
+                
+                if (parts[0].equals("socks5")) {
+                    clientBuilder.proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxyHost, proxyPort)));
+                }
+            }
+            
+            // 6. 构建并发送请求
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK);
+            String jsonBody = gson.toJson(geminiRequest);
+            
+            Request request = new Request.Builder()
+                .url(apiUrl + "&key=" + apiKey)
+                .post(RequestBody.create(jsonBody, JSON))
+                .build();
+            
+            StringBuilder responseBuilder = new StringBuilder();
+            
+            // 7. 处理SSE响应
+            try (Response response = clientBuilder.build().newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new BizException("调用Gemini API失败: " + response.body().string());
+                }
+                
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data: ")) {
+                            String data = line.substring(6);
+                            if (!"[DONE]".equals(data)) {
+                                GeminiResponse geminiResponse = gson.fromJson(data, GeminiResponse.class);
+                                String text = geminiResponse.getFirstResponseText();
+                                if (text != null) {
+                                    responseBuilder.append(text);
+                                    callback.accept(text);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 8. 保存完整的AI响应
+            String fullResponse = responseBuilder.toString();
+            if (!StringUtils.hasText(fullResponse)) {
+                throw new BizException("Gemini API 返回内容为空");
+            }
+            
+            createHistory(thread, fullResponse, 1);
+            
+            // 9. 更新会话使用的模型
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
+            
+        } catch (Exception e) {
+            throw new BizException("AI对话失败: " + e.getMessage());
+        }
     }
 } 
