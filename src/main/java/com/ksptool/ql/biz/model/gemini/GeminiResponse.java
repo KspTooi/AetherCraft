@@ -1,4 +1,4 @@
-package com.ksptool.ql.model.gemini;
+package com.ksptool.ql.biz.model.gemini;
 
 import lombok.Data;
 import java.util.List;

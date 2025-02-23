@@ -1,6 +1,5 @@
-package com.ksptool.ql.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data

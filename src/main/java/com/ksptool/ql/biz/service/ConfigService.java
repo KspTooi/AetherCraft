@@ -5,6 +5,8 @@ import com.ksptool.ql.biz.model.po.ConfigPo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.Date;
+import com.ksptool.ql.commons.AuthContext;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -89,5 +91,76 @@ public class ConfigService {
     
     public boolean existsConfigKey(String configKey, Long userId) {
         return configRepository.existsByUserIdAndConfigKey(userId, configKey);
+    }
+
+    /**
+     * 获取当前用户空间下的配置值
+     */
+    public String get(String key) {
+        return getConfigValue(key, AuthContext.getCurrentUserId());
+    }
+
+    /**
+     * 获取当前用户空间下的配置值，如果不存在返回默认值
+     */
+    public String get(String key, String defaultValue) {
+        String value = get(key);
+        return StringUtils.hasText(value) ? value : defaultValue;
+    }
+
+    /**
+     * 获取整数配置值
+     */
+    public int getInt(String key, int defaultValue) {
+        String value = get(key);
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * 获取长整数配置值
+     */
+    public long getLong(String key, long defaultValue) {
+        String value = get(key);
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * 获取双精度浮点数配置值
+     */
+    public double getDouble(String key, double defaultValue) {
+        String value = get(key);
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * 获取布尔配置值
+     */
+    public boolean getBoolean(String key, boolean defaultValue) {
+        String value = get(key);
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(value);
     }
 } 

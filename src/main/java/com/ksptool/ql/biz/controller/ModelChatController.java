@@ -1,8 +1,8 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.model.dto.ChatCompleteDto;
-import com.ksptool.ql.model.vo.ChatCompleteVo;
+import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
+import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
