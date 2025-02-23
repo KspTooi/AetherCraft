@@ -23,7 +23,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="model" class="form-label small">模型选择 <span class="text-danger">*</span></label>
-                                    <select class="form-select form-select-sm" id="model" name="model" required>
+                                    <select class="form-select form-select-sm" id="model" name="model" required onchange="loadModelConfig(this.value)">
                                         <option value="">请选择模型</option>
                                         <option th:each="m : ${data.models}" 
                                                 th:value="${m.code}" 
@@ -37,8 +37,13 @@
 
                                 <div class="col-md-6">
                                     <label for="apiKey" class="form-label small">API Key <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control form-control-sm" id="apiKey" name="apiKey" 
-                                           th:value="${data.apiKey}" required>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control form-control-sm" id="apiKey" name="apiKey" 
+                                               th:value="${data.apiKey}" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKey()">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="invalid-feedback">请输入API Key</div>
                                 </div>
 
@@ -51,15 +56,29 @@
 
                                 <div class="col-md-6">
                                     <label for="temperature" class="form-label small">温度值</label>
-                                    <input type="number" class="form-control form-control-sm" id="temperature" name="temperature" 
-                                           th:value="${data.temperature}" min="0" max="2" step="0.1" value="0.7">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="temperatureRange" 
+                                               min="0" max="2" step="0.1" th:value="${data.temperature}"
+                                               oninput="updateTemperature(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="temperature" name="temperature" 
+                                               th:value="${data.temperature}" min="0" max="2" step="0.1"
+                                               oninput="updateTemperatureRange(this.value)">
+                                    </div>
                                     <div class="form-text small">控制响应的随机性，范围0-2，默认0.7</div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="topP" class="form-label small">Top P</label>
-                                    <input type="number" class="form-control form-control-sm" id="topP" name="topP" 
-                                           th:value="${data.topP}" min="0" max="1" step="0.1" value="1">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="topPRange" 
+                                               min="0" max="1" step="0.1" th:value="${data.topP}"
+                                               oninput="updateTopP(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="topP" name="topP" 
+                                               th:value="${data.topP}" min="0" max="1" step="0.1"
+                                               oninput="updateTopPRange(this.value)">
+                                    </div>
                                     <div class="form-text small">控制响应的多样性，范围0-1，默认1</div>
                                 </div>
 
@@ -93,6 +112,42 @@
                 }, false);
             });
         })();
+
+        // 切换API Key显示
+        function toggleApiKey() {
+            var input = document.getElementById('apiKey');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        // 更新温度值
+        function updateTemperature(value) {
+            document.getElementById('temperature').value = value;
+        }
+
+        function updateTemperatureRange(value) {
+            document.getElementById('temperatureRange').value = value;
+        }
+
+        // 更新Top P值
+        function updateTopP(value) {
+            document.getElementById('topP').value = value;
+        }
+
+        function updateTopPRange(value) {
+            document.getElementById('topPRange').value = value;
+        }
+
+        // 加载模型配置
+        function loadModelConfig(modelCode) {
+            if (!modelCode) return;
+            
+            // 重定向到选中模型的配置页面
+            window.location.href = '/panel/model/edit?model=' + modelCode;
+        }
     </script>
 </body>
 </html> 
