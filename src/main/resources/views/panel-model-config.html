@@ -143,10 +143,13 @@
 
         // 加载模型配置
         function loadModelConfig(modelCode) {
-            if (!modelCode) return;
+            if (!modelCode) {
+                window.location.href = '/panel/model/edit';
+                return;
+            }
             
             // 重定向到选中模型的配置页面
-            window.location.href = '/panel/model/edit?model=' + modelCode;
+            window.location.href = '/panel/model/edit/' + modelCode;
         }
     </script>
 </body>

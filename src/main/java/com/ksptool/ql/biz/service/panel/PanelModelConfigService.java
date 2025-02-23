@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.commons.AuthContext;
@@ -52,5 +53,28 @@ public class PanelModelConfigService {
         config.setTopP(topPStr != null ? Double.parseDouble(topPStr) : 1.0);
         
         return config;
+    }
+    
+    /**
+     * 保存模型配置
+     */
+    public void saveConfig(SaveModelConfigDto dto) {
+        // 验证模型是否存在
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+        if (modelEnum == null) {
+            throw new IllegalArgumentException("无效的模型代码");
+        }
+        
+        // 获取当前用户ID
+        Long userId = AuthContext.getCurrentUserId();
+        
+        // 构建配置键前缀
+        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+        
+        // 保存配置
+        configService.setConfigValue(baseKey + "apiKey", dto.getApiKey(), userId);
+        configService.setConfigValue(baseKey + "proxy", dto.getProxy(), userId);
+        configService.setConfigValue(baseKey + "temperature", String.valueOf(dto.getTemperature()), userId);
+        configService.setConfigValue(baseKey + "topP", String.valueOf(dto.getTopP()), userId);
     }
 } 
