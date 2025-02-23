@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
@@ -19,7 +20,9 @@ import org.springframework.util.StringUtils;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ModelChatService {
     
@@ -102,6 +105,13 @@ public class ModelChatService {
                 }
                 
                 String responseBody = response.body().string();
+                
+                // 记录请求和响应
+                log.info("Gemini API 请求响应 - 模型: {}, 请求: {}, 响应: {}", 
+                    modelEnum.getCode(), 
+                    jsonBody.replaceAll("\\s+", ""), 
+                    responseBody.replaceAll("\\s+", ""));
+                
                 GeminiResponse geminiResponse = gson.fromJson(responseBody, GeminiResponse.class);
                 
                 String responseText = geminiResponse.getFirstResponseText();
