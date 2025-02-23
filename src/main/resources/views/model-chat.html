@@ -470,7 +470,7 @@
                 <div class="chat-main">
                     <div class="model-select">
                         <label>选择模型：</label>
-                        <select id="modelSelect" onchange="changeModel()">
+                        <select id="modelSelect">
                             <option th:each="model : ${data.models}" 
                                     th:value="${model}"
                                     th:text="${model}"
@@ -499,8 +499,8 @@
     </div>
 
     <script th:inline="javascript">
-        let currentThreadId = [[${data.currentThreadId}]];
-        let currentModel = [[${data.currentThread?.modelCode}]] || 'gemini-pro';
+        const currentThreadId = /*[[${data.currentThreadId}]]*/ null;
+        const currentModel = /*[[${data.currentThread?.modelCode}]]*/ 'gemini-pro';
         let isMobileMenuOpen = false;
         
         function toggleThreadList() {
@@ -550,10 +550,6 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        function changeModel() {
-            currentModel = document.getElementById('modelSelect').value;
-        }
-
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -566,40 +562,129 @@
             // 显示用户消息
             appendMessage(message, true);
 
-            // 清空输入框
+            // 清空输入框并调整高度
             input.value = '';
+            adjustTextareaHeight(input);
 
-            // 发送请求
-            fetch('/model/chat/complete', {
+            // 创建一个新的消息div用于显示AI响应
+            const messagesDiv = document.getElementById('chatMessages');
+            const aiMessageDiv = document.createElement('div');
+            aiMessageDiv.className = 'message assistant';
+            aiMessageDiv.textContent = '正在输入...';  // 默认显示"正在输入..."
+            messagesDiv.appendChild(aiMessageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // 准备请求数据
+            const requestData = {
+                chatThread: currentThreadId || -1,  // 如果是新对话，使用-1
+                model: document.getElementById('modelSelect').value,  // 始终使用当前选择的模型
+                message: message
+            };
+
+            // 使用 fetch 发送 POST 请求
+            fetch('/model/chat/complete/stream', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    chatThread: currentThreadId,
-                    model: currentModel,
-                    message: message
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.code === 0) {
-                    // 更新当前会话ID
-                    currentThreadId = data.data.chatThread;
-                    // 显示AI响应
-                    appendMessage(data.data.content, false);
-                    // 如果是新会话，刷新页面以更新会话列表
-                    if (!currentThreadId) {
-                        window.location.reload();
-                    }
-                } else {
-                    throw new Error(data.message || '请求失败');
+                body: JSON.stringify(requestData)
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            })
-            .catch(error => {
-                appendMessage(`错误: ${error.message}`, false);
-            })
-            .finally(() => {
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let hasReceivedResponse = false;  // 标记是否收到过响应
+
+                function processText(text) {
+                    const lines = (buffer + text).split('\n');
+                    buffer = lines.pop() || ''; // 保存不完整的行到 buffer
+                    
+                    let currentEvent = '';
+
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+                        
+                        if (line.startsWith('event:')) {
+                            currentEvent = line.slice(6).trim();
+                        } else if (line.startsWith('data:')) {
+                            const data = line.slice(5).trim();
+                            
+                            // 根据事件类型处理数据
+                            switch (currentEvent) {
+                                case 'start':
+                                    console.log('开始生成响应');
+                                    break;
+                                    
+                                case 'done':
+                                    console.log('SSE响应完成');
+                                    if (!currentThreadId) {
+                                        window.location.reload();
+                                    }
+                                    input.disabled = false;
+                                    document.getElementById('sendButton').disabled = false;
+                                    input.focus();
+                                    return;
+                                    
+                                case 'error':
+                                    throw new Error(data || '未知错误');
+                                    
+                                case 'message':
+                                    // 只处理实际的消息内容
+                                    if (!hasReceivedResponse) {
+                                        // 第一次收到响应，清除"正在输入..."
+                                        aiMessageDiv.textContent = '';
+                                        hasReceivedResponse = true;
+                                    }
+                                    aiMessageDiv.textContent += data;
+                                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                                    break;
+                                    
+                                default:
+                                    // 忽略其他类型的数据
+                                    break;
+                            }
+                            currentEvent = ''; // 重置事件类型
+                        }
+                    }
+                }
+
+                // 读取响应流
+                function readStream() {
+                    reader.read().then(({done, value}) => {
+                        if (done) {
+                            console.log('流读取完成');
+                            // 如果完全没有收到响应，显示错误信息
+                            if (!hasReceivedResponse) {
+                                aiMessageDiv.textContent = '抱歉，没有收到回应';
+                            }
+                            // 重新启用输入和发送按钮
+                            input.disabled = false;
+                            document.getElementById('sendButton').disabled = false;
+                            input.focus();
+                            return;
+                        }
+                        
+                        processText(decoder.decode(value, {stream: true}));
+                        readStream();
+                    }).catch(error => {
+                        console.error('读取流失败:', error);
+                        aiMessageDiv.textContent = `错误: ${error.message}`;
+                        
+                        // 重新启用输入和发送按钮
+                        input.disabled = false;
+                        document.getElementById('sendButton').disabled = false;
+                        input.focus();
+                    });
+                }
+
+                readStream();
+            }).catch(error => {
+                console.error('请求失败:', error);
+                aiMessageDiv.textContent = `错误: ${error.message}`;
+                
                 // 重新启用输入和发送按钮
                 input.disabled = false;
                 document.getElementById('sendButton').disabled = false;
