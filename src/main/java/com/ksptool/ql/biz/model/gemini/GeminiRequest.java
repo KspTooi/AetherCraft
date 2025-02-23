@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.model.gemini;
 
 import lombok.Data;
+import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,6 +73,15 @@ public class GeminiRequest {
         request.setGenerationConfig(config);
         
         return request;
+    }
+    
+    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, Double temperature, Double topP, Integer topK) {
+        List<ChatMessage> messages = new ArrayList<>();
+        for (ModelChatHistoryPo history : histories) {
+            String role = history.getRole() == 0 ? "user" : "assistant";
+            messages.add(new ChatMessage(role, history.getContent()));
+        }
+        return of(messages, temperature, topP, topK);
     }
     
     @Data

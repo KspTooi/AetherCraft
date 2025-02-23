@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
-
 import java.util.Date;
 
 @Data
@@ -16,22 +15,26 @@ public class ModelChatHistoryPo {
     @Comment("主键ID")
     private Long id;
 
+    @Comment("用户ID")
+    @Column(nullable = false)
+    private Long userId;
+
     @Comment("关联的会话")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false)
     private ModelChatThreadPo thread;
-    
-    @Comment("用户ID")
+
+    @Comment("角色 0-用户 1-AI助手")
     @Column(nullable = false)
-    private Long userId;
-    
-    @Comment("角色 user-用户 assistant-AI助手")
-    @Column(length = 20, nullable = false)
-    private String role;
-    
+    private Integer role;
+
     @Comment("消息内容")
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Comment("消息序号")
+    @Column(nullable = false)
+    private Integer sequence;
     
     @Comment("创建时间")
     @Column(nullable = false)
