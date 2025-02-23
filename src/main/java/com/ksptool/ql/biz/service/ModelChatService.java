@@ -2,10 +2,14 @@ package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
+import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.gemini.GeminiResponse;
+import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
+import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.AuthContext;
@@ -40,12 +44,49 @@ public class ModelChatService {
     @Autowired
     private ConfigService configService;
     
+    @Autowired
+    private ModelChatThreadRepository threadRepository;
+    
+    @Autowired
+    private ModelChatHistoryRepository historyRepository;
+    
+    public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId) throws BizException{
+
+        if (threadId == null || threadId == -1) {
+            // 创建新的会话
+            long count = threadRepository.countByUserId(userId);
+            
+            ModelChatThreadPo thread = new ModelChatThreadPo();
+            thread.setUserId(userId);
+            thread.setTitle("新对话" + (count + 1));
+            thread.setModelCode("gemini-pro");
+            return threadRepository.save(thread);
+        }
+        
+        // 获取已有会话
+        return threadRepository.findById(threadId).orElseThrow(() -> new BizException("会话不存在"));
+    }
+    
+    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) {
+        ModelChatHistoryPo history = new ModelChatHistoryPo();
+        history.setThread(thread);
+        history.setUserId(thread.getUserId());
+        history.setContent(content);
+        history.setRole(role);
+        history.setSequence(thread.getHistories() != null ? thread.getHistories().size() + 1 : 1);
+        return historyRepository.save(history);
+    }
+    
     public ChatCompleteVo chatComplete(ChatCompleteDto dto) throws BizException {
         ChatCompleteVo vo = new ChatCompleteVo();
-        vo.setChatThread(dto.getChatThread());
         
         try {
-            // 1. 获取并验证模型配置
+            // 1. 获取或创建会话
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), AuthContext.getCurrentUserId());
+            thread = threadRepository.findByIdWithHistories(thread.getId());
+            vo.setChatThread(thread.getId());
+            
+            // 2. 获取并验证模型配置
             AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
             if (modelEnum == null) {
                 throw new BizException("无效的模型代码");
@@ -54,7 +95,7 @@ public class ModelChatService {
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent";
             
-            // 2. 获取所有配置
+            // 3. 获取所有配置
             String apiKey = configService.get(baseKey + "apiKey");
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
@@ -65,7 +106,10 @@ public class ModelChatService {
             double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P);
             int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K);
             
-            // 3. 配置HTTP客户端
+            // 4. 保存用户消息
+            createHistory(thread, dto.getMessage(), 0);
+            
+            // 5. 配置HTTP客户端
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
             if (StringUtils.hasText(proxyConfig)) {
                 if (!PROXY_PATTERN.matcher(proxyConfig).matches()) {
@@ -89,8 +133,8 @@ public class ModelChatService {
                 }
             }
             
-            // 4. 构建并发送请求
-            GeminiRequest geminiRequest = GeminiRequest.of(dto.getMessage(), temperature, topP, topK);
+            // 6. 构建并发送请求
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK);
             String jsonBody = gson.toJson(geminiRequest);
             
             Request request = new Request.Builder()
@@ -98,7 +142,7 @@ public class ModelChatService {
                 .post(RequestBody.create(jsonBody, JSON))
                 .build();
                 
-            // 5. 处理响应
+            // 7. 处理响应
             try (Response response = clientBuilder.build().newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     throw new BizException("调用Gemini API失败: " + response.body().string());
@@ -118,6 +162,9 @@ public class ModelChatService {
                 if (responseText == null) {
                     throw new BizException("Gemini API 返回内容为空");
                 }
+                
+                // 8. 保存AI响应
+                createHistory(thread, responseText, 1);
                 
                 vo.setContent(responseText);
                 vo.setConversationId(java.util.UUID.randomUUID().toString());

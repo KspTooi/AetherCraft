@@ -75,12 +75,20 @@ public class GeminiRequest {
         return request;
     }
     
-    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, Double temperature, Double topP, Integer topK) {
+    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK) {
         List<ChatMessage> messages = new ArrayList<>();
-        for (ModelChatHistoryPo history : histories) {
-            String role = history.getRole() == 0 ? "user" : "assistant";
-            messages.add(new ChatMessage(role, history.getContent()));
+        
+        // 添加历史记录
+        if (histories != null && !histories.isEmpty()) {
+            for (ModelChatHistoryPo history : histories) {
+                String role = history.getRole() == 0 ? "user" : "assistant";
+                messages.add(new ChatMessage(role, history.getContent()));
+            }
         }
+        
+        // 添加用户的最新消息
+        messages.add(new ChatMessage("user", userMessage));
+        
         return of(messages, temperature, topP, topK);
     }
     
