@@ -210,6 +210,9 @@ public class ModelChatService {
         }
         vo.setModels(models);
         
+        // 获取默认模型（枚举中的第一个）
+        String defaultModel = AIModelEnum.values()[0].getCode();
+        
         // 获取用户的所有会话
         List<ModelChatThreadPo> threads = threadRepository.findByUserIdOrderByUpdateTimeDesc(userId);
         
@@ -228,6 +231,7 @@ public class ModelChatService {
         if (threadId == null) {
             vo.setMessages(new ArrayList<>());
             vo.setCurrentThreadId(null);
+            vo.setSelectedModel(defaultModel);
             return vo;
         }
         
@@ -235,12 +239,14 @@ public class ModelChatService {
         if (thread == null) {
             vo.setMessages(new ArrayList<>());
             vo.setCurrentThreadId(null);
+            vo.setSelectedModel(defaultModel);
             return vo;
         }
         
         if (!thread.getUserId().equals(userId)) {
             vo.setMessages(new ArrayList<>());
             vo.setCurrentThreadId(null);
+            vo.setSelectedModel(defaultModel);
             return vo;
         }
         
@@ -263,6 +269,7 @@ public class ModelChatService {
             ModelChatViewThreadVo currentThread = new ModelChatViewThreadVo();
             assign(thread, currentThread);
             vo.setCurrentThread(currentThread);
+            vo.setSelectedModel(thread.getModelCode());
         }
         
         return vo;

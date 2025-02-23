@@ -35,6 +35,11 @@ public class ModelChatViewVo {
     private ModelChatViewThreadVo currentThread;
     
     /**
+     * 当前选择的模型代码
+     */
+    private String selectedModel;
+    
+    /**
      * 可用的模型列表
      */
     private List<String> models;
