@@ -1,9 +1,11 @@
 package com.ksptool.ql.biz.service;
 
+import com.google.gson.Gson;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
+import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.exception.BizException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +20,14 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 public class AuthService {
+
+    private final Gson gson = new Gson();
 
     @Autowired
     private UserRepository userRepository;
@@ -68,31 +75,7 @@ public class AuthService {
             throw new BizException("用户名或密码错误");
         }
         // 登录成功，创建或返回 token
-        return createToken(user.getId());
-    }
-
-
-    public String createToken(Long userId) {
-        Date now = new Date();
-        // 查询当前用户是否已有会话
-        UserSessionPo existingSession = userSessionRepository.findByUserId(userId);
-        if (existingSession != null) {
-            // 如果 token 未过期，则直接返回当前 token
-            if (existingSession.getExpiresAt().after(now)) {
-                return existingSession.getToken();
-            } else {
-                // 已过期，删除旧记录
-                userSessionRepository.delete(existingSession);
-            }
-        }
-        // 创建新的 token
-        String token = UUID.randomUUID().toString();
-        UserSessionPo newSession = new UserSessionPo();
-        newSession.setUserId(userId);
-        newSession.setToken(token);
-        newSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
-        userSessionRepository.save(newSession);
-        return token;
+        return createUserSession(user.getId());
     }
 
     public Long verifyToken(String token) {
@@ -107,6 +90,82 @@ public class AuthService {
     public void destroyToken(String token) {
         userSessionRepository.deleteByToken(token);
     }
+
+
+
+    /**
+     * 用户注销，清除数据库中的 session
+     * @param user 当前用户
+     */
+    public void logout(UserPo user) {
+        // 清除用户的 session
+        UserSessionPo query = new UserSessionPo();
+        query.setUserId(user.getId());
+        Example<UserSessionPo> example = Example.of(query);
+        userSessionRepository.deleteAll(userSessionRepository.findAll(example));
+    }
+
+    public String createUserSession(Long userId) {
+        Date now = new Date();
+        // 查询当前用户是否已有会话
+        UserSessionPo existingSession = userSessionRepository.findByUserId(userId);
+        if (existingSession != null) {
+            // 如果 token 未过期，则直接返回当前 token
+            if (existingSession.getExpiresAt().after(now)) {
+                return existingSession.getToken();
+            } else {
+                // 已过期，删除旧记录
+                userSessionRepository.delete(existingSession);
+            }
+        }
+
+        // 获取用户的所有权限
+        List<PermissionPo> permissions = userRepository.findUserPermissions(userId);
+        Set<String> permissionCodes = new HashSet<>();
+        for (PermissionPo permission : permissions) {
+            permissionCodes.add(permission.getCode());
+        }
+
+        // 创建新的 token 和会话
+        String token = UUID.randomUUID().toString();
+        UserSessionPo newSession = new UserSessionPo();
+        newSession.setUserId(userId);
+        newSession.setToken(token);
+        newSession.setPermissions(gson.toJson(permissionCodes));
+        newSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
+        userSessionRepository.save(newSession);
+        return token;
+    }
+
+    /**
+     * 刷新用户会话的权限和过期时间
+     * @param userId 用户ID
+     */
+    public void refreshUserSession(Long userId) {
+        // 查询当前用户是否已有会话
+        UserSessionPo existingSession = userSessionRepository.findByUserId(userId);
+        if (existingSession == null) {
+            return; // 没有会话时直接返回
+        }
+
+        // 检查会话是否过期
+        if (existingSession.getExpiresAt().before(new Date())) {
+            return; // 会话已过期，直接返回
+        }
+
+        // 获取用户的所有权限
+        List<PermissionPo> permissions = userRepository.findUserPermissions(userId);
+        Set<String> permissionCodes = new HashSet<>();
+        for (PermissionPo permission : permissions) {
+            permissionCodes.add(permission.getCode());
+        }
+
+        // 更新会话信息
+        existingSession.setPermissions(gson.toJson(permissionCodes));
+        existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
+        userSessionRepository.save(existingSession);
+    }
+
 
     private String hashSHA256(String input) throws BizException {
         try {
@@ -124,18 +183,6 @@ public class AuthService {
         } catch (NoSuchAlgorithmException e) {
             throw new BizException("密码加密失败", e);
         }
-    }
-
-    /**
-     * 用户注销，清除数据库中的 session
-     * @param user 当前用户
-     */
-    public void logout(UserPo user) {
-        // 清除用户的 session
-        UserSessionPo query = new UserSessionPo();
-        query.setUserId(user.getId());
-        Example<UserSessionPo> example = Example.of(query);
-        userSessionRepository.deleteAll(userSessionRepository.findAll(example));
     }
 
 }

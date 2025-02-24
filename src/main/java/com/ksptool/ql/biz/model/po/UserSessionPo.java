@@ -25,6 +25,10 @@ public class UserSessionPo {
     private String token;
 
     @Column(nullable = false)
+    @Comment("用户权限JSON")
+    private String permissions;
+
+    @Column(nullable = false)
     @Comment("过期时间")
     private Date expiresAt;
 
