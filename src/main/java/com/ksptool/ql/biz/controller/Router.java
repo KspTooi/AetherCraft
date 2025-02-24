@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.AuthContext;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,9 @@ public class Router {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private ConfigService configService;
 
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
@@ -55,10 +60,33 @@ public class Router {
     }
 
     @GetMapping("/dashboard")
-    public ModelAndView dashboard() {
+    public ModelAndView dashboard(HttpServletRequest request) {
         ModelAndView mav = new ModelAndView("demo-control-panel");
         mav.addObject("title", "管理台");
+        
+        // 获取来源页面的URL并保存到当前用户的配置中
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.contains("/dashboard")) {
+            try {
+                java.net.URL url = new java.net.URL(referer);
+                String path = url.getPath();
+                if (path.isEmpty()) {
+                    path = "/";
+                }
+                configService.setConfigValue("path.referer.dashboard", path, AuthContext.getCurrentUserId());
+            } catch (Exception e) {
+                // 如果URL解析失败，使用默认路径
+                configService.setConfigValue("path.referer.dashboard", "/ssr/appCenter", AuthContext.getCurrentUserId());
+            }
+        }
+        
         return mav;
+    }
+
+    @GetMapping("/leaveDashboard")
+    public String leaveDashboard() {
+        String referer = configService.get("path.referer.dashboard", "/ssr/appCenter");
+        return "redirect:" + referer;
     }
 
     @RequestMapping("/version")

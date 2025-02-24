@@ -98,17 +98,18 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="maxOutputTokens" class="form-label small">最大输出长度</label>
+                                    <label for="maxOutputTokens" class="form-label small">最大输出长度 <span class="text-danger">*</span></label>
                                     <div class="d-flex gap-2 align-items-center">
                                         <input type="range" class="form-range flex-grow-1" id="maxOutputTokensRange" 
                                                min="1" max="8192000" step="100" th:value="${data.maxOutputTokens}"
                                                oninput="updateMaxOutputTokens(this.value)">
                                         <input type="number" class="form-control form-control-sm" style="width: 120px" 
-                                               id="maxOutputTokens" name="maxOutputTokens" 
-                                               th:value="${data.maxOutputTokens}" min="1" max="8192000" step="100"
+                                               id="maxOutputTokens" name="maxOutputTokens" required
+                                               th:value="${data.maxOutputTokens}" min="1" max="8192000" step="1"
                                                oninput="updateMaxOutputTokensRange(this.value)">
                                     </div>
-                                    <div class="form-text small">控制响应的最大长度，范围1-8192000，默认800,单次响应超过将自动截断</div>
+                                    <div class="invalid-feedback">最大输出长度必须在1-8192000之间</div>
+                                    <div class="form-text small">控制响应的最大长度，范围1-8192000，默认800，单次响应超过将自动截断</div>
                                 </div>
 
                                 <div class="col-12">
@@ -140,6 +141,15 @@
                     // 如果API Key已保存且没有新输入，则不验证API Key
                     if (hasApiKey && !apiKeyInput.value) {
                         apiKeyInput.setCustomValidity('');
+                    }
+
+                    // 验证最大输出长度
+                    var maxOutputTokensInput = form.querySelector('#maxOutputTokens');
+                    var maxOutputTokensValue = parseInt(maxOutputTokensInput.value);
+                    if (isNaN(maxOutputTokensValue) || maxOutputTokensValue < 1 || maxOutputTokensValue > 8192000) {
+                        maxOutputTokensInput.setCustomValidity('最大输出长度必须在1-8192000之间');
+                    } else {
+                        maxOutputTokensInput.setCustomValidity('');
                     }
                     
                     if (!form.checkValidity()) {
@@ -190,12 +200,45 @@
 
         // 更新最大输出长度
         function updateMaxOutputTokens(value) {
-            document.getElementById('maxOutputTokens').value = value;
+            var input = document.getElementById('maxOutputTokens');
+            var numValue = parseInt(value);
+            
+            if (!isNaN(numValue)) {
+                if (numValue < 1) numValue = 1;
+                if (numValue > 8192000) numValue = 8192000;
+                input.value = numValue;
+            }
+            validateMaxOutputTokens(input);
         }
 
         function updateMaxOutputTokensRange(value) {
-            document.getElementById('maxOutputTokensRange').value = value;
+            var input = document.getElementById('maxOutputTokensRange');
+            var numValue = parseInt(value);
+            var maxOutputTokensInput = document.getElementById('maxOutputTokens');
+            
+            if (!isNaN(numValue)) {
+                if (numValue < 1) numValue = 1;
+                if (numValue > 8192000) numValue = 8192000;
+                input.value = numValue;
+                maxOutputTokensInput.value = numValue;
+            }
+            validateMaxOutputTokens(maxOutputTokensInput);
         }
+
+        function validateMaxOutputTokens(input) {
+            var value = parseInt(input.value);
+            if (isNaN(value) || value < 1 || value > 8192000) {
+                input.setCustomValidity('最大输出长度必须在1-8192000之间');
+            } else {
+                input.setCustomValidity('');
+            }
+            input.reportValidity(); // 立即显示验证结果
+        }
+
+        // 添加输入事件监听
+        document.getElementById('maxOutputTokens').addEventListener('input', function(e) {
+            validateMaxOutputTokens(this);
+        });
 
         // 加载模型配置
         function loadModelConfig(modelCode) {
