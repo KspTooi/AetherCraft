@@ -64,8 +64,24 @@ public enum PermissionEnum {
     EXPLORER_DOWNLOAD("explorer:download", "下载文件"),
     EXPLORER_OPEN("explorer:open", "打开文件"),
     EXPLORER_RENAME("explorer:rename", "重命名文件"),
-    EXPLORER_DELETE("explorer:delete", "删除文件");
+    EXPLORER_DELETE("explorer:delete", "删除文件"),
 
+    //服务权限
+    SERVICE_VIEW("service:view", "访问文件资源管理器"),
+    SERVICE_START("service:start", "启动服务"),
+    SERVICE_KILL("service:kill", "停止服务"),
+
+    //AI聊天功能
+    MODEL_CHAT_VIEW("model:chat:view", "访问AI助手"),
+    MODEL_CHAT_CREATE_THREAD("model:chat:create:thread", "创建新对话"),
+    MODEL_CHAT_REMOVE_THREAD("model:chat:remove:thread", "移除对话"),
+    MODEL_CHAT_MESSAGE("model:chat:message", "发送消息"),
+    MODEL_CHAT_TOGGLE_MODEL("model:chat:toggle_model", "切换模型"),
+    MODEL_CHAT_FUNC("model:chat:func", "AI执行函数"),
+    MODEL_CHAT_TOOLS("model:chat:tools", "AI调用工具"),
+    MODEL_CHAT_CREATE("model:chat:create", "AI创建文件"),
+    MODEL_CHAT_EDIT("model:chat:edit", "AI编辑文件"),
+    MODEL_CHAT_REMOVE("model:chat:remove", "AI移除文件"),
 
     ;
 
