@@ -293,33 +293,33 @@ public class ModelChatService {
      */
     public void chatCompleteSSE(ChatCompleteDto dto, Long userId, Consumer<String> callback) throws BizException {
         try {
-            // 1. 获取并验证模型配置
+            //获取并验证模型配置
             AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
             if (modelEnum == null) {
                 throw new BizException("无效的模型代码");
             }
-            
-            // 2. 获取或创建会话，使用传入的userId而不是从AuthContext获取
-            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, modelEnum.getCode());
-            
+
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent" + SSE_PARAM;
-            
-            // 3. 获取所有配置 - 使用传入的userId
+
+            //获取所有配置 - 使用传入的userId
             String apiKey = configService.get(baseKey + "apiKey", userId);
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
             }
             
+            //获取或创建会话，使用传入的userId而不是从AuthContext获取
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, modelEnum.getCode());
+
             String proxyConfig = configService.get(baseKey + "proxy", userId);
             double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
             double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
             int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
             
-            // 4. 保存用户消息
+            //保存用户消息
             createHistory(thread, dto.getMessage(), 0);
             
-            // 5. 配置HTTP客户端
+            //配置HTTP客户端
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS); // 增加读取超时时间
             
@@ -345,7 +345,7 @@ public class ModelChatService {
                 }
             }
             
-            // 6. 构建并发送请求
+            //构建并发送请求
             GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK);
             String jsonBody = gson.toJson(geminiRequest);
             
@@ -356,7 +356,7 @@ public class ModelChatService {
             
             StringBuilder responseBuilder = new StringBuilder();
             
-            // 7. 处理SSE响应
+            //处理SSE响应
             try (Response response = clientBuilder.build().newCall(request).execute()) {
                 if (!response.isSuccessful()) {
                     throw new BizException("调用Gemini API失败: " + response.body().string());
@@ -380,7 +380,7 @@ public class ModelChatService {
                 }
             }
             
-            // 8. 保存完整的AI响应
+            //保存完整的AI响应
             String fullResponse = responseBuilder.toString();
             if (!StringUtils.hasText(fullResponse)) {
                 throw new BizException("Gemini API 返回内容为空");
@@ -388,7 +388,7 @@ public class ModelChatService {
             
             createHistory(thread, fullResponse, 1);
             
-            // 9. 更新会话使用的模型
+            //更新会话使用的模型
             thread.setModelCode(modelEnum.getCode());
             threadRepository.save(thread);
             
