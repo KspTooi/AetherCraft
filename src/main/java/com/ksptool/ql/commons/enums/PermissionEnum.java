@@ -4,53 +4,67 @@ package com.ksptool.ql.commons.enums;
  * 系统权限节点枚举
  */
 public enum PermissionEnum {
-    // 系统级权限
-    SYSTEM_ACCESS("system:access", "访问系统"),
-    SYSTEM_ADMIN("system:admin", "系统管理员"),
-    
+
+    /**
+     * 管理台权限(Panel)
+     */
     // 用户管理权限
-    USER_VIEW("user:view", "查看用户"),
-    USER_ADD("user:add", "添加用户"),
-    USER_EDIT("user:edit", "编辑用户"),
-    USER_DELETE("user:delete", "删除用户"),
+    PANEL_USER_VIEW("panel:user:view", "查看用户列表"),
+    PANEL_USER_ADD("panel:user:add", "添加用户"),
+    PANEL_USER_EDIT("panel:user:edit", "编辑用户"),
+    PANEL_USER_DELETE("panel:user:delete", "删除用户"),
     
     // 用户组管理权限
-    GROUP_VIEW("group:view", "查看用户组"),
-    GROUP_ADD("group:add", "添加用户组"),
-    GROUP_EDIT("group:edit", "编辑用户组"),
-    GROUP_DELETE("group:delete", "删除用户组"),
-    
-    // 应用管理权限
-    APP_VIEW("app:view", "查看应用"),
-    APP_ADD("app:add", "添加应用"),
-    APP_EDIT("app:edit", "编辑应用"),
-    APP_DELETE("app:delete", "删除应用"),
-    APP_LAUNCH("app:launch", "启动应用"),
-    
+    PANEL_GROUP_VIEW("panel:group:view", "查看用户组"),
+    PANEL_GROUP_ADD("panel:group:add", "添加用户组"),
+    PANEL_GROUP_EDIT("panel:group:edit", "编辑用户组"),
+    PANEL_GROUP_DELETE("panel:group:delete", "删除用户组"),
+    PANEL_GROUP_ASSIGN("panel:group:assign", "为用户组分配权限"),
+
+    // 权限节点管理
+    PANEL_PERMISSION_VIEW("panel:permission:view", "查看权限节点"),
+    PANEL_PERMISSION_ADD("panel:permission:add", "添加权限节点"),
+    PANEL_PERMISSION_REMOVE("panel:permission:remove", "移除权限"),
+
     // 面板应用管理权限
     PANEL_APP_VIEW("panel:app:view", "查看面板应用"),
     PANEL_APP_ADD("panel:app:add", "添加面板应用"),
     PANEL_APP_EDIT("panel:app:edit", "编辑面板应用"),
     PANEL_APP_DELETE("panel:app:delete", "删除面板应用"),
-    
-    // 文件浏览器权限
-    FILE_VIEW("file:view", "查看文件"),
-    FILE_UPLOAD("file:upload", "上传文件"),
-    FILE_DOWNLOAD("file:download", "下载文件"),
-    FILE_DELETE("file:delete", "删除文件"),
-    FILE_RENAME("file:rename", "重命名文件"),
-    
-    // 配置管理权限
-    CONFIG_VIEW("config:view", "查看配置"),
-    CONFIG_EDIT("config:edit", "编辑配置"),
-    
+
+    //配置项管理
+    PANEL_CONFIG_VIEW("panel:config:view", "查看自己的配置项"),
+    PANEL_CONFIG_VIEW_GLOBAL("panel:config:view:global", "查看全部用户的配置项"),
+    PANEL_CONFIG_EDIT("panel:config:edit", "编辑配置项"),
+    PANEL_CONFIG_REMOVE("panel:config:remove", "移除配置项"),
+
     // AI模型配置权限
-    AI_CONFIG_VIEW("ai:config:view", "查看AI配置"),
-    AI_CONFIG_EDIT("ai:config:edit", "编辑AI配置"),
-    
-    // 权限节点管理
-    PERMISSION_VIEW("permission:view", "查看权限节点"),
-    PERMISSION_ASSIGN("permission:assign", "分配权限");
+    PANEL_MODEL_VIEW("panel:model:view", "查看AI配置"),
+    PANEL_MODEL_EDIT("panel:model:edit", "编辑AI配置"),
+
+    /**
+     * 客户端权限
+     */
+    //应用中心
+    APP_VIEW("app:view", "查看应用"),
+    APP_ADD("app:add", "添加应用"),
+    APP_LAUNCH("app:launch", "启动应用"),
+    APP_KILL("app:kill", "终止应用"),
+    APP_EDIT("app:edit", "配置应用"),
+    APP_REMOVE("app:remove", "移除应用"),
+
+
+
+
+    // 文件浏览器权限
+    EXPLORER_VIEW("explorer:view", "查看文件"),
+    EXPLORER_UPLOAD("explorer:upload", "上传文件"),
+    EXPLORER_DOWNLOAD("explorer:download", "下载文件"),
+    EXPLORER_DELETE("explorer:delete", "删除文件"),
+    EXPLORER_RENAME("explorer:rename", "重命名文件");
+
+
+
 
     private final String code;
     private final String description;
