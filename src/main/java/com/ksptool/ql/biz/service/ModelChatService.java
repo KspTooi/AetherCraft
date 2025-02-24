@@ -63,6 +63,20 @@ public class ModelChatService {
     @Autowired
     private ModelChatHistoryRepository historyRepository;
     
+    /**
+     * 验证会话ID是否有效
+     * @param threadId 会话ID
+     * @return 如果会话存在且属于当前用户则返回true
+     */
+    public boolean isValidThread(Long threadId) {
+        if (threadId == null) {
+            return false;
+        }
+        Long userId = AuthContext.getCurrentUserId();
+        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        return thread != null && thread.getUserId().equals(userId);
+    }
+
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
         if (threadId == null || threadId == -1) {
             // 创建新的会话

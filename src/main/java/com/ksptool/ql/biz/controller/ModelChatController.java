@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
-import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -17,7 +16,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ksptool.ql.biz.service.ConfigService;
 
 @Slf4j
 @RestController
@@ -30,9 +30,39 @@ public class ModelChatController {
     @Autowired
     private ModelChatService modelChatService;
 
+    @Autowired
+    private ConfigService configService;
+
     @GetMapping("/chat/view")
     public ModelAndView chatView(@RequestParam(name = "threadId", required = false) Long threadId) {
         ModelAndView mav = new ModelAndView("model-chat");
+        
+        // 如果threadId为空，尝试从缓存获取
+        if (threadId == null) {
+            String cachedThreadId = configService.get("model.chat.current.thread");
+            if (cachedThreadId != null) {
+                try {
+                    Long cachedId = Long.parseLong(cachedThreadId);
+                    // 验证缓存的会话是否有效
+                    if (modelChatService.isValidThread(cachedId)) {
+                        threadId = cachedId;
+                    }
+                } catch (NumberFormatException e) {
+                    // 忽略解析错误
+                }
+            }
+        }
+        
+        // 如果是新对话，清除缓存
+        if (threadId != null && threadId == -1) {
+            configService.setValue("model.chat.current.thread", null);
+        }
+        
+        // 如果是有效的会话ID，更新缓存
+        if (threadId != null && threadId != -1 && modelChatService.isValidThread(threadId)) {
+            configService.setValue("model.chat.current.thread", threadId.toString());
+        }
+        
         mav.addObject("data", modelChatService.getChatView(threadId));
         return mav;
     }

@@ -2,14 +2,12 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
-import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.AuthContext;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
@@ -73,10 +71,10 @@ public class Router {
                 if (path.isEmpty()) {
                     path = "/";
                 }
-                configService.setConfigValue("path.referer.dashboard", path, AuthContext.getCurrentUserId());
+                configService.setValue("path.referer.dashboard", path, AuthContext.getCurrentUserId());
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                configService.setConfigValue("path.referer.dashboard", "/ssr/appCenter", AuthContext.getCurrentUserId());
+                configService.setValue("path.referer.dashboard", "/ssr/appCenter", AuthContext.getCurrentUserId());
             }
         }
         

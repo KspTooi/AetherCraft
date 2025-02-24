@@ -36,7 +36,7 @@ public class FileExplorerService {
      */
     public String getLastPath() {
         Long userId = AuthContext.getCurrentUserId();
-        String path = configService.getConfigValue(EXPLORER_PATH_KEY, userId);
+        String path = configService.getValue(EXPLORER_PATH_KEY, userId);
         return StringUtils.hasText(path) ? path : "@";
     }
 
@@ -45,7 +45,7 @@ public class FileExplorerService {
      */
     public void saveCurrentPath(String path) {
         Long userId = AuthContext.getCurrentUserId();
-        configService.setConfigValue(EXPLORER_PATH_KEY, path, userId);
+        configService.setValue(EXPLORER_PATH_KEY, path, userId);
     }
 
     /**
@@ -230,11 +230,11 @@ public class FileExplorerService {
         Long userId = AuthContext.getCurrentUserId();
         
         // 获取用户自定义运行命令，如果没有则尝试获取全局配置
-        String command = configService.getConfigValue(EXPLORER_CONFIG_KEY, userId);
+        String command = configService.getValue(EXPLORER_CONFIG_KEY, userId);
         if (!StringUtils.hasText(command)) {
             // 如果没有配置，添加默认配置到用户作用域
             command = DEFAULT_EXPLORER_CMD + " #{path}";
-            configService.setConfigValue(EXPLORER_CONFIG_KEY, command, userId);
+            configService.setValue(EXPLORER_CONFIG_KEY, command, userId);
         }
 
         // 替换路径占位符并执行命令
