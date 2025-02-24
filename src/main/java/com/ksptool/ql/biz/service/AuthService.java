@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.exception.BizException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -75,7 +76,7 @@ public class AuthService {
             throw new BizException("用户名或密码错误");
         }
         // 登录成功，创建或返回 token
-        return createUserSession(user.getId());
+        return createUserSession(user.getId()).getToken();
     }
 
     public Long verifyToken(String token) {
@@ -91,7 +92,31 @@ public class AuthService {
         userSessionRepository.deleteByToken(token);
     }
 
+    /**
+     * 根据token获取用户会话信息
+     * @param token 会话token
+     * @return 会话信息，如果token无效或过期则返回null
+     */
+    public UserSessionVo getUserSessionByToken(String token) {
+        UserSessionPo session = userSessionRepository.findByToken(token);
+        if (session == null || session.getExpiresAt().before(new Date())) {
+            return null;
+        }
+        return new UserSessionVo(session);
+    }
 
+    /**
+     * 从HTTP请求中获取用户会话信息
+     * @param hsr HTTP请求
+     * @return 会话信息，如果未登录或会话无效则返回null
+     */
+    public UserSessionVo getUserSessionByHSR(HttpServletRequest hsr) {
+        String token = WebUtils.getCookieValue(hsr, "token");
+        if (token == null) {
+            return null;
+        }
+        return getUserSessionByToken(token);
+    }
 
     /**
      * 用户注销，清除数据库中的 session
@@ -105,14 +130,14 @@ public class AuthService {
         userSessionRepository.deleteAll(userSessionRepository.findAll(example));
     }
 
-    public String createUserSession(Long userId) {
+    public UserSessionVo createUserSession(Long userId) {
         Date now = new Date();
         // 查询当前用户是否已有会话
         UserSessionPo existingSession = userSessionRepository.findByUserId(userId);
         if (existingSession != null) {
             // 如果 token 未过期，则直接返回当前 token
             if (existingSession.getExpiresAt().after(now)) {
-                return existingSession.getToken();
+                return new UserSessionVo(existingSession);
             } else {
                 // 已过期，删除旧记录
                 userSessionRepository.delete(existingSession);
@@ -134,23 +159,24 @@ public class AuthService {
         newSession.setPermissions(gson.toJson(permissionCodes));
         newSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
         userSessionRepository.save(newSession);
-        return token;
+        return new UserSessionVo(newSession);
     }
 
     /**
      * 刷新用户会话的权限和过期时间
      * @param userId 用户ID
+     * @return 更新后的会话信息，如果会话不存在或已过期则返回null
      */
-    public void refreshUserSession(Long userId) {
+    public UserSessionVo refreshUserSession(Long userId) {
         // 查询当前用户是否已有会话
         UserSessionPo existingSession = userSessionRepository.findByUserId(userId);
         if (existingSession == null) {
-            return; // 没有会话时直接返回
+            return null; // 没有会话时直接返回
         }
 
         // 检查会话是否过期
         if (existingSession.getExpiresAt().before(new Date())) {
-            return; // 会话已过期，直接返回
+            return null; // 会话已过期，直接返回
         }
 
         // 获取用户的所有权限
@@ -164,6 +190,7 @@ public class AuthService {
         existingSession.setPermissions(gson.toJson(permissionCodes));
         existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
         userSessionRepository.save(existingSession);
+        return new UserSessionVo(existingSession);
     }
 
 
