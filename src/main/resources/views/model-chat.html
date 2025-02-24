@@ -627,6 +627,12 @@
             const message = input.value.trim();
             if (!message) return;
 
+            // 检查是否有当前会话
+            if (!currentThreadId) {
+                showToast('warning', '请创建或选择一个对话');
+                return;
+            }
+
             // 保存消息到sessionStorage
             sessionStorage.setItem('user.previous.message', message);
 
