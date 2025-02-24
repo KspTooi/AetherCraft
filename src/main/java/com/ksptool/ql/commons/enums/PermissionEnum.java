@@ -53,16 +53,21 @@ public enum PermissionEnum {
     APP_EDIT("app:edit", "配置应用"),
     APP_REMOVE("app:remove", "移除应用"),
 
+    //任务管理器
+    TASK_MGR_VIEW("task:mgr:view", "访问任务管理器"),
+    TASK_MGR_SEARCH("task:mgr:search", "任务管理器关键字搜索"),
+    TASK_MGR_KILL("task:mgr:kill", "终止任务"),
 
-
-
-    // 文件浏览器权限
-    EXPLORER_VIEW("explorer:view", "查看文件"),
+    //文件资源管理器权限
+    EXPLORER_VIEW("explorer:view", "访问文件资源管理器"),
     EXPLORER_UPLOAD("explorer:upload", "上传文件"),
     EXPLORER_DOWNLOAD("explorer:download", "下载文件"),
-    EXPLORER_DELETE("explorer:delete", "删除文件"),
-    EXPLORER_RENAME("explorer:rename", "重命名文件");
+    EXPLORER_OPEN("explorer:open", "打开文件"),
+    EXPLORER_RENAME("explorer:rename", "重命名文件"),
+    EXPLORER_DELETE("explorer:delete", "删除文件");
 
+
+    ;
 
 
 
