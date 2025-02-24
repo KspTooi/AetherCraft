@@ -84,6 +84,34 @@
         overflow: hidden;
         text-overflow: ellipsis;
         border-left: 3px solid transparent;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .thread-item .thread-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 8px;
+    }
+
+    .thread-item .delete-btn {
+        transition: all 0.3s;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .thread-item .delete-btn:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .thread-item:hover {
@@ -459,9 +487,13 @@
                     </button>
                     <div class="thread-items">
                         <div th:each="thread : ${data.threads}" 
-                             th:class="'thread-item' + (${thread.id == data.currentThreadId ? ' active' : ''})"
-                             th:onclick="'loadThread(' + ${thread.id} + ')'"
-                             th:text="${thread.title}">
+                             th:class="'thread-item' + (${thread.id == data.currentThreadId ? ' active' : ''})">
+                            <div class="thread-title" th:onclick="'loadThread(' + ${thread.id} + ')'"
+                                 th:text="${thread.title}">
+                            </div>
+                            <button class="delete-btn" th:onclick="'deleteThread(' + ${thread.id} + ', event)'">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -836,6 +868,13 @@
                 }
             });
         });
+
+        function deleteThread(threadId, event) {
+            // 阻止事件冒泡，避免触发loadThread
+            event.stopPropagation();
+            // 跳转到删除接口
+            window.location.href = '/model/chat/view/removeThread/' + threadId;
+        }
     </script>
 </body>
 </html> 

@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @RestController
@@ -119,5 +120,22 @@ public class ModelChatController {
         }
         
         return emitter;
+    }
+
+    /**
+     * 删除会话
+     * @param threadId 会话ID
+     * @return 重定向到聊天视图
+     */
+    @GetMapping("/chat/view/removeThread/{threadId}")
+    public ModelAndView removeThread(@PathVariable(name = "threadId") Long threadId) {
+        ModelAndView mav = new ModelAndView("redirect:/model/chat/view");
+        try {
+            modelChatService.removeThread(threadId);
+            mav.addObject("vo", Result.success("会话删除成功", null));
+        } catch (BizException e) {
+            mav.addObject("vo", Result.error(e.getMessage()));
+        }
+        return mav;
     }
 } 

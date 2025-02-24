@@ -396,4 +396,23 @@ public class ModelChatService {
             throw new BizException("AI对话失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 删除会话
+     * @param threadId 会话ID
+     * @throws BizException 业务异常
+     */
+    public void removeThread(Long threadId) throws BizException {
+        Long userId = AuthContext.getCurrentUserId();
+        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+        
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权删除该会话");
+        }
+        
+        threadRepository.delete(thread);
+    }
 } 
