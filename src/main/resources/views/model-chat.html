@@ -486,9 +486,10 @@
                         新对话
                     </button>
                     <div class="thread-items">
-                        <div th:each="thread : ${data.threads}" 
+                        <div th:each="thread : ${data.threads}"
+                             th:onclick="'loadThread(' + ${thread.id} + ')'"
                              th:class="'thread-item' + (${thread.id == data.currentThreadId ? ' active' : ''})">
-                            <div class="thread-title" th:onclick="'loadThread(' + ${thread.id} + ')'"
+                            <div class="thread-title"
                                  th:text="${thread.title}">
                             </div>
                             <button class="delete-btn" th:onclick="'deleteThread(' + ${thread.id} + ', event)'">
@@ -520,7 +521,7 @@
                         <div class="chat-input-wrapper">
                             <textarea 
                                 id="messageInput" 
-                                placeholder="问问 Gemini" 
+                                placeholder="怎麽不问问神奇的 Gemini 呢?"
                                 onkeydown="handleKeyPress(event)"></textarea>
                         </div>
                         <button class="send-btn" onclick="sendMessage()" id="sendButton">发送</button>
@@ -561,6 +562,11 @@
         }
 
         function loadThread(threadId) {
+            // 如果点击的是当前会话，不进行跳转
+            if (threadId === currentThreadId) {
+                return;
+            }
+            
             // 如果是移动端，加载新会话时关闭菜单
             if (window.innerWidth <= 768) {
                 toggleThreadList();
