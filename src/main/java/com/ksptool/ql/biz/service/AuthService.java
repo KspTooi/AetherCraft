@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,6 +30,8 @@ import java.util.HashSet;
 @Service
 public class AuthService {
 
+    private static final String SESSION_ATTRIBUTE = "CURRENT_USER_SESSION";
+
     private final Gson gson = new Gson();
 
     @Autowired
@@ -38,6 +42,33 @@ public class AuthService {
 
     @Value("${session.expires}")
     private long expiresInSeconds;
+
+    /**
+     * 设置当前请求的用户会话
+     * @param session 用户会话信息
+     */
+    public static void setCurrentUserSession(UserSessionVo session) {
+        RequestContextHolder.currentRequestAttributes()
+            .setAttribute(SESSION_ATTRIBUTE, session, RequestAttributes.SCOPE_REQUEST);
+    }
+
+    /**
+     * 获取当前请求的用户会话
+     * @return 用户会话信息，如果未设置则返回null
+     */
+    public static UserSessionVo getCurrentUserSession() {
+        return (UserSessionVo) RequestContextHolder.currentRequestAttributes()
+            .getAttribute(SESSION_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+    }
+
+    /**
+     * 获取当前用户ID
+     * @return 当前用户ID，如果未登录则返回null
+     */
+    public static Long getCurrentUserId() {
+        UserSessionVo session = getCurrentUserSession();
+        return session != null ? session.getUserId() : null;
+    }
 
     public UserPo verifyUser(HttpServletRequest hsr){
 

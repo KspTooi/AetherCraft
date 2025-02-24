@@ -11,7 +11,6 @@ import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
-import com.ksptool.ql.commons.AuthContext;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -72,7 +71,7 @@ public class ModelChatService {
         if (threadId == null) {
             return false;
         }
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
         return thread != null && thread.getUserId().equals(userId);
     }
@@ -93,7 +92,7 @@ public class ModelChatService {
             throw new BizException("无效的模型代码");
         }
 
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         long count = threadRepository.countByUserId(userId);
         
         ModelChatThreadPo thread = new ModelChatThreadPo();
@@ -151,7 +150,7 @@ public class ModelChatService {
             }
             
             // 2. 获取或创建会话
-            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), AuthContext.getCurrentUserId(), modelEnum.getCode());
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), AuthService.getCurrentUserId(), modelEnum.getCode());
             vo.setChatThread(thread.getId());
             
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
@@ -253,7 +252,7 @@ public class ModelChatService {
         ModelChatViewVo vo = new ModelChatViewVo();
         
         // 获取当前用户ID
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         
         // 从枚举中获取所有可用的模型列表
         List<String> models = new ArrayList<>();
@@ -453,7 +452,7 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public void removeThread(Long threadId) throws BizException {
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
         if (thread == null) {
             throw new BizException("会话不存在");

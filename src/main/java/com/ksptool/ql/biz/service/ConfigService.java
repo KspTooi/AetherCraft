@@ -5,7 +5,6 @@ import com.ksptool.ql.biz.model.po.ConfigPo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.Date;
-import com.ksptool.ql.commons.AuthContext;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -38,18 +37,18 @@ public class ConfigService {
     }
 
     public String getValue(String key) {
-        return getValue(key, AuthContext.getCurrentUserId());
+        return getValue(key, AuthService.getCurrentUserId());
     }
 
     public void setValue(String key, String value) {
-        setValue(key, value, AuthContext.getCurrentUserId());
+        setValue(key, value, AuthService.getCurrentUserId());
     }
 
     /**
      * 获取当前用户空间下的配置值
      */
     public String get(String key) {
-        return getValue(key, AuthContext.getCurrentUserId());
+        return getValue(key, AuthService.getCurrentUserId());
     }
 
     /**

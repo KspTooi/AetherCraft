@@ -2,8 +2,8 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
-import com.ksptool.ql.commons.AuthContext;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class PanelModelConfigService {
         config.setModelName(modelEnum.getName());
         
         // 获取当前用户ID
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         
         // 从配置服务加载配置
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
@@ -79,7 +79,7 @@ public class PanelModelConfigService {
         }
         
         // 获取当前用户ID
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         
         // 构建配置键前缀
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";

@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.ql.biz.model.vo.FileItemVo;
 import com.ksptool.ql.commons.utils.FileUtils;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.AuthContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -35,7 +34,7 @@ public class FileExplorerService {
      * 获取用户的上次访问路径
      */
     public String getLastPath() {
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         String path = configService.getValue(EXPLORER_PATH_KEY, userId);
         return StringUtils.hasText(path) ? path : "@";
     }
@@ -44,7 +43,7 @@ public class FileExplorerService {
      * 保存用户的当前访问路径
      */
     public void saveCurrentPath(String path) {
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         configService.setValue(EXPLORER_PATH_KEY, path, userId);
     }
 
@@ -227,7 +226,7 @@ public class FileExplorerService {
         }
 
         // 获取当前用户ID
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         
         // 获取用户自定义运行命令，如果没有则尝试获取全局配置
         String command = configService.getValue(EXPLORER_CONFIG_KEY, userId);

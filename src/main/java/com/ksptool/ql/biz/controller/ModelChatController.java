@@ -1,12 +1,12 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
-import com.ksptool.ql.commons.AuthContext;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,7 +100,7 @@ public class ModelChatController {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         
         // 获取用户ID和其他上下文信息 - 在主线程中获取
-        Long userId = AuthContext.getCurrentUserId();
+        Long userId = AuthService.getCurrentUserId();
         
         // 设置SSE连接成功的回调
         emitter.onCompletion(() -> {

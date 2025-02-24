@@ -2,8 +2,7 @@ package com.ksptool.ql.commons.interceptor;
 
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.WebUtils;
-import com.ksptool.ql.commons.AuthContext;
-import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -52,22 +51,15 @@ public class TokenFilter implements Filter {
             }
         }
 
-        String token = WebUtils.getCookieValue(req, "token");
-        if (token == null) {
+        // 获取并验证会话
+        UserSessionVo session = authService.getUserSessionByHSR(req);
+        if (session == null) {
             res.sendRedirect("/login");
             return;
         }
 
-        // 验证token并获取用户
-        UserPo user = authService.verifyUser(req);
-        if (user == null) {
-            res.sendRedirect("/login");
-            return;
-        }
-
-        // 将token和user存储到RequestContext中
-        AuthContext.setToken(token);
-        AuthContext.setCurrentUser(user);
+        // 将会话信息存储到请求上下文中
+        AuthService.setCurrentUserSession(session);
 
         try {
             chain.doFilter(request, response);
