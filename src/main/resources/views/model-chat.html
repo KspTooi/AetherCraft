@@ -593,6 +593,9 @@
             const message = input.value.trim();
             if (!message) return;
 
+            // 保存消息到sessionStorage
+            sessionStorage.setItem('user.previous.message', message);
+
             input.disabled = true;
             document.getElementById('sendButton').disabled = true;
 
@@ -606,6 +609,9 @@
             aiMessageDiv.textContent = '正在输入...';
             messagesDiv.appendChild(aiMessageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // 保存用户消息的DOM元素引用
+            const userMessageDiv = messagesDiv.lastElementChild.previousElementSibling;
 
             const requestData = {
                 chatThread: currentThreadId || -1,
@@ -659,13 +665,35 @@
                                                 updateThreadList(); // 新对话时更新会话列表
                                             }
                                             break;
+                                        case 10: // 错误事件
+                                            // 移除错误的聊天气泡和用户消息
+                                            aiMessageDiv.remove();
+                                            userMessageDiv.remove();
+                                            
+                                            // 从sessionStorage恢复消息到输入框
+                                            const previousMessage = sessionStorage.getItem('user.previous.message');
+                                            if (previousMessage) {
+                                                input.value = previousMessage;
+                                                adjustTextareaHeight(input);
+                                            }
+                                            
+                                            showToast('danger', response.data || '服务器返回错误');
+                                            // 重置输入状态
+                                            input.disabled = false;
+                                            document.getElementById('sendButton').disabled = false;
+                                            input.focus();
+                                            break;
                                         default:
-                                            aiMessageDiv.textContent = `未知状态: ${response.data || '无数据'}`;
+                                            // 移除错误的聊天气泡
+                                            aiMessageDiv.remove();
+                                            showToast('danger', response.data || '未知错误');
                                             break;
                                     }
                                 } catch (error) {
                                     console.error('解析JSON失败:', error, '原始行:', line);
-                                    aiMessageDiv.textContent = `错误: JSON解析失败 (${error.message})`;
+                                    // 移除错误的聊天气泡
+                                    aiMessageDiv.remove();
+                                    showToast('danger', `解析响应失败: ${error.message}`);
                                 }
                             }
                         });
@@ -675,7 +703,9 @@
                         reader.read().then(({ done, value }) => {
                             if (done) {
                                 if (!hasReceivedData) {
-                                    aiMessageDiv.textContent = '无响应数据';
+                                    // 移除空响应的聊天气泡
+                                    aiMessageDiv.remove();
+                                    //showToast('danger', '服务器未返回任何响应');
                                 }
                                 input.disabled = false;
                                 document.getElementById('sendButton').disabled = false;
@@ -689,7 +719,9 @@
                             readStream();
                         }).catch(error => {
                             console.error('读取流失败:', error);
-                            aiMessageDiv.textContent = `错误: ${error.message}`;
+                            // 移除错误的聊天气泡
+                            aiMessageDiv.remove();
+                            showToast('danger', `读取响应失败: ${error.message}`);
                             input.disabled = false;
                             document.getElementById('sendButton').disabled = false;
                             input.focus();
@@ -700,7 +732,9 @@
                 })
                 .catch(error => {
                     console.error('请求失败:', error);
-                    aiMessageDiv.textContent = `错误: ${error.message || '网络请求失败'}`;
+                    // 移除错误的聊天气泡
+                    aiMessageDiv.remove();
+                    showToast('danger', error.message || '网络请求失败');
                     input.disabled = false;
                     document.getElementById('sendButton').disabled = false;
                     input.focus();
