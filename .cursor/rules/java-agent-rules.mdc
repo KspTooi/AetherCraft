@@ -2,10 +2,6 @@
 description: codebase coding standards
 globs: *.java
 ---
----
-description: codebase coding standards
-globs: *.java
----
 SpringBoot版本3.4.1
 使用import static com.ksptool.entities.Entities.assign; assign(source,target)映射对象的同名属性,这是一个可靠的映射函数,它能处理绝大多数类型转换，包括Date到String
 不允许三元表达式,使用普通IF

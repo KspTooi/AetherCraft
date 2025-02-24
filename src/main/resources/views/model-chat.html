@@ -499,7 +499,7 @@
     </div>
 
     <script th:inline="javascript">
-        const currentThreadId = /*[[${data.currentThreadId}]]*/ null;
+        let currentThreadId = /*[[${data.currentThreadId}]]*/ null;
         const currentModel = /*[[${data.currentThread?.modelCode}]]*/ 'gemini-pro';
         let isMobileMenuOpen = false;
         
@@ -550,146 +550,161 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
+        function updateThreadList() {
+            fetch('/model/chat/view')
+                .then(response => response.text())
+                .then(html => {
+                    // 创建一个临时的DOM元素来解析HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // 获取新的会话列表
+                    const newThreadList = tempDiv.querySelector('.thread-items').innerHTML;
+                    
+                    // 更新当前页面的会话列表
+                    document.querySelector('.thread-items').innerHTML = newThreadList;
+                    
+                    // 获取最新的会话ID
+                    const latestThreadId = tempDiv.querySelector('.thread-item')?.getAttribute('onclick')?.match(/\d+/)?.[0];
+                    
+                    if (latestThreadId) {
+                        // 更新当前会话ID
+                        currentThreadId = parseInt(latestThreadId);
+                        
+                        // 移除所有active类
+                        document.querySelectorAll('.thread-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        
+                        // 为最新的会话添加active类
+                        const latestThread = document.querySelector(`.thread-item[onclick*="${latestThreadId}"]`);
+                        if (latestThread) {
+                            latestThread.classList.add('active');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('更新会话列表失败:', error);
+                });
+        }
+
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             if (!message) return;
 
-            // 禁用输入和发送按钮
             input.disabled = true;
             document.getElementById('sendButton').disabled = true;
 
-            // 显示用户消息
             appendMessage(message, true);
-
-            // 清空输入框并调整高度
             input.value = '';
             adjustTextareaHeight(input);
 
-            // 创建一个新的消息div用于显示AI响应
             const messagesDiv = document.getElementById('chatMessages');
             const aiMessageDiv = document.createElement('div');
             aiMessageDiv.className = 'message assistant';
-            aiMessageDiv.textContent = '正在输入...';  // 默认显示"正在输入..."
+            aiMessageDiv.textContent = '正在输入...';
             messagesDiv.appendChild(aiMessageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-            // 准备请求数据
             const requestData = {
-                chatThread: currentThreadId || -1,  // 如果是新对话，使用-1
-                model: document.getElementById('modelSelect').value,  // 始终使用当前选择的模型
+                chatThread: currentThreadId || -1,
+                model: document.getElementById('modelSelect').value,
                 message: message
             };
 
-            // 使用 fetch 发送 POST 请求
             fetch('/model/chat/complete/stream', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestData)
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let hasReceivedResponse = false;  // 标记是否收到过响应
-
-                function processText(text) {
-                    const lines = (buffer + text).split('\n');
-                    buffer = lines.pop() || ''; // 保存不完整的行到 buffer
-                    
-                    let currentEvent = '';
-
-                    for (const line of lines) {
-                        if (line.trim() === '') continue;
-                        
-                        if (line.startsWith('event:')) {
-                            currentEvent = line.slice(6).trim();
-                        } else if (line.startsWith('data:')) {
-                            const data = line.slice(5).trim();
-                            
-                            // 根据事件类型处理数据
-                            switch (currentEvent) {
-                                case 'start':
-                                    console.log('开始生成响应');
-                                    break;
-                                    
-                                case 'done':
-                                    console.log('SSE响应完成');
-                                    if (!currentThreadId) {
-                                        window.location.reload();
-                                    }
-                                    input.disabled = false;
-                                    document.getElementById('sendButton').disabled = false;
-                                    input.focus();
-                                    return;
-                                    
-                                case 'error':
-                                    throw new Error(data || '未知错误');
-                                    
-                                case 'message':
-                                    // 只处理实际的消息内容
-                                    if (!hasReceivedResponse) {
-                                        // 第一次收到响应，清除"正在输入..."
-                                        aiMessageDiv.textContent = '';
-                                        hasReceivedResponse = true;
-                                    }
-                                    aiMessageDiv.textContent += data;
-                                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                                    break;
-                                    
-                                default:
-                                    // 忽略其他类型的数据
-                                    break;
-                            }
-                            currentEvent = ''; // 重置事件类型
-                        }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                }
 
-                // 读取响应流
-                function readStream() {
-                    reader.read().then(({done, value}) => {
-                        if (done) {
-                            console.log('流读取完成');
-                            // 如果完全没有收到响应，显示错误信息
-                            if (!hasReceivedResponse) {
-                                aiMessageDiv.textContent = '抱歉，没有收到回应';
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = ''; // 用于累积未完整接收的行
+                    let hasReceivedData = false; // 标记是否收到过数据
+
+                    function processText(text) {
+                        buffer += text;
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // 未完整的行保留在buffer中
+
+                        lines.forEach(line => {
+                            if (line.startsWith('data:')) {
+                                try {
+                                    const jsonString = line.substring(5).trim();
+                                    const response = JSON.parse(jsonString);
+
+                                    switch (response.code) {
+                                        case 0: // 开始生成
+                                            console.log('开始生成:', response.data);
+                                            break;
+                                        case 1: // 数据传输
+                                            if (!hasReceivedData) {
+                                                aiMessageDiv.textContent = ''; // 清除"正在输入..."
+                                                hasReceivedData = true;
+                                            }
+                                            aiMessageDiv.textContent += response.data; // 追加内容
+                                            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                                            break;
+                                        case 2: // 生成完成
+                                            console.log('生成完成:', response.data);
+                                            if (!currentThreadId) {
+                                                updateThreadList(); // 新对话时更新会话列表
+                                            }
+                                            break;
+                                        default:
+                                            aiMessageDiv.textContent = `未知状态: ${response.data || '无数据'}`;
+                                            break;
+                                    }
+                                } catch (error) {
+                                    console.error('解析JSON失败:', error, '原始行:', line);
+                                    aiMessageDiv.textContent = `错误: JSON解析失败 (${error.message})`;
+                                }
                             }
-                            // 重新启用输入和发送按钮
+                        });
+                    }
+
+                    function readStream() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                if (!hasReceivedData) {
+                                    aiMessageDiv.textContent = '无响应数据';
+                                }
+                                input.disabled = false;
+                                document.getElementById('sendButton').disabled = false;
+                                input.focus();
+                                console.log('流读取完成');
+                                return;
+                            }
+
+                            const chunk = decoder.decode(value, { stream: true });
+                            processText(chunk);
+                            readStream();
+                        }).catch(error => {
+                            console.error('读取流失败:', error);
+                            aiMessageDiv.textContent = `错误: ${error.message}`;
                             input.disabled = false;
                             document.getElementById('sendButton').disabled = false;
                             input.focus();
-                            return;
-                        }
-                        
-                        processText(decoder.decode(value, {stream: true}));
-                        readStream();
-                    }).catch(error => {
-                        console.error('读取流失败:', error);
-                        aiMessageDiv.textContent = `错误: ${error.message}`;
-                        
-                        // 重新启用输入和发送按钮
-                        input.disabled = false;
-                        document.getElementById('sendButton').disabled = false;
-                        input.focus();
-                    });
-                }
+                        });
+                    }
 
-                readStream();
-            }).catch(error => {
-                console.error('请求失败:', error);
-                aiMessageDiv.textContent = `错误: ${error.message}`;
-                
-                // 重新启用输入和发送按钮
-                input.disabled = false;
-                document.getElementById('sendButton').disabled = false;
-                input.focus();
-            });
+                    readStream();
+                })
+                .catch(error => {
+                    console.error('请求失败:', error);
+                    aiMessageDiv.textContent = `错误: ${error.message || '网络请求失败'}`;
+                    input.disabled = false;
+                    document.getElementById('sendButton').disabled = false;
+                    input.focus();
+                });
         }
 
         // 防抖函数

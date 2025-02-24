@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.web.SseResult;
 import com.ksptool.ql.commons.AuthContext;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class ModelChatController {
     
     private static final long SSE_TIMEOUT = TimeUnit.MINUTES.toMillis(5); // 5分钟超时
+    private static final MediaType APPLICATION_STREAM_JSON = MediaType.APPLICATION_JSON;
     
     @Autowired
     private ModelChatService modelChatService;
@@ -58,12 +61,12 @@ public class ModelChatController {
         emitter.onCompletion(() -> {
             log.debug("SSE连接完成");
         });
-        
+
         emitter.onTimeout(() -> {
             log.warn("SSE连接超时");
             emitter.complete();
         });
-        
+
         emitter.onError(ex -> {
             log.error("SSE连接错误", ex);
             emitter.complete();
@@ -72,10 +75,8 @@ public class ModelChatController {
         // 在主线程中获取必要的Spring上下文信息
         try {
             // 发送开始事件 - 在主线程发送
-            emitter.send(SseEmitter.event()
-                .name("start")
-                .data("开始生成响应..."));
-                
+            emitter.send(SseResult.start("开始生成响应..."), APPLICATION_STREAM_JSON);
+
             // 使用虚拟线程处理SSE响应
             Thread.startVirtualThread(() -> {
                 try {
@@ -83,9 +84,7 @@ public class ModelChatController {
                     modelChatService.chatCompleteSSE(dto, userId, text -> {
                         try {
                             // 发送文本片段
-                            emitter.send(SseEmitter.event()
-                                .name("message")
-                                .data(text));
+                            emitter.send(SseResult.data(text), APPLICATION_STREAM_JSON);
                         } catch (IOException e) {
                             log.error("发送SSE消息失败", e);
                             emitter.completeWithError(e);
@@ -93,9 +92,7 @@ public class ModelChatController {
                     });
                     
                     // 发送完成事件
-                    emitter.send(SseEmitter.event()
-                        .name("done")
-                        .data("生成完成"));
+                    emitter.send(SseResult.end("生成完成"), APPLICATION_STREAM_JSON);
                     
                     // 完成SSE连接
                     emitter.complete();
@@ -104,9 +101,7 @@ public class ModelChatController {
                     log.error("处理流式对话失败", e);
                     try {
                         // 发送错误事件
-                        emitter.send(SseEmitter.event()
-                            .name("error")
-                            .data(e.getMessage()));
+                        emitter.send(SseResult.error(e.getMessage()), APPLICATION_STREAM_JSON);
                         emitter.complete();
                     } catch (IOException ex) {
                         emitter.completeWithError(ex);
@@ -115,7 +110,12 @@ public class ModelChatController {
             });
         } catch (Exception e) {
             log.error("初始化SSE连接失败", e);
-            emitter.completeWithError(e);
+            try {
+                emitter.send(SseResult.error(e.getMessage()), APPLICATION_STREAM_JSON);
+                emitter.complete();
+            } catch (IOException ex) {
+                emitter.completeWithError(ex);
+            }
         }
         
         return emitter;
