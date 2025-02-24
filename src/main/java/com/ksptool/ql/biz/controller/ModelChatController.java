@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import com.ksptool.ql.biz.service.ConfigService;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @RestController
@@ -32,6 +33,19 @@ public class ModelChatController {
 
     @Autowired
     private ConfigService configService;
+
+    @GetMapping("/chat/newThread")
+    public ModelAndView newThread(@RequestParam(name = "modelCode") String modelCode, RedirectAttributes ra) {
+        try {
+            // 创建新会话
+            Long threadId = modelChatService.createNewThread(modelCode);
+            // 重定向到聊天视图
+            return new ModelAndView("redirect:/model/chat/view?threadId=" + threadId);
+        } catch (BizException e) {
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+            return new ModelAndView("redirect:/model/chat/view");
+        }
+    }
 
     @GetMapping("/chat/view")
     public ModelAndView chatView(@RequestParam(name = "threadId", required = false) Long threadId) {

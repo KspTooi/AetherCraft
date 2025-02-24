@@ -77,6 +77,34 @@ public class ModelChatService {
         return thread != null && thread.getUserId().equals(userId);
     }
 
+    /**
+     * 创建新的空会话线程
+     * @param modelCode 模型代码
+     * @return 新创建的会话ID
+     * @throws BizException 如果模型代码无效
+     */
+    public Long createNewThread(String modelCode) throws BizException {
+        if (!StringUtils.hasText(modelCode)) {
+            throw new BizException("模型代码不能为空");
+        }
+
+        AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+
+        Long userId = AuthContext.getCurrentUserId();
+        long count = threadRepository.countByUserId(userId);
+        
+        ModelChatThreadPo thread = new ModelChatThreadPo();
+        thread.setUserId(userId);
+        thread.setTitle("新对话" + (count + 1));
+        thread.setModelCode(modelCode);
+        
+        thread = threadRepository.save(thread);
+        return thread.getId();
+    }
+
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
         if (threadId == null || threadId == -1) {
             // 创建新的会话

@@ -555,7 +555,9 @@
         }
 
         function startNewChat() {
-            window.location.href = '/model/chat/view?threadId=-1';
+            const modelSelect = document.getElementById('modelSelect');
+            const modelCode = modelSelect.value;
+            window.location.href = '/model/chat/newThread?modelCode=' + encodeURIComponent(modelCode);
         }
 
         function loadThread(threadId) {
