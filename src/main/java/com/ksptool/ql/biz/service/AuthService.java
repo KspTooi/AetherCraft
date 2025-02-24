@@ -70,6 +70,19 @@ public class AuthService {
         return session != null ? session.getUserId() : null;
     }
 
+    /**
+     * 检查当前用户是否拥有指定权限
+     * @param permission 权限标识，如：system:user:view
+     * @return 如果用户拥有该权限返回true，否则返回false
+     */
+    public static boolean hasPermission(String permission) {
+        UserSessionVo session = getCurrentUserSession();
+        if (session == null || session.getPermissions() == null) {
+            return false;
+        }
+        return session.getPermissions().contains(permission);
+    }
+
     public UserPo verifyUser(HttpServletRequest hsr){
 
         String token = WebUtils.getCookieValue(hsr, "token");
