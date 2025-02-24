@@ -61,6 +61,10 @@ public class PanelModelConfigService {
         String topKStr = configService.getConfigValue(baseKey + "topK", userId);
         config.setTopK(topKStr != null ? Integer.parseInt(topKStr) : 40);
         
+        // 获取最大输出长度，默认800
+        String maxOutputTokensStr = configService.getConfigValue(baseKey + "maxOutputTokens", userId);
+        config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800);
+        
         return config;
     }
     
@@ -90,5 +94,6 @@ public class PanelModelConfigService {
         configService.setConfigValue(baseKey + "temperature", String.valueOf(dto.getTemperature()), userId);
         configService.setConfigValue(baseKey + "topP", String.valueOf(dto.getTopP()), userId);
         configService.setConfigValue(baseKey + "topK", String.valueOf(dto.getTopK()), userId);
+        configService.setConfigValue(baseKey + "maxOutputTokens", String.valueOf(dto.getMaxOutputTokens()), userId);
     }
 } 

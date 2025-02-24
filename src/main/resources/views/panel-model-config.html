@@ -97,6 +97,20 @@
                                     <div class="form-text small">控制响应的词汇量，范围1-100，默认40</div>
                                 </div>
 
+                                <div class="col-md-6">
+                                    <label for="maxOutputTokens" class="form-label small">最大输出长度</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="maxOutputTokensRange" 
+                                               min="1" max="8192000" step="100" th:value="${data.maxOutputTokens}"
+                                               oninput="updateMaxOutputTokens(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 120px" 
+                                               id="maxOutputTokens" name="maxOutputTokens" 
+                                               th:value="${data.maxOutputTokens}" min="1" max="8192000" step="100"
+                                               oninput="updateMaxOutputTokensRange(this.value)">
+                                    </div>
+                                    <div class="form-text small">控制响应的最大长度，范围1-8192000，默认800,单次响应超过将自动截断</div>
+                                </div>
+
                                 <div class="col-12">
                                     <div class="text-end mt-3">
                                         <button type="submit" class="btn btn-primary btn-sm">
@@ -172,6 +186,15 @@
 
         function updateTopKRange(value) {
             document.getElementById('topKRange').value = value;
+        }
+
+        // 更新最大输出长度
+        function updateMaxOutputTokens(value) {
+            document.getElementById('maxOutputTokens').value = value;
+        }
+
+        function updateMaxOutputTokensRange(value) {
+            document.getElementById('maxOutputTokensRange').value = value;
         }
 
         // 加载模型配置

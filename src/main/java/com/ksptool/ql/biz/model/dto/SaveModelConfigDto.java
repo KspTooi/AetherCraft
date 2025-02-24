@@ -41,4 +41,10 @@ public class SaveModelConfigDto {
     @Min(value = 1, message = "Top K最小为1")
     @Max(value = 100, message = "Top K最大为100")
     private Integer topK;
+    
+    // 最大输出长度
+    @NotNull(message = "请设置最大输出长度")
+    @Min(value = 1, message = "最大输出长度最小为1")
+    @Max(value = 8192000, message = "最大输出长度最大为8192000")
+    private Integer maxOutputTokens;
 } 

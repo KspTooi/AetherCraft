@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class GeminiRequest {
+
     private List<Content> contents;
     private List<SafetySetting> safetySettings;
     private GenerationConfig generationConfig;
@@ -37,11 +38,7 @@ public class GeminiRequest {
         private Integer topK;
     }
 
-    public static GeminiRequest of(String text, Double temperature, Double topP, Integer topK) {
-        return of(List.of(new ChatMessage("user", text)), temperature, topP, topK);
-    }
-    
-    public static GeminiRequest of(List<ChatMessage> messages, Double temperature, Double topP, Integer topK) {
+    public static GeminiRequest of(List<ChatMessage> messages, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {
         GeminiRequest request = new GeminiRequest();
         
         // 设置对话内容
@@ -67,15 +64,18 @@ public class GeminiRequest {
         // 设置生成配置
         GenerationConfig config = new GenerationConfig();
         config.setTemperature(temperature);
-        config.setMaxOutputTokens(800);
+        config.setMaxOutputTokens(maxOutputTokens);
         config.setTopP(topP);
         config.setTopK(topK);
         request.setGenerationConfig(config);
-        
         return request;
     }
     
-    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK) {
+    public static GeminiRequest of(String text, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {
+        return of(List.of(new ChatMessage("user", text)), temperature, topP, topK, maxOutputTokens);
+    }
+    
+    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {
         List<ChatMessage> messages = new ArrayList<>();
         
         // 添加历史记录
@@ -88,8 +88,7 @@ public class GeminiRequest {
         
         // 添加用户的最新消息
         messages.add(new ChatMessage("user", userMessage));
-        
-        return of(messages, temperature, topP, topK);
+        return of(messages, temperature, topP, topK, maxOutputTokens);
     }
     
     @Data

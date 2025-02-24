@@ -125,6 +125,7 @@ public class ModelChatService {
             double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE);
             double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P);
             int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K);
+            int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800);
             
             // 4. 保存用户消息
             createHistory(thread, dto.getMessage(), 0);
@@ -154,7 +155,7 @@ public class ModelChatService {
             }
             
             // 6. 构建并发送请求
-            GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK);
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK,maxOutputTokens);
             String jsonBody = gson.toJson(geminiRequest);
             
             Request request = new Request.Builder()
@@ -315,13 +316,13 @@ public class ModelChatService {
             double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
             double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
             int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
+            int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800, userId);
             
             //保存用户消息
             createHistory(thread, dto.getMessage(), 0);
             
             //配置HTTP客户端
-            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
-                .readTimeout(60, TimeUnit.SECONDS); // 增加读取超时时间
+            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder().readTimeout(60, TimeUnit.SECONDS); // 增加读取超时时间
             
             if (StringUtils.hasText(proxyConfig)) {
                 if (!PROXY_PATTERN.matcher(proxyConfig).matches()) {
@@ -346,7 +347,14 @@ public class ModelChatService {
             }
             
             //构建并发送请求
-            GeminiRequest geminiRequest = GeminiRequest.ofHistory(thread.getHistories(), dto.getMessage(), temperature, topP, topK);
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(
+                thread.getHistories(), 
+                dto.getMessage(), 
+                Double.valueOf(temperature), 
+                Double.valueOf(topP), 
+                Integer.valueOf(topK), 
+                Integer.valueOf(maxOutputTokens)
+            );
             String jsonBody = gson.toJson(geminiRequest);
             
             Request request = new Request.Builder()

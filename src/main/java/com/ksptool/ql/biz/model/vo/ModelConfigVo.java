@@ -32,6 +32,9 @@ public class ModelConfigVo {
     // Top K值
     private Integer topK = 40;
     
+    // 最大输出长度
+    private Integer maxOutputTokens = 800;
+    
     // 可用的模型列表
     private List<AIModelEnum> models = Arrays.asList(AIModelEnum.values());
 } 
