@@ -24,7 +24,7 @@ public class UserSessionPo {
     @Comment("Token")
     private String token;
 
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "JSON")
     @Comment("用户权限JSON")
     private String permissions;
 
