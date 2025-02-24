@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>AI模型配置 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="h-100">
+    <!-- 引入控制台框架 -->
+    <div th:replace="~{components/com-frame-control-panel :: control-panel(~{::content})}">
+        <div th:fragment="content">
+            <!-- 页面内容 -->
+            <div class="container-fluid p-0">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center px-3">
+                            <h5 class="card-title mb-0 fw-bold text-dark">AI模型配置</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <!-- 配置表单 -->
+                        <form method="post" action="/panel/model/save" class="needs-validation" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="model" class="form-label small">模型选择 <span class="text-danger">*</span></label>
+                                    <select class="form-select form-select-sm" id="model" name="model" required onchange="loadModelConfig(this.value)">
+                                        <option value="">请选择模型</option>
+                                        <option th:each="m : ${data.models}" 
+                                                th:value="${m.code}" 
+                                                th:text="${m.name}"
+                                                th:selected="${m.code == data.model}">
+                                            Gemini 2.0 Flash
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">请选择AI模型</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="apiKey" class="form-label small">API Key <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control form-control-sm" id="apiKey" name="apiKey" 
+                                               th:placeholder="${data.hasApiKey ? 'APIKEY已保存 你无法再次查看' : '请输入API Key'}"
+                                               th:required="${!data.hasApiKey}">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKey()">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">请输入API Key</div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="proxy" class="form-label small">代理地址</label>
+                                    <input type="text" class="form-control form-control-sm" id="proxy" name="proxy" 
+                                           th:value="${data.proxy}" placeholder="http://127.0.0.1:7890">
+                                    <div class="form-text small">代理服务器地址，如不需要代理可留空</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="temperature" class="form-label small">温度值</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="temperatureRange" 
+                                               min="0" max="2" step="0.1" th:value="${data.temperature}"
+                                               oninput="updateTemperature(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="temperature" name="temperature" 
+                                               th:value="${data.temperature}" min="0" max="2" step="0.1"
+                                               oninput="updateTemperatureRange(this.value)">
+                                    </div>
+                                    <div class="form-text small">控制响应的随机性，范围0-2，默认0.7</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="topP" class="form-label small">Top P</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="topPRange" 
+                                               min="0" max="1" step="0.1" th:value="${data.topP}"
+                                               oninput="updateTopP(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="topP" name="topP" 
+                                               th:value="${data.topP}" min="0" max="1" step="0.1"
+                                               oninput="updateTopPRange(this.value)">
+                                    </div>
+                                    <div class="form-text small">控制响应的多样性，范围0-1，默认1</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="topK" class="form-label small">Top K</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="range" class="form-range flex-grow-1" id="topKRange" 
+                                               min="1" max="100" step="1" th:value="${data.topK}"
+                                               oninput="updateTopK(this.value)">
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px" 
+                                               id="topK" name="topK" 
+                                               th:value="${data.topK}" min="1" max="100" step="1"
+                                               oninput="updateTopKRange(this.value)">
+                                    </div>
+                                    <div class="form-text small">控制响应的词汇量，范围1-100，默认40</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="text-end mt-3">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-check-lg me-1"></i>保存配置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 表单验证
+        (function() {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    // 获取API Key输入框
+                    var apiKeyInput = form.querySelector('#apiKey');
+                    var hasApiKey = apiKeyInput.getAttribute('placeholder').includes('APIKEY已保存');
+                    
+                    // 如果API Key已保存且没有新输入，则不验证API Key
+                    if (hasApiKey && !apiKeyInput.value) {
+                        apiKeyInput.setCustomValidity('');
+                    }
+                    
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // 切换API Key显示
+        function toggleApiKey() {
+            var input = document.getElementById('apiKey');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        // 更新温度值
+        function updateTemperature(value) {
+            document.getElementById('temperature').value = value;
+        }
+
+        function updateTemperatureRange(value) {
+            document.getElementById('temperatureRange').value = value;
+        }
+
+        // 更新Top P值
+        function updateTopP(value) {
+            document.getElementById('topP').value = value;
+        }
+
+        function updateTopPRange(value) {
+            document.getElementById('topPRange').value = value;
+        }
+
+        // 更新Top K值
+        function updateTopK(value) {
+            document.getElementById('topK').value = value;
+        }
+
+        function updateTopKRange(value) {
+            document.getElementById('topKRange').value = value;
+        }
+
+        // 加载模型配置
+        function loadModelConfig(modelCode) {
+            if (!modelCode) {
+                window.location.href = '/panel/model/edit';
+                return;
+            }
+            
+            // 重定向到选中模型的配置页面
+            window.location.href = '/panel/model/edit/' + modelCode;
+        }
+    </script>
+</body>
+</html> 
