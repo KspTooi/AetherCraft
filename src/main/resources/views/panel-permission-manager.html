@@ -30,6 +30,7 @@
                                         <th style="width: 150px;">权限名称</th>
                                         <th>权限描述</th>
                                         <th class="text-center" style="width: 80px;">排序</th>
+                                        <th class="text-center" style="width: 100px;">系统权限</th>
                                         <th class="text-end" style="width: 100px;">操作</th>
                                     </tr>
                                 </thead>
@@ -40,6 +41,10 @@
                                         <td th:text="${permission.name}">查看用户</td>
                                         <td th:text="${permission.description}">允许查看用户列表和详情</td>
                                         <td class="text-center" th:text="${permission.sortOrder}">0</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning" th:if="${permission.isSystem != null && permission.isSystem == 1}">是</span>
+                                            <span class="badge bg-secondary" th:if="${permission.isSystem == null || permission.isSystem == 0}">否</span>
+                                        </td>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
                                                 <a th:href="@{/panel/permission/edit/{id}(id=${permission.id})}" 
@@ -48,16 +53,22 @@
                                                 </a>
                                                 <form th:action="@{/panel/permission/remove/{id}(id=${permission.id})}" 
                                                       method="post" class="d-inline" 
-                                                      onsubmit="return confirm('确定要删除该权限吗？');">
+                                                      onsubmit="return confirm('确定要删除该权限吗？');"
+                                                      th:if="${permission.isSystem == null || permission.isSystem == 0}">
                                                     <button type="submit" class="btn btn-outline-danger">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
+                                                <button type="button" class="btn btn-outline-danger disabled" 
+                                                        title="系统权限不可删除"
+                                                        th:if="${permission.isSystem != null && permission.isSystem == 1}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${data.rows.empty}">
-                                        <td colspan="6" class="text-center text-muted">暂无数据</td>
+                                        <td colspan="7" class="text-center text-muted">暂无数据</td>
                                     </tr>
                                 </tbody>
                             </table>

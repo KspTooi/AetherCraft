@@ -41,6 +41,10 @@ public class PermissionPo {
     @Comment("排序号")
     private Integer sortOrder;
 
+    @Column(nullable = false)
+    @Comment("是否系统权限 0:非系统权限 1:系统权限")
+    private Integer isSystem = 0;
+
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
     private Date createTime;

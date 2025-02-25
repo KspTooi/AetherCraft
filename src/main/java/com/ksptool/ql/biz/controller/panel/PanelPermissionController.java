@@ -106,6 +106,23 @@ public class PanelPermissionController {
             
             boolean isCreate = permission.getId() == null;
             
+            // 如果是新创建的权限，设置为非系统权限
+            if (isCreate) {
+                permission.setIsSystem(0);
+            } else {
+                // 如果是编辑现有权限，获取原有权限信息
+                PermissionPo oldPermission = panelPermissionService.getPermission(permission.getId());
+                
+                // 如果是系统权限，保留原有的code和name，不允许修改
+                if (oldPermission.getIsSystem() != null && oldPermission.getIsSystem() == 1) {
+                    permission.setCode(oldPermission.getCode());
+                    permission.setName(oldPermission.getName());
+                }
+                
+                // 保留原有的系统权限标识
+                permission.setIsSystem(oldPermission.getIsSystem());
+            }
+            
             panelPermissionService.savePermission(permission);
             
             if (isCreate) {

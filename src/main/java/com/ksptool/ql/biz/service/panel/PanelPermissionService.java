@@ -93,6 +93,11 @@ public class PanelPermissionService {
         PermissionPo permission = permissionRepository.findById(id)
                 .orElseThrow(() -> new BizException("权限不存在"));
         
+        // 检查是否为系统权限
+        if (permission.getIsSystem() != null && permission.getIsSystem() == 1) {
+            throw new BizException("系统权限不允许删除");
+        }
+        
         // 检查权限是否被使用
         if (!permission.getGroups().isEmpty()) {
             throw new BizException("权限已被用户组使用，无法删除");
