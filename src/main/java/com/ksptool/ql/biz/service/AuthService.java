@@ -77,13 +77,13 @@ public class AuthService {
      */
     public static boolean hasPermission(String permission) {
 
-        return true;
+        //return true;
 
-/*        UserSessionVo session = getCurrentUserSession();
+        UserSessionVo session = getCurrentUserSession();
         if (session == null || session.getPermissions() == null) {
             return false;
         }
-        return session.getPermissions().contains(permission);*/
+        return session.getPermissions().contains(permission);
     }
 
     public UserPo verifyUser(HttpServletRequest hsr){
