@@ -1,8 +1,11 @@
 package com.ksptool.ql.commons.aop;
 
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
+import com.ksptool.ql.commons.exception.BizException;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,6 +19,7 @@ import java.lang.reflect.Method;
  * 权限校验切面
  * 用于拦截带有RequirePermission或RequirePermissionRest注解的方法，进行权限校验
  */
+@Slf4j
 @Aspect
 @Component
 public class PermissionAspect {
@@ -45,7 +49,12 @@ public class PermissionAspect {
             // 有权限，执行原方法
             return joinPoint.proceed();
         } else {
-            // 没有权限，重定向到noPermission页面
+            // 没有权限，记录日志
+            String username = getUsernameFromSession();
+            String methodName = method.getDeclaringClass().getName() + "." + method.getName();
+            log.warn("权限校验失败: 用户[{}]尝试访问[{}]，但缺少权限[{}]", username, methodName, permission);
+            
+            // 重定向到noPermission页面
             return new ModelAndView("redirect:/noPermission");
         }
     }
@@ -75,8 +84,26 @@ public class PermissionAspect {
             // 有权限，执行原方法
             return joinPoint.proceed();
         } else {
-            // 没有权限，抛出权限不足异常
+            // 没有权限，记录日志
+            String username = getUsernameFromSession();
+            String methodName = method.getDeclaringClass().getName() + "." + method.getName();
+            log.warn("权限校验失败: 用户[{}]尝试访问REST接口[{}]，但缺少权限[{}]", username, methodName, permission);
+            
+            // 抛出权限不足异常
             throw new SecurityException("权限不足：" + permission);
         }
+    }
+    
+    /**
+     * 从当前会话中获取用户名
+     * @return 当前用户名，如果未登录则返回"未登录用户"
+     */
+    private String getUsernameFromSession() {
+        UserSessionVo session = AuthService.getCurrentUserSession();
+        if (session == null) {
+            return "未登录用户";
+        }
+        Long userId = session.getUserId();
+        return userId != null ? "用户ID:" + userId : "未知用户";
     }
 } 

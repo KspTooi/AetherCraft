@@ -21,6 +21,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(Result.internalError(ex.getMessage(),null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+
+    @ExceptionHandler(SecurityException.class)
+    @ResponseBody
+    public ResponseEntity<Result<Object>> handleSecurityException(SecurityException ex) {
+
+        if(ex.getMessage().contains("权限")) {
+            return new ResponseEntity<>(Result.internalError(ex.getMessage(),null), HttpStatus.UNAUTHORIZED);
+        }
+        log.error(ex.getMessage(),ex);
+        return new ResponseEntity<>(Result.internalError(ex.getMessage(),null), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     /**
      * 处理其他Exception
      */
