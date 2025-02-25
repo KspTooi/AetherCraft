@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个性化设置</title>
+</head>
+
+<style>
+    .customize-center {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        color: #fff;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-shrink: 0;
+    }
+
+    .page-title {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .customize-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .customize-section {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        color: #fff;
+    }
+
+    .wallpaper-upload {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .upload-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-zone:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .upload-zone.dragover {
+        border-color: #4facfe;
+        background: rgba(79, 172, 254, 0.1);
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .upload-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    /* 模态框样式 */
+    .wallpaper-modal .modal-content {
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .wallpaper-modal .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+    }
+
+    .wallpaper-modal .modal-title {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .wallpaper-modal .modal-body {
+        padding: 0;
+        position: relative;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wallpaper-preview {
+        width: 100%;
+        height: auto;
+        max-height: 70vh;
+        object-fit: contain;
+    }
+
+    .wallpaper-modal .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @media (max-width: 768px) {
+        .customize-content {
+            padding: 10px;
+        }
+
+        .customize-section {
+            padding: 15px;
+        }
+        
+        .wallpaper-modal .modal-body {
+            max-height: 60vh;
+        }
+    }
+</style>
+
+<body>
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="customize-center">
+            <div class="page-header">
+                <h1 class="page-title">个性化设置</h1>
+            </div>
+
+            <div class="customize-content">
+                <div class="customize-section">
+                    <h2 class="section-title">壁纸设置</h2>
+                    <div class="wallpaper-upload">
+                        <div class="upload-zone" id="uploadZone">
+                            <div class="upload-icon">📁</div>
+                            <div class="upload-text">
+                                拖拽图片到此处或点击上传<br>
+                                <span style="font-size: 0.8em; opacity: 0.7">支持 jpg、png 格式，大小不超过5MB</span>
+                            </div>
+                            <input type="file" id="fileInput" style="display: none" accept="image/jpeg,image/png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 壁纸预览模态框 -->
+    <div class="modal fade wallpaper-modal" id="wallpaperPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">预览壁纸</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalPreviewImage" class="wallpaper-preview" src="" alt="壁纸预览">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="applyWallpaperBtn">应用壁纸</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{/components/com-toasts}"></div>
+
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            const uploadZone = $('#uploadZone');
+            const fileInput = $('#fileInput');
+            const modalPreviewImage = $('#modalPreviewImage');
+            const wallpaperModal = new bootstrap.Modal('#wallpaperPreviewModal');
+            const applyWallpaperBtn = $('#applyWallpaperBtn');
+
+            // 点击上传区域触发文件选择
+            uploadZone.on('click', function(e) {
+                e.stopPropagation();
+                if (e.target === this || $(e.target).closest('.upload-text, .upload-icon').length) {
+                    fileInput.trigger('click');
+                }
+            });
+
+            // 处理拖拽事件
+            uploadZone.on('dragover dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadZone.addClass('dragover');
+            });
+
+            uploadZone.on('dragleave dragend drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadZone.removeClass('dragover');
+            });
+
+            uploadZone.on('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const files = e.originalEvent.dataTransfer.files;
+                handleFiles(files);
+            });
+
+            // 处理文件选择
+            fileInput.on('change', function(e) {
+                e.stopPropagation();
+                handleFiles(this.files);
+            });
+
+            // 处理文件
+            function handleFiles(files) {
+                if (files.length === 0) return;
+
+                const file = files[0];
+                if (!file.type.match('image/(jpeg|png)')) {
+                    showToast('danger', '只支持 jpg、png 格式的图片');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('danger', '图片大小不能超过5MB');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    modalPreviewImage.attr('src', e.target.result);
+                    wallpaperModal.show();
+                };
+                reader.onerror = function() {
+                    showToast('danger', '读取文件失败');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 应用壁纸按钮点击事件
+            applyWallpaperBtn.on('click', function() {
+                const imageData = modalPreviewImage.attr('src');
+                if (!imageData) {
+                    showToast('danger', '请先选择图片');
+                    return;
+                }
+
+                // 禁用按钮，显示加载状态
+                applyWallpaperBtn.prop('disabled', true).text('应用中...');
+                
+                $.ajax({
+                    url: '/customize/setWallpaper',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ imageData: imageData }),
+                    success: function(response) {
+                        if (response.code === 0) {
+                            showToast('success', '壁纸设置成功');
+                            wallpaperModal.hide();
+                            fileInput.val('');
+                        } else {
+                            showToast('danger', '壁纸设置失败：' + response.message);
+                        }
+                    },
+                    error: function() {
+                        showToast('danger', '壁纸设置失败');
+                    },
+                    complete: function() {
+                        // 恢复按钮状态
+                        applyWallpaperBtn.prop('disabled', false).text('应用壁纸');
+                    }
+                });
+            });
+
+            // 模态框关闭时清理
+            $('#wallpaperPreviewModal').on('hidden.bs.modal', function() {
+                modalPreviewImage.attr('src', '');
+                fileInput.val('');
+                applyWallpaperBtn.prop('disabled', false).text('应用壁纸');
+            });
+        });
+    </script>
+</body>
+</html> 
