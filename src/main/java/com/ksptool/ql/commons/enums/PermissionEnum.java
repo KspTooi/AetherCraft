@@ -8,39 +8,41 @@ public enum PermissionEnum {
     /**
      * 管理台权限(Panel)
      */
+    PANEL_ACCESS("panel:access", "允许访问管理台"),
+
     // 用户管理权限
-    PANEL_USER_VIEW("panel:user:view", "查看用户列表"),
-    PANEL_USER_ADD("panel:user:add", "添加用户"),
-    PANEL_USER_EDIT("panel:user:edit", "编辑用户"),
-    PANEL_USER_DELETE("panel:user:delete", "删除用户"),
+    PANEL_USER_VIEW("panel:user:view", "管理台:查看用户列表"),
+    PANEL_USER_ADD("panel:user:add", "管理台:添加用户"),
+    PANEL_USER_EDIT("panel:user:edit", "管理台:编辑用户"),
+    PANEL_USER_DELETE("panel:user:delete", "管理台:删除用户"),
     
     // 用户组管理权限
-    PANEL_GROUP_VIEW("panel:group:view", "查看用户组"),
-    PANEL_GROUP_ADD("panel:group:add", "添加用户组"),
-    PANEL_GROUP_EDIT("panel:group:edit", "编辑用户组"),
-    PANEL_GROUP_DELETE("panel:group:delete", "删除用户组"),
-    PANEL_GROUP_ASSIGN("panel:group:assign", "为用户组分配权限"),
+    PANEL_GROUP_VIEW("panel:group:view", "管理台:查看用户组"),
+    PANEL_GROUP_ADD("panel:group:add", "管理台:添加用户组"),
+    PANEL_GROUP_EDIT("panel:group:edit", "管理台:编辑用户组"),
+    PANEL_GROUP_DELETE("panel:group:delete", "管理台:删除用户组"),
+    PANEL_GROUP_ASSIGN("panel:group:assign", "管理台:为用户组分配权限"),
 
     // 权限节点管理
-    PANEL_PERMISSION_VIEW("panel:permission:view", "查看权限节点"),
-    PANEL_PERMISSION_ADD("panel:permission:add", "添加权限节点"),
-    PANEL_PERMISSION_REMOVE("panel:permission:remove", "移除权限"),
+    PANEL_PERMISSION_VIEW("panel:permission:view", "管理台:查看权限节点"),
+    PANEL_PERMISSION_ADD("panel:permission:add", "管理台:添加权限节点"),
+    PANEL_PERMISSION_REMOVE("panel:permission:remove", "管理台:移除权限"),
 
     // 面板应用管理权限
-    PANEL_APP_VIEW("panel:app:view", "查看面板应用"),
-    PANEL_APP_ADD("panel:app:add", "添加面板应用"),
-    PANEL_APP_EDIT("panel:app:edit", "编辑面板应用"),
-    PANEL_APP_DELETE("panel:app:delete", "删除面板应用"),
+    PANEL_APP_VIEW("panel:app:view", "管理台:查看应用"),
+    PANEL_APP_ADD("panel:app:add", "管理台:添加应用"),
+    PANEL_APP_EDIT("panel:app:edit", "管理台:编辑应用"),
+    PANEL_APP_DELETE("panel:app:delete", "管理台:删除应用"),
 
     //配置项管理
-    PANEL_CONFIG_VIEW("panel:config:view", "查看自己的配置项"),
-    PANEL_CONFIG_VIEW_GLOBAL("panel:config:view:global", "查看全部用户的配置项"),
-    PANEL_CONFIG_EDIT("panel:config:edit", "编辑配置项"),
-    PANEL_CONFIG_REMOVE("panel:config:remove", "移除配置项"),
+    PANEL_CONFIG_VIEW("panel:config:view", "管理台:查看自己的配置项"),
+    PANEL_CONFIG_VIEW_GLOBAL("panel:config:view:global", "管理台:查看全部用户的配置项"),
+    PANEL_CONFIG_EDIT("panel:config:edit", "管理台:编辑配置项"),
+    PANEL_CONFIG_REMOVE("panel:config:remove", "管理台:移除配置项"),
 
     // AI模型配置权限
-    PANEL_MODEL_VIEW("panel:model:view", "查看AI配置"),
-    PANEL_MODEL_EDIT("panel:model:edit", "编辑AI配置"),
+    PANEL_MODEL_VIEW("panel:model:view", "管理台:查看AI配置"),
+    PANEL_MODEL_EDIT("panel:model:edit", "管理台:编辑AI配置"),
 
     /**
      * 客户端权限
