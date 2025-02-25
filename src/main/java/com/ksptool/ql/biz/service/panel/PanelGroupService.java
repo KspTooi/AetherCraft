@@ -2,13 +2,16 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
+import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
+import com.ksptool.ql.biz.model.po.UserSessionPo;
 import com.ksptool.ql.biz.model.vo.ListPanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupPermissionVo;
 import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
 import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,12 @@ public class PanelGroupService {
 
     @Autowired
     private PermissionRepository permissionRepository;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
+
+    @Autowired
+    private AuthService authService;
 
     /**
      * 获取用户组列表视图数据
@@ -134,35 +143,42 @@ public class PanelGroupService {
     @Transactional
     public void savePanelGroup(SavePanelGroupDto dto) throws BizException {
 
-        // 1. 更新基础信息
-        GroupPo group;
+        GroupPo group = null;
+        boolean isUpdate = false;
+        
+        //创建新用户组
         if (dto.getId() == null) {
-            // 创建新用户组
             group = new GroupPo();
             if (groupRepository.existsByCode(dto.getCode())) {
                 throw new BizException("用户组标识已存在");
             }
-        } else {
-            // 更新现有用户组
-            group = groupRepository.findById(dto.getId())
-                    .orElseThrow(() -> new BizException("用户组不存在"));
-            if (!group.getCode().equals(dto.getCode()) &&
-                groupRepository.existsByCode(dto.getCode())) {
-                throw new BizException("用户组标识已存在");
+        }
+        
+        //更新现有用户组
+        if (dto.getId() != null) {
+            group = groupRepository.findById(dto.getId()).orElseThrow(() -> new BizException("用户组不存在"));
+
+            //判断是否修改了用户组Code 如果修改了Code判断是否重名
+            if (!group.getCode().equals(dto.getCode())) {
+                if (groupRepository.existsByCode(dto.getCode())) {
+                    throw new BizException("用户组标识重复");
+                }
             }
+
+            isUpdate = true;
         }
 
-        // 设置基础信息
+        //设置基础信息
         group.setCode(dto.getCode());
         group.setName(dto.getName());
         group.setDescription(dto.getDescription());
         group.setStatus(dto.getStatus());
         group.setSortOrder(dto.getSortOrder());
         
-        // 2. 处理权限关联
+        //处理权限关联
         group.getPermissions().clear();
         
-        // 3. 建立新的权限关联
+        //建立新的权限关联
         if (dto.getPermissionIds() != null && !dto.getPermissionIds().isEmpty()) {
             Set<PermissionPo> newPermissions = new HashSet<>(
                 permissionRepository.findAllById(dto.getPermissionIds())
@@ -170,10 +186,21 @@ public class PanelGroupService {
             group.getPermissions().addAll(newPermissions);
         }
         
-        // 4. 保存所有更改
+        //保存所有更改
         groupRepository.save(group);
+        
+        //如果是更新用户组，刷新该组下所有在线用户的会话
+        if (isUpdate) {
+            // 获取该用户组下所有在线用户的会话
+            List<UserSessionPo> activeSessions = userSessionRepository.getUserSessionByGroupId(group.getId());
+            
+            // 刷新每个用户的会话
+            for (UserSessionPo session : activeSessions) {
+                authService.refreshUserSession(session.getUserId());
+            }
+        }
     }
-
+    
     /**
      * 删除用户组
      * @param id 用户组ID
