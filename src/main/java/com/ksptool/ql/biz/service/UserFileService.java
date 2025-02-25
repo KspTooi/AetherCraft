@@ -23,28 +23,38 @@ import java.util.HexFormat;
 @RequiredArgsConstructor
 public class UserFileService {
 
-    private final ConfigService configService;
+    private final GlobalConfigService globalConfigService;
     private final UserFileRepository userFileRepository;
+
+    /**
+     * 获取文件存储的根目录
+     */
+    private Path getStorageBasePath() throws BizException {
+        String storagePath = globalConfigService.get("user.file.storage.path");
+        if (!StringUtils.hasText(storagePath)) {
+            throw new BizException("未配置文件存储路径 它位于全局配置:user.file.storage.path");
+        }
+        String userDir = System.getProperty("user.dir");
+        return Paths.get(userDir, storagePath);
+    }
+
+    /**
+     * 获取文件的完整存储路径
+     */
+    private Path getFullPath(String filename) throws BizException {
+        return getStorageBasePath().resolve(filename);
+    }
 
     @Transactional
     public UserFilePo receive(MultipartFile file) throws BizException {
-
         if (file.isEmpty()) {
             throw new BizException("上传的文件不能为空");
         }
 
-        String storagePath = configService.get("user.file.storage.path");
-        if (!StringUtils.hasText(storagePath)) {
-            throw new BizException("未配置文件存储路径 它位于全局配置:user.file.storage.path");
-        }
-
-        // 获取程序运行路径并拼接存储路径
-        String userDir = System.getProperty("user.dir");
-        Path absoluteStoragePath = Paths.get(userDir, storagePath);
-
         try {
             // 确保存储目录存在
-            Files.createDirectories(absoluteStoragePath);
+            Path storagePath = getStorageBasePath();
+            Files.createDirectories(storagePath);
 
             Long userId = AuthService.getCurrentUserId();
             String originalFilename = file.getOriginalFilename();
@@ -53,10 +63,9 @@ public class UserFileService {
             // 生成新文件名：userId_UUID.extension
             String newFilename = userId + "_" + UUID.randomUUID().toString() + 
                 (fileExtension != null ? "." + fileExtension : "");
-            
-            Path targetPath = absoluteStoragePath.resolve(newFilename);
 
             // 保存文件
+            Path targetPath = getFullPath(newFilename);
             Files.copy(file.getInputStream(), targetPath);
 
             // 计算SHA256
@@ -66,7 +75,7 @@ public class UserFileService {
             UserFilePo userFile = new UserFilePo();
             userFile.setUserId(userId);
             userFile.setOriginalFilename(originalFilename);
-            userFile.setFilepath(targetPath.toString());
+            userFile.setFilepath(newFilename);  // 只存储文件名
             userFile.setFileType(file.getContentType());
             userFile.setFileSize(file.getSize());
             userFile.setSha256(sha256);
@@ -79,36 +88,40 @@ public class UserFileService {
     }
 
     /**
-     * 根据文件路径获取文件，并验证用户权限
-     * @param filepath 文件路径
+     * 根据文件名获取文件，并验证用户权限
+     * @param filename 文件名
      * @param userId 用户ID
      * @return 文件对象，如果文件不存在或用户无权限则返回null
      */
-    public File getUserFile(String filepath, Long userId) {
-        if (!StringUtils.hasText(filepath) || userId == null) {
+    public File getUserFile(String filename, Long userId) {
+        if (!StringUtils.hasText(filename) || userId == null) {
             return null;
         }
 
         // 验证文件是否属于该用户
-        UserFilePo userFile = userFileRepository.findByFilepathAndUserId(filepath, userId);
+        UserFilePo userFile = userFileRepository.findByFilepathAndUserId(filename, userId);
         if (userFile == null) {
             return null;
         }
 
-        File file = new File(filepath);
-        return file.exists() && file.isFile() ? file : null;
+        try {
+            File file = getFullPath(filename).toFile();
+            return file.exists() && file.isFile() ? file : null;
+        } catch (BizException e) {
+            return null;
+        }
     }
 
     /**
-     * 根据文件路径获取当前用户的文件
-     * @param filepath 文件路径
+     * 根据文件名获取当前用户的文件
+     * @param filename 文件名
      * @return 文件对象，如果文件不存在或用户无权限则返回null
      */
-    public File getUserFile(String filepath) {
-        if (!StringUtils.hasText(filepath)) {
+    public File getUserFile(String filename) {
+        if (!StringUtils.hasText(filename)) {
             return null;
         }
-        return getUserFile(filepath, AuthService.getCurrentUserId());
+        return getUserFile(filename, AuthService.getCurrentUserId());
     }
 
     private String calculateSHA256(MultipartFile file) throws BizException {

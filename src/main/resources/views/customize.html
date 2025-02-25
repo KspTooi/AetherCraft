@@ -175,6 +175,30 @@
             max-height: 60vh;
         }
     }
+
+    /* 添加壁纸操作按钮样式 */
+    .wallpaper-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+
+    .action-icon {
+        margin-right: 4px;
+        font-size: 1.1em;
+    }
+
+    .wallpaper-actions .btn {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .wallpaper-actions .btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
 </style>
 
 <body>
@@ -197,6 +221,11 @@
                                 <span style="font-size: 0.8em; opacity: 0.7">支持 jpg、png 格式，大小不超过5MB</span>
                             </div>
                             <input type="file" id="fileInput" style="display: none" accept="image/jpeg,image/png">
+                        </div>
+                        <div class="wallpaper-actions">
+                            <button class="btn btn-secondary" id="resetWallpaperBtn">
+                                <span class="action-icon">🖼️</span> 恢复默认壁纸
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -226,12 +255,41 @@
     <div th:replace="~{/components/com-toasts}"></div>
 
     <script th:inline="javascript">
+        // 恢复默认壁纸函数（移到全局作用域）
+        function resetWallpaper() {
+            if (!confirm('确定要恢复默认壁纸吗？')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/customize/resetWallpaper',
+                type: 'POST',
+                success: function(response) {
+                    if (response.code === 0) {
+                        showToast('success', '已恢复默认壁纸');
+                        // 刷新页面以显示默认壁纸
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showToast('danger', '操作失败：' + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    showToast('danger', '操作失败：' + (xhr.responseJSON?.message || '服务器错误'));
+                }
+            });
+        }
+
         $(document).ready(function() {
             const uploadZone = $('#uploadZone');
             const fileInput = $('#fileInput');
             const modalPreviewImage = $('#modalPreviewImage');
             const wallpaperModal = new bootstrap.Modal('#wallpaperPreviewModal');
             const applyWallpaperBtn = $('#applyWallpaperBtn');
+
+            // 绑定重置壁纸按钮点击事件
+            $('#resetWallpaperBtn').on('click', resetWallpaper);
 
             // 点击上传区域触发文件选择
             uploadZone.on('click', function(e) {
@@ -304,22 +362,31 @@
                 // 禁用按钮，显示加载状态
                 applyWallpaperBtn.prop('disabled', true).text('应用中...');
                 
+                // 创建表单数据
+                const requestData = {
+                    imageData: imageData
+                };
+                
                 $.ajax({
                     url: '/customize/setWallpaper',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ imageData: imageData }),
+                    data: JSON.stringify(requestData),
                     success: function(response) {
                         if (response.code === 0) {
                             showToast('success', '壁纸设置成功');
                             wallpaperModal.hide();
                             fileInput.val('');
+                            // 刷新页面以显示新壁纸
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
                         } else {
                             showToast('danger', '壁纸设置失败：' + response.message);
                         }
                     },
-                    error: function() {
-                        showToast('danger', '壁纸设置失败');
+                    error: function(xhr) {
+                        showToast('danger', '壁纸设置失败：' + (xhr.responseJSON?.message || '服务器错误'));
                     },
                     complete: function() {
                         // 恢复按钮状态

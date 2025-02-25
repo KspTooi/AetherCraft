@@ -16,7 +16,7 @@ public class UserFilePo {
     private Long id;
 
     @Column(nullable = false, length = 500)
-    @Comment("文件完整路径")
+    @Comment("存储的文件名")
     private String filepath;
 
     @Column(nullable = false, length = 255)

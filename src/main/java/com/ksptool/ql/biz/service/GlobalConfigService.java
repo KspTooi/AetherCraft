@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 public class GlobalConfigService {
     
     private final ConfigRepository configRepository;
-    private static final Long GLOBAL_USER_ID = 0L;
+    private static final Long GLOBAL_USER_ID = -1L;
 
     public String getValue(String key) {
         ConfigPo config = configRepository.findByUserIdAndConfigKey(GLOBAL_USER_ID, key);
