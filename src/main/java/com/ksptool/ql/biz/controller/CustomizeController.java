@@ -45,7 +45,7 @@ public class CustomizeController {
     }
 
     @GetMapping("/wallpaper")
-    public ResponseEntity<?> getWallpaper() {
+    public ResponseEntity<?> getWallpaper(@RequestParam(value = "check", required = false) Boolean check) {
         try {
             // 1. 从配置中获取壁纸路径
             String wallpaperPath = configService.get("customize.wallpaper.path");
@@ -63,10 +63,16 @@ public class CustomizeController {
                     .build();
             }
 
-            // 3. 响应图片文件
+            // 如果是检查模式，直接返回成功
+            if (Boolean.TRUE.equals(check)) {
+                return ResponseEntity.ok().build();
+            }
+
+            // 3. 响应图片文件，添加下载相关的响应头
             Resource resource = new FileSystemResource(wallpaperFile);
             return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
+                .header("Content-Disposition", "attachment; filename=wallpaper.jpg")
                 .body(resource);
                 
         } catch (Exception e) {
