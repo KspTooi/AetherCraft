@@ -11,6 +11,7 @@ import com.ksptool.ql.biz.model.vo.GetAppDetailsVo;
 import com.ksptool.ql.biz.service.AppService;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.UserService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,7 @@ public class AppCenterController {
     @Autowired
     private AppService appService;
 
+    @RequirePermission("app:view")
     @GetMapping("/appCenter")
     public ModelAndView appCenter(HttpServletRequest hsr, @RequestParam(value = "keyword", required = false) String keyword) {
         UserPo userPo = authService.verifyUser(hsr);
@@ -65,6 +67,7 @@ public class AppCenterController {
         return mav;
     }
 
+    @RequirePermission("app:add")
     @PostMapping("/createApp")
     public String createApp(@Valid CreateAppDto dto, BindingResult br, HttpServletRequest hsr, RedirectAttributes ra) {
 
@@ -85,6 +88,7 @@ public class AppCenterController {
         return "redirect:/appCenter";
     }
 
+    @RequirePermission("app:remove")
     @PostMapping("/removeApp")
     public String removeApp(@RequestParam("appId") Long appId, HttpServletRequest hsr, RedirectAttributes ra) {
         if (appId == null) {
@@ -101,6 +105,7 @@ public class AppCenterController {
         return "redirect:/appCenter";
     }
 
+    @RequirePermission("app:launch")
     @PostMapping("/runApp")
     @ResponseBody
     public Result<String> runApp(@RequestBody @Valid RunAppDto dto, HttpServletRequest hsr) {
@@ -113,6 +118,7 @@ public class AppCenterController {
         }
     }
 
+    @RequirePermission("app:edit")
     @GetMapping("/getAppDetails")
     @ResponseBody
     public Result<GetAppDetailsVo> getAppDetails(@RequestParam("appId") Long appId, HttpServletRequest hsr) {
@@ -127,6 +133,7 @@ public class AppCenterController {
         }
     }
 
+    @RequirePermission("app:edit")
     @PostMapping("/editApp")
     public String editApp(@Valid EditAppDto dto, BindingResult br, HttpServletRequest hsr, RedirectAttributes ra) {
         // 当表单数据校验失败时返回应用中心页面
