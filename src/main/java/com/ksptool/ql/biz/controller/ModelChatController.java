@@ -177,7 +177,7 @@ public class ModelChatController {
      * @param threadId 会话ID
      * @return 重定向到聊天视图
      */
-    @RequirePermissionRest("model:chat:remove:thread")
+    @RequirePermission("model:chat:remove:thread")
     @GetMapping("/chat/view/removeThread/{threadId}")
     public ModelAndView removeThread(@PathVariable(name = "threadId") Long threadId) {
         ModelAndView mav = new ModelAndView("redirect:/model/chat/view");

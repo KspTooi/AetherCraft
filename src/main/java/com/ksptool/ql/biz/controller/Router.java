@@ -49,8 +49,8 @@ public class Router {
 
     @RequirePermission("task:mgr:view")
     @GetMapping("/taskManager")
-    public String taskManager() {
-        return "task-manager";
+    public ModelAndView taskManager() {
+        return new ModelAndView("task-manager");
     }
 
     @GetMapping("/ssr/demo")
