@@ -46,68 +46,30 @@
                 const $btn = $(this);
                 $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>校验中...');
                 
-                // 这里可以添加AJAX请求，调用后端接口进行权限校验
-                // 示例：
-                /*
+                // 调用后端接口进行权限校验
                 $.ajax({
-                    url: '/api/maintain/check-permissions',
+                    url: '/panel/maintain/validSystemPermission',
                     type: 'POST',
+                    contentType: 'application/json',
                     success: function(response) {
-                        if (response.success) {
+                        if (response.code === 0) {
                             showToast('success', '校验完成', response.message);
                         } else {
                             showToast('error', '校验失败', response.message);
                         }
                     },
-                    error: function() {
-                        showToast('error', '校验失败', '请求出错，请稍后重试');
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        showToast('error', '校验失败', errorMsg);
                     },
                     complete: function() {
                         $btn.prop('disabled', false).html('<i class="bi bi-shield-check me-1"></i>校验内置权限节点');
                     }
                 });
-                */
-                
-                // 临时模拟请求
-                setTimeout(function() {
-                    showToast('success', '校验完成', '系统内置权限节点校验完成，所有节点均已正确配置。');
-                    $btn.prop('disabled', false).html('<i class="bi bi-shield-check me-1"></i>校验内置权限节点');
-                }, 1500);
             });
-            
-            // 显示提示消息
-            function showToast(type, title, message) {
-                const toastHtml = `
-                    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-                        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                            <div class="toast-header ${type === 'success' ? 'bg-success text-white' : 'bg-danger text-white'}">
-                                <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'} me-2"></i>
-                                <strong class="me-auto">${title}</strong>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                            <div class="toast-body">
-                                ${message}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                const $toast = $(toastHtml);
-                $('body').append($toast);
-                
-                const toastEl = $toast.find('.toast')[0];
-                const toast = new bootstrap.Toast(toastEl, {
-                    autohide: true,
-                    delay: 5000
-                });
-                
-                toast.show();
-                
-                // 关闭后移除DOM
-                $(toastEl).on('hidden.bs.toast', function() {
-                    $toast.remove();
-                });
-            }
         });
     </script>
 </body>

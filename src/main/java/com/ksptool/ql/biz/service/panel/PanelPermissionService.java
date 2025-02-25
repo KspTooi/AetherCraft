@@ -6,6 +6,8 @@ import com.ksptool.ql.biz.model.vo.EditPanelPermissionVo;
 import com.ksptool.ql.biz.model.vo.ListPanelPermissionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.commons.enums.PermissionEnum;
+import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -121,5 +123,54 @@ public class PanelPermissionService {
      */
     public Integer getNextSortOrder() {
         return permissionRepository.findMaxSortOrder() + 1;
+    }
+    
+    /**
+     * 校验系统内置权限节点
+     * 检查数据库中是否存在所有系统内置权限，如果不存在则自动创建
+     * @return 校验结果，包含新增的权限数量和已存在的权限数量
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ValidateSystemPermissionsVo validateSystemPermissions() {
+        ValidateSystemPermissionsVo result = new ValidateSystemPermissionsVo();
+        
+        // 获取所有系统内置权限枚举
+        PermissionEnum[] permissionEnums = PermissionEnum.values();
+        
+        // 记录已存在和新增的权限数量
+        int existCount = 0;
+        int addedCount = 0;
+        List<String> addedPermissions = new ArrayList<>();
+        
+        // 遍历所有系统内置权限
+        for (PermissionEnum permEnum : permissionEnums) {
+            String code = permEnum.getCode();
+            
+            // 检查权限是否已存在
+            if (permissionRepository.existsByCode(code)) {
+                existCount++;
+            } else {
+                // 创建新的权限
+                PermissionPo permission = new PermissionPo();
+                permission.setCode(code);
+                permission.setName(permEnum.getDescription());
+                permission.setDescription(permEnum.getDescription());
+                permission.setIsSystem(1); // 标记为系统权限
+                permission.setSortOrder(getNextSortOrder());
+                
+                // 保存权限
+                permissionRepository.save(permission);
+                
+                addedCount++;
+                addedPermissions.add(code);
+            }
+        }
+        
+        // 设置结果
+        result.setExistCount(existCount);
+        result.setAddedCount(addedCount);
+        result.setAddedPermissions(addedPermissions);
+        
+        return result;
     }
 } 
