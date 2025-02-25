@@ -26,6 +26,7 @@ public enum PermissionEnum {
     // 权限节点管理
     PANEL_PERMISSION_VIEW("panel:permission:view", "管理台:查看权限节点"),
     PANEL_PERMISSION_ADD("panel:permission:add", "管理台:添加权限节点"),
+    PANEL_PERMISSION_EDIT("panel:permission:edit", "管理台:编辑权限节点"),
     PANEL_PERMISSION_REMOVE("panel:permission:remove", "管理台:移除权限"),
 
     // 面板应用管理权限
@@ -37,6 +38,7 @@ public enum PermissionEnum {
     //配置项管理
     PANEL_CONFIG_VIEW("panel:config:view", "管理台:查看自己的配置项"),
     PANEL_CONFIG_VIEW_GLOBAL("panel:config:view:global", "管理台:查看全部用户的配置项"),
+    PANEL_CONFIG_ADD("panel:config:add", "管理台:创建配置项"),
     PANEL_CONFIG_EDIT("panel:config:edit", "管理台:编辑配置项"),
     PANEL_CONFIG_REMOVE("panel:config:remove", "管理台:移除配置项"),
 
@@ -88,6 +90,8 @@ public enum PermissionEnum {
     MODEL_CHAT_CREATE("model:chat:create", "AI创建文件"),
     MODEL_CHAT_EDIT("model:chat:edit", "AI编辑文件"),
     MODEL_CHAT_REMOVE("model:chat:remove", "AI移除文件"),
+    MODEL_CONTROL_MOUSE("model:control:mouse", "AI接管鼠标"),
+    MODEL_CONTROL_KEYBOARD("model:control:keyboard", "AI接管键盘"),
 
     ;
 
