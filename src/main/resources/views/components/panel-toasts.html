@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div id="panel-toast-container" aria-live="polite" aria-atomic="true" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060; pointer-events: none;">
+    <style>
+        /* 控制面板风格的Toast样式 */
+        #panelToast {
+            pointer-events: auto;
+            border-radius: 8px !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+            overflow: hidden !important;
+            min-width: 300px;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa) !important;
+        }
+
+        /* 成功状态样式 */
+        #panelToast.toast-success {
+            border-left: 4px solid var(--bs-success) !important;
+        }
+
+        /* 错误状态样式 */
+        #panelToast.toast-danger {
+            border-left: 4px solid var(--bs-danger) !important;
+        }
+
+        /* 警告状态样式 */
+        #panelToast.toast-warning {
+            border-left: 4px solid var(--bs-warning) !important;
+        }
+
+        /* 信息状态样式 */
+        #panelToast.toast-info {
+            border-left: 4px solid var(--bs-info) !important;
+        }
+
+        /* Toast头部样式 */
+        #panelToast .toast-header {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+            padding: 0.75rem 1rem !important;
+        }
+
+        #panelToast .toast-header strong {
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+        }
+
+        #panelToast.toast-success .toast-header strong {
+            color: var(--bs-success) !important;
+        }
+
+        #panelToast.toast-danger .toast-header strong {
+            color: var(--bs-danger) !important;
+        }
+
+        #panelToast.toast-warning .toast-header strong {
+            color: var(--bs-warning) !important;
+        }
+
+        #panelToast.toast-info .toast-header strong {
+            color: var(--bs-info) !important;
+        }
+
+        /* Toast内容样式 */
+        #panelToast .toast-body {
+            padding: 1rem !important;
+            color: var(--bs-gray-700) !important;
+            font-size: 0.875rem !important;
+            line-height: 1.5 !important;
+        }
+
+        /* 关闭按钮样式 */
+        #panelToast .btn-close {
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        #panelToast .btn-close:hover {
+            opacity: 0.75;
+        }
+
+        /* 图标样式 */
+        #panelToast .toast-icon {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+        }
+
+        #panelToast.toast-success .toast-icon {
+            color: var(--bs-success);
+        }
+
+        #panelToast.toast-danger .toast-icon {
+            color: var(--bs-danger);
+        }
+
+        #panelToast.toast-warning .toast-icon {
+            color: var(--bs-warning);
+        }
+
+        #panelToast.toast-info .toast-icon {
+            color: var(--bs-info);
+        }
+    </style>
+
+    <div id="panelToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"
+         data-bs-autohide="true" data-bs-delay="4000">
+        <div class="toast-header">
+            <i class="bi toast-icon"></i>
+            <strong class="me-auto">通知</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="关闭"></button>
+        </div>
+        <div class="toast-body">
+            这里显示通知内容
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * 显示面板 Toast 通知
+     * @param {string} type - 通知类型，可取值 "success"（成功）、"error"/"danger"（错误）、"warning"（警告）、"info"（信息）
+     * @param {string} title - 通知标题
+     * @param {string} message - 显示的通知内容
+     */
+    function showToast(type, title, message) {
+        const $toast = $('#panelToast');
+        const $headerText = $toast.find('.toast-header strong');
+        const $icon = $toast.find('.toast-icon');
+        
+        // 移除所有类型类
+        $toast.removeClass("toast-success toast-danger toast-warning toast-info");
+        
+        // 根据类型设置样式和图标
+        if (type === "success") {
+            $toast.addClass("toast-success");
+            $icon.removeClass().addClass("bi bi-check-circle-fill toast-icon");
+            $headerText.text(title || "成功");
+        } else if (type === "error" || type === "danger") {
+            $toast.addClass("toast-danger");
+            $icon.removeClass().addClass("bi bi-exclamation-circle-fill toast-icon");
+            $headerText.text(title || "错误");
+        } else if (type === "warning") {
+            $toast.addClass("toast-warning");
+            $icon.removeClass().addClass("bi bi-exclamation-triangle-fill toast-icon");
+            $headerText.text(title || "警告");
+        } else if (type === "info") {
+            $toast.addClass("toast-info");
+            $icon.removeClass().addClass("bi bi-info-circle-fill toast-icon");
+            $headerText.text(title || "信息");
+        } else {
+            $toast.addClass("toast-info");
+            $icon.removeClass().addClass("bi bi-bell-fill toast-icon");
+            $headerText.text(title || "通知");
+        }
+        
+        // 设置消息内容
+        $toast.find('.toast-body').text(message);
+        
+        // 初始化并显示 Toast
+        const toastInstance = new bootstrap.Toast($toast[0]);
+        toastInstance.show();
+    }
+
+    /**
+     * 隐藏面板 Toast 通知
+     */
+    function hideToast() {
+        const $toast = $('#panelToast');
+        const toastInstance = bootstrap.Toast.getInstance($toast[0]);
+        if (toastInstance) {
+            toastInstance.hide();
+        } else {
+            new bootstrap.Toast($toast[0]).hide();
+        }
+    }
+</script>
+</html> 
