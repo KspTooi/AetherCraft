@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.dto.SavePanelGroupDto;
 import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.biz.model.vo.SavePanelGroupVo;
@@ -16,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * 用户组管理控制器
+ */
 @Controller
 @RequestMapping("/panel/group")
 public class PanelGroupController {
@@ -23,7 +27,11 @@ public class PanelGroupController {
     @Autowired
     private PanelGroupService groupService;
 
+    /**
+     * 用户组列表页面
+     */
     @GetMapping("/list")
+    @RequirePermission("panel:group:view")
     public ModelAndView list(@Valid ListPanelGroupDto dto) {
         ModelAndView mv = new ModelAndView("panel-group-manager");
         mv.addObject("data", groupService.getListView(dto));
@@ -31,14 +39,22 @@ public class PanelGroupController {
         return mv;
     }
 
+    /**
+     * 创建用户组页面
+     */
     @GetMapping("/create")
+    @RequirePermission("panel:group:add")
     public ModelAndView create() {
         ModelAndView mv = new ModelAndView("panel-group-operator");
         mv.addObject("group", groupService.getCreateView());
         return mv;
     }
 
+    /**
+     * 编辑用户组页面
+     */
     @GetMapping("/edit/{id}")
+    @RequirePermission("panel:group:edit")
     public ModelAndView edit(@PathVariable(name = "id") Long id) {
         ModelAndView mv = new ModelAndView();
         
@@ -53,7 +69,11 @@ public class PanelGroupController {
         return mv;
     }
 
+    /**
+     * 保存用户组
+     */
     @PostMapping("/save")
+    @RequirePermission("panel:group:edit")
     public ModelAndView save(@Valid SavePanelGroupDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView();
         
@@ -97,7 +117,11 @@ public class PanelGroupController {
         return mv;
     }
 
+    /**
+     * 删除用户组
+     */
     @PostMapping("/remove/{id}")
+    @RequirePermission("panel:group:delete")
     public ModelAndView remove(@PathVariable(name = "id") Long id, RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView("redirect:/panel/group/list");
         

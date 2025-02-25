@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.service.panel.PanelModelConfigService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * AI模型配置控制器
+ */
 @Controller
 @RequestMapping("/panel/model")
 public class PanelModelConfigController {
@@ -21,7 +25,11 @@ public class PanelModelConfigController {
     @Autowired
     private PanelModelConfigService panelModelConfigService;
     
+    /**
+     * 编辑AI模型配置页面
+     */
     @GetMapping({"/edit", "/edit/{model}"})
+    @RequirePermission("panel:model:view")
     public ModelAndView editPage(@PathVariable(name = "model", required = false) String model) {
         ModelAndView mv = new ModelAndView("panel-model-config");
         // 设置页面标题
@@ -31,7 +39,11 @@ public class PanelModelConfigController {
         return mv;
     }
     
+    /**
+     * 保存AI模型配置
+     */
     @PostMapping("/save")
+    @RequirePermission("panel:model:edit")
     public String saveConfig(@Valid SaveModelConfigDto dto, BindingResult br, RedirectAttributes ra) {
         // 表单验证
         if (br.hasErrors()) {

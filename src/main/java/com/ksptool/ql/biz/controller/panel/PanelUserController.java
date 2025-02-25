@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -22,6 +23,9 @@ import java.util.List;
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
+/**
+ * 用户管理控制器
+ */
 @Controller
 @RequestMapping("/panel/user")
 public class PanelUserController {
@@ -33,6 +37,7 @@ public class PanelUserController {
      * 用户管理页面
      */
     @GetMapping("/list")
+    @RequirePermission("panel:user:view")
     public ModelAndView userManager(ListPanelUserDto dto) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
         mav.addObject("data", panelUserService.getListView(dto));
@@ -43,6 +48,7 @@ public class PanelUserController {
      * 用户操作页面（创建/编辑）
      */
     @GetMapping({"/create", "/edit"})
+    @RequirePermission("panel:user:edit")
     public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id, @ModelAttribute("data") SavePanelUserVo flashData) {
         ModelAndView mav = new ModelAndView("panel-user-operator");
         
@@ -71,6 +77,7 @@ public class PanelUserController {
      * 保存用户
      */
     @PostMapping("/save")
+    @RequirePermission("panel:user:edit")
     public ModelAndView saveUser(@Valid SavePanelUserDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         ModelAndView mav = new ModelAndView();
 
@@ -134,6 +141,7 @@ public class PanelUserController {
      * 删除用户
      */
     @PostMapping("/remove/{id}")
+    @RequirePermission("panel:user:delete")
     public ModelAndView deleteUser(@PathVariable(name = "id") Long id) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
         

@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.dto.ListPanelAppDto;
 import com.ksptool.ql.biz.model.dto.SavePanelAppDto;
 import com.ksptool.ql.biz.model.vo.SavePanelAppVo;
 import com.ksptool.ql.biz.service.panel.PanelAppService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -16,6 +17,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import static com.ksptool.entities.Entities.assign;
 
+/**
+ * 面板应用控制器
+ */
 @Controller
 @RequestMapping("/panel/app")
 public class PanelAppController {
@@ -27,6 +31,7 @@ public class PanelAppController {
      * 应用列表页面
      */
     @GetMapping("/list")
+    @RequirePermission("panel:app:view")
     public ModelAndView getListView(ListPanelAppDto dto) {
         ModelAndView mv = new ModelAndView("panel-app-list");
         mv.addObject("data", panelAppService.getListView(dto));
@@ -38,6 +43,7 @@ public class PanelAppController {
      * 创建应用页面
      */
     @GetMapping("/create")
+    @RequirePermission("panel:app:add")
     public ModelAndView getCreateView(@ModelAttribute("data") SavePanelAppVo flashData) {
         ModelAndView mv = new ModelAndView("panel-app-operator");
         
@@ -56,6 +62,7 @@ public class PanelAppController {
      * 编辑应用页面
      */
     @GetMapping("/edit")
+    @RequirePermission("panel:app:edit")
     public ModelAndView getEditView(@RequestParam("id") Long id) {
         try {
             ModelAndView mv = new ModelAndView("panel-app-operator");
@@ -76,6 +83,7 @@ public class PanelAppController {
      * 保存应用
      */
     @PostMapping("/save")
+    @RequirePermission("panel:app:edit")
     public String save(@Valid SavePanelAppDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         // 验证失败，返回表单页面
         if (bindingResult.hasErrors()) {
@@ -120,6 +128,7 @@ public class PanelAppController {
      * 删除应用
      */
     @GetMapping("/remove/{id}")
+    @RequirePermission("panel:app:delete")
     public String remove(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             panelAppService.remove(id);

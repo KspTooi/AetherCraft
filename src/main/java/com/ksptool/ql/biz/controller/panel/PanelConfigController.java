@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.dto.ListPanelConfigDto;
 import com.ksptool.ql.biz.model.dto.SavePanelConfigDto;
 import com.ksptool.ql.biz.model.vo.SavePanelConfigVo;
 import com.ksptool.ql.biz.service.panel.PanelConfigService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -16,6 +17,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import static com.ksptool.entities.Entities.assign;
 
+/**
+ * 配置项管理控制器
+ */
 @Controller
 @RequestMapping("/panel/config")
 public class PanelConfigController {
@@ -27,6 +31,7 @@ public class PanelConfigController {
      * 配置项列表页面
      */
     @GetMapping("/list")
+    @RequirePermission("panel:config:view")
     public ModelAndView getListView(ListPanelConfigDto dto) {
         ModelAndView mv = new ModelAndView("panel-config-list");
         mv.addObject("data", panelConfigService.getListView(dto));
@@ -38,6 +43,7 @@ public class PanelConfigController {
      * 创建配置项页面
      */
     @GetMapping("/create")
+    @RequirePermission("panel:config:add")
     public ModelAndView getCreateView(@ModelAttribute("data") SavePanelConfigVo flashData) {
         ModelAndView mv = new ModelAndView("panel-config-operator");
         
@@ -56,6 +62,7 @@ public class PanelConfigController {
      * 编辑配置项页面
      */
     @GetMapping("/edit")
+    @RequirePermission("panel:config:edit")
     public ModelAndView getEditView(@RequestParam("id") Long id) {
         try {
             ModelAndView mv = new ModelAndView("panel-config-operator");
@@ -76,6 +83,7 @@ public class PanelConfigController {
      * 保存配置项
      */
     @PostMapping("/save")
+    @RequirePermission("panel:config:edit")
     public String save(@Valid SavePanelConfigDto dto, BindingResult bindingResult, RedirectAttributes ra) {
         // 验证失败，返回表单页面
         if (bindingResult.hasErrors()) {
@@ -120,6 +128,7 @@ public class PanelConfigController {
      * 删除配置项
      */
     @GetMapping("/remove/{id}")
+    @RequirePermission("panel:config:remove")
     public String remove(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             panelConfigService.remove(id);

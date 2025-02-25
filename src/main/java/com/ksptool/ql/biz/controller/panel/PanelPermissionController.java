@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.vo.EditPanelPermissionVo;
 import com.ksptool.ql.biz.model.vo.ListPanelPermissionVo;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -34,6 +35,7 @@ public class PanelPermissionController {
      * 权限管理列表页面
      */
     @GetMapping("/list")
+    @RequirePermission("panel:permission:view")
     public ModelAndView permissionManager(@RequestParam(name = "page", defaultValue = "1") int page,
                                         @RequestParam(name = "size", defaultValue = "10") int size) {
         ModelAndView mav = new ModelAndView("panel-permission-manager");
@@ -50,6 +52,7 @@ public class PanelPermissionController {
      * 创建权限页面
      */
     @GetMapping("/create")
+    @RequirePermission("panel:permission:add")
     public ModelAndView createPermission(@ModelAttribute("data") CreatePermissionDto dto) {
         ModelAndView mav = new ModelAndView("panel-permission-operator");
         
@@ -66,6 +69,7 @@ public class PanelPermissionController {
      * 编辑权限页面
      */
     @GetMapping("/edit/{id}")
+    @RequirePermission("panel:permission:edit")
     public ModelAndView editPermission(@PathVariable(name = "id") Long id) {
         ModelAndView mav = new ModelAndView();
         
@@ -84,6 +88,7 @@ public class PanelPermissionController {
      * 保存权限
      */
     @PostMapping("/save")
+    @RequirePermission("panel:permission:add")
     public ModelAndView savePermission(@Valid @ModelAttribute("data") CreatePermissionDto dto, 
                                      BindingResult bindingResult,
                                      RedirectAttributes ra) {
@@ -153,6 +158,7 @@ public class PanelPermissionController {
      * 删除权限
      */
     @PostMapping("/remove/{id}")
+    @RequirePermission("panel:permission:remove")
     public ModelAndView deletePermission(@PathVariable(name = "id") Long id, RedirectAttributes redirectAttributes) {
         ModelAndView mav = new ModelAndView("redirect:/panel/permission/list");
         
