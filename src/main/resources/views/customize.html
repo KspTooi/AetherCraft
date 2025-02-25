@@ -12,44 +12,45 @@
         display: flex;
         flex-direction: column;
         color: #fff;
-        padding: 20px;
+        padding: 16px;
     }
 
     .page-header {
+        margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        gap: 10px;
+        padding: 0 5px;
         flex-shrink: 0;
-        padding: 0 10px;
     }
 
     .page-title {
         color: #fff;
-        font-size: 1.5rem;
-        font-weight: 500;
         margin: 0;
+        font-size: 18px;
+        font-weight: 500;
     }
 
     .customize-content {
         flex: 1;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        gap: 16px;
         min-height: 0;
     }
 
     .customize-column {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 16px;
         min-height: 0;
     }
 
     .customize-section {
         background: rgba(0, 0, 0, 0.2);
         border-radius: 12px;
-        padding: 24px;
+        padding: 20px;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -57,139 +58,123 @@
     .section-title {
         font-size: 1.1rem;
         font-weight: 500;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         color: #fff;
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    .section-title::before {
-        font-size: 1.2em;
-        line-height: 1;
-    }
-
-    .wallpaper-section .section-title::before {
-        content: '🖼️';
-    }
-
-    .theme-section .section-title::before {
-        content: '🎨';
-    }
-
-    .opacity-section .section-title::before {
-        content: '🌓';
-    }
-
-    .wallpaper-upload {
+    .section-content {
         display: flex;
         flex-direction: column;
         gap: 16px;
     }
 
+    .setting-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .setting-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .setting-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .setting-control {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .setting-control.color-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .color-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .color-picker {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+    }
+
+    .color-picker::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    .color-picker::-webkit-color-swatch {
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    .color-label {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.9);
+        flex: 1;
+    }
+
     .upload-zone {
         border: 2px dashed rgba(255, 255, 255, 0.3);
         border-radius: 12px;
-        padding: 30px;
+        padding: 24px;
         text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
         background: rgba(255, 255, 255, 0.05);
-    }
-
-    .upload-zone:hover {
-        border-color: rgba(255, 255, 255, 0.5);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .upload-zone.dragover {
-        border-color: #4facfe;
-        background: rgba(79, 172, 254, 0.1);
-    }
-
-    .upload-icon {
-        font-size: 2.5rem;
-        margin-bottom: 15px;
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .upload-text {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.95rem;
-        line-height: 1.5;
+        margin-bottom: 12px;
     }
 
     .wallpaper-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 12px;
-    }
-
-    .setting-item {
-        margin-bottom: 24px;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 16px;
-        border-radius: 8px;
-    }
-
-    .setting-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .setting-label {
-        display: block;
-        margin-bottom: 12px;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.95rem;
-        font-weight: 500;
-    }
-
-    .color-picker-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 8px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
+        gap: 8px;
     }
 
     #themeColorPicker {
-        width: 56px;
-        height: 56px;
-        border-radius: 12px;
-    }
-
-    #themeColorPicker::-webkit-color-swatch {
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-    }
-
-    .color-value {
-        font-size: 1rem;
-    }
-
-    .slider-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 8px;
-        background: rgba(0, 0, 0, 0.2);
+        width: 48px;
+        height: 48px;
         border-radius: 8px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
     .opacity-slider {
-        height: 8px;
-        border-radius: 4px;
-    }
-
-    .opacity-slider::-webkit-slider-thumb {
-        width: 20px;
-        height: 20px;
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.2);
     }
 
     .opacity-value {
-        font-size: 1rem;
-        min-width: 54px;
+        min-width: 48px;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: monospace;
+        font-size: 0.9rem;
+        text-align: right;
     }
 
     @media (max-width: 1024px) {
@@ -200,11 +185,11 @@
 
     @media (max-width: 768px) {
         .customize-center {
-            padding: 15px;
+            padding: 12px;
         }
 
         .customize-section {
-            padding: 20px;
+            padding: 16px;
         }
     }
 
@@ -271,8 +256,8 @@
     }
 
     .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transform: none;
+        background: rgba(255, 255, 255, 0.25);
     }
 
     .btn:disabled {
@@ -362,8 +347,8 @@
     }
 
     .opacity-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+        transform: none;
+        box-shadow: none;
     }
 
     .opacity-value {
@@ -387,9 +372,9 @@
             <div class="customize-content">
                 <!-- 左栏：壁纸设置 -->
                 <div class="customize-column">
-                    <div class="customize-section wallpaper-section">
-                        <h2 class="section-title">壁纸设置</h2>
-                        <div class="wallpaper-upload">
+                    <div class="customize-section">
+                        <h2 class="section-title">🖼️ 壁纸设置</h2>
+                        <div class="section-content">
                             <div class="upload-zone" id="uploadZone">
                                 <div class="upload-icon">📁</div>
                                 <div class="upload-text">
@@ -412,41 +397,70 @@
 
                 <!-- 右栏：主题颜色和透明度设置 -->
                 <div class="customize-column">
-                    <div class="customize-section theme-section">
-                        <h2 class="section-title">主题颜色</h2>
-                        <div class="theme-color-settings">
+                    <div class="customize-section">
+                        <h2 class="section-title">🎨 颜色设置</h2>
+                        <div class="section-content">
                             <div class="setting-item">
                                 <label class="setting-label">主题色调</label>
-                                <div class="color-picker-wrapper">
-                                    <input type="color" id="themeColorPicker" value="#4facfe">
-                                    <span class="color-value">#4facfe</span>
+                                <div class="setting-control">
+                                    <div class="color-item">
+                                        <input type="color" id="themeColorPicker" class="color-picker" value="#4facfe">
+                                        <span class="color-value">#4facfe</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">界面颜色</label>
+                                <div class="setting-control color-group">
+                                    <div class="color-item">
+                                        <input type="color" id="navbarColorPicker" class="color-picker" value="#000000">
+                                        <span class="color-label">菜单栏背景</span>
+                                    </div>
+                                    <div class="color-item">
+                                        <input type="color" id="mainColorPicker" class="color-picker" value="#000000">
+                                        <span class="color-label">主要区域背景</span>
+                                    </div>
+                                    <div class="color-item">
+                                        <input type="color" id="navTextColorPicker" class="color-picker" value="#ffffff">
+                                        <span class="color-label">菜单栏文字</span>
+                                    </div>
+                                    <div class="color-item">
+                                        <input type="color" id="mainTextColorPicker" class="color-picker" value="#ffffff">
+                                        <span class="color-label">主要区域文字</span>
+                                    </div>
+                                    <div class="color-item">
+                                        <input type="color" id="toastColorPicker" class="color-picker" value="#000000">
+                                        <span class="color-label">通知背景</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="customize-section opacity-section">
-                        <h2 class="section-title">透明度设置</h2>
-                        <div class="opacity-settings">
-                            <div class="setting-item">
-                                <label class="setting-label">菜单栏透明度</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="navbarOpacity" min="0" max="100" value="75" class="opacity-slider">
-                                    <span class="opacity-value">75%</span>
+                    <div class="customize-section">
+                        <h2 class="section-title">🌓 透明度设置</h2>
+                        <div class="section-content">
+                            <div class="setting-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">菜单栏透明度</label>
+                                    <div class="setting-control">
+                                        <input type="range" id="navbarOpacity" min="0" max="100" value="75" class="opacity-slider">
+                                        <span class="opacity-value">75%</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="setting-item">
-                                <label class="setting-label">主要区域透明度</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="mainAreaOpacity" min="0" max="100" value="85" class="opacity-slider">
-                                    <span class="opacity-value">85%</span>
+                                <div class="setting-item">
+                                    <label class="setting-label">主要区域透明度</label>
+                                    <div class="setting-control">
+                                        <input type="range" id="mainAreaOpacity" min="0" max="100" value="85" class="opacity-slider">
+                                        <span class="opacity-value">85%</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="setting-item">
-                                <label class="setting-label">通知透明度</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="toastOpacity" min="0" max="100" value="90" class="opacity-slider">
-                                    <span class="opacity-value">90%</span>
+                                <div class="setting-item">
+                                    <label class="setting-label">通知透明度</label>
+                                    <div class="setting-control">
+                                        <input type="range" id="toastOpacity" min="0" max="100" value="90" class="opacity-slider">
+                                        <span class="opacity-value">90%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -487,7 +501,7 @@
                     background: ${color} !important;
                 }
                 .opacity-slider::-webkit-slider-thumb:hover {
-                    box-shadow: 0 0 10px ${color}80 !important;
+                    box-shadow: none;
                 }
                 .btn-primary {
                     background: linear-gradient(135deg, ${color} 0%, ${adjustColor(color, 20)} 100%) !important;
@@ -523,7 +537,7 @@
             if (target === 'navbar') {
                 $('.navbar').css('background-color', `rgba(0, 0, 0, ${opacity})`);
             } else if (target === 'mainArea') {
-                $('.customize-content').css('background-color', `rgba(255, 255, 255, ${opacity * 0.1})`);
+                //$('.customize-content').css('background-color', `rgba(255, 255, 255, ${opacity * 0.1})`);
                 $('.customize-section').css('background-color', `rgba(0, 0, 0, ${opacity * 0.2})`);
             } else if (target === 'toast') {
                 const style = document.createElement('style');
@@ -748,6 +762,26 @@
                 } else if (sliderId === 'toastOpacity') {
                     applyOpacity('toast', value);
                 }
+            });
+
+            // 保存颜色设置
+            $('.color-picker').not('#themeColorPicker').on('change', function() {
+                const id = $(this).attr('id');
+                const color = $(this).val();
+                
+                // 这里可以添加保存颜色设置的 AJAX 请求
+                console.log('Color changed:', id, color);
+                
+                // 示例：
+                // $.ajax({
+                //     url: '/customize/saveColor',
+                //     type: 'POST',
+                //     contentType: 'application/json',
+                //     data: JSON.stringify({
+                //         type: id,
+                //         color: color
+                //     })
+                // });
             });
 
             // 初始应用透明度
