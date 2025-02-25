@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller.panel;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,7 +39,7 @@ public class PanelMaintainController {
      */
     @PostMapping("/validSystemPermission")
     @ResponseBody
-    @RequirePermission("panel:maintain:permission")
+    @RequirePermissionRest("panel:maintain:permission")
     public Result<ValidateSystemPermissionsVo> validateSystemPermissions() {
         try {
             ValidateSystemPermissionsVo result = panelPermissionService.validateSystemPermissions();
