@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,13 +28,14 @@ public class UserFileService {
 
     @Transactional
     public UserFilePo receive(MultipartFile file) throws BizException {
+
         if (file.isEmpty()) {
             throw new BizException("上传的文件不能为空");
         }
 
         String storagePath = configService.get("user.file.storage.path");
         if (!StringUtils.hasText(storagePath)) {
-            throw new BizException("未配置文件存储路径");
+            throw new BizException("未配置文件存储路径 它位于全局配置:user.file.storage.path");
         }
 
         // 获取程序运行路径并拼接存储路径
@@ -74,6 +76,39 @@ public class UserFileService {
         } catch (IOException e) {
             throw new BizException("文件保存失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 根据文件路径获取文件，并验证用户权限
+     * @param filepath 文件路径
+     * @param userId 用户ID
+     * @return 文件对象，如果文件不存在或用户无权限则返回null
+     */
+    public File getUserFile(String filepath, Long userId) {
+        if (!StringUtils.hasText(filepath) || userId == null) {
+            return null;
+        }
+
+        // 验证文件是否属于该用户
+        UserFilePo userFile = userFileRepository.findByFilepathAndUserId(filepath, userId);
+        if (userFile == null) {
+            return null;
+        }
+
+        File file = new File(filepath);
+        return file.exists() && file.isFile() ? file : null;
+    }
+
+    /**
+     * 根据文件路径获取当前用户的文件
+     * @param filepath 文件路径
+     * @return 文件对象，如果文件不存在或用户无权限则返回null
+     */
+    public File getUserFile(String filepath) {
+        if (!StringUtils.hasText(filepath)) {
+            return null;
+        }
+        return getUserFile(filepath, AuthService.getCurrentUserId());
     }
 
     private String calculateSHA256(MultipartFile file) throws BizException {
