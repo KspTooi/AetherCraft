@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ public class Router {
         return "forward:/ssr/appCenter";
     }
 
+    @RequirePermission("task:mgr:view")
     @GetMapping("/taskManager")
     public String taskManager() {
         return "task-manager";

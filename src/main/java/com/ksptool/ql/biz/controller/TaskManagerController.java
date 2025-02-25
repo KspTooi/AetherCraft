@@ -3,6 +3,8 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.TerminateProcessDto;
 import com.ksptool.ql.biz.model.vo.ProcessInfoVo;
 import com.ksptool.ql.biz.service.TaskManagerService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -22,6 +24,7 @@ public class TaskManagerController {
      * 获取进程列表
      * @param keyword 搜索关键字（可选）
      */
+    @RequirePermissionRest("task:mgr:search")
     @GetMapping("/getProcessList")
     public Result<List<ProcessInfoVo>> getProcessList(@RequestParam(value = "keyword", required = false) String keyword) {
         try {
@@ -34,6 +37,7 @@ public class TaskManagerController {
     /**
      * 终止进程
      */
+    @RequirePermissionRest("task:mgr:kill")
     @PostMapping("/terminateProcess")
     public Result<String> terminateProcess(@RequestBody @Valid TerminateProcessDto dto) {
         try {
