@@ -66,10 +66,12 @@ public class PanelConfigService {
     public void save(SavePanelConfigDto dto) throws BizException {
         // 新增时检查配置键
         if (dto.getId() == null) {
+
             if (dto.getUserId() == null) {
                 if (configRepository.existsByConfigKey(dto.getConfigKey())) {
                     throw new BizException("配置键已存在");
                 }
+                dto.setUserId(-1L);
             }
             
             if (dto.getUserId() != null) {
@@ -80,7 +82,7 @@ public class PanelConfigService {
 
             ConfigPo config = new ConfigPo();
             assign(dto, config);
-            
+
             Date now = new Date();
             config.setCreateTime(now);
             config.setUpdateTime(now);
