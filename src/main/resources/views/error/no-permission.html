@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>权限不足 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入通用脚本和样式 -->
+    <div th:replace="~{/components/com-scripts}"></div>
+    <div th:replace="~{/components/com-styles}"></div>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .error-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+        .error-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+        }
+        .error-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #343a40;
+        }
+        .error-message {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        .btn-back {
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        /* 移动端响应式调整 */
+        @media (max-width: 576px) {
+            .error-container {
+                padding: 1.5rem;
+            }
+            .error-icon {
+                font-size: 3.5rem;
+                margin-bottom: 1rem;
+            }
+            .error-title {
+                font-size: 1.5rem;
+            }
+            .error-message {
+                font-size: 0.9rem;
+                margin-bottom: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="bi bi-shield-lock"></i>
+        </div>
+        <h1 class="error-title">权限不足</h1>
+        <p class="error-message">您没有权限访问此功能，请联系管理员获取相应的权限，或返回上一页。</p>
+        <a href="/leaveNoPermission" class="btn btn-primary btn-back">
+            <i class="bi bi-arrow-left me-2"></i>返回上一页
+        </a>
+    </div>
+</body>
+</html> 

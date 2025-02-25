@@ -43,6 +43,10 @@ public enum PermissionEnum {
     // AI模型配置权限
     PANEL_MODEL_VIEW("panel:model:view", "管理台:查看AI配置"),
     PANEL_MODEL_EDIT("panel:model:edit", "管理台:编辑AI配置"),
+    
+    // 维护工具权限
+    PANEL_MAINTAIN_VIEW("panel:maintain:view", "管理台:访问维护工具"),
+    PANEL_MAINTAIN_PERMISSION("panel:maintain:permission", "管理台:校验系统权限"),
 
     /**
      * 客户端权限
