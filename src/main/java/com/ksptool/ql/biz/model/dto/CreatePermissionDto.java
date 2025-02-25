@@ -35,4 +35,9 @@ public class CreatePermissionDto {
      * 排序号
      */
     private Integer sortOrder = 0;
+    
+    /**
+     * 是否系统权限 0:非系统权限 1:系统权限
+     */
+    private Integer isSystem = 0;
 } 
