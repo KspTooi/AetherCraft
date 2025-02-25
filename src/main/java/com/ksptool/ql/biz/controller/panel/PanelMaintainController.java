@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller.panel;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.biz.service.panel.PanelGroupService;
+import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
@@ -26,6 +27,9 @@ public class PanelMaintainController {
 
     @Autowired
     private PanelGroupService panelGroupService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 维护工具页面
@@ -75,6 +79,22 @@ public class PanelMaintainController {
             return Result.success(result,null);
         } catch (Exception e) {
             return Result.error("校验用户组失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 校验系统内置用户
+     * 检查数据库中是否存在所有系统内置用户，如果不存在则自动创建
+     */
+    @PostMapping("/validSystemUsers")
+    @ResponseBody
+    @RequirePermissionRest("panel:maintain:permission")
+    public Result<String> validateSystemUsers() {
+        try {
+            String result = userService.validateSystemUsers();
+            return Result.success(result,null);
+        } catch (Exception e) {
+            return Result.error("校验用户失败：" + e.getMessage());
         }
     }
 } 

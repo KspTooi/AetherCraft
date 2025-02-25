@@ -49,6 +49,21 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="flex-grow-1">
+                                            <h5 class="card-title">用户校验</h5>
+                                            <p class="card-text text-muted">校验系统内置用户是否完整，如有缺失将自动补充。管理员用户将被赋予所有用户组。</p>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button id="btnCheckUsers" class="btn btn-primary w-100">
+                                                <i class="bi bi-person-check-fill me-1"></i>校验系统用户
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- 可以在这里添加更多维护工具卡片 -->
                         </div>
                     </div>
@@ -116,6 +131,36 @@
                     },
                     complete: function() {
                         $btn.prop('disabled', false).html('<i class="bi bi-people-fill me-1"></i>校验系统用户组');
+                    }
+                });
+            });
+
+            // 校验系统用户按钮点击事件
+            $('#btnCheckUsers').on('click', function() {
+                const $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>校验中...');
+                
+                // 调用后端接口进行系统用户校验
+                $.ajax({
+                    url: '/panel/maintain/validSystemUsers',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            showToast('success', '校验完成', response.message);
+                        } else {
+                            showToast('error', '校验失败', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        showToast('error', '校验失败', errorMsg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="bi bi-person-check-fill me-1"></i>校验系统用户');
                     }
                 });
             });
