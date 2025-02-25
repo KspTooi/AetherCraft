@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.ServiceQueryDto;
 import com.ksptool.ql.biz.model.vo.WindowsServiceVo;
 import com.ksptool.ql.biz.service.WindowsNativeService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,7 @@ public class NativeServiceController {
 
     private final WindowsNativeService windowsNativeService;
 
+    @RequirePermission("service:view")
     @GetMapping("/serviceCenter")
     public ModelAndView serviceCenter(@RequestParam(name = "keyword", required = false) String keyword) {
         ModelAndView mav = new ModelAndView("service-center");

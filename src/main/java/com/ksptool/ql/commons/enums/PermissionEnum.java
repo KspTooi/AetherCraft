@@ -75,7 +75,7 @@ public enum PermissionEnum {
     EXPLORER_DELETE("explorer:delete", "删除文件"),
 
     //服务权限
-    SERVICE_VIEW("service:view", "访问文件资源管理器"),
+    SERVICE_VIEW("service:view", "访问服务管理器"),
     SERVICE_START("service:start", "启动服务"),
     SERVICE_KILL("service:kill", "停止服务"),
 

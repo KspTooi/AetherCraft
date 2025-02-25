@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
@@ -34,6 +36,7 @@ public class ModelChatController {
     @Autowired
     private ConfigService configService;
 
+    @RequirePermission("model:chat:create:thread")
     @GetMapping("/chat/newThread")
     public ModelAndView newThread(@RequestParam(name = "modelCode") String modelCode, RedirectAttributes ra) {
         try {
@@ -47,6 +50,7 @@ public class ModelChatController {
         }
     }
 
+    @RequirePermission("model:chat:view")
     @GetMapping("/chat/view")
     public ModelAndView chatView(@RequestParam(name = "threadId", required = false) Long threadId) {
         ModelAndView mav = new ModelAndView("model-chat");
@@ -81,6 +85,7 @@ public class ModelChatController {
         return mav;
     }
 
+    @RequirePermissionRest("model:chat:message")
     @PostMapping("/chat/complete")
     public Result<ChatCompleteVo> chatComplete(@Valid @RequestBody ChatCompleteDto dto) {
         try {
@@ -95,6 +100,7 @@ public class ModelChatController {
      * @param dto 对话请求参数
      * @return SSE事件流
      */
+    @RequirePermissionRest("model:chat:message")
     @PostMapping("/chat/complete/stream")
     public SseEmitter chatCompleteStream(@Valid @RequestBody ChatCompleteDto dto) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
@@ -171,6 +177,7 @@ public class ModelChatController {
      * @param threadId 会话ID
      * @return 重定向到聊天视图
      */
+    @RequirePermissionRest("model:chat:remove:thread")
     @GetMapping("/chat/view/removeThread/{threadId}")
     public ModelAndView removeThread(@PathVariable(name = "threadId") Long threadId) {
         ModelAndView mav = new ModelAndView("redirect:/model/chat/view");

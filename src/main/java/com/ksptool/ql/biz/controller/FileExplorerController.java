@@ -7,6 +7,8 @@ import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.service.FileExplorerService;
 import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,7 @@ public class FileExplorerController {
         return String.format("explorer.%d.path", userId);
     }
 
+    @RequirePermission("explorer:view")
     @GetMapping("/fileExplorer")
     public ModelAndView fileExplorer(@RequestParam(value = "path", required = false) String path,
                                    HttpServletRequest request,
@@ -139,6 +142,7 @@ public class FileExplorerController {
         return mav;
     }
 
+    @RequirePermissionRest("explorer:view")
     @GetMapping("/validatePath")
     @ResponseBody
     public boolean validatePath(@RequestParam("path") String path) {
@@ -151,6 +155,7 @@ public class FileExplorerController {
         }
     }
 
+    @RequirePermission("explorer:rename")
     @PostMapping("/renameFile")
     @ResponseBody
     public Result<String> renameFile(@RequestBody RenameFileDto dto) {
@@ -214,6 +219,7 @@ public class FileExplorerController {
         }
     }
 
+    @RequirePermission("explorer:open")
     @PostMapping("/openPath")
     @ResponseBody
     public Result<Long> openPath(@RequestBody OpenPathDto dto) {
