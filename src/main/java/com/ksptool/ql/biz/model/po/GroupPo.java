@@ -20,8 +20,12 @@ import java.util.HashSet;
 @Data
 @NamedEntityGraph(
         name = "with-permissions",
-        attributeNodes = {@NamedAttributeNode("permissions")
-})
+        attributeNodes = {@NamedAttributeNode("permissions")}
+)
+@NamedEntityGraph(
+        name = "with-permissions-user",
+        attributeNodes = {@NamedAttributeNode("permissions"),@NamedAttributeNode("users")}
+)
 public class GroupPo {
 
     @Id

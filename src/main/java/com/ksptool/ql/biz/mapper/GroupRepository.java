@@ -25,6 +25,15 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
     @EntityGraph(value = "with-permissions")
     GroupPo getGroupDetailsById(@Param("id") Long id);
 
+
+    @Query("""
+    SELECT g FROM GroupPo g
+    LEFT JOIN FETCH g.permissions
+    LEFT JOIN FETCH g.users
+    WHERE g.id = :id
+    """)
+    GroupPo getGroupWithUserAndPermission(@Param("id") Long id);
+
     /**
      * 获取最大排序号
      * @return 最大排序号，如果没有记录则返回0
@@ -51,7 +60,6 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
             WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
             AND (:#{#dto.code} IS NULL OR g.code LIKE %:#{#dto.code}%)
             AND (:#{#dto.description} IS NULL OR g.description LIKE %:#{#dto.description}%)
-            ORDER BY g.updateTime DESC
     """)
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
