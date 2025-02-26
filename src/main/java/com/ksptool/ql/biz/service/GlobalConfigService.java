@@ -2,10 +2,14 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.po.ConfigPo;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import org.springframework.util.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -104,5 +108,40 @@ public class GlobalConfigService {
             return defaultValue;
         }
         return Boolean.parseBoolean(value);
+    }
+
+    /**
+     * 校验系统全局配置项
+     * 检查数据库中是否存在所有系统内置的全局配置项，如果不存在则自动创建
+     */
+    @Transactional
+    public String validateSystemConfigs() {
+        List<ConfigPo> addedConfigs = new ArrayList<>();
+        int existCount = 0;
+
+        for (GlobalConfigEnum config : GlobalConfigEnum.values()) {
+            ConfigPo existingConfig = configRepository.findByUserIdAndConfigKey(GLOBAL_USER_ID, config.getKey());
+            
+            if (existingConfig == null) {
+                ConfigPo newConfig = new ConfigPo();
+                newConfig.setUserId(GLOBAL_USER_ID);
+                newConfig.setConfigKey(config.getKey());
+                newConfig.setConfigValue(config.getDefaultValue());
+                newConfig.setDescription(config.getDescription());
+                newConfig.setCreateTime(new Date());
+                newConfig.setUpdateTime(new Date());
+                addedConfigs.add(newConfig);
+            } else {
+                existCount++;
+            }
+        }
+
+        if (!addedConfigs.isEmpty()) {
+            configRepository.saveAll(addedConfigs);
+            return String.format("校验完成，已添加 %d 个缺失的配置项，已存在 %d 个配置项", 
+                addedConfigs.size(), existCount);
+        }
+
+        return String.format("校验完成，所有 %d 个系统配置项均已存在", existCount);
     }
 } 

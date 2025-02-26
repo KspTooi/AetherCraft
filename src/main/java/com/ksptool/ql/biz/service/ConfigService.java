@@ -2,16 +2,24 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.po.ConfigPo;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor
 public class ConfigService {
-    
+
     private final ConfigRepository configRepository;
+
+    public ConfigService(ConfigRepository configRepository) {
+        this.configRepository = configRepository;
+    }
 
     public String getValue(String key, Long userId) {
         ConfigPo config = configRepository.findByUserIdAndConfigKey(userId, key);
