@@ -12,36 +12,36 @@
     <!-- 使用 div 布局左右导航项 -->
     <div class="collapse navbar-collapse" id="navbarContent">
       <div class="nav-left d-flex align-items-center">
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="app:center:view">
           <a class="nav-link" th:href="@{/appCenter}">应用中心</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="task:manager:view">
           <a class="nav-link" th:href="@{/taskManager}">任务管理器</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="file:explorer:view">
           <a class="nav-link" th:href="@{/ssr/fileExplorer}">资源管理器</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="service:center:view">
           <a class="nav-link" th:href="@{/ssr/serviceCenter}">服务</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="demo:view">
           <a class="nav-link" th:href="@{/ssr/demo}">组件展示</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="chat:view">
           <a class="nav-link" th:href="@{/model/chat/view}">聊天</a>
         </div>
 <!--         <div class="nav-item">
           <a class="nav-link" th:href="@{/settings}">功能</a>
         </div> -->
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="customize:view">
           <a class="nav-link" th:href="@{/customize/view}">个性化</a>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="desktop:view">
           <a class="nav-link" th:href="@{/ssr/demo}">桌面</a>
         </div>
       </div>
       <div class="nav-right d-flex align-items-center ms-auto">
-        <div class="nav-item">
+        <div class="nav-item" sec:hasPermission="dashboard:view">
           <a class="nav-link" th:href="@{/dashboard}">管理台</a>
         </div>
         <div class="nav-item">

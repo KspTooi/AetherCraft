@@ -58,6 +58,7 @@ public class Router {
         return "demo";
     }
 
+    @RequirePermission("panel:access")
     @GetMapping("/dashboard")
     public ModelAndView dashboard(HttpServletRequest request) {
         ModelAndView mav = new ModelAndView("demo-control-panel");
@@ -130,4 +131,7 @@ public class Router {
     public Result<String> getVersion(){
         return Result.success("1.0-A");
     }
+
+
+
 }
