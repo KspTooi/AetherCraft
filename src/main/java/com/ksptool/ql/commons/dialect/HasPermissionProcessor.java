@@ -10,7 +10,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 
 public class HasPermissionProcessor extends AbstractAttributeTagProcessor {
     
-    private static final String ATTR_NAME = "hasPermission";
+    private static final String ATTR_NAME = "authorize";
     private static final int PRECEDENCE = 300;
 
     public HasPermissionProcessor(final String dialectPrefix) {
