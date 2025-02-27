@@ -93,6 +93,11 @@ public enum PermissionEnum {
     MODEL_CONTROL_MOUSE("model:control:mouse", "AI接管鼠标"),
     MODEL_CONTROL_KEYBOARD("model:control:keyboard", "AI接管键盘"),
 
+
+    //其他
+    CUSTOMIZE("customize:view", "允许访问个性化"),
+    DESKTOP("desktop:view", "允许访问桌面"),
+
     ;
 
 
