@@ -162,31 +162,31 @@
                 <div class="sidebar-menu flex-grow-1">
                     <div class="menu-group">
                         <div class="menu-title">系统管理</div>
-                        <a href="/panel/user/list" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/user/list" class="menu-item d-flex align-items-center rounded"  sec:authorize="panel:user:view">
                             <i class="bi bi-people"></i>
                             <span>用户管理</span>
                         </a>
-                        <a href="/panel/group/list" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/group/list" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:group:view">
                             <i class="bi bi-shield-lock"></i>
                             <span>用户组管理</span>
                         </a>
-                        <a href="/panel/permission/list" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/permission/list" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:permission:view">
                             <i class="bi bi-key"></i>
                             <span>权限节点</span>
                         </a>
-                        <a href="/panel/app/list" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/app/list" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:app:view">
                             <i class="bi bi-window-stack"></i>
                             <span>应用管理</span>
                         </a>
-                        <a href="/panel/config/list" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/config/list" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:config:view">
                             <i class="bi bi-gear"></i>
                             <span>配置项</span>
                         </a>
-                        <a href="/panel/model/edit" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/model/edit" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:model:view">
                             <i class="bi bi-robot"></i>
                             <span>AI模型配置</span>
                         </a>
-                        <a href="/panel/maintain/view" class="menu-item d-flex align-items-center rounded">
+                        <a href="/panel/maintain/view" class="menu-item d-flex align-items-center rounded" sec:authorize="panel:maintain:view">
                             <i class="bi bi-tools"></i>
                             <span>维护工具</span>
                         </a>
