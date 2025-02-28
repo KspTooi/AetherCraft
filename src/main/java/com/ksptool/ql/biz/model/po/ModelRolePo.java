@@ -64,9 +64,6 @@ public class ModelRolePo {
         if (sortOrder == null) {
             sortOrder = 0;
         }
-        if (isSystem == null) {
-            isSystem = false;
-        }
         if (status == null) {
             status = 1;
         }
