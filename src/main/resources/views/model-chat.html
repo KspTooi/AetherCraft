@@ -151,44 +151,6 @@
         background: transparent;
         overflow: hidden;
     }
-
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 48px 20px 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .message {
-        max-width: 80%;
-        padding: 12px 16px;
-        border-radius: 8px;
-        line-height: 1.5;
-        font-size: 15px;
-    }
-
-    .message.user {
-        align-self: flex-end;
-        background: rgba(79, 172, 254, 0.3);
-        margin-left: 20%;
-    }
-
-    .message.assistant {
-        align-self: flex-start;
-        background: rgba(255, 255, 255, 0.2);
-        margin-right: 20%;
-    }
-
-    /* 输入区域 */
-    .chat-input {
-        padding: 12px 20px;
-        background: rgba(0, 0, 0, 0.2);
-        display: flex;
-        gap: 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
     
     /* 模型选择区域 */
     .model-select {
@@ -231,130 +193,6 @@
         color: #fff;
     }
 
-    .chat-input-wrapper {
-        flex: 1;
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        min-height: 48px;
-        max-height: 150px;
-        padding: 4px; /* 减小内边距 */
-    }
-
-    .chat-input textarea {
-        flex: 1;
-        width: 100%;
-        min-height: 40px;
-        padding: 8px 12px;
-        background: transparent;
-        border: none;
-        color: #fff;
-        resize: none;
-        font-size: 15px;
-        line-height: 1.5;
-        transition: all 0.3s;
-        overflow-y: hidden;
-        max-height: 120px;
-        display: block;
-        margin: 0;
-        box-sizing: border-box;
-    }
-
-    /* 输入框滚动条样式 */
-    .chat-input textarea::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .chat-input textarea::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .chat-input textarea::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-    }
-
-    .chat-input textarea::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-
-    .chat-input textarea::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-        line-height: 1.5;
-        padding: 0;
-        margin: 0;
-    }
-
-    .chat-input textarea:focus {
-        outline: none;
-    }
-
-    .chat-input-wrapper:focus-within {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.15);
-    }
-
-    .chat-input .voice-btn {
-        background: transparent;
-        border: none;
-        color: rgba(255, 255, 255, 0.7);
-        padding: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
-    }
-
-    .chat-input .voice-btn:hover {
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .send-btn {
-        padding: 8px 24px;
-        border: none;
-        border-radius: 24px;
-        background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
-        color: white;
-        cursor: pointer;
-        transition: all 0.3s;
-        align-self: center;
-        font-size: 15px;
-        height: 48px;
-    }
-
-    .send-btn:hover {
-        transform: scale(1.05);
-        background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
-    }
-
-    .send-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    /* 自定义滚动条 */
-    .chat-messages::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .chat-messages::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-    }
-
     /* 布局容器 */
     .chat-layout {
         display: flex;
@@ -386,10 +224,6 @@
             font-size: 13px;
         }
         
-        .chat-messages {
-            padding-top: 42px;
-        }
-        
         .thread-list {
             position: absolute;
             left: -240px;
@@ -402,11 +236,6 @@
         
         .thread-list.show {
             transform: translateX(240px);
-        }
-        
-        .message {
-            max-width: 90%;
-            font-size: 14px;
         }
         
         /* 添加移动端菜单按钮 */
@@ -452,85 +281,6 @@
             display: block;
         }
     }
-
-    /* Markdown 样式 */
-    .message.assistant {
-        font-size: 15px;
-        line-height: 1.6;
-    }
-
-    .message.assistant p {
-        margin: 0 0 1em;
-    }
-
-    .message.assistant p:last-child {
-        margin-bottom: 0;
-    }
-
-    .message.assistant pre {
-        background: rgba(0, 0, 0, 0.2);
-        padding: 12px;
-        border-radius: 4px;
-        overflow-x: auto;
-        margin: 1em 0;
-        color: #ffffff;
-    }
-
-    .message.assistant code {
-        font-family: Consolas, Monaco, 'Andale Mono', monospace;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 2px 4px;
-        border-radius: 3px;
-    }
-
-    .message.assistant pre code {
-        background: none;
-        padding: 0;
-        border-radius: 0;
-    }
-
-    .message.assistant ul, 
-    .message.assistant ol {
-        margin: 1em 0;
-        padding-left: 2em;
-    }
-
-    .message.assistant blockquote {
-        border-left: 4px solid rgba(255, 255, 255, 0.2);
-        margin: 1em 0;
-        padding-left: 1em;
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    .message.assistant img {
-        max-width: 100%;
-        border-radius: 4px;
-    }
-
-    .message.assistant table {
-        border-collapse: collapse;
-        margin: 1em 0;
-        width: 100%;
-    }
-
-    .message.assistant th,
-    .message.assistant td {
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 8px;
-        text-align: left;
-    }
-
-    .message.assistant th {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    li code {
-        color: #ffcb9d !important;
-    }
-    p code {
-        color: #ffcb9d !important;
-    }
-
 </style>
 
 <body>
@@ -579,18 +329,9 @@
                             </option>
                         </select>
                     </div>
-                    <div class="chat-messages" id="chatMessages">
-                        <div th:each="message : ${data.messages}" 
-                             th:class="'message ' + (${message.role == 0 ? 'user' : 'assistant'})"
-                             th:if="${message.role == 0}"
-                             th:text="${message.content}">
-                        </div>
-                        <div th:each="message : ${data.messages}" 
-                             th:class="'message ' + (${message.role == 0 ? 'user' : 'assistant'})"
-                             th:if="${message.role != 0}"
-                             th:utext="${message.content}">
-                        </div>
-                    </div>
+                    
+                    <!-- 引入聊天消息组件 -->
+                    <div th:replace="~{components/model-chat-messages :: model-chat-messages}"></div>
                     
                     <!-- 引入聊天输入组件 -->
                     <div th:replace="~{components/model-chat-input :: model-chat-input}"></div>
@@ -642,26 +383,6 @@
             window.location.href = '/model/chat/view?threadId=' + threadId;
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        }
-
-        function appendMessage(content, isUser) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
-            if (isUser) {
-                messageDiv.textContent = content;
-            } else {
-                messageDiv.innerHTML = marked.parse(content);
-            }
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
         function updateThreadList() {
             fetch('/model/chat/view')
                 .then(response => response.text())
@@ -700,6 +421,13 @@
                 });
         }
 
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -717,19 +445,13 @@
             input.disabled = true;
             document.getElementById('sendButton').disabled = true;
 
-            appendMessage(message, true);
+            // 添加用户消息
+            ChatMessages.appendMessage(message, 'user');
             input.value = '';
             adjustTextareaHeight(input);
 
-            const messagesDiv = document.getElementById('chatMessages');
-            const aiMessageDiv = document.createElement('div');
-            aiMessageDiv.className = 'message assistant';
-            aiMessageDiv.textContent = '正在输入...';
-            messagesDiv.appendChild(aiMessageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-            // 保存用户消息的DOM元素引用
-            const userMessageDiv = messagesDiv.lastElementChild.previousElementSibling;
+            // 添加AI消息占位
+            const aiMessageDiv = ChatMessages.appendMessage('正在输入...', 'assistant');
 
             const requestData = {
                 chatThread: currentThreadId || -1,
@@ -774,8 +496,8 @@
                                                 aiMessageDiv.textContent = ''; // 清除"正在输入..."
                                                 hasReceivedData = true;
                                             }
-                                            aiMessageDiv.innerHTML = marked.parse(aiMessageDiv.textContent + response.data); // 使用marked渲染markdown
-                                            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                                            ChatMessages.updateLastMessage(aiMessageDiv.textContent + response.data, 'assistant');
+                                            ChatMessages.scrollToBottom();
                                             break;
                                         case 2: // 生成完成
                                             console.log('生成完成:', response.data);
@@ -785,8 +507,8 @@
                                             break;
                                         case 10: // 错误事件
                                             // 移除错误的聊天气泡和用户消息
-                                            aiMessageDiv.remove();
-                                            userMessageDiv.remove();
+                                            ChatMessages.removeLastMessage(); // 移除AI消息
+                                            ChatMessages.removeLastMessage(); // 移除用户消息
                                             
                                             // 从sessionStorage恢复消息到输入框
                                             const previousMessage = sessionStorage.getItem('user.previous.message');
@@ -803,14 +525,14 @@
                                             break;
                                         default:
                                             // 移除错误的聊天气泡
-                                            aiMessageDiv.remove();
+                                            ChatMessages.removeLastMessage();
                                             showToast('danger', response.data || '未知错误');
                                             break;
                                     }
                                 } catch (error) {
                                     console.error('解析JSON失败:', error, '原始行:', line);
                                     // 移除错误的聊天气泡
-                                    aiMessageDiv.remove();
+                                    ChatMessages.removeLastMessage();
                                     showToast('danger', `解析响应失败: ${error.message}`);
                                 }
                             }
@@ -822,8 +544,7 @@
                             if (done) {
                                 if (!hasReceivedData) {
                                     // 移除空响应的聊天气泡
-                                    aiMessageDiv.remove();
-                                    //showToast('danger', '服务器未返回任何响应');
+                                    ChatMessages.removeLastMessage();
                                 }
                                 input.disabled = false;
                                 document.getElementById('sendButton').disabled = false;
@@ -838,7 +559,7 @@
                         }).catch(error => {
                             console.error('读取流失败:', error);
                             // 移除错误的聊天气泡
-                            aiMessageDiv.remove();
+                            ChatMessages.removeLastMessage();
                             showToast('danger', `读取响应失败: ${error.message}`);
                             input.disabled = false;
                             document.getElementById('sendButton').disabled = false;
@@ -851,7 +572,7 @@
                 .catch(error => {
                     console.error('请求失败:', error);
                     // 移除错误的聊天气泡
-                    aiMessageDiv.remove();
+                    ChatMessages.removeLastMessage();
                     showToast('danger', error.message || '网络请求失败');
                     input.disabled = false;
                     document.getElementById('sendButton').disabled = false;
@@ -861,16 +582,8 @@
 
         // 页面加载完成后自动聚焦到输入框和滚动到最新消息
         document.addEventListener('DOMContentLoaded', function() {
-            // 渲染已有的AI消息
-            document.querySelectorAll('.message.assistant').forEach(message => {
-                message.innerHTML = marked.parse(message.textContent);
-            });
-            
             const messageInput = document.getElementById('messageInput');
             messageInput.focus();
-            
-            const messagesDiv = document.getElementById('chatMessages');
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
             
             // 添加窗口大小变化监听
             window.addEventListener('resize', function() {
