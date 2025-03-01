@@ -98,6 +98,13 @@
         margin-right: 8px;
     }
 
+    .thread-item .thread-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .thread-item .edit-btn,
     .thread-item .delete-btn {
         transition: all 0.3s;
         background: transparent;
@@ -111,6 +118,7 @@
         justify-content: center;
     }
 
+    .thread-item .edit-btn:hover,
     .thread-item .delete-btn:hover {
         color: rgba(255, 255, 255, 0.9);
         background: rgba(255, 255, 255, 0.1);
@@ -310,9 +318,17 @@
                             <div class="thread-title"
                                  th:text="${thread.title}">
                             </div>
-                            <button class="delete-btn" th:onclick="'deleteThread(' + ${thread.id} + ', event)'">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="thread-actions">
+                                <button class="edit-btn" 
+                                        th:data-thread-id="${thread.id}"
+                                        th:data-thread-title="${thread.title}"
+                                        onclick="editThreadTitle(this.getAttribute('data-thread-id'), this.getAttribute('data-thread-title'), event)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="delete-btn" th:onclick="'deleteThread(' + ${thread.id} + ', event)'">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -340,10 +356,87 @@
         </div>
     </div>
 
+    <!-- 编辑标题模态框 -->
+    <div class="modal fade" id="editTitleModal" tabindex="-1" aria-labelledby="editTitleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTitleModalLabel">编辑对话标题</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editThreadId" value="">
+                    <div class="mb-3">
+                        <label for="newTitle" class="form-label">新标题</label>
+                        <input type="text" class="form-control" id="newTitle" placeholder="请输入新标题">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveThreadTitle()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         let currentThreadId = /*[[${data.currentThreadId}]]*/ null;
         const currentModel = /*[[${data.currentThread?.modelCode}]]*/ 'gemini-pro';
         let isMobileMenuOpen = false;
+        let editTitleModal;
+        
+        // 页面加载完成后初始化模态框
+        document.addEventListener('DOMContentLoaded', function() {
+            editTitleModal = new bootstrap.Modal(document.getElementById('editTitleModal'));
+            
+            const messageInput = document.getElementById('messageInput');
+            messageInput.focus();
+            
+            // 添加窗口大小变化监听
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768 && isMobileMenuOpen) {
+                    toggleThreadList();
+                }
+            });
+        });
+        
+        // 打开编辑标题模态框
+        function editThreadTitle(threadId, currentTitle, event) {
+            // 阻止事件冒泡，避免触发loadThread
+            event.stopPropagation();
+            
+            // 确保threadId是数字
+            threadId = parseInt(threadId, 10);
+            
+            // 设置当前编辑的会话ID和标题
+            document.getElementById('editThreadId').value = threadId;
+            document.getElementById('newTitle').value = currentTitle;
+            
+            // 显示模态框
+            editTitleModal.show();
+            
+            // 聚焦到输入框
+            setTimeout(() => {
+                document.getElementById('newTitle').focus();
+            }, 500);
+        }
+        
+        // 保存新标题
+        function saveThreadTitle() {
+            const threadId = parseInt(document.getElementById('editThreadId').value, 10);
+            const newTitle = document.getElementById('newTitle').value.trim();
+            
+            if (!newTitle) {
+                showToast('warning', '标题不能为空');
+                return;
+            }
+            
+            // 关闭模态框
+            editTitleModal.hide();
+            
+            // 跳转到编辑标题接口
+            window.location.href = '/model/chat/view/editThreadTitle?threadId=' + threadId + '&newTitle=' + encodeURIComponent(newTitle);
+        }
         
         function toggleThreadList() {
             const threadList = document.querySelector('.thread-list');
@@ -598,19 +691,6 @@
                 input.focus();
             });
         }
-
-        // 页面加载完成后自动聚焦到输入框和滚动到最新消息
-        document.addEventListener('DOMContentLoaded', function() {
-            const messageInput = document.getElementById('messageInput');
-            messageInput.focus();
-            
-            // 添加窗口大小变化监听
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768 && isMobileMenuOpen) {
-                    toggleThreadList();
-                }
-            });
-        });
 
         function deleteThread(threadId, event) {
             // 阻止事件冒泡，避免触发loadThread
