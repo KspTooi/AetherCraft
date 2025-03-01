@@ -42,12 +42,16 @@
                 background: rgba(79, 172, 254, 0.3);
                 margin-left: 20%;
                 white-space: pre-wrap;
+                border-bottom-right-radius: 4px; /* 右下角更尖锐 */
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
             }
 
             .message.assistant {
                 align-self: flex-start;
                 background: rgba(255, 255, 255, 0.2);
                 margin-right: 20%;
+                border-bottom-left-radius: 4px; /* 左下角更尖锐 */
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
             }
 
             /* 自定义滚动条 */
@@ -159,16 +163,13 @@
         </style>
 
         <div class="chat-messages" id="chatMessages">
-            <div th:each="message : ${data.messages}" 
-                 th:class="'message ' + (${message.role == 0 ? 'user' : 'assistant'})"
-                 th:if="${message.role == 0}"
-                 th:text="${message.content}">
-            </div>
-            <div th:each="message : ${data.messages}" 
-                 th:class="'message ' + (${message.role == 0 ? 'user' : 'assistant'})"
-                 th:if="${message.role != 0}"
-                 th:utext="${message.content}">
-            </div>
+            <th:block th:each="message : ${data.messages}">
+                <!-- 用户消息 -->
+                <div th:if="${message.role == 0}" class="message user" th:text="${message.content}"></div>
+                
+                <!-- AI消息 -->
+                <div th:if="${message.role != 0}" class="message assistant" th:text="${message.content}"></div>
+            </th:block>
         </div>
 
         <script th:inline="javascript">
@@ -247,7 +248,10 @@
                 init() {
                     // 渲染已有的AI消息
                     this.container.querySelectorAll('.message.assistant').forEach(message => {
-                        message.innerHTML = this.renderMarkdown(message.textContent);
+                        const content = message.textContent || message.innerText;
+                        if (content) {
+                            message.innerHTML = this.renderMarkdown(content);
+                        }
                     });
                     
                     // 滚动到最新消息
