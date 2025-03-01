@@ -14,6 +14,16 @@ public class ChatSegmentVo {
     private Long threadId;
     
     /**
+     * 历史记录ID
+     */
+    private Long historyId;
+    
+    /**
+     * 角色 0-用户 1-AI助手
+     */
+    private Integer role;
+    
+    /**
      * 片段序号
      */
     private Integer sequence;
