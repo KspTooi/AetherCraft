@@ -165,10 +165,16 @@
         <div class="chat-messages" id="chatMessages">
             <th:block th:each="message : ${data.messages}">
                 <!-- 用户消息 -->
-                <div th:if="${message.role == 0}" class="message user" th:text="${message.content}"></div>
+                <div th:if="${message.role == 0}" 
+                     class="message user" 
+                     th:text="${message.content}"
+                     th:data-history-id="${message.id}"></div>
                 
                 <!-- AI消息 -->
-                <div th:if="${message.role != 0}" class="message assistant" th:text="${message.content}"></div>
+                <div th:if="${message.role != 0}" 
+                     class="message assistant" 
+                     th:text="${message.content}"
+                     th:data-history-id="${message.id}"></div>
             </th:block>
         </div>
 
@@ -183,7 +189,7 @@
                 },
                 
                 // 创建新的消息元素
-                createMessage(content, role) {
+                createMessage(content, role, historyId) {
                     const messageDiv = document.createElement('div');
                     messageDiv.className = `message ${role}`;
                     if (role === 'user') {
@@ -191,12 +197,16 @@
                     } else {
                         messageDiv.innerHTML = this.renderMarkdown(content);
                     }
+                    // 设置历史记录ID
+                    if (historyId) {
+                        messageDiv.dataset.historyId = historyId;
+                    }
                     return messageDiv;
                 },
                 
                 // 添加新消息
-                appendMessage(content, role) {
-                    const messageDiv = this.createMessage(content, role);
+                appendMessage(content, role, historyId) {
+                    const messageDiv = this.createMessage(content, role, historyId);
                     this.container.appendChild(messageDiv);
                     this.scrollToBottom();
                     return messageDiv;
@@ -236,10 +246,18 @@
                 updateLastMessage(content, role) {
                     const lastMessage = this.getLastMessage();
                     if (lastMessage) {
+                        // 保存historyId
+                        const historyId = lastMessage.dataset.historyId;
+                        
                         if (role === 'user') {
                             lastMessage.textContent = content;
                         } else {
                             lastMessage.innerHTML = this.renderMarkdown(content);
+                        }
+                        
+                        // 恢复historyId
+                        if (historyId) {
+                            lastMessage.dataset.historyId = historyId;
                         }
                     }
                 },

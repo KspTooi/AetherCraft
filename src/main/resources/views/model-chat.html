@@ -554,7 +554,7 @@
                 queryKind: 0 // 0表示发送消息
             };
 
-            // 发送消息请求
+            // 发送请求
             fetch('/model/chat/complete/batch', {
                 method: 'POST',
                 headers: {
@@ -563,133 +563,148 @@
                 body: JSON.stringify(requestData)
             })
             .then(response => response.json())
-            .then(response => {
-                if (response.code !== 0) {
-                    throw new Error(response.message || '发送消息失败');
+            .then(data => {
+                if (data.code === 0) {
+                    // 成功发送消息
+                    currentThreadId = data.data.threadId;
+                    
+                    // 更新用户消息的historyId
+                    const userMessageDiv = aiMessageDiv.previousElementSibling;
+                    if (userMessageDiv) {
+                        userMessageDiv.dataset.historyId = data.data.historyId;
+                    }
+                    
+                    // 开始轮询获取AI响应
+                    pollAIResponse(aiMessageDiv);
+                } else {
+                    // 发送失败
+                    showToast('error', data.message || '发送消息失败');
+                    aiMessageDiv.remove();
+                    input.disabled = false;
+                    document.getElementById('sendButton').disabled = false;
                 }
+            })
+            .catch(error => {
+                console.error('发送消息失败:', error);
+                showToast('error', '发送消息失败，请稍后再试');
+                aiMessageDiv.remove();
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+            });
+        }
+
+        // 轮询获取AI响应
+        function pollAIResponse(aiMessageDiv) {
+            let responseText = '';
+            let isCompleted = false;
+            let aiHistoryId = null;
+            const input = document.getElementById('messageInput');
+            
+            // 定义轮询函数
+            function pollResponse() {
+                if (isCompleted) return;
                 
-                // 开始轮询获取响应
-                let responseText = '';
-                let isCompleted = false;
+                // 创建查询请求
+                const queryData = {
+                    thread: currentThreadId,
+                    queryKind: 1 // 1表示查询响应
+                };
                 
-                // 定义轮询函数
-                function pollResponse() {
-                    if (isCompleted) return;
+                fetch('/model/chat/complete/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(queryData)
+                })
+                .then(response => response.json())
+                .then(response => {
+                    if (response.code !== 0) {
+                        throw new Error(response.message || '查询响应失败');
+                    }
                     
-                    // 创建查询请求
-                    const queryData = {
-                        thread: currentThreadId,
-                        queryKind: 1 // 1表示查询响应
-                    };
-                    
-                    fetch('/model/chat/complete/batch', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(queryData)
-                    })
-                    .then(response => response.json())
-                    .then(response => {
-                        if (response.code !== 0) {
-                            throw new Error(response.message || '查询响应失败');
-                        }
-                        
-                        // 如果没有数据，继续轮询
-                        if (!response.data) {
-                            setTimeout(pollResponse, 300);
-                            return;
-                        }
-                        
-                        const segment = response.data;
-                        
-                        // 根据片段类型处理
-                        if (segment.type === 0) { // 开始
-                            console.log('开始生成');
-                            setTimeout(pollResponse, 300);
-                            return;
-                        }
-                        
-                        if (segment.type === 1) { // 数据
-                            if (responseText === '') {
-                                aiMessageDiv.textContent = ''; // 清除"正在输入..."
-                            }
-                            responseText += segment.content;
-                            ChatMessages.updateLastMessage(responseText, 'assistant');
-                            ChatMessages.scrollToBottom();
-                            setTimeout(pollResponse, 300);
-                            return;
-                        }
-                        
-                        if (segment.type === 2) { // 结束
-                            console.log('生成完成');
-                            isCompleted = true;
-                            if (!currentThreadId) {
-                                updateThreadList(); // 新对话时更新会话列表
-                            }
-                            input.disabled = false;
-                            document.getElementById('sendButton').disabled = false;
-                            input.focus();
-                            return;
-                        }
-                        
-                        if (segment.type === 10) { // 错误
-                            isCompleted = true;
-                            // 移除错误的聊天气泡和用户消息
-                            ChatMessages.removeLastMessage(); // 移除AI消息
-                            ChatMessages.removeLastMessage(); // 移除用户消息
-                            
-                            // 从sessionStorage恢复消息到输入框
-                            const previousMessage = sessionStorage.getItem('user.previous.message');
-                            if (previousMessage) {
-                                input.value = previousMessage;
-                                adjustTextareaHeight(input);
-                            }
-                            
-                            showToast('danger', segment.content || '服务器返回错误');
-                            input.disabled = false;
-                            document.getElementById('sendButton').disabled = false;
-                            input.focus();
-                            return;
-                        }
-                        
-                        // 默认情况，继续轮询
+                    // 如果没有数据，继续轮询
+                    if (!response.data) {
                         setTimeout(pollResponse, 300);
-                    })
-                    .catch(error => {
-                        console.error('查询响应失败:', error);
+                        return;
+                    }
+                    
+                    const segment = response.data;
+                    
+                    // 保存historyId
+                    if (segment.historyId && !aiHistoryId) {
+                        aiHistoryId = segment.historyId;
+                        // 更新AI消息的historyId
+                        aiMessageDiv.dataset.historyId = aiHistoryId;
+                    }
+                    
+                    // 根据片段类型处理
+                    if (segment.type === 0) { // 开始
+                        console.log('开始生成');
+                        setTimeout(pollResponse, 300);
+                        return;
+                    }
+                    
+                    if (segment.type === 1) { // 数据
+                        if (responseText === '') {
+                            aiMessageDiv.textContent = ''; // 清除"正在输入..."
+                        }
+                        responseText += segment.content;
+                        ChatMessages.updateLastMessage(responseText, 'assistant');
+                        ChatMessages.scrollToBottom();
+                        setTimeout(pollResponse, 300);
+                        return;
+                    }
+                    
+                    if (segment.type === 2) { // 结束
+                        console.log('生成完成');
                         isCompleted = true;
-                        // 移除错误的聊天气泡
-                        ChatMessages.removeLastMessage();
-                        showToast('danger', error.message || '查询响应失败');
+                        if (!currentThreadId) {
+                            updateThreadList(); // 新对话时更新会话列表
+                        }
                         input.disabled = false;
                         document.getElementById('sendButton').disabled = false;
                         input.focus();
-                    });
-                }
-                
-                // 开始轮询
-                setTimeout(pollResponse, 300);
-            })
-            .catch(error => {
-                console.error('请求失败:', error);
-                // 移除错误的聊天气泡
-                ChatMessages.removeLastMessage();
-                // 移除用户消息
-                ChatMessages.removeLastMessage();
-                
-                // 从sessionStorage恢复消息到输入框
-                const previousMessage = sessionStorage.getItem('user.previous.message');
-                if (previousMessage) {
-                    input.value = previousMessage;
-                    adjustTextareaHeight(input);
-                }
-                
-                showToast('danger', error.message || '网络请求失败');
-                input.disabled = false;
-                document.getElementById('sendButton').disabled = false;
-                input.focus();
-            });
+                        return;
+                    }
+                    
+                    if (segment.type === 10) { // 错误
+                        isCompleted = true;
+                        // 移除错误的聊天气泡和用户消息
+                        ChatMessages.removeLastMessage(); // 移除AI消息
+                        ChatMessages.removeLastMessage(); // 移除用户消息
+                        
+                        // 从sessionStorage恢复消息到输入框
+                        const previousMessage = sessionStorage.getItem('user.previous.message');
+                        if (previousMessage) {
+                            input.value = previousMessage;
+                            adjustTextareaHeight(input);
+                        }
+                        
+                        showToast('danger', segment.content || '服务器返回错误');
+                        input.disabled = false;
+                        document.getElementById('sendButton').disabled = false;
+                        input.focus();
+                        return;
+                    }
+                    
+                    // 默认情况，继续轮询
+                    setTimeout(pollResponse, 300);
+                })
+                .catch(error => {
+                    console.error('查询响应失败:', error);
+                    isCompleted = true;
+                    // 移除错误的聊天气泡
+                    ChatMessages.removeLastMessage();
+                    showToast('danger', error.message || '查询响应失败');
+                    input.disabled = false;
+                    document.getElementById('sendButton').disabled = false;
+                    input.focus();
+                });
+            }
+            
+            // 开始轮询
+            setTimeout(pollResponse, 300);
         }
 
         function deleteThread(threadId, event) {
