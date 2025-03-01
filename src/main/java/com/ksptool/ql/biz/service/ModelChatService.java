@@ -629,7 +629,6 @@ public class ModelChatService {
 
                                 // 清理会话状态
                                 chatThreadProcessingStatus.remove(thread.getId());
-                                return;
                             }
                         } catch (Exception e) {
                             log.error("处理聊天片段失败", e);
@@ -704,7 +703,7 @@ public class ModelChatService {
         }
         
         // 如果等待超时仍未获取到片段
-        if (unreadSegments == null || unreadSegments.isEmpty()) {
+        if (unreadSegments.isEmpty()) {
             throw new BizException("等待片段超时，请稍后再试");
         }
         
