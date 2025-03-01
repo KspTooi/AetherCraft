@@ -773,6 +773,50 @@ public class ModelChatService {
     }
 
     /**
+     * 编辑会话标题
+     * @param threadId 会话ID
+     * @param newTitle 新标题
+     * @return 更新后的会话ID
+     * @throws BizException 业务异常
+     */
+    public Long editThreadTitle(Long threadId, String newTitle) throws BizException {
+        if (threadId == null) {
+            throw new BizException("会话ID不能为空");
+        }
+        
+        if (!StringUtils.hasText(newTitle)) {
+            throw new BizException("会话标题不能为空");
+        }
+        
+        // 限制标题长度
+        if (newTitle.length() > 100) {
+            newTitle = newTitle.substring(0, 97) + "...";
+        }
+        
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 获取会话
+        ModelChatThreadPo thread = threadRepository.findById(threadId).orElse(null);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+        
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权编辑该会话");
+        }
+        
+        // 更新会话标题
+        thread.setTitle(newTitle);
+        // 标记为手动编辑的标题
+        thread.setTitleGenerated(2);
+        threadRepository.save(thread);
+        
+        return thread.getId();
+    }
+
+    /**
      * 生成会话标题
      * @param threadId 会话ID
      * @param model 模型代码

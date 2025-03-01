@@ -81,6 +81,7 @@ public enum PermissionEnum {
 
     //AI聊天功能
     MODEL_CHAT_VIEW("model:chat:view", "访问AI助手"),
+    MODEL_CHAT_EDIT_THREAD("model:chat:edit:thread", "编辑对话标题"),
     MODEL_CHAT_CREATE_THREAD("model:chat:create:thread", "创建新对话"),
     MODEL_CHAT_REMOVE_THREAD("model:chat:remove:thread", "移除对话"),
     MODEL_CHAT_MESSAGE("model:chat:message", "发送消息"),

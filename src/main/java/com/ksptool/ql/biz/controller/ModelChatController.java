@@ -215,6 +215,29 @@ public class ModelChatController {
     }
 
     /**
+     * 编辑会话标题
+     * @param threadId 会话ID
+     * @param newTitle 新标题
+     * @return 重定向到聊天视图
+     */
+    @RequirePermission("model:chat:edit:thread")
+    @GetMapping("/chat/view/editThreadTitle")
+    public ModelAndView editThreadTitle(
+            @RequestParam(name = "threadId") Long threadId,
+            @RequestParam(name = "newTitle") String newTitle,
+            RedirectAttributes ra) {
+        try {
+            // 编辑会话标题
+            Long updatedThreadId = modelChatService.editThreadTitle(threadId, newTitle);
+            // 重定向到聊天视图
+            return new ModelAndView("redirect:/model/chat/view?threadId=" + updatedThreadId);
+        } catch (BizException e) {
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+            return new ModelAndView("redirect:/model/chat/view");
+        }
+    }
+
+    /**
      * 删除会话
      * @param threadId 会话ID
      * @return 重定向到聊天视图
