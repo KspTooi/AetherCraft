@@ -5,7 +5,9 @@ import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
+import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
+import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -170,6 +172,21 @@ public class ModelChatController {
         }
         
         return emitter;
+    }
+
+    /**
+     * 批量聊天接口 - 长轮询方式
+     * @param dto 批量聊天请求参数
+     * @return 聊天片段
+     */
+    @RequirePermissionRest("model:chat:message")
+    @PostMapping("/chat/complete/batch")
+    public Result<ChatSegmentVo> chatCompleteBatch(@Valid @RequestBody BatchChatCompleteDto dto) {
+        try {
+            return Result.success(modelChatService.chatCompleteBatch(dto));
+        } catch (BizException e) {
+            return Result.error(e);
+        }
     }
 
     /**
