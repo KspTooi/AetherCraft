@@ -496,7 +496,7 @@ public class ModelChatService {
             ModelChatThreadPo thread = createOrRetrieveThread(dto.getThread(), userId, modelEnum.getCode());
 
             // 保存用户消息
-            createHistory(thread, dto.getMessage(), 0);
+            ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
 
             // 清理之前的片段（如果有）
             segmentRepository.deleteByThreadId(thread.getId());
@@ -621,12 +621,14 @@ public class ModelChatService {
                     }
             );
 
-            // 返回开始片段
+            // 返回用户消息作为第一次响应
             ChatSegmentVo vo = new ChatSegmentVo();
             vo.setThreadId(thread.getId());
+            vo.setHistoryId(userHistory.getId());
+            vo.setRole(0); // 用户角色
             vo.setSequence(startSegment.getSequence());
-            vo.setContent(null);
-            vo.setType(0); // 开始类型
+            vo.setContent(dto.getMessage()); // 返回用户的消息内容
+            vo.setType(0); // 数据类型
             return vo;
 
         } catch (Exception e) {
