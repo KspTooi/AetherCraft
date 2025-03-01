@@ -29,6 +29,10 @@ public class ModelChatThreadPo {
     @Column(length = 50, nullable = false)
     private String modelCode;
     
+    @Comment("是否已生成过标题 0-未生成 1-已生成")
+    @Column(nullable = false)
+    private Integer titleGenerated;
+    
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ModelChatHistoryPo> histories;
     
@@ -44,6 +48,9 @@ public class ModelChatThreadPo {
     protected void onCreate() {
         createTime = new Date();
         updateTime = new Date();
+        if (titleGenerated == null) {
+            titleGenerated = 0; // 默认未生成
+        }
     }
     
     @PreUpdate
