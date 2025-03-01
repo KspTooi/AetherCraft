@@ -40,6 +40,8 @@ import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import java.util.concurrent.ConcurrentHashMap;
+import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 
 @Slf4j
 @Service
@@ -67,6 +69,9 @@ public class ModelChatService {
     
     @Autowired
     private ConfigService configService;
+    
+    @Autowired
+    private GlobalConfigService globalConfigService;
     
     @Autowired
     private ModelChatThreadRepository threadRepository;
@@ -775,6 +780,12 @@ public class ModelChatService {
      */
     public void generateThreadTitle(Long threadId, String model) throws BizException {
         try {
+            // 检查是否需要生成标题
+            boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
+            if (!shouldGenerateTitle) {
+                return; // 配置为不生成标题，直接返回
+            }
+            
             // 获取会话
             ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
             if (thread == null) {
@@ -805,8 +816,12 @@ public class ModelChatService {
                 return; // 没有找到用户消息或消息内容为空
             }
             
-            // 构建请求消息
-            String prompt = "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:" + firstUserMessage.getContent();
+            // 从配置获取提示语模板
+            String promptTemplate = globalConfigService.get("model.chat.gen.thread.prompt", 
+                "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:#{content}");
+            
+            // 替换模板中的内容占位符
+            String prompt = promptTemplate.replace("#{content}", firstUserMessage.getContent());
             
             // 获取当前用户ID
             Long userId = thread.getUserId();
