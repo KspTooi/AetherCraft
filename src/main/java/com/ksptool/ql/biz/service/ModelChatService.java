@@ -571,6 +571,9 @@ public class ModelChatService {
                             }
                             
                             if (context.getType() == 1) {
+                                // 保存AI响应到历史记录
+                                ModelChatHistoryPo aiHistory = createHistory(thread, context.getContent(), 1);
+                                
                                 // 完成类型 - 创建结束片段
                                 ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
                                 endSegment.setUserId(userId);
@@ -579,10 +582,8 @@ public class ModelChatService {
                                 endSegment.setContent(null);
                                 endSegment.setStatus(0); // 未读状态
                                 endSegment.setType(2); // 结束类型
+                                endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
                                 segmentRepository.save(endSegment);
-
-                                // 保存AI响应到历史记录
-                                createHistory(thread, context.getContent(), 1);
 
                                 // 更新会话使用的模型
                                 thread.setModelCode(modelEnum.getCode());
@@ -628,7 +629,7 @@ public class ModelChatService {
             vo.setRole(0); // 用户角色
             vo.setSequence(startSegment.getSequence());
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
-            vo.setType(0); // 数据类型
+            vo.setType(0); // 起始类型，而不是数据类型
             return vo;
 
         } catch (Exception e) {
@@ -717,9 +718,14 @@ public class ModelChatService {
         // 转换为VO
         ChatSegmentVo vo = new ChatSegmentVo();
         vo.setThreadId(threadId);
+        vo.setHistoryId(segment.getHistoryId()); // 设置历史记录ID
         vo.setSequence(segment.getSequence());
         vo.setContent(segment.getContent());
         vo.setType(segment.getType());
+        
+        // 直接设置角色为AI助手，因为chatCompleteQueryBatch不会获取到用户消息
+        vo.setRole(1); // AI助手角色
+        
         return vo;
     }
 
