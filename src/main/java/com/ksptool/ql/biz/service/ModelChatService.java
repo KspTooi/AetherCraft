@@ -412,23 +412,23 @@ public class ModelChatService {
                     if (context.getType() == 0) {
                         // 数据类型
                         String text = context.getContent();
-                        if (text != null) {
-                            responseBuilder.append(text);
-                            callback.accept(text);
+                                if (text != null) {
+                                    responseBuilder.append(text);
+                                    callback.accept(text);
                         }
                     } else if (context.getType() == 1) {
                         // 完成类型
                         // 保存完整的AI响应
                         String fullResponse = context.getContent();
-                        if (!StringUtils.hasText(fullResponse)) {
-                            throw new BizException("Gemini API 返回内容为空");
-                        }
-                        
-                        createHistory(thread, fullResponse, 1);
-                        
-                        //更新会话使用的模型
-                        thread.setModelCode(modelEnum.getCode());
-                        threadRepository.save(thread);
+            if (!StringUtils.hasText(fullResponse)) {
+                throw new BizException("Gemini API 返回内容为空");
+            }
+            
+            createHistory(thread, fullResponse, 1);
+            
+            //更新会话使用的模型
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
                     } else if (context.getType() == 2) {
                         // 错误类型
                         throw new BizException("AI对话失败: " + 
@@ -559,21 +559,21 @@ public class ModelChatService {
                         try {
                             // 从ModelChatContext中获取contextId
                             String contextId = context.getContextId();
-                            
-                            // 首次收到消息时，将contextId存入映射表
-                            if (!chatThreadProcessingStatus.containsValue(contextId)) {
-                                chatThreadProcessingStatus.put(threadId, contextId);
-                            }
-                            
+
                             // 检查该contextId是否已被终止
                             if (terminatedContextIds.containsKey(contextId)) {
-                                // 如果是完成回调，从终止列表中移除
+                                // 如果是完成或错误回调，从终止列表中移除
                                 if (context.getType() == 1 || context.getType() == 2) {
                                     terminatedContextIds.remove(contextId);
                                 }
                                 return;
                             }
-                            
+
+                            // 首次收到消息时，将contextId存入映射表
+                            if (!chatThreadProcessingStatus.containsValue(contextId)) {
+                                chatThreadProcessingStatus.put(threadId, contextId);
+                            }
+
                             // 获取当前最大序号
                             int nextSequence = segmentRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
                             
