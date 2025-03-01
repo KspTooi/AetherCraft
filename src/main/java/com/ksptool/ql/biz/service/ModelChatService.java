@@ -587,7 +587,15 @@ public class ModelChatService {
                                 // 更新会话使用的模型
                                 thread.setModelCode(modelEnum.getCode());
                                 threadRepository.save(thread);
-
+                                
+                                // 尝试生成会话标题
+                                try {
+                                    generateThreadTitle(thread.getId(), modelEnum.getCode());
+                                } catch (Exception e) {
+                                    log.error("生成会话标题失败", e);
+                                    // 生成标题失败不影响主流程
+                                }
+                                
                                 // 清理会话状态
                                 chatThreadProcessingStatus.remove(thread.getId());
                                 return;
@@ -599,9 +607,7 @@ public class ModelChatService {
                                 errorSegment.setUserId(userId);
                                 errorSegment.setThread(thread);
                                 errorSegment.setSequence(nextSequence);
-                                errorSegment.setContent(context.getException() != null ? 
-                                        "AI响应错误: " + context.getException().getMessage() : 
-                                        "AI响应错误");
+                                errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
                                 errorSegment.setStatus(0); // 未读状态
                                 errorSegment.setType(10); // 错误类型
                                 segmentRepository.save(errorSegment);
@@ -759,5 +765,86 @@ public class ModelChatService {
         endSegment.setStatus(0); // 未读状态
         endSegment.setType(2); // 结束类型
         segmentRepository.save(endSegment);
+    }
+
+    /**
+     * 生成会话标题
+     * @param threadId 会话ID
+     * @param model 模型代码
+     * @throws BizException 业务异常
+     */
+    public void generateThreadTitle(Long threadId, String model) throws BizException {
+        try {
+            // 获取会话
+            ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+            if (thread == null) {
+                throw new BizException("会话不存在");
+            }
+            
+            // 检查是否已生成过标题
+            if (thread.getTitleGenerated() != null && thread.getTitleGenerated() == 1) {
+                return; // 已生成过标题，直接返回
+            }
+            
+            // 获取第一条用户消息
+            List<ModelChatHistoryPo> histories = thread.getHistories();
+            if (histories == null || histories.isEmpty()) {
+                return; // 没有历史记录，无法生成标题
+            }
+            
+            // 查找第一条用户消息
+            ModelChatHistoryPo firstUserMessage = null;
+            for (ModelChatHistoryPo history : histories) {
+                if (history.getRole() == 0) { // 用户消息
+                    firstUserMessage = history;
+                    break;
+                }
+            }
+            
+            if (firstUserMessage == null || !StringUtils.hasText(firstUserMessage.getContent())) {
+                return; // 没有找到用户消息或消息内容为空
+            }
+            
+            // 构建请求消息
+            String prompt = "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:" + firstUserMessage.getContent();
+            
+            // 获取当前用户ID
+            Long userId = thread.getUserId();
+            
+            // 创建请求DTO
+            ModelChatParam modelChatParam = createModelChatDto(model, userId);
+            modelChatParam.setMessage(prompt);
+            
+            // 设置API URL和API Key
+            String baseKey = "ai.model.cfg." + model + ".";
+            String proxyUrl = configService.get(baseKey + "proxy", userId);
+            String apiKey = configService.get(baseKey + "apiKey", userId);
+            
+            if (!StringUtils.hasText(apiKey)) {
+                throw new BizException("未配置API Key");
+            }
+            
+            modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+            modelChatParam.setApiKey(apiKey);
+            
+            // 发送请求
+            String title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            
+            // 处理标题（去除引号和多余空格，限制长度）
+            title = title.replaceAll("^\"|\"$", "").trim();
+            if (title.length() > 100) {
+                title = title.substring(0, 97) + "...";
+            }
+            
+            // 更新会话标题
+            thread.setTitle(title);
+            thread.setTitleGenerated(1); // 标记为已生成标题
+            threadRepository.save(thread);
+            
+            log.info("已为会话 {} 生成标题: {}", threadId, title);
+        } catch (Exception e) {
+            log.error("生成会话标题失败", e);
+            // 生成标题失败不抛出异常，不影响主流程
+        }
     }
 }
