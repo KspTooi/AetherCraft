@@ -495,7 +495,7 @@ public class ModelChatService {
      * @return 聊天片段VO
      * @throws BizException 业务异常
      */
-    private ChatSegmentVo chatCompleteSendBatch(BatchChatCompleteDto dto) throws BizException {
+    public ChatSegmentVo chatCompleteSendBatch(BatchChatCompleteDto dto) throws BizException {
         Long threadId = dto.getThread();
 
         // 检查该会话是否正在处理中
@@ -665,7 +665,7 @@ public class ModelChatService {
      * @return 聊天片段VO
      * @throws BizException 业务异常
      */
-    private ChatSegmentVo chatCompleteQueryBatch(BatchChatCompleteDto dto) throws BizException {
+    public ChatSegmentVo chatCompleteQueryBatch(BatchChatCompleteDto dto) throws BizException {
         Long threadId = dto.getThread();
         Long userId = AuthService.getCurrentUserId();
         

@@ -191,6 +191,14 @@ public class ModelChatController {
                 if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
                     return Result.error("发送消息时，消息内容不能为空");
                 }
+                
+                // 发送消息
+                return Result.success(modelChatService.chatCompleteSendBatch(dto));
+            }
+            
+            // 查询响应
+            if (dto.getQueryKind() == 1) {
+                return Result.success(modelChatService.chatCompleteQueryBatch(dto));
             }
             
             // 处理终止操作的特殊情况
@@ -199,7 +207,8 @@ public class ModelChatController {
                 return Result.success("AI响应已终止", null);
             }
             
-            return Result.success(modelChatService.chatCompleteBatch(dto));
+            // 默认情况
+            return Result.error("无效的查询类型");
         } catch (BizException e) {
             return Result.error(e);
         }
