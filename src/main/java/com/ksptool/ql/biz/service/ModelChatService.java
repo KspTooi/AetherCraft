@@ -588,7 +588,10 @@ public class ModelChatService {
                                 dataSegment.setStatus(0); // 未读状态
                                 dataSegment.setType(1); // 数据类型
                                 segmentRepository.save(dataSegment);
-                            } else if (context.getType() == 1) {
+                                return;
+                            }
+                            
+                            if (context.getType() == 1) {
                                 // 完成类型 - 创建结束片段
                                 ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
                                 endSegment.setUserId(userId);
@@ -608,7 +611,10 @@ public class ModelChatService {
 
                                 // 清理会话状态
                                 chatThreadProcessingStatus.remove(thread.getId());
-                            } else if (context.getType() == 2) {
+                                return;
+                            }
+                            
+                            if (context.getType() == 2) {
                                 // 错误类型 - 创建错误片段
                                 ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
                                 errorSegment.setUserId(userId);
@@ -623,6 +629,7 @@ public class ModelChatService {
 
                                 // 清理会话状态
                                 chatThreadProcessingStatus.remove(thread.getId());
+                                return;
                             }
                         } catch (Exception e) {
                             log.error("处理聊天片段失败", e);
