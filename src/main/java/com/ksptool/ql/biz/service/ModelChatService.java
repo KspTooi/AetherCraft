@@ -461,6 +461,10 @@ public class ModelChatService {
             throw new BizException("无权删除该会话");
         }
         
+        // 先删除关联的聊天片段
+        segmentRepository.deleteByThreadId(threadId);
+        
+        // 再删除会话
         threadRepository.delete(thread);
     }
 
