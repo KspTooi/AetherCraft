@@ -465,31 +465,6 @@ public class ModelChatService {
     }
 
     /**
-     * 批量聊天完成 - 长轮询方式
-     * @param dto 批量聊天请求参数
-     * @return 聊天片段VO
-     * @throws BizException 业务异常
-     */
-    public ChatSegmentVo chatCompleteBatch(BatchChatCompleteDto dto) throws BizException {
-        // 根据queryKind处理不同的请求类型
-        if (dto.getQueryKind() == 0) { // 发送消息
-            return chatCompleteSendBatch(dto);
-        }
-        
-        if (dto.getQueryKind() == 1) { // 查询响应流
-            return chatCompleteQueryBatch(dto);
-        }
-        
-        if (dto.getQueryKind() == 2) { // 终止AI响应
-            chatCompleteTerminateBatch(dto);
-            return null; // 终止操作不返回片段
-        }
-        
-        // 默认情况
-        throw new BizException("无效的查询类型");
-    }
-    
-    /**
      * 发送批量聊天消息
      * @param dto 批量聊天请求参数
      * @return 聊天片段VO
