@@ -453,131 +453,149 @@
             // 添加AI消息占位
             const aiMessageDiv = ChatMessages.appendMessage('正在输入...', 'assistant');
 
+            // 创建批量聊天请求数据
             const requestData = {
-                chatThread: currentThreadId || -1,
+                thread: currentThreadId || -1,
                 model: document.getElementById('modelSelect').value,
-                message: message
+                message: message,
+                queryKind: 0 // 0表示发送消息
             };
 
-            fetch('/model/chat/complete/stream', {
+            // 发送消息请求
+            fetch('/model/chat/complete/batch', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestData)
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = ''; // 用于累积未完整接收的行
-                    let hasReceivedData = false; // 标记是否收到过数据
-
-                    function processText(text) {
-                        buffer += text;
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); // 未完整的行保留在buffer中
-
-                        lines.forEach(line => {
-                            if (line.startsWith('data:')) {
-                                try {
-                                    const jsonString = line.substring(5).trim();
-                                    const response = JSON.parse(jsonString);
-
-                                    switch (response.code) {
-                                        case 0: // 开始生成
-                                            console.log('开始生成:', response.data);
-                                            break;
-                                        case 1: // 数据传输
-                                            if (!hasReceivedData) {
-                                                aiMessageDiv.textContent = ''; // 清除"正在输入..."
-                                                hasReceivedData = true;
-                                            }
-                                            ChatMessages.updateLastMessage(aiMessageDiv.textContent + response.data, 'assistant');
-                                            ChatMessages.scrollToBottom();
-                                            break;
-                                        case 2: // 生成完成
-                                            console.log('生成完成:', response.data);
-                                            if (!currentThreadId) {
-                                                updateThreadList(); // 新对话时更新会话列表
-                                            }
-                                            break;
-                                        case 10: // 错误事件
-                                            // 移除错误的聊天气泡和用户消息
-                                            ChatMessages.removeLastMessage(); // 移除AI消息
-                                            ChatMessages.removeLastMessage(); // 移除用户消息
-                                            
-                                            // 从sessionStorage恢复消息到输入框
-                                            const previousMessage = sessionStorage.getItem('user.previous.message');
-                                            if (previousMessage) {
-                                                input.value = previousMessage;
-                                                adjustTextareaHeight(input);
-                                            }
-                                            
-                                            showToast('danger', response.data || '服务器返回错误');
-                                            // 重置输入状态
-                                            input.disabled = false;
-                                            document.getElementById('sendButton').disabled = false;
-                                            input.focus();
-                                            break;
-                                        default:
-                                            // 移除错误的聊天气泡
-                                            ChatMessages.removeLastMessage();
-                                            showToast('danger', response.data || '未知错误');
-                                            break;
-                                    }
-                                } catch (error) {
-                                    console.error('解析JSON失败:', error, '原始行:', line);
-                                    // 移除错误的聊天气泡
-                                    ChatMessages.removeLastMessage();
-                                    showToast('danger', `解析响应失败: ${error.message}`);
+            .then(response => response.json())
+            .then(response => {
+                if (response.code !== 0) {
+                    throw new Error(response.message || '发送消息失败');
+                }
+                
+                // 开始轮询获取响应
+                let responseText = '';
+                let isCompleted = false;
+                
+                // 定义轮询函数
+                function pollResponse() {
+                    if (isCompleted) return;
+                    
+                    // 创建查询请求
+                    const queryData = {
+                        thread: currentThreadId,
+                        queryKind: 1 // 1表示查询响应
+                    };
+                    
+                    fetch('/model/chat/complete/batch', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(queryData)
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.code !== 0) {
+                            throw new Error(response.message || '查询响应失败');
+                        }
+                        
+                        // 如果没有数据，继续轮询
+                        if (!response.data) {
+                            setTimeout(pollResponse, 300);
+                            return;
+                        }
+                        
+                        const segment = response.data;
+                        
+                        // 根据片段类型处理
+                        switch (segment.type) {
+                            case 0: // 开始
+                                console.log('开始生成');
+                                setTimeout(pollResponse, 300);
+                                break;
+                                
+                            case 1: // 数据
+                                if (responseText === '') {
+                                    aiMessageDiv.textContent = ''; // 清除"正在输入..."
                                 }
-                            }
-                        });
-                    }
-
-                    function readStream() {
-                        reader.read().then(({ done, value }) => {
-                            if (done) {
-                                if (!hasReceivedData) {
-                                    // 移除空响应的聊天气泡
-                                    ChatMessages.removeLastMessage();
+                                responseText += segment.content;
+                                ChatMessages.updateLastMessage(responseText, 'assistant');
+                                ChatMessages.scrollToBottom();
+                                setTimeout(pollResponse, 300);
+                                break;
+                                
+                            case 2: // 结束
+                                console.log('生成完成');
+                                isCompleted = true;
+                                if (!currentThreadId) {
+                                    updateThreadList(); // 新对话时更新会话列表
                                 }
                                 input.disabled = false;
                                 document.getElementById('sendButton').disabled = false;
                                 input.focus();
-                                console.log('流读取完成');
-                                return;
-                            }
-
-                            const chunk = decoder.decode(value, { stream: true });
-                            processText(chunk);
-                            readStream();
-                        }).catch(error => {
-                            console.error('读取流失败:', error);
-                            // 移除错误的聊天气泡
-                            ChatMessages.removeLastMessage();
-                            showToast('danger', `读取响应失败: ${error.message}`);
-                            input.disabled = false;
-                            document.getElementById('sendButton').disabled = false;
-                            input.focus();
-                        });
-                    }
-
-                    readStream();
-                })
-                .catch(error => {
-                    console.error('请求失败:', error);
-                    // 移除错误的聊天气泡
-                    ChatMessages.removeLastMessage();
-                    showToast('danger', error.message || '网络请求失败');
-                    input.disabled = false;
-                    document.getElementById('sendButton').disabled = false;
-                    input.focus();
-                });
+                                break;
+                                
+                            case 10: // 错误
+                                isCompleted = true;
+                                // 移除错误的聊天气泡和用户消息
+                                ChatMessages.removeLastMessage(); // 移除AI消息
+                                ChatMessages.removeLastMessage(); // 移除用户消息
+                                
+                                // 从sessionStorage恢复消息到输入框
+                                const previousMessage = sessionStorage.getItem('user.previous.message');
+                                if (previousMessage) {
+                                    input.value = previousMessage;
+                                    adjustTextareaHeight(input);
+                                }
+                                
+                                showToast('danger', segment.content || '服务器返回错误');
+                                input.disabled = false;
+                                document.getElementById('sendButton').disabled = false;
+                                input.focus();
+                                break;
+                                
+                            default:
+                                setTimeout(pollResponse, 300);
+                                break;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('查询响应失败:', error);
+                        isCompleted = true;
+                        // 移除错误的聊天气泡
+                        ChatMessages.removeLastMessage();
+                        showToast('danger', error.message || '查询响应失败');
+                        input.disabled = false;
+                        document.getElementById('sendButton').disabled = false;
+                        input.focus();
+                    });
+                }
+                
+                // 开始轮询
+                setTimeout(pollResponse, 300);
+            })
+            .catch(error => {
+                console.error('请求失败:', error);
+                // 移除错误的聊天气泡
+                ChatMessages.removeLastMessage();
+                // 移除用户消息
+                ChatMessages.removeLastMessage();
+                
+                // 从sessionStorage恢复消息到输入框
+                const previousMessage = sessionStorage.getItem('user.previous.message');
+                if (previousMessage) {
+                    input.value = previousMessage;
+                    adjustTextareaHeight(input);
+                }
+                
+                showToast('danger', error.message || '网络请求失败');
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            });
         }
 
         // 页面加载完成后自动聚焦到输入框和滚动到最新消息
