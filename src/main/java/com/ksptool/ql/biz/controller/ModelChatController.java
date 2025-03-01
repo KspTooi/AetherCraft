@@ -254,4 +254,26 @@ public class ModelChatController {
         }
         return mav;
     }
+
+    /**
+     * 删除指定的历史消息
+     * @param threadId 会话ID
+     * @param historyId 历史消息ID
+     * @return 重定向到聊天视图
+     */
+    @RequirePermission("model:chat:remove:history")
+    @GetMapping("/chat/view/removeHistory")
+    public ModelAndView removeHistory(
+            @RequestParam(name = "threadId") Long threadId,
+            @RequestParam(name = "historyId") Long historyId,
+            RedirectAttributes ra) {
+        ModelAndView mav = new ModelAndView("redirect:/model/chat/view?threadId=" + threadId);
+        try {
+            modelChatService.removeHistory(threadId, historyId);
+            ra.addFlashAttribute("vo", Result.success("历史消息已删除", null));
+        } catch (BizException e) {
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+        }
+        return mav;
+    }
 } 

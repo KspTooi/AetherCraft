@@ -909,4 +909,43 @@ public class ModelChatService {
             // 生成标题失败不抛出异常，不影响主流程
         }
     }
+
+
+    /**
+     * 删除指定的历史消息
+     * @param threadId 会话ID
+     * @param historyId 历史消息ID
+     * @throws BizException 业务异常
+     */
+    public void removeHistory(Long threadId, Long historyId) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 检查会话是否存在
+        ModelChatThreadPo thread = threadRepository.findById(threadId).orElse(null);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+        
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权删除该历史消息");
+        }
+        
+        // 检查历史消息是否存在
+        ModelChatHistoryPo history = historyRepository.findById(historyId).orElse(null);
+        if (history == null) {
+            throw new BizException("历史消息不存在");
+        }
+        
+        // 检查历史消息是否属于该会话
+        if (!history.getThread().getId().equals(threadId)) {
+            throw new BizException("历史消息不属于该会话");
+        }
+        
+        // 删除历史消息
+        historyRepository.delete(history);
+        
+        log.info("已删除会话 {} 的历史消息 {}", threadId, historyId);
+    }
 }
