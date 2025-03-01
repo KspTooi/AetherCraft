@@ -28,6 +28,10 @@ public class ModelChatSegmentPo {
     @JoinColumn(name = "thread_id", nullable = false)
     private ModelChatThreadPo thread;
     
+    @Comment("关联的历史记录ID")
+    @Column(name = "history_id")
+    private Long historyId;
+    
     @Comment("片段序号，用于排序")
     @Column(nullable = false)
     private Integer sequence;

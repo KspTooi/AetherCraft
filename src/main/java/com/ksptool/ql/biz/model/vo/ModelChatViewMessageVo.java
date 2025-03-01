@@ -10,7 +10,7 @@ import java.util.Date;
 public class ModelChatViewMessageVo {
     
     /**
-     * 消息ID
+     * 消息历史记录ID
      */
     private Long id;
     
