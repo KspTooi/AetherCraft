@@ -29,11 +29,7 @@ public class ChatSegmentVo {
      * 1 - 数据
      * 2 - 结束
      * 10 - 错误
+     * null - 无数据
      */
     private Integer type;
-    
-    /**
-     * 是否还有更多片段
-     */
-    private Boolean hasMore;
 } 

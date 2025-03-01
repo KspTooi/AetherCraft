@@ -8,15 +8,13 @@ import lombok.Data;
 public class BatchChatCompleteDto {
 
     @NotNull
-    private Long chatThread;
+    private Long thread;
 
-    @NotBlank
     private String model;
 
-    @NotBlank(message = "消息内容不能为空")
     private String message;
 
-    @NotBlank
+    @NotNull
     private Integer queryKind; //0:发送消息 1:查询响应流 2:终止AI响应
 
 } 

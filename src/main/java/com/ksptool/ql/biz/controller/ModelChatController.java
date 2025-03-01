@@ -183,6 +183,22 @@ public class ModelChatController {
     @PostMapping("/chat/complete/batch")
     public Result<ChatSegmentVo> chatCompleteBatch(@Valid @RequestBody BatchChatCompleteDto dto) {
         try {
+            // 参数校验：只有queryKind=0时才需要model和message
+            if (dto.getQueryKind() == 0) {
+                if (dto.getModel() == null || dto.getModel().trim().isEmpty()) {
+                    return Result.error("发送消息时，模型代码不能为空");
+                }
+                if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
+                    return Result.error("发送消息时，消息内容不能为空");
+                }
+            }
+            
+            // 处理终止操作的特殊情况
+            if (dto.getQueryKind() == 2) {
+                modelChatService.chatCompleteTerminateBatch(dto);
+                return Result.success("AI响应已终止", null);
+            }
+            
             return Result.success(modelChatService.chatCompleteBatch(dto));
         } catch (BizException e) {
             return Result.error(e);

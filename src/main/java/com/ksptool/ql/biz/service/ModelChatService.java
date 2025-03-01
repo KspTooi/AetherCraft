@@ -39,6 +39,7 @@ import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -54,6 +55,13 @@ public class ModelChatService {
     private static final double DEFAULT_TEMPERATURE = 0.7;
     private static final double DEFAULT_TOP_P = 1.0;
     private static final int DEFAULT_TOP_K = 40;
+
+
+    // 线程安全的容器，记录聊天状态 <threadId, contextId>
+    private final ConcurrentHashMap<Long, String> chatThreadProcessingStatus = new ConcurrentHashMap<>();
+    
+    // 终止列表，存储已经被终止的contextId
+    private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
     
     private final Gson gson = new Gson();
     
@@ -386,41 +394,51 @@ public class ModelChatService {
             
             StringBuilder responseBuilder = new StringBuilder();
             
-            //处理SSE响应
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new BizException("调用Gemini API失败: " + response.body().string());
-                }
-                
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("data: ")) {
-                            String data = line.substring(6);
-                            if (!"[DONE]".equals(data)) {
-                                GeminiResponse geminiResponse = gson.fromJson(data, GeminiResponse.class);
-                                String text = geminiResponse.getFirstResponseText();
-                                if (text != null) {
-                                    responseBuilder.append(text);
-                                    callback.accept(text);
-                                }
-                            }
+            // 创建ModelChatParam对象
+            ModelChatParam modelChatParam = new ModelChatParam();
+            modelChatParam.setModelCode(modelEnum.getCode());
+            modelChatParam.setMessage(dto.getMessage());
+            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
+            modelChatParam.setApiKey(apiKey);
+            modelChatParam.setTemperature(temperature);
+            modelChatParam.setTopP(topP);
+            modelChatParam.setTopK(topK);
+            modelChatParam.setMaxOutputTokens(maxOutputTokens);
+            modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
+            
+            // 使用新的回调机制
+            modelGeminiService.sendMessageStream(client, modelChatParam, context -> {
+                try {
+                    if (context.getType() == 0) {
+                        // 数据类型
+                        String text = context.getContent();
+                        if (text != null) {
+                            responseBuilder.append(text);
+                            callback.accept(text);
                         }
+                    } else if (context.getType() == 1) {
+                        // 完成类型
+                        // 保存完整的AI响应
+                        String fullResponse = context.getContent();
+                        if (!StringUtils.hasText(fullResponse)) {
+                            throw new BizException("Gemini API 返回内容为空");
+                        }
+                        
+                        createHistory(thread, fullResponse, 1);
+                        
+                        //更新会话使用的模型
+                        thread.setModelCode(modelEnum.getCode());
+                        threadRepository.save(thread);
+                    } else if (context.getType() == 2) {
+                        // 错误类型
+                        throw new BizException("AI对话失败: " + 
+                            (context.getException() != null ? context.getException().getMessage() : "未知错误"));
                     }
+                } catch (Exception e) {
+                    log.error("处理SSE响应失败", e);
+                    throw new RuntimeException(e);
                 }
-            }
-            
-            //保存完整的AI响应
-            String fullResponse = responseBuilder.toString();
-            if (!StringUtils.hasText(fullResponse)) {
-                throw new BizException("Gemini API 返回内容为空");
-            }
-            
-            createHistory(thread, fullResponse, 1);
-            
-            //更新会话使用的模型
-            thread.setModelCode(modelEnum.getCode());
-            threadRepository.save(thread);
+            });
             
         } catch (Exception e) {
             throw new BizException("AI对话失败: " + e.getMessage());
@@ -453,26 +471,18 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public ChatSegmentVo chatCompleteBatch(BatchChatCompleteDto dto) throws BizException {
-        if (dto == null) {
-            throw new BizException("请求参数不能为空");
-        }
-        
-        // 获取当前用户ID
-        Long userId = AuthService.getCurrentUserId();
-        
         // 根据queryKind处理不同的请求类型
         if (dto.getQueryKind() == 0) { // 发送消息
-            return handleSendMessage(dto, userId);
+            return chatCompleteSendBatch(dto);
         }
         
         if (dto.getQueryKind() == 1) { // 查询响应流
-            // 暂不实现
-            throw new BizException("暂不支持查询响应流");
+            return chatCompleteQueryBatch(dto);
         }
         
         if (dto.getQueryKind() == 2) { // 终止AI响应
-            // 暂不实现
-            throw new BizException("暂不支持终止AI响应");
+            chatCompleteTerminateBatch(dto);
+            return null; // 终止操作不返回片段
         }
         
         // 默认情况
@@ -480,198 +490,289 @@ public class ModelChatService {
     }
     
     /**
-     * 处理发送消息请求
+     * 发送批量聊天消息
      * @param dto 批量聊天请求参数
-     * @param userId 用户ID
      * @return 聊天片段VO
      * @throws BizException 业务异常
      */
-    private ChatSegmentVo handleSendMessage(BatchChatCompleteDto dto, Long userId) throws BizException {
-        // 1. 验证参数
-        if (dto.getChatThread() == null) {
-            throw new BizException("会话ID不能为空");
+    private ChatSegmentVo chatCompleteSendBatch(BatchChatCompleteDto dto) throws BizException {
+        Long threadId = dto.getThread();
+
+        // 检查该会话是否正在处理中
+        if (chatThreadProcessingStatus.containsKey(threadId)) {
+            throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
-        
-        if (!StringUtils.hasText(dto.getModel())) {
-            throw new BizException("模型代码不能为空");
-        }
-        
-        if (!StringUtils.hasText(dto.getMessage())) {
-            throw new BizException("消息内容不能为空");
-        }
-        
-        // 2. 获取或创建会话
-        ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, dto.getModel());
-        
-        // 3. 检查当前会话是否有未完成的AI响应
-        int unreadCount = segmentRepository.countUnreadByThreadId(thread.getId());
-        if (unreadCount > 0) {
-            // 获取最后一个片段，检查是否为结束或错误类型
-            List<ModelChatSegmentPo> segments = segmentRepository.findByThreadIdOrderBySequenceAsc(thread.getId());
-            if (!segments.isEmpty()) {
-                ModelChatSegmentPo lastSegment = segments.get(segments.size() - 1);
-                if (lastSegment.getType() != 2 && lastSegment.getType() != 10) {
-                    throw new BizException("当前会话有未完成的AI响应，请等待响应完成后再发送新消息");
-                }
+
+        try {
+            // 获取并验证模型配置
+            AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+            if (modelEnum == null) {
+                throw new BizException("无效的模型代码");
             }
-        }
-        
-        // 4. 清除之前的所有片段
-        segmentRepository.deleteByThreadId(thread.getId());
-        
-        // 5. 保存用户消息到历史记录
-        createHistory(thread, dto.getMessage(), 0);
-        
-        // 6. 创建开始片段
-        ModelChatSegmentPo startSegment = new ModelChatSegmentPo();
-        startSegment.setUserId(userId);
-        startSegment.setThread(thread);
-        startSegment.setSequence(0);
-        startSegment.setContent("开始生成响应...");
-        startSegment.setStatus(0); // 未读取
-        startSegment.setType(0); // 开始类型
-        startSegment = segmentRepository.save(startSegment);
-        
-        // 7. 启动虚拟线程处理AI响应
-        Thread.startVirtualThread(() -> {
-            try {
-                // 获取模型配置
-                AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
-                if (modelEnum == null) {
-                    createErrorSegment(thread, userId, "无效的模型代码");
-                    return;
-                }
-                
-                String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-                String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent" + SSE_PARAM;
-                
-                // 获取所有配置
-                String apiKey = configService.get(baseKey + "apiKey", userId);
-                if (!StringUtils.hasText(apiKey)) {
-                    createErrorSegment(thread, userId, "未配置API Key");
-                    return;
-                }
-                
-                String proxyConfig = configService.get(baseKey + "proxy", userId);
-                double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
-                double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
-                int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
-                int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800, userId);
-                
-                // 创建HTTP客户端
-                OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
-                
-                // 构建并发送请求
-                GeminiRequest geminiRequest = GeminiRequest.ofHistory(
-                    thread.getHistories(), 
-                    dto.getMessage(),
-                        temperature,
-                        topP,
-                        topK,
-                        maxOutputTokens
-                );
-                String jsonBody = gson.toJson(geminiRequest);
-                
-                // 创建请求对象
-                Request request = new Request.Builder()
-                    .url(apiUrl + "&key=" + apiKey)
-                    .post(RequestBody.create(jsonBody, JSON))
-                    .build();
-                
-                StringBuilder responseBuilder = new StringBuilder();
-                int segmentSequence = 1; // 开始片段序号为0，数据片段从1开始
-                
-                // 处理SSE响应
-                try (Response response = client.newCall(request).execute()) {
-                    if (!response.isSuccessful()) {
-                        createErrorSegment(thread, userId, "调用Gemini API失败: " + response.body().string());
-                        return;
-                    }
-                    
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (line.startsWith("data: ")) {
-                                String data = line.substring(6);
-                                if (!"[DONE]".equals(data)) {
-                                    GeminiResponse geminiResponse = gson.fromJson(data, GeminiResponse.class);
-                                    String text = geminiResponse.getFirstResponseText();
-                                    if (text != null) {
-                                        responseBuilder.append(text);
-                                        
-                                        // 创建数据片段
-                                        ModelChatSegmentPo dataSegment = new ModelChatSegmentPo();
-                                        dataSegment.setUserId(userId);
-                                        dataSegment.setThread(thread);
-                                        dataSegment.setSequence(segmentSequence++);
-                                        dataSegment.setContent(text);
-                                        dataSegment.setStatus(0); // 未读取
-                                        dataSegment.setType(1); // 数据类型
-                                        segmentRepository.save(dataSegment);
-                                    }
-                                }
+
+            // 获取当前用户ID
+            Long userId = AuthService.getCurrentUserId();
+
+            // 获取或创建会话
+            ModelChatThreadPo thread = createOrRetrieveThread(dto.getThread(), userId, modelEnum.getCode());
+
+            // 保存用户消息
+            createHistory(thread, dto.getMessage(), 0);
+
+            // 清理之前的片段（如果有）
+            segmentRepository.deleteByThreadId(thread.getId());
+
+            // 创建开始片段并返回
+            ModelChatSegmentPo startSegment = new ModelChatSegmentPo();
+            startSegment.setUserId(userId);
+            startSegment.setThread(thread);
+            startSegment.setSequence(1);
+            startSegment.setContent(null);
+            startSegment.setStatus(0); // 未读状态
+            startSegment.setType(0); // 开始类型
+            segmentRepository.save(startSegment);
+
+            // 获取配置
+            String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+            String proxyConfig = configService.get(baseKey + "proxy", userId);
+            String apiKey = configService.get(baseKey + "apiKey", userId);
+            if (!StringUtils.hasText(apiKey)) {
+                throw new BizException("未配置API Key");
+            }
+
+            // 创建HTTP客户端
+            OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
+
+            // 创建请求DTO
+            ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), userId);
+            modelChatParam.setMessage(dto.getMessage());
+            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
+            modelChatParam.setApiKey(apiKey);
+            modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
+
+            // 异步调用ModelGeminiService发送流式请求
+            modelGeminiService.sendMessageStream(
+                    client,
+                    modelChatParam,
+                    // 统一回调 - 处理所有类型的消息
+                    context -> {
+                        try {
+                            // 从ModelChatContext中获取contextId
+                            String contextId = context.getContextId();
+                            
+                            // 首次收到消息时，将contextId存入映射表
+                            if (!chatThreadProcessingStatus.containsValue(contextId)) {
+                                chatThreadProcessingStatus.put(threadId, contextId);
                             }
+                            
+                            // 检查该contextId是否已被终止
+                            if (terminatedContextIds.containsKey(contextId)) {
+                                // 如果是完成回调，从终止列表中移除
+                                if (context.getType() == 1 || context.getType() == 2) {
+                                    terminatedContextIds.remove(contextId);
+                                }
+                                return;
+                            }
+                            
+                            // 获取当前最大序号
+                            int nextSequence = segmentRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
+                            
+                            // 根据context.type处理不同类型的消息
+                            if (context.getType() == 0) {
+                                // 数据类型 - 创建数据片段
+                                ModelChatSegmentPo dataSegment = new ModelChatSegmentPo();
+                                dataSegment.setUserId(userId);
+                                dataSegment.setThread(thread);
+                                dataSegment.setSequence(nextSequence);
+                                dataSegment.setContent(context.getContent());
+                                dataSegment.setStatus(0); // 未读状态
+                                dataSegment.setType(1); // 数据类型
+                                segmentRepository.save(dataSegment);
+                            } else if (context.getType() == 1) {
+                                // 完成类型 - 创建结束片段
+                                ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
+                                endSegment.setUserId(userId);
+                                endSegment.setThread(thread);
+                                endSegment.setSequence(nextSequence);
+                                endSegment.setContent(null);
+                                endSegment.setStatus(0); // 未读状态
+                                endSegment.setType(2); // 结束类型
+                                segmentRepository.save(endSegment);
+
+                                // 保存AI响应到历史记录
+                                createHistory(thread, context.getContent(), 1);
+
+                                // 更新会话使用的模型
+                                thread.setModelCode(modelEnum.getCode());
+                                threadRepository.save(thread);
+
+                                // 清理会话状态
+                                chatThreadProcessingStatus.remove(thread.getId());
+                            } else if (context.getType() == 2) {
+                                // 错误类型 - 创建错误片段
+                                ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
+                                errorSegment.setUserId(userId);
+                                errorSegment.setThread(thread);
+                                errorSegment.setSequence(nextSequence);
+                                errorSegment.setContent(context.getException() != null ? 
+                                        "AI响应错误: " + context.getException().getMessage() : 
+                                        "AI响应错误");
+                                errorSegment.setStatus(0); // 未读状态
+                                errorSegment.setType(10); // 错误类型
+                                segmentRepository.save(errorSegment);
+
+                                // 清理会话状态
+                                chatThreadProcessingStatus.remove(thread.getId());
+                            }
+                        } catch (Exception e) {
+                            log.error("处理聊天片段失败", e);
                         }
                     }
-                    
-                    // 获取完整响应
-                    String fullResponse = responseBuilder.toString();
-                    if (!StringUtils.hasText(fullResponse)) {
-                        createErrorSegment(thread, userId, "Gemini API 返回内容为空");
-                        return;
-                    }
-                    
-                    // 保存完整的AI响应到历史记录
-                    createHistory(thread, fullResponse, 1);
-                    
-                    // 创建结束片段
-                    ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
-                    endSegment.setUserId(userId);
-                    endSegment.setThread(thread);
-                    endSegment.setSequence(segmentSequence);
-                    endSegment.setContent("生成完成");
-                    endSegment.setStatus(0); // 未读取
-                    endSegment.setType(2); // 结束类型
-                    segmentRepository.save(endSegment);
-                    
-                    // 更新会话使用的模型
-                    thread.setModelCode(modelEnum.getCode());
-                    threadRepository.save(thread);
-                }
-            } catch (Exception e) {
-                log.error("AI对话失败", e);
-                createErrorSegment(thread, userId, "AI对话失败: " + e.getMessage());
+            );
+
+            // 返回开始片段
+            ChatSegmentVo vo = new ChatSegmentVo();
+            vo.setThreadId(thread.getId());
+            vo.setSequence(startSegment.getSequence());
+            vo.setContent(null);
+            vo.setType(0); // 开始类型
+            return vo;
+
+        } catch (Exception e) {
+            // 发生异常时清理会话状态
+            chatThreadProcessingStatus.remove(threadId);
+
+            // 清理所有片段
+            try {
+                segmentRepository.deleteByThreadId(threadId);
+            } catch (Exception ex) {
+                log.error("清理聊天片段失败", ex);
             }
-        });
+
+            throw new BizException("发送批量聊天消息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 查询批量聊天响应
+     * @param dto 批量聊天请求参数
+     * @return 聊天片段VO
+     * @throws BizException 业务异常
+     */
+    private ChatSegmentVo chatCompleteQueryBatch(BatchChatCompleteDto dto) throws BizException {
+        Long threadId = dto.getThread();
+        Long userId = AuthService.getCurrentUserId();
         
-        // 8. 返回开始片段
+        // 最大等待次数和等待时间
+        final int MAX_WAIT_TIMES = 10;
+        final long WAIT_INTERVAL_MS = 300;
+        
+        // 尝试获取未读片段，最多等待10次
+        List<ModelChatSegmentPo> unreadSegments = null;
+        int waitTimes = 0;
+        
+        while (waitTimes < MAX_WAIT_TIMES) {
+            unreadSegments = segmentRepository.findNextUnreadByThreadId(threadId);
+            
+            // 如果有未读片段，跳出循环
+            if (!unreadSegments.isEmpty()) {
+                break;
+            }
+            
+            // 如果没有未读片段，且会话不在处理中，直接返回null
+            if (!chatThreadProcessingStatus.containsKey(threadId)) {
+                // 没有未读片段
+                return null;
+            }
+            
+            // 等待一段时间后再次尝试
+            try {
+                Thread.sleep(WAIT_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new BizException("等待片段时被中断");
+            }
+            
+            waitTimes++;
+        }
+        
+        // 如果等待超时仍未获取到片段
+        if (unreadSegments == null || unreadSegments.isEmpty()) {
+            throw new BizException("等待片段超时，请稍后再试");
+        }
+        
+        // 获取第一个未读片段
+        ModelChatSegmentPo segment = unreadSegments.get(0);
+        
+        // 检查权限
+        if (!segment.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+        
+        // 检查是否为错误片段
+        if (segment.getType() == 10) {
+            // 标记为已读
+            segment.setStatus(1);
+            segmentRepository.save(segment);
+            throw new BizException(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+        }
+        
+        // 标记为已读
+        segment.setStatus(1); // 已读状态
+        segmentRepository.save(segment);
+        
+        // 转换为VO
         ChatSegmentVo vo = new ChatSegmentVo();
-        vo.setThreadId(thread.getId());
-        vo.setSequence(startSegment.getSequence());
-        vo.setContent(startSegment.getContent());
-        vo.setType(startSegment.getType());
-        vo.setHasMore(true); // 还有更多片段
+        vo.setThreadId(threadId);
+        vo.setSequence(segment.getSequence());
+        vo.setContent(segment.getContent());
+        vo.setType(segment.getType());
         return vo;
     }
-    
+
     /**
-     * 创建错误片段
-     * @param thread 会话
-     * @param userId 用户ID
-     * @param errorMessage 错误信息
+     * 终止批量聊天响应
+     * @param dto 批量聊天请求参数
+     * @throws BizException 业务异常
      */
-    private void createErrorSegment(ModelChatThreadPo thread, Long userId, String errorMessage) {
-        try {
-            ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
-            errorSegment.setUserId(userId);
-            errorSegment.setThread(thread);
-            errorSegment.setSequence(segmentRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
-            errorSegment.setContent(errorMessage);
-            errorSegment.setStatus(0); // 未读取
-            errorSegment.setType(10); // 错误类型
-            segmentRepository.save(errorSegment);
-        } catch (Exception e) {
-            log.error("创建错误片段失败", e);
+    public void chatCompleteTerminateBatch(BatchChatCompleteDto dto) throws BizException {
+        Long threadId = dto.getThread();
+        Long userId = AuthService.getCurrentUserId();
+
+        // 检查会话是否存在
+        ModelChatThreadPo thread = threadRepository.findById(threadId).orElse(null);
+        if (thread == null) {
+            throw new BizException("会话不存在");
         }
+
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+
+        // 获取当前正在进行的contextId
+        String contextId = chatThreadProcessingStatus.get(threadId);
+        if (contextId == null) {
+            throw new BizException("该会话未在进行中或已经终止");
+        }
+
+        // 将contextId加入终止列表
+        terminatedContextIds.put(contextId, true);
+        
+        // 清理会话状态
+        chatThreadProcessingStatus.remove(threadId);
+
+        // 获取当前最大序号
+        int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+
+        // 创建终止片段
+        ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
+        endSegment.setUserId(userId);
+        endSegment.setThread(thread);
+        endSegment.setSequence(nextSequence);
+        endSegment.setContent("用户终止了AI响应");
+        endSegment.setStatus(0); // 未读状态
+        endSegment.setType(2); // 结束类型
+        segmentRepository.save(endSegment);
     }
 }
