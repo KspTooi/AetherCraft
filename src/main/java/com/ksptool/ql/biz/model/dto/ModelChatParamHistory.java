@@ -3,10 +3,10 @@ package com.ksptool.ql.biz.model.dto;
 import lombok.Data;
 
 /**
- * 模型聊天历史记录DTO
+ * 模型聊天参数 - 历史记录
  */
 @Data
-public class ModelChatHistoryDto {
+public class ModelChatParamHistory {
     
     /**
      * 角色 0-用户 1-AI助手

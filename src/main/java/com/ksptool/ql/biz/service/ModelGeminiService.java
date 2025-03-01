@@ -1,8 +1,8 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
-import com.ksptool.ql.biz.model.dto.ModelChatDto;
-import com.ksptool.ql.biz.model.dto.ModelChatHistoryDto;
+import com.ksptool.ql.biz.model.dto.ModelChatParam;
+import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.gemini.GeminiResponse;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static com.ksptool.entities.Entities.as;
 
 /**
  * Gemini模型服务
@@ -37,13 +39,20 @@ public class ModelGeminiService {
      * @return 模型响应文本
      * @throws BizException 业务异常
      */
-    public String sendMessageSync(OkHttpClient client, ModelChatDto dto) throws BizException {
+    public String sendMessageSync(OkHttpClient client, ModelChatParam dto) throws BizException {
         try {
             // 验证参数
             validateParams(dto);
             
             // 构建请求
-            GeminiRequest geminiRequest = createGeminiRequest(dto);
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(
+                    as(dto.getHistories(),ModelChatHistoryPo.class),
+                    dto.getMessage(),
+                    dto.getTemperature(),
+                    dto.getTopP(),
+                    dto.getTopK(),
+                    dto.getMaxOutputTokens()
+            );
             String jsonBody = gson.toJson(geminiRequest);
             
             // 创建请求对象
@@ -87,13 +96,20 @@ public class ModelGeminiService {
      * @param callback 流式响应回调
      * @throws BizException 业务异常
      */
-    public void sendMessageStream(OkHttpClient client, ModelChatDto dto, Consumer<String> callback) throws BizException {
+    public void sendMessageStream(OkHttpClient client, ModelChatParam dto, Consumer<String> callback) throws BizException {
         try {
             // 验证参数
             validateParams(dto);
             
             // 构建请求
-            GeminiRequest geminiRequest = createGeminiRequest(dto);
+            GeminiRequest geminiRequest = GeminiRequest.ofHistory(
+                    as(dto.getHistories(),ModelChatHistoryPo.class),
+                    dto.getMessage(),
+                    dto.getTemperature(),
+                    dto.getTopP(),
+                    dto.getTopK(),
+                    dto.getMaxOutputTokens()
+            );
             String jsonBody = gson.toJson(geminiRequest);
             
             // 创建请求对象 - 使用流式API
@@ -144,42 +160,14 @@ public class ModelGeminiService {
             throw new BizException("发送流式消息失败: " + e.getMessage());
         }
     }
-    
-    /**
-     * 创建Gemini请求对象
-     * @param dto 聊天请求参数
-     * @return Gemini请求对象
-     */
-    private GeminiRequest createGeminiRequest(ModelChatDto dto) {
-        // 将DTO中的历史记录转换为PO类型
-        List<ModelChatHistoryPo> historyPos = new ArrayList<>();
-        if (dto.getHistories() != null && !dto.getHistories().isEmpty()) {
-            for (ModelChatHistoryDto historyDto : dto.getHistories()) {
-                ModelChatHistoryPo historyPo = new ModelChatHistoryPo();
-                historyPo.setRole(historyDto.getRole());
-                historyPo.setContent(historyDto.getContent());
-                historyPo.setSequence(historyDto.getSequence());
-                historyPos.add(historyPo);
-            }
-        }
-        
-        // 使用转换后的PO列表创建GeminiRequest
-        return GeminiRequest.ofHistory(
-            historyPos,
-            dto.getMessage(),
-            dto.getTemperature(),
-            dto.getTopP(),
-            dto.getTopK(),
-            dto.getMaxOutputTokens()
-        );
-    }
+
     
     /**
      * 验证请求参数
      * @param dto 聊天请求参数
      * @throws BizException 业务异常
      */
-    private void validateParams(ModelChatDto dto) throws BizException {
+    private void validateParams(ModelChatParam dto) throws BizException {
         if (dto == null) {
             throw new BizException("请求参数不能为空");
         }

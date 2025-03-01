@@ -4,10 +4,10 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 模型聊天请求DTO
+ * 模型聊天请求参数
  */
 @Data
-public class ModelChatDto {
+public class ModelChatParam {
     
     /**
      * 模型代码
@@ -22,7 +22,7 @@ public class ModelChatDto {
     /**
      * 历史记录列表
      */
-    private List<ModelChatHistoryDto> histories;
+    private List<ModelChatParamHistory> histories;
     
     /**
      * 温度参数

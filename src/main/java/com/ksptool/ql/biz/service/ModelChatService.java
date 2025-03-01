@@ -20,26 +20,25 @@ import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.ArrayList;
 import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
 import com.ksptool.ql.biz.model.vo.ModelChatViewThreadVo;
 import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
+
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.function.Consumer;
-import java.util.concurrent.TimeUnit;
+
 import com.ksptool.ql.biz.mapper.ModelChatSegmentRepository;
 import com.ksptool.ql.biz.model.po.ModelChatSegmentPo;
 import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
-import com.ksptool.ql.biz.model.dto.ModelChatDto;
-import com.ksptool.ql.biz.model.dto.ModelChatHistoryDto;
+import com.ksptool.ql.biz.model.dto.ModelChatParam;
+import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 
 @Slf4j
 @Service
@@ -155,7 +154,7 @@ public class ModelChatService {
      * @return 预填充配置的ModelChatDto
      * @throws BizException 业务异常
      */
-    public ModelChatDto createModelChatDto(String modelCode) throws BizException {
+    public ModelChatParam createModelChatDto(String modelCode) throws BizException {
         return createModelChatDto(modelCode, AuthService.getCurrentUserId());
     }
     
@@ -166,7 +165,7 @@ public class ModelChatService {
      * @return 预填充配置的ModelChatDto
      * @throws BizException 业务异常
      */
-    public ModelChatDto createModelChatDto(String modelCode, Long userId) throws BizException {
+    public ModelChatParam createModelChatDto(String modelCode, Long userId) throws BizException {
         // 验证模型代码
         AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
         if (modelEnum == null) {
@@ -183,7 +182,7 @@ public class ModelChatService {
         int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800, userId);
         
         // 创建并填充DTO
-        ModelChatDto dto = new ModelChatDto();
+        ModelChatParam dto = new ModelChatParam();
         dto.setModelCode(modelEnum.getCode());
         dto.setTemperature(temperature);
         dto.setTopP(topP);
@@ -207,7 +206,6 @@ public class ModelChatService {
             ///设置API URL和API Key Proxy
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String proxyUrl = configService.get(baseKey + "proxy");
-            String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent";
             String apiKey = configService.get(baseKey + "apiKey");
 
             if (!StringUtils.hasText(apiKey)) {
@@ -223,26 +221,16 @@ public class ModelChatService {
             createHistory(thread, dto.getMessage(), 0);
 
             //使用createModelChatDto创建请求DTO
-            ModelChatDto modelChatDto = createModelChatDto(modelEnum.getCode(), userId);
-            modelChatDto.setMessage(dto.getMessage());
-            modelChatDto.setUrl(apiUrl);
-            modelChatDto.setApiKey(apiKey);
+            ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), userId);
+            modelChatParam.setMessage(dto.getMessage());
+            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent");
+            modelChatParam.setApiKey(apiKey);
             
             //转换历史记录
-            List<ModelChatHistoryDto> historyDtos = new ArrayList<>();
-            if (thread.getHistories() != null) {
-                for (ModelChatHistoryPo historyPo : thread.getHistories()) {
-                    ModelChatHistoryDto historyDto = new ModelChatHistoryDto();
-                    historyDto.setRole(historyPo.getRole());
-                    historyDto.setContent(historyPo.getContent());
-                    historyDto.setSequence(historyPo.getSequence());
-                    historyDtos.add(historyDto);
-                }
-            }
-            modelChatDto.setHistories(historyDtos);
+            modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
             
             //调用ModelGeminiService发送请求
-            String responseText = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatDto);
+            String responseText = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
             
             //保存AI响应
             createHistory(thread, responseText, 1);
@@ -252,7 +240,6 @@ public class ModelChatService {
             threadRepository.save(thread);
             
             ret.setContent(responseText);
-            ret.setConversationId(java.util.UUID.randomUUID().toString());
             
         } catch (Exception e) {
             throw new BizException("AI对话失败: " + e.getMessage());
@@ -334,13 +321,10 @@ public class ModelChatService {
         vo.setCurrentThreadId(threadId);
         
         // 设置当前会话信息
-        if (thread != null) {
-            ModelChatViewThreadVo currentThread = new ModelChatViewThreadVo();
-            assign(thread, currentThread);
-            vo.setCurrentThread(currentThread);
-            vo.setSelectedModel(thread.getModelCode());
-        }
-        
+        ModelChatViewThreadVo currentThread = new ModelChatViewThreadVo();
+        assign(thread, currentThread);
+        vo.setCurrentThread(currentThread);
+        vo.setSelectedModel(thread.getModelCode());
         return vo;
     }
     
@@ -386,11 +370,11 @@ public class ModelChatService {
             //构建并发送请求
             GeminiRequest geminiRequest = GeminiRequest.ofHistory(
                 thread.getHistories(), 
-                dto.getMessage(), 
-                Double.valueOf(temperature), 
-                Double.valueOf(topP), 
-                Integer.valueOf(topK), 
-                Integer.valueOf(maxOutputTokens)
+                dto.getMessage(),
+                temperature,
+                topP,
+                topK,
+                maxOutputTokens
             );
             String jsonBody = gson.toJson(geminiRequest);
             
@@ -580,11 +564,11 @@ public class ModelChatService {
                 // 构建并发送请求
                 GeminiRequest geminiRequest = GeminiRequest.ofHistory(
                     thread.getHistories(), 
-                    dto.getMessage(), 
-                    Double.valueOf(temperature), 
-                    Double.valueOf(topP), 
-                    Integer.valueOf(topK), 
-                    Integer.valueOf(maxOutputTokens)
+                    dto.getMessage(),
+                        temperature,
+                        topP,
+                        topK,
+                        maxOutputTokens
                 );
                 String jsonBody = gson.toJson(geminiRequest);
                 
@@ -667,7 +651,6 @@ public class ModelChatService {
         vo.setContent(startSegment.getContent());
         vo.setType(startSegment.getType());
         vo.setHasMore(true); // 还有更多片段
-        
         return vo;
     }
     

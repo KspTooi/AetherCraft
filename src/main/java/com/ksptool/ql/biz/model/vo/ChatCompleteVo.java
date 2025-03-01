@@ -5,9 +5,6 @@ import lombok.Data;
 @Data
 public class ChatCompleteVo {
 
-    //对话ID
-    private String conversationId;
-
     //对话串ID
     private Long chatThread;
 
