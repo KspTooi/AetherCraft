@@ -6,7 +6,6 @@ import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
-import com.ksptool.ql.biz.model.gemini.GeminiResponse;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.commons.exception.BizException;
@@ -16,7 +15,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,8 +27,7 @@ import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+
 import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.mapper.ModelChatSegmentRepository;
@@ -40,8 +37,6 @@ import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import java.util.concurrent.ConcurrentHashMap;
-import com.ksptool.ql.biz.service.ConfigService;
-import com.ksptool.ql.biz.service.GlobalConfigService;
 
 @Slf4j
 @Service
@@ -148,7 +143,7 @@ public class ModelChatService {
         return thread;
     }
     
-    private void createHistory(ModelChatThreadPo thread, String content, Integer role) {
+    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) {
         ModelChatHistoryPo history = new ModelChatHistoryPo();
         history.setThread(thread);
         history.setUserId(thread.getUserId());
@@ -158,7 +153,7 @@ public class ModelChatService {
         // 获取当前最大序号并加1
         int nextSequence = historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
         history.setSequence(nextSequence);
-        historyRepository.save(history);
+        return historyRepository.save(history);
     }
     
     /**
