@@ -240,15 +240,19 @@
                                         <div class="mb-4 text-center">
                                             <div class="position-relative d-inline-block">
                                                 <div class="avatar-preview mb-3 mx-auto">
-                                                    <i class="bi bi-person" th:style="${data.avatarPath != null ? 'display:none' : ''}" id="avatarPlaceholder"></i>
-                                                    <img th:if="${data.avatarPath != null}" th:src="${data.avatarPath}" alt="角色头像" id="avatarPreview">
+                                                    <i class="bi bi-person" id="avatarPlaceholder" th:style="${data.avatarPath != null ? 'display:none' : ''}"></i>
+                                                    <img id="avatarPreview" 
+                                                         th:src="${data.avatarPath}" 
+                                                         th:style="${data.avatarPath != null ? '' : 'display:none'}"
+                                                         alt="角色头像">
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
                                                         onclick="document.getElementById('avatarUpload').click()">
                                                     <i class="bi bi-camera"></i>
                                                 </button>
-                                                <input type="file" id="avatarUpload" name="avatarFile" accept="image/jpeg,image/png,image/gif" style="display:none" onchange="previewAvatar(this)">
-                                                <input type="hidden" name="avatarPath" id="avatarPath" th:value="${data.avatarPath}">
+                                                <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/gif" style="display:none"
+                                                       onchange="previewAvatar(this)">
+                                                <input type="hidden" id="avatarPath" name="avatarPath" th:value="${data.avatarPath}">
                                             </div>
                                         </div>
                                         
@@ -361,50 +365,6 @@
     <script>
         // 最小化的JavaScript代码，仅处理必要的客户端交互
         document.addEventListener('DOMContentLoaded', function() {
-            // 头像上传预览
-            const avatarUpload = document.getElementById('avatarUpload');
-            if (avatarUpload) {
-                avatarUpload.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        const file = this.files[0];
-                        
-                        // 检查文件类型
-                        if (!file.type.match('image/(jpeg|png|gif)')) {
-                            alert('请选择 JPG、PNG 或 GIF 格式的图片');
-                            return;
-                        }
-                        
-                        // 检查文件大小（限制为2MB）
-                        if (file.size > 2 * 1024 * 1024) {
-                            alert('图片大小不能超过2MB');
-                            return;
-                        }
-                        
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const preview = document.querySelector('.avatar-preview img');
-                            const placeholder = document.querySelector('.avatar-preview i.bi-person');
-                            
-                            if (!preview) {
-                                const newImg = document.createElement('img');
-                                newImg.src = e.target.result;
-                                newImg.alt = '角色头像';
-                                newImg.id = 'avatarPreview';
-                                document.querySelector('.avatar-preview').appendChild(newImg);
-                            } else {
-                                preview.src = e.target.result;
-                                preview.style.display = 'block';
-                            }
-                            
-                            if (placeholder) {
-                                placeholder.style.display = 'none';
-                            }
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-            
             // 表单验证
             const forms = document.querySelectorAll('.needs-validation');
             Array.from(forms).forEach(form => {
@@ -418,7 +378,7 @@
             });
         });
         
-        // 预览头像并上传
+        // 预览头像
         function previewAvatar(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -468,7 +428,6 @@
             .then(response => response.json())
             .then(result => {
                 // 根据Result.java中定义的状态码判断
-                // code: 0-业务正常, 1-业务异常, 2-内部服务器错误
                 if (result.code === 0) {
                     // 上传成功，设置头像路径
                     document.getElementById('avatarPath').value = result.data;
@@ -526,10 +485,11 @@
             form.querySelector('input[name="avatarPath"]').value = avatarPath;
             
             // 重置头像预览
-            const preview = form.querySelector('.avatar-preview img');
-            const placeholder = form.querySelector('.avatar-preview i.bi-person');
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
             
             if (avatarPath && preview) {
+                preview.src = avatarPath;
                 preview.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'none';
             } else {

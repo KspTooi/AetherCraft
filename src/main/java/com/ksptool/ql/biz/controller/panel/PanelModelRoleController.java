@@ -4,8 +4,8 @@ import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.model.vo.SaveModelRoleVo;
-import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -56,7 +56,7 @@ public class PanelModelRoleController {
      * @return 模型角色列表视图
      */
     @GetMapping("/list")
-    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, SessionStatus sessionStatus, Model model) {
+    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, Model model) {
         // 调用服务获取视图数据
         ListModelRoleVo vo = panelModelRoleService.getListView(dto);
         
@@ -76,9 +76,6 @@ public class PanelModelRoleController {
             // 将表单数据应用到视图对象
             vo.setIsNew(formData.getId() == null);
             assign(formData, vo);
-        } else {
-            // 清除会话中的表单数据
-            sessionStatus.setComplete();
         }
         
         // 创建ModelAndView并设置数据
@@ -94,7 +91,7 @@ public class PanelModelRoleController {
      * @return 保存结果视图
      */
     @PostMapping("/save")
-    public String saveModelRole(@Valid @ModelAttribute("formData") SaveModelRoleDto dto, BindingResult br, RedirectAttributes ra, Model model) {
+    public String saveModelRole(@Valid @ModelAttribute("formData") SaveModelRoleDto dto, BindingResult br, RedirectAttributes ra) {
         // 表单验证
         if (br.hasErrors()) {
             ra.addFlashAttribute("vo", Result.error(br.getAllErrors().get(0).getDefaultMessage()));
@@ -145,7 +142,7 @@ public class PanelModelRoleController {
     }
     
     /**
-     * 上传模型角色头像
+     * 上传角色头像
      * @param file 头像文件
      * @return 上传结果
      */
