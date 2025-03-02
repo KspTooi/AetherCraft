@@ -2,8 +2,10 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ModelUserRoleRepository;
 import com.ksptool.ql.biz.model.dto.ModelUserRoleQueryDto;
+import com.ksptool.ql.biz.model.dto.SaveModelUserRoleDto;
 import com.ksptool.ql.biz.model.po.ModelUserRolePo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
+import com.ksptool.ql.commons.exception.BizException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -32,7 +34,7 @@ public class ModelUserRoleService {
     private EntityManager entityManager;
     
     @Autowired
-    private ModelUserRoleRepository modelUserRoleRepository;
+    private ModelUserRoleRepository rep;
 
     /**
      * 查询用户角色列表
@@ -78,7 +80,7 @@ public class ModelUserRoleService {
             return null;
         }
         
-        Optional<ModelUserRolePo> optionalRole = modelUserRoleRepository.findById(id);
+        Optional<ModelUserRolePo> optionalRole = rep.findById(id);
         if (optionalRole.isPresent()) {
             ModelUserRoleVo vo = new ModelUserRoleVo();
             assign(optionalRole.get(), vo);
@@ -90,62 +92,84 @@ public class ModelUserRoleService {
     
     /**
      * 保存角色
-     * @param roleVo 角色信息
-     * @return 保存后的角色
+     * @param roleDto 角色信息
+     * @return 保存后的角色ID
+     * @throws BizException 业务异常
      */
     @Transactional
-    public ModelUserRoleVo saveRole(ModelUserRoleVo roleVo) {
-        ModelUserRolePo rolePo;
+    public Long saveModelUserRole(SaveModelUserRoleDto roleDto) throws BizException {
+        // 新增角色时检查名称是否已存在
+        if (roleDto.getId() == null) {
+            ModelUserRolePo existingRole = rep.findByName(roleDto.getName());
+            if (existingRole != null) {
+                throw new BizException("角色名称 '" + roleDto.getName() + "' 已存在，请使用其他名称");
+            }
+        }
         
-        if (roleVo.getId() != null) {
-            // 更新
-            Optional<ModelUserRolePo> optionalRole = modelUserRoleRepository.findById(roleVo.getId());
+        // 更新角色时检查名称是否与其他角色重复
+        if (roleDto.getId() != null) {
+            ModelUserRolePo existingRole = rep.findByNameAndIdNot(roleDto.getName(), roleDto.getId());
+            if (existingRole != null) {
+                throw new BizException("角色名称 '" + roleDto.getName() + "' 已存在，请使用其他名称");
+            }
+        }
+        
+        ModelUserRolePo rolePo = new ModelUserRolePo();
+        
+        // 如果是更新操作，获取现有角色
+        if (roleDto.getId() != null) {
+            Optional<ModelUserRolePo> optionalRole = rep.findById(roleDto.getId());
             if (optionalRole.isPresent()) {
                 rolePo = optionalRole.get();
-            } else {
-                rolePo = new ModelUserRolePo();
             }
-        } else {
-            // 新增
-            rolePo = new ModelUserRolePo();
         }
         
         // 设置属性
-        assign(roleVo, rolePo);
+        assign(roleDto, rolePo);
+        rolePo.setUserId(AuthService.getCurrentUserId());
         
-        // 如果设置为默认角色，需要将其他角色设置为非默认
-        if (roleVo.getIsDefault() != null && roleVo.getIsDefault() == 1) {
-            modelUserRoleRepository.updateAllToNonDefault();
+        // 是否需要设置为默认角色
+        if(roleDto.getIsDefault() == 1){
+            rep.updateAllToNonDefault();
+            // 清除实体管理器缓存，确保后续操作使用最新的数据库状态
+            entityManager.clear();
         }
+
+        // 保存角色
+        rolePo = rep.save(rolePo);
         
-        // 保存
-        rolePo = modelUserRoleRepository.save(rolePo);
-        
-        // 返回结果
-        ModelUserRoleVo result = new ModelUserRoleVo();
-        assign(rolePo, result);
-        return result;
+        // 返回保存后的角色ID
+        return rolePo.getId();
     }
     
     /**
      * 删除角色
      * @param id 角色ID
      * @return 是否成功
+     * @throws BizException 删除失败时抛出异常
      */
     @Transactional
-    public boolean deleteRole(Long id) {
+    public boolean removeModelUserRole(Long id) throws BizException {
         if (id == null) {
-            return false;
+            throw new BizException("角色ID不能为空");
         }
         
         // 检查是否为默认角色
-        Optional<ModelUserRolePo> optionalRole = modelUserRoleRepository.findById(id);
-        if (optionalRole.isPresent() && optionalRole.get().getIsDefault() == 1) {
-            // 不允许删除默认角色
-            return false;
+        Optional<ModelUserRolePo> optionalRole = rep.findById(id);
+        if (!optionalRole.isPresent()) {
+            throw new BizException("角色不存在");
         }
         
-        modelUserRoleRepository.deleteById(id);
-        return true;
+        if (optionalRole.get().getIsDefault() == 1) {
+            // 不允许删除默认角色
+            throw new BizException("不允许删除默认角色");
+        }
+        
+        try {
+            rep.deleteById(id);
+            return true;
+        } catch (Exception e) {
+            throw new BizException("删除角色失败: " + e.getMessage(), e);
+        }
     }
 } 

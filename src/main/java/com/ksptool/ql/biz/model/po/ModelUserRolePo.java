@@ -3,6 +3,9 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.Date;
 
@@ -13,6 +16,7 @@ import java.util.Date;
 @Entity
 @Table(name = "model_user_roles")
 @Data
+@DynamicUpdate
 public class ModelUserRolePo {
 
     @Id

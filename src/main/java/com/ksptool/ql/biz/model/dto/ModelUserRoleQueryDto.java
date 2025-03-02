@@ -14,4 +14,7 @@ public class ModelUserRoleQueryDto {
     
     // 当前选中的角色ID
     private Long selectedId;
+    
+    // 是否为新建角色模式
+    private Boolean isNewRole = false;
 } 
