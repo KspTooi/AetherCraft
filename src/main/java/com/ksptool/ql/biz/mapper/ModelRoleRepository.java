@@ -34,4 +34,23 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      */
     @Query("SELECT r FROM ModelRolePo r LEFT JOIN FETCH r.chatTemplates WHERE r.id = :id")
     ModelRolePo findByIdWithTemplates(@Param("id") Long id);
+    
+    /**
+     * 检查角色名称是否已存在（新增时使用）
+     * 
+     * @param name 角色名称
+     * @return 是否存在
+     */
+    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name")
+    boolean existsByName(@Param("name") String name);
+    
+    /**
+     * 检查角色名称是否已被其他角色使用（更新时使用）
+     * 
+     * @param name 角色名称
+     * @param id 当前角色ID
+     * @return 是否存在
+     */
+    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name AND r.id != :id")
+    boolean existsByNameAndIdNot(@Param("name") String name, @Param("id") Long id);
 } 
