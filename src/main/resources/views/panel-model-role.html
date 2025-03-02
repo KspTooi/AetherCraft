@@ -329,7 +329,7 @@
                                         <div class="d-flex justify-content-between">
                                             <button type="button" class="btn btn-outline-danger" 
                                                     th:if="${!data.isNew && data.id != null}"
-                                                    th:onclick="'if(confirm(\'确定要删除此角色吗？此操作不可恢复。\')) { window.location.href=\'' + @{/panel/model/role/delete(id=${data.id})} + '\'; }'">
+                                                    th:onclick="'if(confirm(\'确定要删除此角色吗？此操作不可恢复。\')) { window.location.href=\'' + @{/panel/model/role/remove(id=${data.id})} + '\'; }'">
                                                 <i class="bi bi-trash me-1"></i>删除角色
                                             </button>
                                             <div th:if="${data.isNew || data.id == null}"></div>
