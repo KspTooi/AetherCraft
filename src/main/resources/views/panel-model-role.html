@@ -173,10 +173,10 @@
                                                <span class="visually-hidden" th:text="${role.name}">角色名称</span>
                                             </a>
                                             <div class="role-item-content">
-                                                <div class="me-3" th:if="${role.avatarPath != null}">
+                                                <div class="me-3" th:if="${role.avatarPath != null && role.avatarPath != ''}">
                                                     <img th:src="${'/res/' + role.avatarPath}" class="role-avatar" alt="角色头像">
                                                 </div>
-                                                <div class="role-avatar-placeholder me-3" th:if="${role.avatarPath == null}">
+                                                <div class="role-avatar-placeholder me-3" th:if="${role.avatarPath == null || role.avatarPath == ''}">
                                                     <i class="bi bi-person"></i>
                                                 </div>
                                                 <div class="role-info">
@@ -240,10 +240,10 @@
                                         <div class="mb-4 text-center">
                                             <div class="position-relative d-inline-block">
                                                 <div class="avatar-preview mb-3 mx-auto">
-                                                    <i class="bi bi-person" id="avatarPlaceholder" th:style="${data.avatarPath != null ? 'display:none' : ''}"></i>
+                                                    <i class="bi bi-person" id="avatarPlaceholder" th:style="${data.avatarPath != null && data.avatarPath != '' ? 'display:none' : ''}"></i>
                                                     <img id="avatarPreview" 
-                                                         th:src="${data.avatarPath != null ? '/res/' + data.avatarPath : ''}" 
-                                                         th:style="${data.avatarPath != null ? '' : 'display:none'}"
+                                                         th:src="${data.avatarPath != null && data.avatarPath != '' ? '/res/' + data.avatarPath : ''}" 
+                                                         th:style="${data.avatarPath != null && data.avatarPath != '' ? '' : 'display:none'}"
                                                          alt="角色头像">
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
@@ -408,6 +408,47 @@
             }
         }
         
+        // 重置表单
+        function resetForm() {
+            const form = document.querySelector('form.needs-validation');
+            if (!form) return;
+            
+            // 获取当前状态
+            const isNew = form.querySelector('input[name="isNew"]').value === 'true';
+            const id = form.querySelector('input[name="id"]').value;
+            const currentPage = form.querySelector('input[name="currentPage"]').value;
+            const pageSize = form.querySelector('input[name="pageSize"]').value;
+            const keyword = form.querySelector('input[name="keyword"]').value;
+            const avatarPath = form.querySelector('input[name="avatarPath"]').value;
+            
+            // 重置表单
+            form.reset();
+            
+            // 恢复重要字段
+            form.querySelector('input[name="isNew"]').value = isNew;
+            form.querySelector('input[name="id"]').value = id;
+            form.querySelector('input[name="currentPage"]').value = currentPage;
+            form.querySelector('input[name="pageSize"]').value = pageSize;
+            form.querySelector('input[name="keyword"]').value = keyword;
+            form.querySelector('input[name="avatarPath"]').value = avatarPath;
+            
+            // 重置头像预览
+            const preview = document.getElementById('avatarPreview');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            
+            if (avatarPath && avatarPath.trim() !== '') {
+                preview.src = '/res/' + avatarPath;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                if (preview) preview.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+            }
+            
+            // 移除验证样式
+            form.classList.remove('was-validated');
+        }
+        
         // 上传头像
         function uploadAvatar(file) {
             // 创建FormData对象
@@ -458,47 +499,6 @@
                 document.getElementById('avatarPlaceholder').style.display = 'block';
                 document.getElementById('avatarPath').value = '';
             }
-        }
-        
-        // 重置表单
-        function resetForm() {
-            const form = document.querySelector('form.needs-validation');
-            if (!form) return;
-            
-            // 获取当前状态
-            const isNew = form.querySelector('input[name="isNew"]').value === 'true';
-            const id = form.querySelector('input[name="id"]').value;
-            const currentPage = form.querySelector('input[name="currentPage"]').value;
-            const pageSize = form.querySelector('input[name="pageSize"]').value;
-            const keyword = form.querySelector('input[name="keyword"]').value;
-            const avatarPath = form.querySelector('input[name="avatarPath"]').value;
-            
-            // 重置表单
-            form.reset();
-            
-            // 恢复重要字段
-            form.querySelector('input[name="isNew"]').value = isNew;
-            form.querySelector('input[name="id"]').value = id;
-            form.querySelector('input[name="currentPage"]').value = currentPage;
-            form.querySelector('input[name="pageSize"]').value = pageSize;
-            form.querySelector('input[name="keyword"]').value = keyword;
-            form.querySelector('input[name="avatarPath"]').value = avatarPath;
-            
-            // 重置头像预览
-            const preview = document.getElementById('avatarPreview');
-            const placeholder = document.getElementById('avatarPlaceholder');
-            
-            if (avatarPath && preview) {
-                preview.src = '/res/' + avatarPath;
-                preview.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            } else {
-                if (preview) preview.style.display = 'none';
-                if (placeholder) placeholder.style.display = 'block';
-            }
-            
-            // 移除验证样式
-            form.classList.remove('was-validated');
         }
     </script>
 </body>
