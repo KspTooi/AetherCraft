@@ -240,15 +240,15 @@
                                         <div class="mb-4 text-center">
                                             <div class="position-relative d-inline-block">
                                                 <div class="avatar-preview mb-3 mx-auto">
-                                                    <i class="bi bi-person" th:style="${data.avatarPath != null ? 'display:none' : ''}"></i>
-                                                    <img th:if="${data.avatarPath != null}" th:src="${data.avatarPath}" alt="角色头像">
+                                                    <i class="bi bi-person" th:style="${data.avatarPath != null ? 'display:none' : ''}" id="avatarPlaceholder"></i>
+                                                    <img th:if="${data.avatarPath != null}" th:src="${data.avatarPath}" alt="角色头像" id="avatarPreview">
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
                                                         onclick="document.getElementById('avatarUpload').click()">
                                                     <i class="bi bi-camera"></i>
                                                 </button>
-                                                <input type="file" id="avatarUpload" name="avatarFile" accept="image/jpeg,image/png,image/gif" style="display:none">
-                                                <input type="hidden" name="avatarPath" th:value="${data.avatarPath}">
+                                                <input type="file" id="avatarUpload" name="avatarFile" accept="image/jpeg,image/png,image/gif" style="display:none" onchange="previewAvatar(this)">
+                                                <input type="hidden" name="avatarPath" id="avatarPath" th:value="${data.avatarPath}">
                                             </div>
                                         </div>
                                         
@@ -389,6 +389,7 @@
                                 const newImg = document.createElement('img');
                                 newImg.src = e.target.result;
                                 newImg.alt = '角色头像';
+                                newImg.id = 'avatarPreview';
                                 document.querySelector('.avatar-preview').appendChild(newImg);
                             } else {
                                 preview.src = e.target.result;
@@ -416,6 +417,89 @@
                 }, false);
             });
         });
+        
+        // 预览头像并上传
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // 检查文件类型
+                if (!file.type.match('image/(jpeg|png|gif)')) {
+                    alert('请选择 JPG、PNG 或 GIF 格式的图片');
+                    return;
+                }
+                
+                // 检查文件大小（限制为2MB）
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('图片大小不能超过2MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                    document.getElementById('avatarPreview').style.display = 'block';
+                    document.getElementById('avatarPlaceholder').style.display = 'none';
+                    
+                    // 上传头像
+                    uploadAvatar(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // 上传头像
+        function uploadAvatar(file) {
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 显示上传中的状态
+            const uploadBtn = document.querySelector('.btn-primary[onclick*="avatarUpload"]');
+            const originalContent = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="bi bi-arrow-clockwise animation-spin"></i>';
+            uploadBtn.disabled = true;
+            
+            // 发送上传请求
+            fetch('/panel/model/role/upload-avatar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                // 根据Result.java中定义的状态码判断
+                // code: 0-业务正常, 1-业务异常, 2-内部服务器错误
+                if (result.code === 0) {
+                    // 上传成功，设置头像路径
+                    document.getElementById('avatarPath').value = result.data;
+                    // 显示成功状态
+                    uploadBtn.innerHTML = '<i class="bi bi-check"></i>';
+                    setTimeout(() => {
+                        uploadBtn.innerHTML = originalContent;
+                        uploadBtn.disabled = false;
+                    }, 1000);
+                } else {
+                    // 上传失败（业务异常或服务器错误）
+                    handleUploadError(result.message || '头像上传失败');
+                }
+            })
+            .catch(error => {
+                console.error('上传错误:', error);
+                handleUploadError('头像上传出错，请重试');
+            });
+
+            // 处理上传错误的函数
+            function handleUploadError(errorMessage) {
+                alert(errorMessage);
+                // 恢复按钮状态
+                uploadBtn.innerHTML = originalContent;
+                uploadBtn.disabled = false;
+                // 清除预览
+                document.getElementById('avatarPreview').style.display = 'none';
+                document.getElementById('avatarPlaceholder').style.display = 'block';
+                document.getElementById('avatarPath').value = '';
+            }
+        }
         
         // 重置表单
         function resetForm() {
