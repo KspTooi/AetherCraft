@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelUserRoleDto;
 import com.ksptool.ql.biz.model.vo.ListModelUserRoleVo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
 import com.ksptool.ql.biz.service.ModelUserRoleService;
+import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -26,6 +28,9 @@ public class PanelModelUserRoleController {
 
     @Autowired
     private ModelUserRoleService modelUserRoleService;
+    
+    @Autowired
+    private UserFileService userFileService;
 
     /**
      * 获取用户角色列表视图
@@ -186,11 +191,13 @@ public class PanelModelUserRoleController {
      */
     @PostMapping("/upload-avatar")
     @ResponseBody
-    public Result<String> uploadAvatar(@RequestParam("file") Object file) {
-        // TODO: 实现文件上传逻辑
-        // 这里需要实现文件上传的逻辑，返回上传后的文件路径
-        
-        // 模拟上传成功
-        return Result.success("/static/img/avatar-default.jpg");
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        try {
+            // 使用统一文件服务保存头像
+            var userFile = userFileService.receive(file);
+            return Result.success(userFile.getFilepath());
+        } catch (Exception e) {
+            return Result.error("头像上传失败：" + e.getMessage());
+        }
     }
 } 

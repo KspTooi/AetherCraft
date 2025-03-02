@@ -57,6 +57,49 @@
             flex-shrink: 0;
             margin-left: 8px;
         }
+        .role-crown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .role-crown i {
+            color: #ffc107;
+            font-size: 16px;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animation-spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .avatar-preview i.bi-person {
+            font-size: 60px;
+            color: #aaa;
+            position: absolute;
+        }
     </style>
 </head>
 <body class="h-100">
@@ -122,14 +165,14 @@
                                                 <i class="bi bi-person"></i>
                                             </div>
                                             <div th:if="${!#strings.isEmpty(role.avatarPath)}" class="me-3">
-                                                <img th:src="${role.avatarPath}" class="role-avatar" alt="角色头像">
+                                                <img th:src="${'/res/' + role.avatarPath}" class="role-avatar" alt="角色头像">
                                             </div>
                                             <div class="role-info">
                                                 <h6 class="role-name" th:text="${role.name}">角色名称</h6>
                                                 <div class="role-description" th:text="${role.description}">角色描述</div>
                                             </div>
-                                            <div class="role-badge" th:if="${role.isDefault == 1}">
-                                                <span class="badge bg-success">默认</span>
+                                            <div class="role-crown" th:if="${role.isDefault == 1}">
+                                                <i class="bi bi-star-fill"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -148,18 +191,18 @@
                                                 <i class="bi bi-info-circle me-2"></i>您正在创建新的角色
                                             </div>
                                             <div class="position-relative d-inline-block">
-                                                <div class="avatar-preview mb-3 mx-auto" 
-                                                     style="width:120px;height:120px;border-radius:50%;background:#f0f0f0;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                                                    <i class="bi bi-person" style="font-size:60px;color:#aaa;" id="avatarPlaceholder" th:style="${data.selectedRole != null && !#strings.isEmpty(data.selectedRole.avatarPath) ? 'display:none' : ''}"></i>
-                                                    <img id="avatarPreview" style="width:100%;height:100%;object-fit:cover;" 
-                                                         th:src="${data.selectedRole != null ? data.selectedRole.avatarPath : ''}" 
-                                                         th:style="${data.selectedRole != null && !#strings.isEmpty(data.selectedRole.avatarPath) ? '' : 'display:none'}">
+                                                <div class="avatar-preview mb-3 mx-auto">
+                                                    <i class="bi bi-person" id="avatarPlaceholder" th:style="${data.selectedRole != null && !#strings.isEmpty(data.selectedRole.avatarPath) ? 'display:none' : ''}"></i>
+                                                    <img id="avatarPreview" 
+                                                         th:src="${data.selectedRole != null ? '/res/' + data.selectedRole.avatarPath : ''}" 
+                                                         th:style="${data.selectedRole != null && !#strings.isEmpty(data.selectedRole.avatarPath) ? '' : 'display:none'}"
+                                                         alt="角色头像">
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
                                                         onclick="document.getElementById('avatarUpload').click()">
                                                     <i class="bi bi-camera"></i>
                                                 </button>
-                                                <input type="file" id="avatarUpload" accept="image/*" style="display:none"
+                                                <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/gif" style="display:none"
                                                        onchange="previewAvatar(this)">
                                                 <input type="hidden" id="avatarPath" name="avatarPath" th:value="${data.selectedRole != null ? data.selectedRole.avatarPath : ''}">
                                             </div>
@@ -242,6 +285,20 @@
         // 预览头像
         function previewAvatar(input) {
             if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // 检查文件类型
+                if (!file.type.match('image/(jpeg|png|gif)')) {
+                    alert('请选择 JPG、PNG 或 GIF 格式的图片');
+                    return;
+                }
+                
+                // 检查文件大小（限制为2MB）
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('图片大小不能超过2MB');
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('avatarPreview').src = e.target.result;
@@ -249,9 +306,9 @@
                     document.getElementById('avatarPlaceholder').style.display = 'none';
                     
                     // 上传头像
-                    uploadAvatar(input.files[0]);
+                    uploadAvatar(file);
                 };
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         }
         
@@ -261,6 +318,12 @@
             const formData = new FormData();
             formData.append('file', file);
             
+            // 显示上传中的状态
+            const uploadBtn = document.querySelector('.btn-primary[onclick*="avatarUpload"]');
+            const originalContent = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="bi bi-arrow-clockwise animation-spin"></i>';
+            uploadBtn.disabled = true;
+            
             // 发送上传请求
             fetch('/panel/model/user-role/upload-avatar', {
                 method: 'POST',
@@ -268,18 +331,38 @@
             })
             .then(response => response.json())
             .then(result => {
-                if (result.code === 200) {
+                // 根据Result.java中定义的状态码判断
+                // code: 0-业务正常, 1-业务异常, 2-内部服务器错误
+                if (result.code === 0) {
                     // 上传成功，设置头像路径
                     document.getElementById('avatarPath').value = result.data;
+                    // 显示成功状态
+                    uploadBtn.innerHTML = '<i class="bi bi-check"></i>';
+                    setTimeout(() => {
+                        uploadBtn.innerHTML = originalContent;
+                        uploadBtn.disabled = false;
+                    }, 1000);
                 } else {
-                    // 上传失败
-                    alert('头像上传失败：' + result.message);
+                    // 上传失败（业务异常或服务器错误）
+                    handleUploadError(result.message || '头像上传失败');
                 }
             })
             .catch(error => {
                 console.error('上传错误:', error);
-                alert('头像上传出错，请重试');
+                handleUploadError('头像上传出错，请重试');
             });
+
+            // 处理上传错误的函数
+            function handleUploadError(errorMessage) {
+                alert(errorMessage);
+                // 恢复按钮状态
+                uploadBtn.innerHTML = originalContent;
+                uploadBtn.disabled = false;
+                // 清除预览
+                document.getElementById('avatarPreview').style.display = 'none';
+                document.getElementById('avatarPlaceholder').style.display = 'block';
+                document.getElementById('avatarPath').value = '';
+            }
         }
         
         // 重置表单
