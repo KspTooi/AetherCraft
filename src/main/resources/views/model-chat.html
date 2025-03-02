@@ -539,7 +539,7 @@
             document.getElementById('sendButton').disabled = true;
 
             // 添加用户消息
-            ChatMessages.appendMessage(message, 'user');
+            const userMessageDiv = ChatMessages.appendMessage(message, 'user');
             input.value = '';
             adjustTextareaHeight(input);
 
@@ -569,9 +569,20 @@
                     currentThreadId = data.data.threadId;
                     
                     // 更新用户消息的historyId
-                    const userMessageDiv = aiMessageDiv.previousElementSibling;
-                    if (userMessageDiv) {
+                    if (userMessageDiv && data.data.historyId) {
                         userMessageDiv.dataset.historyId = data.data.historyId;
+                        
+                        // 为用户消息添加删除按钮
+                        if (!userMessageDiv.querySelector('.message-delete-btn')) {
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'message-delete-btn';
+                            deleteBtn.innerHTML = '×';
+                            deleteBtn.title = '删除消息';
+                            deleteBtn.onclick = function() {
+                                deleteMessage(currentThreadId, data.data.historyId);
+                            };
+                            userMessageDiv.appendChild(deleteBtn);
+                        }
                     }
                     
                     // 开始轮询获取AI响应
@@ -580,6 +591,7 @@
                     // 发送失败
                     showToast('error', data.message || '发送消息失败');
                     aiMessageDiv.remove();
+                    userMessageDiv.remove(); // 同时移除用户消息
                     input.disabled = false;
                     document.getElementById('sendButton').disabled = false;
                 }
@@ -588,6 +600,7 @@
                 console.error('发送消息失败:', error);
                 showToast('error', '发送消息失败，请稍后再试');
                 aiMessageDiv.remove();
+                userMessageDiv.remove(); // 同时移除用户消息
                 input.disabled = false;
                 document.getElementById('sendButton').disabled = false;
             });
@@ -659,6 +672,22 @@
                     if (segment.type === 2) { // 结束
                         console.log('生成完成');
                         isCompleted = true;
+                        
+                        // 添加删除按钮
+                        if (aiHistoryId) {
+                            // 检查是否已经有删除按钮
+                            if (!aiMessageDiv.querySelector('.message-delete-btn')) {
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'message-delete-btn';
+                                deleteBtn.innerHTML = '×';
+                                deleteBtn.title = '删除消息';
+                                deleteBtn.onclick = function() {
+                                    deleteMessage(currentThreadId, aiHistoryId);
+                                };
+                                aiMessageDiv.appendChild(deleteBtn);
+                            }
+                        }
+                        
                         if (!currentThreadId) {
                             updateThreadList(); // 新对话时更新会话列表
                         }
@@ -712,6 +741,14 @@
             event.stopPropagation();
             // 跳转到删除接口
             window.location.href = '/model/chat/view/removeThread/' + threadId;
+        }
+        
+        // 删除消息的函数
+        function deleteMessage(threadId, historyId) {
+            if (!threadId || !historyId) return;
+            
+            // 跳转到删除接口
+            window.location.href = `/model/chat/view/removeHistory?threadId=${threadId}&historyId=${historyId}`;
         }
     </script>
 </body>

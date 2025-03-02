@@ -317,10 +317,8 @@
                     // 设置历史记录ID
                     if (historyId) {
                         messageDiv.dataset.historyId = historyId;
-                    }
-                    
-                    // 添加删除按钮
-                    if (historyId) {
+                        
+                        // 添加删除按钮
                         const deleteBtn = document.createElement('button');
                         deleteBtn.className = 'message-delete-btn';
                         deleteBtn.innerHTML = '×';
@@ -379,6 +377,9 @@
                         // 保存historyId
                         const historyId = lastMessage.dataset.historyId;
                         
+                        // 保存删除按钮（如果存在）
+                        const deleteBtn = lastMessage.querySelector('.message-delete-btn');
+                        
                         // 获取或创建内容容器
                         let contentSpan = lastMessage.querySelector('span');
                         if (!contentSpan) {
@@ -395,6 +396,11 @@
                         // 恢复historyId
                         if (historyId) {
                             lastMessage.dataset.historyId = historyId;
+                        }
+                        
+                        // 如果之前有删除按钮但现在没有，重新添加
+                        if (deleteBtn && !lastMessage.querySelector('.message-delete-btn')) {
+                            lastMessage.appendChild(deleteBtn);
                         }
                     }
                 },
