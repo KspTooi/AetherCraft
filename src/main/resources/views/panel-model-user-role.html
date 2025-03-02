@@ -42,13 +42,14 @@
         <div th:fragment="content">
             <!-- 页面内容 -->
             <div class="container-fluid p-0">
+                <!-- 消息提示组件已在panel-mvc-toasts.html中引入，通过控制面板框架自动加载 -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-white border-bottom pt-3 pb-2">
                         <div class="d-flex justify-content-between align-items-center px-3">
                             <h5 class="card-title mb-0 fw-bold text-dark">用户角色管理</h5>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="createRole()">
+                            <a th:href="@{/panel/model/user-role/add}" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-lg me-1"></i>添加角色
-                            </button>
+                            </a>
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -56,49 +57,41 @@
                             <!-- 左侧角色列表 -->
                             <div class="col-md-4 border-end">
                                 <div class="p-3">
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text bg-light border-end-0">
-                                            <i class="bi bi-search"></i>
-                                        </span>
-                                        <input type="text" class="form-control border-start-0" 
-                                               placeholder="搜索角色..." id="roleSearch">
-                                    </div>
+                                    <form th:action="@{/panel/model/user-role/list}" method="get" class="mb-3">
+                                        <input type="hidden" name="selectedId" th:value="${selectedRole != null ? selectedRole.id : ''}" id="selectedIdInput">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input type="text" class="form-control border-start-0" 
+                                                   placeholder="搜索角色..." id="roleSearch" name="name"
+                                                   th:value="${query != null ? query.name : ''}">
+                                            <button class="btn btn-primary" type="submit">搜索</button>
+                                        </div>
+                                    </form>
                                     
                                     <div class="role-list" id="roleList">
                                         <!-- 角色列表项 -->
-                                        <div class="role-item p-2 mb-2 d-flex align-items-center active" 
-                                             onclick="selectRole(1)">
-                                            <div class="role-avatar-placeholder me-3">
+                                        <div th:if="${#lists.isEmpty(roles)}" class="text-center py-4 text-muted">
+                                            <i class="bi bi-exclamation-circle d-block mb-2" style="font-size: 2rem;"></i>
+                                            <p>暂无角色数据</p>
+                                        </div>
+                                        
+                                        <div th:each="role : ${roles}" 
+                                             th:class="'role-item p-2 mb-2 d-flex align-items-center ' + (${selectedRole != null && selectedRole.id == role.id ? 'active' : ''})" 
+                                             th:onclick="'selectRole(' + ${role.id} + ')'">
+                                            <div th:if="${#strings.isEmpty(role.avatarPath)}" class="role-avatar-placeholder me-3">
                                                 <i class="bi bi-person"></i>
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-0">默认角色</h6>
-                                                <small class="text-muted">系统默认角色</small>
+                                            <div th:if="${!#strings.isEmpty(role.avatarPath)}" class="me-3">
+                                                <img th:src="${role.avatarPath}" class="role-avatar" alt="角色头像">
                                             </div>
-                                            <div class="text-end">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0" th:text="${role.name}">角色名称</h6>
+                                                <small class="text-muted" th:text="${role.description}">角色描述</small>
+                                            </div>
+                                            <div class="text-end" th:if="${role.isDefault == 1}">
                                                 <span class="badge bg-success">默认</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="role-item p-2 mb-2 d-flex align-items-center" 
-                                             onclick="selectRole(2)">
-                                            <div class="me-3">
-                                                <img src="/static/img/avatar-1.jpg" class="role-avatar" alt="角色头像">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-0">管理员</h6>
-                                                <small class="text-muted">系统管理员角色</small>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="role-item p-2 mb-2 d-flex align-items-center" 
-                                             onclick="selectRole(3)">
-                                            <div class="me-3">
-                                                <img src="/static/img/avatar-2.jpg" class="role-avatar" alt="角色头像">
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-0">普通用户</h6>
-                                                <small class="text-muted">普通用户角色</small>
                                             </div>
                                         </div>
                                     </div>
@@ -108,15 +101,17 @@
                             <!-- 右侧角色详情 -->
                             <div class="col-md-8">
                                 <div class="p-4">
-                                    <form id="roleForm" class="needs-validation" novalidate>
-                                        <input type="hidden" id="roleId" name="id" value="1">
+                                    <form id="roleForm" th:action="@{/panel/model/user-role/save}" method="post" class="needs-validation" novalidate>
+                                        <input type="hidden" id="roleId" name="id" th:value="${selectedRole != null ? selectedRole.id : ''}">
                                         
                                         <div class="mb-4 text-center">
                                             <div class="position-relative d-inline-block">
                                                 <div class="avatar-preview mb-3 mx-auto" 
                                                      style="width:120px;height:120px;border-radius:50%;background:#f0f0f0;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-                                                    <i class="bi bi-person" style="font-size:60px;color:#aaa;" id="avatarPlaceholder"></i>
-                                                    <img id="avatarPreview" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                                    <i class="bi bi-person" style="font-size:60px;color:#aaa;" id="avatarPlaceholder" th:style="${selectedRole != null && !#strings.isEmpty(selectedRole.avatarPath) ? 'display:none' : ''}"></i>
+                                                    <img id="avatarPreview" style="width:100%;height:100%;object-fit:cover;" 
+                                                         th:src="${selectedRole != null ? selectedRole.avatarPath : ''}" 
+                                                         th:style="${selectedRole != null && !#strings.isEmpty(selectedRole.avatarPath) ? '' : 'display:none'}">
                                                 </div>
                                                 <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
                                                         onclick="document.getElementById('avatarUpload').click()">
@@ -124,32 +119,36 @@
                                                 </button>
                                                 <input type="file" id="avatarUpload" accept="image/*" style="display:none"
                                                        onchange="previewAvatar(this)">
-                                                <input type="hidden" id="avatarPath" name="avatarPath">
+                                                <input type="hidden" id="avatarPath" name="avatarPath" th:value="${selectedRole != null ? selectedRole.avatarPath : ''}">
                                             </div>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="roleName" class="form-label small">角色名称 <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="roleName" name="name" 
-                                                   placeholder="请输入角色名称" required>
+                                                   placeholder="请输入角色名称" required
+                                                   th:value="${selectedRole != null ? selectedRole.name : ''}">
                                             <div class="invalid-feedback">请输入角色名称</div>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="roleDescription" class="form-label small">角色描述</label>
                                             <textarea class="form-control" id="roleDescription" name="description" 
-                                                      rows="3" placeholder="请输入角色描述"></textarea>
+                                                      rows="3" placeholder="请输入角色描述"
+                                                      th:text="${selectedRole != null ? selectedRole.description : ''}"></textarea>
                                         </div>
                                         
                                         <div class="mb-3">
                                             <label for="sortOrder" class="form-label small">排序号</label>
                                             <input type="number" class="form-control" id="sortOrder" name="sortOrder" 
-                                                   placeholder="请输入排序号" value="0">
+                                                   placeholder="请输入排序号" 
+                                                   th:value="${selectedRole != null ? selectedRole.sortOrder : 0}">
                                         </div>
                                         
                                         <div class="mb-4">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault">
+                                                <input class="form-check-input" type="checkbox" id="isDefault" name="isDefault"
+                                                       th:checked="${selectedRole != null && selectedRole.isDefault == 1}">
                                                 <label class="form-check-label" for="isDefault">
                                                     设为默认角色
                                                 </label>
@@ -158,7 +157,8 @@
                                         </div>
                                         
                                         <div class="d-flex justify-content-between">
-                                            <button type="button" class="btn btn-outline-danger" onclick="deleteRole()">
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteModelUserRole()"
+                                                    th:disabled="${selectedRole != null && selectedRole.isDefault == 1}">
                                                 <i class="bi bi-trash me-1"></i>删除角色
                                             </button>
                                             <div>
@@ -181,67 +181,13 @@
     </div>
     
     <script>
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化表单验证
-            const forms = document.querySelectorAll('.needs-validation');
-            Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        event.preventDefault();
-                        saveRole();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-            
-            // 加载默认角色数据
-            loadRoleData(1);
-        });
-        
         // 选择角色
         function selectRole(id) {
-            // 更新选中状态
-            document.querySelectorAll('.role-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
+            // 更新隐藏字段
+            document.getElementById('selectedIdInput').value = id;
             
-            // 加载角色数据
-            loadRoleData(id);
-        }
-        
-        // 加载角色数据
-        function loadRoleData(id) {
-            // 模拟数据，实际应从后端获取
-            const roleData = {
-                1: { id: 1, name: '默认角色', description: '系统默认角色', sortOrder: 0, isDefault: 1, avatarPath: '' },
-                2: { id: 2, name: '管理员', description: '系统管理员角色', sortOrder: 1, isDefault: 0, avatarPath: '/static/img/avatar-1.jpg' },
-                3: { id: 3, name: '普通用户', description: '普通用户角色', sortOrder: 2, isDefault: 0, avatarPath: '/static/img/avatar-2.jpg' }
-            };
-            
-            const role = roleData[id];
-            if (role) {
-                document.getElementById('roleId').value = role.id;
-                document.getElementById('roleName').value = role.name;
-                document.getElementById('roleDescription').value = role.description;
-                document.getElementById('sortOrder').value = role.sortOrder;
-                document.getElementById('isDefault').checked = role.isDefault === 1;
-                document.getElementById('avatarPath').value = role.avatarPath;
-                
-                // 更新头像预览
-                if (role.avatarPath) {
-                    document.getElementById('avatarPreview').src = role.avatarPath;
-                    document.getElementById('avatarPreview').style.display = 'block';
-                    document.getElementById('avatarPlaceholder').style.display = 'none';
-                } else {
-                    document.getElementById('avatarPreview').style.display = 'none';
-                    document.getElementById('avatarPlaceholder').style.display = 'block';
-                }
-            }
+            // 提交表单
+            document.querySelector('form[action="/panel/model/user-role/list"]').submit();
         }
         
         // 预览头像
@@ -252,58 +198,12 @@
                     document.getElementById('avatarPreview').src = e.target.result;
                     document.getElementById('avatarPreview').style.display = 'block';
                     document.getElementById('avatarPlaceholder').style.display = 'none';
+                    
                     // 实际上传逻辑需要在此处添加
+                    // 上传成功后设置avatarPath字段
+                    // document.getElementById('avatarPath').value = '上传后的路径';
                 };
                 reader.readAsDataURL(input.files[0]);
-            }
-        }
-        
-        // 保存角色
-        function saveRole() {
-            // 获取表单数据
-            const formData = new FormData(document.getElementById('roleForm'));
-            const roleData = Object.fromEntries(formData.entries());
-            
-            // 转换复选框值
-            roleData.isDefault = roleData.isDefault ? 1 : 0;
-            
-            // 模拟保存成功
-            alert('角色保存成功！');
-            console.log('保存角色数据:', roleData);
-            
-            // 实际应发送到后端保存
-            // fetch('/panel/model/user-role/save', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(roleData)
-            // }).then(response => response.json())
-            //   .then(data => {
-            //     if (data.success) {
-            //         alert('角色保存成功！');
-            //     } else {
-            //         alert('保存失败：' + data.message);
-            //     }
-            //   });
-        }
-        
-        // 删除角色
-        function deleteRole() {
-            const id = document.getElementById('roleId').value;
-            if (confirm('确定要删除该角色吗？')) {
-                // 模拟删除成功
-                alert('角色删除成功！');
-                
-                // 实际应发送到后端删除
-                // fetch(`/panel/model/user-role/delete/${id}`, {
-                //     method: 'POST'
-                // }).then(response => response.json())
-                //   .then(data => {
-                //     if (data.success) {
-                //         alert('角色删除成功！');
-                //     } else {
-                //         alert('删除失败：' + data.message);
-                //     }
-                //   });
             }
         }
         
@@ -312,13 +212,14 @@
             // 重置表单
             resetForm();
             
-            // 生成临时ID
-            document.getElementById('roleId').value = 'new';
-            
-            // 更新选中状态
+            // 清除选中状态
             document.querySelectorAll('.role-item').forEach(item => {
                 item.classList.remove('active');
             });
+            
+            // 清除选中ID
+            document.getElementById('selectedIdInput').value = '';
+            document.getElementById('roleId').value = '';
         }
         
         // 重置表单
@@ -328,6 +229,31 @@
             document.getElementById('avatarPlaceholder').style.display = 'block';
             document.getElementById('roleForm').classList.remove('was-validated');
         }
+        
+        // 删除角色
+        function deleteModelUserRole() {
+            const id = document.getElementById('roleId').value;
+            if (!id) return;
+            
+            if (confirm('确定要删除该角色吗？')) {
+                window.location.href = '/panel/model/user-role/delete?id=' + id;
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化表单验证
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
     </script>
 </body>
 </html> 
