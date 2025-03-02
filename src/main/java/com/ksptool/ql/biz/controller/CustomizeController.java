@@ -52,6 +52,7 @@ public class CustomizeController {
             if (!StringUtils.hasText(wallpaperPath)) {
                 return ResponseEntity.status(302)
                     .header("Location", "/img/bg1.jpg")
+                    .header("Cache-Control", "public, max-age=60") // 缓存1分钟
                     .build();
             }
 
@@ -60,6 +61,7 @@ public class CustomizeController {
             if (wallpaperFile == null || !wallpaperFile.exists()) {
                 return ResponseEntity.status(302)
                     .header("Location", "/img/bg1.jpg")
+                    .header("Cache-Control", "public, max-age=60") // 缓存1分钟
                     .build();
             }
 
@@ -72,12 +74,14 @@ public class CustomizeController {
             Resource resource = new FileSystemResource(wallpaperFile);
             return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .header("Content-Disposition", "attachment; filename=wallpaper.jpg")
+                .header("Content-Disposition", "inline; filename=wallpaper.jpg") // 修改为inline
+                .header("Cache-Control", "public, max-age=60") // 缓存1分钟
                 .body(resource);
                 
         } catch (Exception e) {
             return ResponseEntity.status(302)
                 .header("Location", "/img/bg1.jpg")
+                .header("Cache-Control", "public, max-age=60") // 缓存1分钟
                 .build();
         }
     }
