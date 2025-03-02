@@ -81,7 +81,7 @@ public class GeminiRequest {
         // 添加历史记录
         if (histories != null && !histories.isEmpty()) {
             for (ModelChatHistoryPo history : histories) {
-                String role = history.getRole() == 0 ? "user" : "assistant";
+                String role = history.getRole() == 0 ? "user" : "model";
                 messages.add(new ChatMessage(role, history.getContent()));
             }
         }
