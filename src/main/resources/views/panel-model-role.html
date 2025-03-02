@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>模型角色管理 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .role-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        .role-item:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        .role-item.active {
+            background-color: rgba(13,110,253,0.1);
+            border-left: 3px solid var(--bs-primary);
+        }
+        .role-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .role-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--bs-gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--bs-gray-600);
+            flex-shrink: 0;
+        }
+        .role-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .role-name {
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role-description {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--bs-text-muted);
+            font-size: 0.875rem;
+        }
+        .role-badge {
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animation-spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .avatar-preview i.bi-person {
+            font-size: 60px;
+            color: #aaa;
+            position: absolute;
+        }
+        .chat-template-item {
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        .chat-template-header {
+            background-color: rgba(0,0,0,.03);
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid rgba(0,0,0,.125);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="h-100">
+    <!-- 引入控制台框架 -->
+    <div th:replace="~{components/com-frame-control-panel :: control-panel(~{::content})}">
+        <div th:fragment="content">
+            <!-- 页面内容 -->
+            <div class="container-fluid p-0">
+                <!-- 消息提示组件已在panel-mvc-toasts.html中引入，通过控制面板框架自动加载 -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center px-3">
+                            <h5 class="card-title mb-0 fw-bold text-dark">模型角色管理</h5>
+                            <a th:href="@{/panel/model/role/edit}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1"></i>新建角色
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- 左侧角色列表 -->
+                            <div class="col-md-4 border-end">
+                                <div class="p-3">
+                                    <form th:action="@{/panel/model/role/search}" method="get" class="mb-3">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input type="text" class="form-control border-start-0" 
+                                                   name="keyword" th:value="${param.keyword}" 
+                                                   placeholder="搜索角色...">
+                                            <button class="btn btn-primary" type="submit">搜索</button>
+                                        </div>
+                                    </form>
+                                    
+                                    <div class="role-list">
+                                        <!-- 角色列表项 -->
+                                        <div th:each="role : ${roles}" 
+                                             th:class="${role.id == selectedRole?.id ? 'role-item p-2 mb-2 d-flex align-items-center active' : 'role-item p-2 mb-2 d-flex align-items-center'}"
+                                             th:attr="data-id=${role.id}">
+                                            <a th:href="@{/panel/model/role/list(id=${role.id})}" class="d-flex align-items-center text-decoration-none w-100 text-dark">
+                                                <div class="me-3" th:if="${role.avatarPath != null}">
+                                                    <img th:src="${role.avatarPath}" class="role-avatar" alt="角色头像">
+                                                </div>
+                                                <div class="role-avatar-placeholder me-3" th:if="${role.avatarPath == null}">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                                <div class="role-info">
+                                                    <h6 class="role-name" th:text="${role.name}">角色名称</h6>
+                                                    <div class="role-description" th:text="${role.description}">角色描述</div>
+                                                </div>
+                                                <div class="role-badge">
+                                                    <span th:class="${role.status == 1 ? 'badge bg-success' : 'badge bg-secondary'}"
+                                                          th:text="${role.status == 1 ? '启用' : '禁用'}">状态</span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- 无数据提示 -->
+                                        <div th:if="${#lists.isEmpty(roles)}" class="text-center py-4 text-muted">
+                                            <i class="bi bi-inbox fs-2"></i>
+                                            <p class="mt-2">暂无角色数据</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 分页 -->
+                                    <nav aria-label="角色分页" class="mt-3" th:if="${totalPages > 1}">
+                                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                                            <li th:class="${currentPage == 1 ? 'page-item disabled' : 'page-item'}">
+                                                <a class="page-link" th:href="@{/panel/model/role/list(page=${currentPage - 1}, keyword=${param.keyword})}" tabindex="-1">上一页</a>
+                                            </li>
+                                            <li th:each="i : ${#numbers.sequence(1, totalPages)}" 
+                                                th:class="${i == currentPage ? 'page-item active' : 'page-item'}">
+                                                <a class="page-link" th:href="@{/panel/model/role/list(page=${i}, keyword=${param.keyword})}" th:text="${i}">1</a>
+                                            </li>
+                                            <li th:class="${currentPage == totalPages ? 'page-item disabled' : 'page-item'}">
+                                                <a class="page-link" th:href="@{/panel/model/role/list(page=${currentPage + 1}, keyword=${param.keyword})}">下一页</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            
+                            <!-- 右侧角色详情 -->
+                            <div class="col-md-8">
+                                <div class="p-4">
+                                    <form th:if="${selectedRole != null}" th:action="@{/panel/model/role/save}" method="post" 
+                                          enctype="multipart/form-data" class="needs-validation" novalidate>
+                                        <input type="hidden" id="roleId" name="id" th:value="${selectedRole.id}">
+                                        
+                                        <div class="mb-4 text-center">
+                                            <div class="position-relative d-inline-block">
+                                                <div class="avatar-preview mb-3 mx-auto">
+                                                    <i class="bi bi-person" th:style="${selectedRole.avatarPath != null ? 'display:none' : ''}"></i>
+                                                    <img th:if="${selectedRole.avatarPath != null}" th:src="${selectedRole.avatarPath}" alt="角色头像">
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0"
+                                                        onclick="document.getElementById('avatarUpload').click()">
+                                                    <i class="bi bi-camera"></i>
+                                                </button>
+                                                <input type="file" id="avatarUpload" name="avatarFile" accept="image/jpeg,image/png,image/gif" style="display:none">
+                                                <input type="hidden" name="avatarPath" th:value="${selectedRole.avatarPath}">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 基本信息 -->
+                                        <div class="mb-4">
+                                            <h6 class="border-bottom pb-2 mb-3">基本信息</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="roleName" class="form-label small">角色名称 <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control" id="roleName" name="name" 
+                                                               th:value="${selectedRole.name}" placeholder="请输入角色名称" required>
+                                                        <div class="invalid-feedback">请输入角色名称</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="roleStatus" class="form-label small">状态</label>
+                                                        <select class="form-select" id="roleStatus" name="status">
+                                                            <option value="1" th:selected="${selectedRole.status == 1}">启用</option>
+                                                            <option value="0" th:selected="${selectedRole.status == 0}">禁用</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="roleTags" class="form-label small">标签</label>
+                                                        <input type="text" class="form-control" id="roleTags" name="tags" 
+                                                               th:value="${selectedRole.tags}" placeholder="输入标签，多个标签用逗号分隔">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="sortOrder" class="form-label small">排序号</label>
+                                                        <input type="number" class="form-control" id="sortOrder" name="sortOrder" 
+                                                               th:value="${selectedRole.sortOrder}" placeholder="请输入排序号">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="mb-3">
+                                                        <label for="roleDescription" class="form-label small">角色描述</label>
+                                                        <textarea class="form-control" id="roleDescription" name="description" 
+                                                                  rows="3" placeholder="请输入角色描述" th:text="${selectedRole.description}"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 角色设定 -->
+                                        <div class="mb-4">
+                                            <h6 class="border-bottom pb-2 mb-3">角色设定</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <div class="mb-3">
+                                                        <label for="roleSummary" class="form-label small">角色设定摘要</label>
+                                                        <textarea class="form-control" id="roleSummary" name="roleSummary" 
+                                                                  rows="2" placeholder="简要描述角色的设定和特点" th:text="${selectedRole.roleSummary}"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="mb-3">
+                                                        <label for="roleScenario" class="form-label small">情景</label>
+                                                        <textarea class="form-control" id="roleScenario" name="scenario" 
+                                                                  rows="3" placeholder="描述角色所处的情景和背景" th:text="${selectedRole.scenario}"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="mb-3">
+                                                        <label for="firstMessage" class="form-label small">首次对话内容</label>
+                                                        <textarea class="form-control" id="firstMessage" name="firstMessage" 
+                                                                  rows="3" placeholder="角色首次对话时的内容" th:text="${selectedRole.firstMessage}"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 对话示例 -->
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                                                <h6 class="mb-0">对话示例</h6>
+                                                <a th:href="@{/panel/model/role/template/add(roleId=${selectedRole.id})}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-plus-circle me-1"></i>添加示例
+                                                </a>
+                                            </div>
+                                            
+                                            <div id="chatTemplateContainer">
+                                                <!-- 对话示例 -->
+                                                <div th:each="template, stat : ${chatTemplates}" class="chat-template-item mb-3">
+                                                    <div class="chat-template-header">
+                                                        <span th:text="'对话示例 #' + ${stat.count}">对话示例</span>
+                                                        <a th:href="@{/panel/model/role/template/delete(id=${template.id}, roleId=${selectedRole.id})}" 
+                                                           class="btn btn-sm btn-outline-danger"
+                                                           onclick="return confirm('确定要删除这个对话示例吗？')">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small">用户消息</label>
+                                                            <textarea class="form-control" name="templates[${stat.index}].userMessage" 
+                                                                      rows="2" placeholder="用户可能会问的问题" th:text="${template.userMessage}"></textarea>
+                                                            <input type="hidden" name="templates[${stat.index}].id" th:value="${template.id}">
+                                                        </div>
+                                                        <div class="mb-0">
+                                                            <label class="form-label small">助手回复</label>
+                                                            <textarea class="form-control" name="templates[${stat.index}].assistantMessage" 
+                                                                      rows="3" placeholder="角色应该如何回复" th:text="${template.assistantMessage}"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- 无对话示例提示 -->
+                                                <div th:if="${#lists.isEmpty(chatTemplates)}" class="text-center py-4 text-muted">
+                                                    <i class="bi bi-chat-square-text fs-2"></i>
+                                                    <p class="mt-2">暂无对话示例，点击"添加示例"按钮创建</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between">
+                                            <a th:href="@{/panel/model/role/delete(id=${selectedRole.id})}" 
+                                               class="btn btn-outline-danger"
+                                               onclick="return confirm('确定要删除这个角色吗？此操作不可恢复。')">
+                                                <i class="bi bi-trash me-1"></i>删除角色
+                                            </a>
+                                            <div>
+                                                <a th:href="@{/panel/model/role/list}" class="btn btn-outline-secondary me-2">
+                                                    取消
+                                                </a>
+                                                <button type="submit" class="btn btn-primary">
+                                                    保存
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    <!-- 未选择角色时的提示 -->
+                                    <div th:if="${selectedRole == null}" class="text-center py-5 text-muted">
+                                        <i class="bi bi-person-badge fs-1"></i>
+                                        <p class="mt-3">请从左侧选择一个角色查看详情<br>或点击"新建角色"按钮创建</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 最小化的JavaScript代码，仅处理必要的客户端交互
+        document.addEventListener('DOMContentLoaded', function() {
+            // 头像上传预览
+            const avatarUpload = document.getElementById('avatarUpload');
+            if (avatarUpload) {
+                avatarUpload.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        
+                        // 检查文件类型
+                        if (!file.type.match('image/(jpeg|png|gif)')) {
+                            alert('请选择 JPG、PNG 或 GIF 格式的图片');
+                            return;
+                        }
+                        
+                        // 检查文件大小（限制为2MB）
+                        if (file.size > 2 * 1024 * 1024) {
+                            alert('图片大小不能超过2MB');
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = document.querySelector('.avatar-preview img');
+                            const placeholder = document.querySelector('.avatar-preview i.bi-person');
+                            
+                            if (!preview) {
+                                const newImg = document.createElement('img');
+                                newImg.src = e.target.result;
+                                newImg.alt = '角色头像';
+                                document.querySelector('.avatar-preview').appendChild(newImg);
+                            } else {
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                            }
+                            
+                            if (placeholder) {
+                                placeholder.style.display = 'none';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // 表单验证
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
+</body>
+</html> 
