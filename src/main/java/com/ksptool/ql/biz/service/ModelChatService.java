@@ -268,9 +268,9 @@ public class ModelChatService {
         Long userId = AuthService.getCurrentUserId();
         
         // 从枚举中获取所有可用的模型列表
-        List<String> models = new ArrayList<>();
+        List<AIModelEnum> models = new ArrayList<>();
         for (AIModelEnum model : AIModelEnum.values()) {
-            models.add(model.getCode());
+            models.add(model);
         }
         vo.setModels(models);
         

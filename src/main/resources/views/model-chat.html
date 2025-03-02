@@ -339,9 +339,9 @@
                         <label>选择模型：</label>
                         <select id="modelSelect">
                             <option th:each="model : ${data.models}" 
-                                    th:value="${model}"
-                                    th:text="${model}"
-                                    th:selected="${model == data.currentThread?.modelCode}">
+                                    th:value="${model.code}"
+                                    th:text="${model.name}"
+                                    th:selected="${model.code == data.currentThread?.modelCode}">
                             </option>
                         </select>
                     </div>

@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.model.vo;
 
+import com.ksptool.ql.commons.enums.AIModelEnum;
 import lombok.Data;
 import java.util.List;
 
@@ -42,5 +43,5 @@ public class ModelChatViewVo {
     /**
      * 可用的模型列表
      */
-    private List<String> models;
+    private List<AIModelEnum> models;
 } 

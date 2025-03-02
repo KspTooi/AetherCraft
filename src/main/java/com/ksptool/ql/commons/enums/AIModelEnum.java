@@ -7,16 +7,38 @@ import lombok.Getter;
  */
 @Getter
 public enum AIModelEnum {
-    
+
+    /*正式模型*/
     GEMINI_2_FLASH("gemini-2.0-flash", "Gemini 2.0 Flash"),
-    GEMINI_2_FLASH_LITE_PREVIEW("gemini-2.0-flash-lite-preview-02-05", "Gemini 2.0 Flash Lite Preview"),
+    GEMINI_2_FLASH_LITE("gemini-2.0-flash-lite", "Gemini 2.0 Flash-Lite"),
     GEMINI_15_FLASH("gemini-1.5-flash", "Gemini 1.5 Flash"),
     GEMINI_15_FLASH_8B("gemini-1.5-flash-8b", "Gemini 1.5 Flash 8B"),
     GEMINI_15_PRO("gemini-1.5-pro", "Gemini 1.5 Pro"),
-    GEMINI_2_PRO_EXP("gemini-2.0-pro-exp-02-05", "Gemini 2.0 Pro Experimental"),
-    GEMINI_2_FLASH_THINKING_EXP("gemini-2.0-flash-thinking-exp-01-21", "Gemini 2.0 Flash Thinking Experimental"),
-    GEMINI_EXP_1206("gemini-exp-1206", "Gemini Experimental 1206");
-    
+
+
+
+    /*实验模型*/
+    GEMINI_2_PRO_EXP("gemini-2.0-pro-exp", "Gemini 2.0 Pro Exp"),
+    GEMINI_2_PRO_EXP_0205("gemini-2.0-pro-exp-02-05", "Gemini 2.0 Pro Exp 2025-02-05"),
+    GEMINI_2_FLASH_THINKING_EXP_0121("gemini-2.0-flash-thinking-exp-01-21", "Gemini 2.0 Flash Thinking Exp 2025-01-21"),
+    GEMINI_2_FLASH_THINKING_EXP_1219("gemini-2.0-flash-thinking-exp-1219", "Gemini 2.0 Flash Thinking Exp 2024-12-19"),
+    GEMINI_2_FLASH_EXP("gemini-2.0-flash-exp", "Gemini 2.0 Flash Exp"),
+
+    GEMINI_2_EXP_1206("gemini-exp-1206", "Gemini 2024-12-06"),
+    GEMINI_2_EXP_1121("gemini-exp-1121", "Gemini 2024-11-21"),
+    GEMINI_2_EXP_1114("gemini-exp-1114", "Gemini 2024-11-14"),
+
+    GEMINI_15_PRO_EXP_0827("gemini-1.5-pro-exp-0827", "Gemini 1.5 Pro Exp 2024-08-27"),
+    GEMINI_15_PRO_EXP_0801("gemini-1.5-pro-exp-0801", "Gemini 1.5 Pro Exp 2024-08-01"),
+
+    GEMINI_15_PRO_001("gemini-1.5-pro-001", "Gemini 1.5 Pro #001"),
+    GEMINI_15_PRO_002("gemini-1.5-pro-002", "Gemini 1.5 Pro #002"),
+    GEMINI_15_FLASH_001("gemini-1.5-flash-001", "Gemini 1.5 Flash #001"),
+    GEMINI_15_FLASH_002("gemini-1.5-flash-002", "Gemini 1.5 Flash #002"),
+
+
+    ;
+
     /**
      * 模型代码
      */
