@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
 import java.util.Date;
+import java.util.List;
 
 /**
  * AI模型角色实体类
@@ -26,22 +27,34 @@ public class ModelRolePo {
     @Column(nullable = false, length = 50)
     @Comment("角色名称")
     private String name;
+    
+    @Column(name = "avatar_path", length = 255)
+    @Comment("头像路径")
+    private String avatarPath;
 
     @Column(length = 1000)
     @Comment("角色描述")
     private String description;
 
+    @Column(name = "role_summary", length = 500)
+    @Comment("角色设定摘要")
+    private String roleSummary;
+
+    @Column(name = "scenario", length = 1000)
+    @Comment("情景")
+    private String scenario;
+
     @Column(name = "first_message", length = 1000)
     @Comment("首次对话内容")
     private String firstMessage;
 
-    @Column(name = "avatar_path", length = 255)
-    @Comment("头像路径")
-    private String avatarPath;
-
     @Column(length = 50)
     @Comment("角色标签，多个标签用逗号分隔")
     private String tags;
+
+    @OneToMany(mappedBy = "modelRole", cascade = CascadeType.ALL)
+    @Comment("对话示例列表")
+    private List<ModelChatTemplatePo> chatTemplates;
 
     @Column(nullable = false)
     @Comment("排序号")
