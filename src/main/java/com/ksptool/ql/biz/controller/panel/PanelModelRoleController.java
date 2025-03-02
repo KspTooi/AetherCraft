@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.model.vo.SaveModelRoleVo;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
+import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -35,6 +38,9 @@ public class PanelModelRoleController {
 
     @Autowired
     private PanelModelRoleService panelModelRoleService;
+    
+    @Autowired
+    private UserFileService userFileService;
     
     /**
      * 初始化表单数据
@@ -136,5 +142,22 @@ public class PanelModelRoleController {
         }
         // 重定向到列表页
         return "redirect:/panel/model/role/list";
+    }
+    
+    /**
+     * 上传模型角色头像
+     * @param file 头像文件
+     * @return 上传结果
+     */
+    @PostMapping("/upload-avatar")
+    @ResponseBody
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        try {
+            // 使用统一文件服务保存头像
+            var userFile = userFileService.receive(file);
+            return Result.success(userFile.getFilepath());
+        } catch (Exception e) {
+            return Result.error("头像上传失败：" + e.getMessage());
+        }
     }
 }
