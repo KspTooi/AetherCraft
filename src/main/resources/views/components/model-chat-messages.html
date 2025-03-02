@@ -14,16 +14,22 @@
                 flex-direction: column;
                 min-height: 0; /* 关键:确保flex布局下的滚动正常工作 */
                 position: relative; /* 确保定位正确 */
+                overflow-x: hidden; /* 防止横向滚动 */
+                width: 100%; /* 确保宽度不超过父容器 */
+                max-width: 100%; /* 限制最大宽度 */
             }
 
             .chat-messages {
                 flex: 1;
                 overflow-y: auto;
+                overflow-x: hidden; /* 防止横向滚动 */
                 padding: 48px 20px 20px;
                 display: flex;
                 flex-direction: column;
                 gap: 16px;
                 min-height: 0; /* 关键:确保flex布局下的滚动正常工作 */
+                width: 100%; /* 确保宽度不超过父容器 */
+                max-width: 100%; /* 限制最大宽度 */
             }
 
             .message {
@@ -36,6 +42,16 @@
                 word-break: break-word;
                 overflow-wrap: break-word;
                 position: relative; /* 添加相对定位，用于删除按钮的绝对定位 */
+                box-sizing: border-box; /* 确保padding不会增加元素的总宽度 */
+            }
+
+            /* 消息内容样式 */
+            .message > span {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                overflow-wrap: break-word;
+                word-break: break-word;
             }
 
             .message.user {
@@ -94,6 +110,9 @@
                 overflow-x: auto;
                 margin: 1em 0;
                 color: #ffffff;
+                max-width: 100%; /* 确保不超过容器宽度 */
+                white-space: pre-wrap; /* 允许代码自动换行 */
+                word-break: break-word; /* 在单词内部换行 */
             }
 
             .message.assistant code {
@@ -101,6 +120,8 @@
                 background: rgba(0, 0, 0, 0.2);
                 padding: 2px 4px;
                 border-radius: 3px;
+                word-break: break-word; /* 在单词内部换行 */
+                white-space: pre-wrap; /* 允许代码自动换行 */
             }
 
             .message.assistant pre code {
@@ -124,6 +145,7 @@
 
             .message.assistant img {
                 max-width: 100%;
+                height: auto; /* 保持图片比例 */
                 border-radius: 4px;
             }
 
@@ -131,6 +153,9 @@
                 border-collapse: collapse;
                 margin: 1em 0;
                 width: 100%;
+                max-width: 100%; /* 确保不超过容器宽度 */
+                display: block; /* 允许表格滚动 */
+                overflow-x: auto; /* 横向滚动 */
             }
 
             .message.assistant th,
@@ -138,6 +163,7 @@
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 padding: 8px;
                 text-align: left;
+                min-width: 80px; /* 设置最小宽度，防止内容过于挤压 */
             }
 
             .message.assistant th {
@@ -200,11 +226,42 @@
             @media (max-width: 768px) {
                 .chat-messages {
                     padding-top: 42px;
+                    padding-left: 10px;
+                    padding-right: 10px;
                 }
                 
                 .message {
                     max-width: 90%;
                     font-size: 14px;
+                    padding: 10px 12px;
+                }
+                
+                /* 确保代码块不会溢出 */
+                .message.assistant pre {
+                    max-width: 100%;
+                    overflow-x: auto;
+                }
+                
+                /* 确保表格不会溢出 */
+                .message.assistant table {
+                    max-width: 100%;
+                    display: block;
+                    overflow-x: auto;
+                }
+            }
+            
+            /* 超小屏幕适配 */
+            @media (max-width: 480px) {
+                .message {
+                    max-width: 95%;
+                    font-size: 13px;
+                    padding: 8px 10px;
+                }
+                
+                .chat-messages {
+                    padding-left: 5px;
+                    padding-right: 5px;
+                    gap: 12px;
                 }
             }
         </style>
