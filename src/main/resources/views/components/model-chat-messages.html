@@ -113,6 +113,7 @@
                 max-width: 100%; /* 确保不超过容器宽度 */
                 white-space: pre-wrap; /* 允许代码自动换行 */
                 word-break: break-word; /* 在单词内部换行 */
+                position: relative; /* 为复制按钮定位 */
             }
 
             .message.assistant code {
@@ -264,6 +265,42 @@
                     gap: 12px;
                 }
             }
+
+            /* 代码块复制按钮样式 */
+            .code-copy-btn {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: none;
+                border-radius: 3px;
+                padding: 3px 8px;
+                font-size: 12px;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s ease, background 0.2s ease;
+                z-index: 5;
+            }
+
+            .message.assistant pre:hover .code-copy-btn {
+                opacity: 1;
+            }
+
+            .code-copy-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .code-copy-btn.copied {
+                background: rgba(46, 204, 113, 0.4);
+            }
+
+            /* 移动端触摸支持 */
+            @media (hover: none) {
+                .code-copy-btn {
+                    opacity: 0.7;
+                }
+            }
         </style>
 
         <div class="chat-messages" id="chatMessages">
@@ -311,6 +348,8 @@
                         contentSpan.textContent = content;
                     } else {
                         contentSpan.innerHTML = this.renderMarkdown(content);
+                        // 为代码块添加复制按钮
+                        this.addCodeCopyButtons(contentSpan);
                     }
                     messageDiv.appendChild(contentSpan);
                     
@@ -370,55 +409,101 @@
                     }
                 },
                 
+                // 添加代码块复制按钮
+                addCodeCopyButtons(container) {
+                    const codeBlocks = container.querySelectorAll('pre');
+                    codeBlocks.forEach(pre => {
+                        // 避免重复添加
+                        if (pre.querySelector('.code-copy-btn')) return;
+                        
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'code-copy-btn';
+                        copyBtn.textContent = '复制';
+                        copyBtn.title = '复制代码';
+                        
+                        copyBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const code = pre.querySelector('code');
+                            const textToCopy = code ? code.textContent : pre.textContent;
+                            
+                            // 使用Clipboard API复制文本
+                            navigator.clipboard.writeText(textToCopy)
+                                .then(() => {
+                                    // 复制成功，更改按钮状态
+                                    copyBtn.textContent = '已复制';
+                                    copyBtn.classList.add('copied');
+                                    
+                                    // 2秒后恢复按钮状态
+                                    setTimeout(() => {
+                                        copyBtn.textContent = '复制';
+                                        copyBtn.classList.remove('copied');
+                                    }, 2000);
+                                })
+                                .catch(err => {
+                                    console.error('复制失败:', err);
+                                    copyBtn.textContent = '复制失败';
+                                    
+                                    // 2秒后恢复按钮状态
+                                    setTimeout(() => {
+                                        copyBtn.textContent = '复制';
+                                    }, 2000);
+                                });
+                        });
+                        
+                        pre.appendChild(copyBtn);
+                    });
+                },
+                
                 // 更新最后一条消息的内容
                 updateLastMessage(content, role) {
                     const lastMessage = this.getLastMessage();
-                    if (lastMessage) {
-                        // 保存historyId
-                        const historyId = lastMessage.dataset.historyId;
-                        
-                        // 保存删除按钮（如果存在）
-                        const deleteBtn = lastMessage.querySelector('.message-delete-btn');
-                        
-                        // 获取或创建内容容器
-                        let contentSpan = lastMessage.querySelector('span');
-                        if (!contentSpan) {
-                            contentSpan = document.createElement('span');
-                            lastMessage.appendChild(contentSpan);
-                        }
-                        
-                        if (role === 'user') {
-                            contentSpan.textContent = content;
-                        } else {
-                            contentSpan.innerHTML = this.renderMarkdown(content);
-                        }
-                        
-                        // 恢复historyId
-                        if (historyId) {
-                            lastMessage.dataset.historyId = historyId;
-                        }
-                        
-                        // 如果之前有删除按钮但现在没有，重新添加
-                        if (deleteBtn && !lastMessage.querySelector('.message-delete-btn')) {
-                            lastMessage.appendChild(deleteBtn);
-                        }
+                    if (!lastMessage) return;
+                    
+                    // 保存historyId
+                    const historyId = lastMessage.dataset.historyId;
+                    
+                    // 保存删除按钮（如果存在）
+                    const deleteBtn = lastMessage.querySelector('.message-delete-btn');
+                    
+                    // 获取或创建内容容器
+                    let contentSpan = lastMessage.querySelector('span');
+                    if (!contentSpan) {
+                        contentSpan = document.createElement('span');
+                        lastMessage.appendChild(contentSpan);
+                    }
+                    
+                    if (role === 'user') {
+                        contentSpan.textContent = content;
+                    } else {
+                        contentSpan.innerHTML = this.renderMarkdown(content);
+                        // 为代码块添加复制按钮
+                        this.addCodeCopyButtons(contentSpan);
+                    }
+                    
+                    // 恢复historyId
+                    if (historyId) {
+                        lastMessage.dataset.historyId = historyId;
+                    }
+                    
+                    // 如果之前有删除按钮但现在没有，重新添加
+                    if (deleteBtn && !lastMessage.querySelector('.message-delete-btn')) {
+                        lastMessage.appendChild(deleteBtn);
                     }
                 },
                 
-                // 初始化组件
+                // 初始化
                 init() {
                     // 渲染已有的AI消息
-                    this.container.querySelectorAll('.message.assistant').forEach(message => {
-                        const contentSpan = message.querySelector('span');
-                        if (contentSpan) {
-                            const content = contentSpan.textContent || contentSpan.innerText;
-                            if (content) {
-                                contentSpan.innerHTML = this.renderMarkdown(content);
-                            }
-                        }
+                    const aiMessages = this.container.querySelectorAll('.message.assistant span');
+                    aiMessages.forEach(span => {
+                        span.innerHTML = this.renderMarkdown(span.textContent);
+                        // 为代码块添加复制按钮
+                        this.addCodeCopyButtons(span);
                     });
                     
-                    // 滚动到最新消息
+                    // 滚动到底部
                     this.scrollToBottom();
                 }
             };
