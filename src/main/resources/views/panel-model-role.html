@@ -174,7 +174,7 @@
                                             </a>
                                             <div class="role-item-content">
                                                 <div class="me-3" th:if="${role.avatarPath != null}">
-                                                    <img th:src="${role.avatarPath}" class="role-avatar" alt="角色头像">
+                                                    <img th:src="${'/res/' + role.avatarPath}" class="role-avatar" alt="角色头像">
                                                 </div>
                                                 <div class="role-avatar-placeholder me-3" th:if="${role.avatarPath == null}">
                                                     <i class="bi bi-person"></i>
@@ -242,7 +242,7 @@
                                                 <div class="avatar-preview mb-3 mx-auto">
                                                     <i class="bi bi-person" id="avatarPlaceholder" th:style="${data.avatarPath != null ? 'display:none' : ''}"></i>
                                                     <img id="avatarPreview" 
-                                                         th:src="${data.avatarPath}" 
+                                                         th:src="${data.avatarPath != null ? '/res/' + data.avatarPath : ''}" 
                                                          th:style="${data.avatarPath != null ? '' : 'display:none'}"
                                                          alt="角色头像">
                                                 </div>
@@ -489,7 +489,7 @@
             const placeholder = document.getElementById('avatarPlaceholder');
             
             if (avatarPath && preview) {
-                preview.src = avatarPath;
+                preview.src = '/res/' + avatarPath;
                 preview.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'none';
             } else {
