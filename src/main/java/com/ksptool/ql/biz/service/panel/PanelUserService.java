@@ -13,10 +13,10 @@ import com.ksptool.ql.biz.model.vo.SavePanelUserPermissionVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -153,12 +153,12 @@ public class PanelUserService {
         // 处理编辑用户
         UserPo user = userRepository.findById(dto.getId()).orElseThrow(()->new BizException("用户不存在"));
 
-        // 处理密码
-        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-            dto.setPassword(user.getPassword());
-        }
-        if (!user.getPassword().equals(dto.getPassword())) {
+        // 处理密码(dto密码非空 代表用户修改了密码)
+        if (!StringUtils.isBlank(dto.getPassword())) {
             dto.setPassword(encryptPassword(dto.getPassword(), dto.getUsername()));
+        }
+        if(StringUtils.isBlank(dto.getPassword())){
+            dto.setPassword(user.getPassword());
         }
 
         // 更新用户信息
