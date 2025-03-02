@@ -56,10 +56,34 @@ public class GeminiRequest {
         request.setContents(contents);
         
         // 设置安全配置
-        SafetySetting safetySetting = new SafetySetting();
-        safetySetting.setCategory("HARM_CATEGORY_DANGEROUS_CONTENT");
-        safetySetting.setThreshold("BLOCK_ONLY_HIGH");
-        request.setSafetySettings(List.of(safetySetting));
+        List<SafetySetting> safetySettings = new ArrayList<>();
+        
+        SafetySetting harassmentSetting = new SafetySetting();
+        harassmentSetting.setCategory("HARM_CATEGORY_HARASSMENT");
+        harassmentSetting.setThreshold("OFF");
+        safetySettings.add(harassmentSetting);
+        
+        SafetySetting hateSpeechSetting = new SafetySetting();
+        hateSpeechSetting.setCategory("HARM_CATEGORY_HATE_SPEECH");
+        hateSpeechSetting.setThreshold("OFF");
+        safetySettings.add(hateSpeechSetting);
+        
+        SafetySetting sexuallySetting = new SafetySetting();
+        sexuallySetting.setCategory("HARM_CATEGORY_SEXUALLY_EXPLICIT");
+        sexuallySetting.setThreshold("OFF");
+        safetySettings.add(sexuallySetting);
+        
+        SafetySetting dangerousSetting = new SafetySetting();
+        dangerousSetting.setCategory("HARM_CATEGORY_DANGEROUS_CONTENT");
+        dangerousSetting.setThreshold("OFF");
+        safetySettings.add(dangerousSetting);
+        
+        SafetySetting civicSetting = new SafetySetting();
+        civicSetting.setCategory("HARM_CATEGORY_CIVIC_INTEGRITY");
+        civicSetting.setThreshold("BLOCK_NONE");
+        safetySettings.add(civicSetting);
+        
+        request.setSafetySettings(safetySettings);
         
         // 设置生成配置
         GenerationConfig config = new GenerationConfig();
