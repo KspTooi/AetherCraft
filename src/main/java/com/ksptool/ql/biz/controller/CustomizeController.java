@@ -3,7 +3,9 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.WallpaperDto;
 import com.ksptool.ql.biz.model.po.UserFilePo;
 import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,10 @@ public class CustomizeController {
     
     private final UserFileService userFileService;
     private final ConfigService configService;
+    private final GlobalConfigService globalConfigService;
+    
+    // 用户壁纸路径的配置键
+    private static final String USER_WALLPAPER_PATH_KEY = "customize.wallpaper.path";
     
     @GetMapping("/view")
     public ModelAndView customizeView() {
@@ -37,7 +43,7 @@ public class CustomizeController {
     public Result<?> resetWallpaper() {
         try {
             // 通过设置为 null 来移除壁纸配置项
-            configService.setValue("customize.wallpaper.path", null);
+            configService.setValue(USER_WALLPAPER_PATH_KEY, null);
             return Result.success("已恢复默认壁纸");
         } catch (Exception e) {
             return Result.error("恢复默认壁纸失败：" + e.getMessage());
@@ -47,21 +53,26 @@ public class CustomizeController {
     @GetMapping("/wallpaper")
     public ResponseEntity<?> getWallpaper(@RequestParam(value = "check", required = false) Boolean check) {
         try {
-            // 1. 从配置中获取壁纸路径
-            String wallpaperPath = configService.get("customize.wallpaper.path");
+            // 获取全局配置的缓存时间和默认壁纸路径
+            int cacheSeconds = globalConfigService.getInt("customize.wallpaper.cache.seconds", 60);
+            
+            String defaultWallpaperPath = globalConfigService.get("customize.wallpaper.default.path","/img/bg1.jpg");
+            
+            // 从用户配置中获取壁纸路径
+            String wallpaperPath = configService.get(USER_WALLPAPER_PATH_KEY);
             if (!StringUtils.hasText(wallpaperPath)) {
                 return ResponseEntity.status(302)
-                    .header("Location", "/img/bg1.jpg")
-                    .header("Cache-Control", "public, max-age=60") // 缓存1分钟
+                    .header("Location", defaultWallpaperPath)
+                    .header("Cache-Control", "public, max-age=" + cacheSeconds)
                     .build();
             }
 
-            // 2. 通过统一文件系统获取文件
+            // 通过统一文件系统获取文件
             File wallpaperFile = userFileService.getUserFile(wallpaperPath);
             if (wallpaperFile == null || !wallpaperFile.exists()) {
                 return ResponseEntity.status(302)
-                    .header("Location", "/img/bg1.jpg")
-                    .header("Cache-Control", "public, max-age=60") // 缓存1分钟
+                    .header("Location", defaultWallpaperPath)
+                    .header("Cache-Control", "public, max-age=" + cacheSeconds)
                     .build();
             }
 
@@ -70,18 +81,21 @@ public class CustomizeController {
                 return ResponseEntity.ok().build();
             }
 
-            // 3. 响应图片文件，添加下载相关的响应头
+            // 响应图片文件，添加下载相关的响应头
             Resource resource = new FileSystemResource(wallpaperFile);
             return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .header("Content-Disposition", "inline; filename=wallpaper.jpg") // 修改为inline
-                .header("Cache-Control", "public, max-age=60") // 缓存1分钟
+                .header("Content-Disposition", "inline; filename=wallpaper.jpg")
+                .header("Cache-Control", "public, max-age=" + cacheSeconds)
                 .body(resource);
                 
         } catch (Exception e) {
+            int cacheSeconds = globalConfigService.getInt("customize.wallpaper.cache.seconds", 60);
+            String defaultWallpaperPath = globalConfigService.get("customize.wallpaper.default.path","/img/bg1.jpg");
+            
             return ResponseEntity.status(302)
-                .header("Location", "/img/bg1.jpg")
-                .header("Cache-Control", "public, max-age=60") // 缓存1分钟
+                .header("Location", defaultWallpaperPath)
+                .header("Cache-Control", "public, max-age=" + cacheSeconds)
                 .build();
         }
     }
@@ -98,7 +112,7 @@ public class CustomizeController {
             UserFilePo userFile = userFileService.receive(multipartFile);
 
             // 3. 更新用户配置，保存壁纸路径
-            configService.setValue("customize.wallpaper.path", userFile.getFilepath());
+            configService.setValue(USER_WALLPAPER_PATH_KEY, userFile.getFilepath());
 
             return Result.success("壁纸设置成功");
         } catch (Exception e) {

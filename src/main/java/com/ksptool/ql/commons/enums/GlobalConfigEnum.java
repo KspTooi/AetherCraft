@@ -10,6 +10,9 @@ public enum GlobalConfigEnum {
     MODEL_CHAT_GEN_THREAD_TITLE("model.chat.gen.thread.title", "true", "是否自动生成会话标题，true-生成，false-不生成"),
     MODEL_CHAT_GEN_THREAD_PROMPT("model.chat.gen.thread.prompt", "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:#{content}", "生成会话标题的提示语模板，#{content}将被替换为用户的第一条消息"),
 
+    // 壁纸缓存相关配置（全局配置）
+    CUSTOMIZE_WALLPAPER_CACHE_SECONDS("customize.wallpaper.cache.seconds", "60", "壁纸缓存时间(秒)"),
+    CUSTOMIZE_WALLPAPER_DEFAULT_PATH("customize.wallpaper.default.path", "/img/bg1.jpg", "默认壁纸路径"),
 
     ;
 
