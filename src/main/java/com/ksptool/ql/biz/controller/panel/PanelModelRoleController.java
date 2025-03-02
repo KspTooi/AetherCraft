@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
@@ -115,5 +116,25 @@ public class PanelModelRoleController {
             ra.addFlashAttribute("hasFormError", true);
             return "redirect:/panel/model/role/list";
         }
+    }
+    
+    /**
+     * 删除模型角色
+     * @param id 角色ID
+     * @param redirectAttributes 重定向属性
+     * @return 重定向到列表页
+     */
+    @GetMapping("/remove")
+    public String removeModelRole(@RequestParam(name = "id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            // 删除角色
+            panelModelRoleService.removeModelRole(id);
+            redirectAttributes.addFlashAttribute("vo", Result.success("角色删除成功", null));
+        } catch (Exception e) {
+            // 设置业务异常消息
+            redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));
+        }
+        // 重定向到列表页
+        return "redirect:/panel/model/role/list";
     }
 }

@@ -173,4 +173,41 @@ public class PanelModelRoleService {
             throw new BizException("保存角色失败：" + e.getMessage(), e);
         }
     }
+    
+    /**
+     * 删除模型角色
+     * 
+     * @param id 角色ID
+     * @throws BizException 业务异常
+     */
+    @Transactional
+    public void removeModelRole(Long id) throws BizException {
+        if (id == null) {
+            throw new BizException("角色ID不能为空");
+        }
+        
+        try {
+            // 获取当前用户ID
+            Long currentUserId = AuthService.getCurrentUserId();
+            
+            // 查询角色
+            ModelRolePo rolePo = modelRoleRepository.findById(id).orElse(null);
+            if (rolePo == null) {
+                throw new BizException("角色不存在");
+            }
+            
+            // 检查是否有权限删除该角色
+            if (!rolePo.getUserId().equals(currentUserId)) {
+                throw new BizException("无权删除该角色");
+            }
+            
+            // 删除角色
+            modelRoleRepository.deleteById(id);
+        } catch (Exception e) {
+            if (e instanceof BizException) {
+                throw (BizException) e;
+            }
+            throw new BizException("删除角色失败：" + e.getMessage(), e);
+        }
+    }
 } 
