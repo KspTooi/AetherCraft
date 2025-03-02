@@ -9,6 +9,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             border-radius: 8px;
+            position: relative;
         }
         .role-item:hover {
             background-color: rgba(0,0,0,0.05);
@@ -16,6 +17,14 @@
         .role-item.active {
             background-color: rgba(13,110,253,0.1);
             border-left: 3px solid var(--bs-primary);
+        }
+        .role-item a {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
         .role-avatar {
             width: 48px;
@@ -56,6 +65,13 @@
         .role-badge {
             flex-shrink: 0;
             margin-left: 8px;
+        }
+        .role-item-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 0;
         }
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -153,7 +169,10 @@
                                              th:class="${role.id == data.id && !data.isNew ? 'role-item p-2 mb-2 d-flex align-items-center active' : 'role-item p-2 mb-2 d-flex align-items-center'}"
                                              th:attr="data-id=${role.id}">
                                             <a th:href="@{/panel/model/role/list(id=${role.id}, keyword=${data.keyword}, currentPage=${data.roleList.currentPage}, pageSize=${data.roleList.pageSize})}" 
-                                               class="d-flex align-items-center text-decoration-none w-100 text-dark">
+                                               class="text-decoration-none">
+                                               <span class="visually-hidden" th:text="${role.name}">角色名称</span>
+                                            </a>
+                                            <div class="role-item-content">
                                                 <div class="me-3" th:if="${role.avatarPath != null}">
                                                     <img th:src="${role.avatarPath}" class="role-avatar" alt="角色头像">
                                                 </div>
@@ -168,7 +187,7 @@
                                                     <span th:class="${role.status == 1 ? 'badge bg-success' : 'badge bg-secondary'}"
                                                           th:text="${role.status == 1 ? '启用' : '禁用'}">状态</span>
                                                 </div>
-                                            </a>
+                                            </div>
                                         </div>
                                         
                                         <!-- 无数据提示 -->
