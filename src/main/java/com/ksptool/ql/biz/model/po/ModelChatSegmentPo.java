@@ -25,7 +25,7 @@ public class ModelChatSegmentPo {
     
     @Comment("关联的会话")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "thread_id", nullable = false)
+    @JoinColumn(name = "thread_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ModelChatThreadPo thread;
     
     @Comment("关联的历史记录ID")

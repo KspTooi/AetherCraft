@@ -20,7 +20,7 @@ public class ModelChatTemplatePo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_role_id", nullable = false)
+    @JoinColumn(name = "model_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("关联的角色")
     private ModelRolePo modelRole;
 

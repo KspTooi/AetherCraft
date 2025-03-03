@@ -46,8 +46,8 @@ public class UserPo {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_group",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "group_id")
+        joinColumns = @JoinColumn(name = "user_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)),
+        inverseJoinColumns = @JoinColumn(name = "group_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

@@ -76,8 +76,8 @@ public class GroupPo {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "group_permission",
-        joinColumns = @JoinColumn(name = "group_id"),
-        inverseJoinColumns = @JoinColumn(name = "permission_id")
+        joinColumns = @JoinColumn(name = "group_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)),
+        inverseJoinColumns = @JoinColumn(name = "permission_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

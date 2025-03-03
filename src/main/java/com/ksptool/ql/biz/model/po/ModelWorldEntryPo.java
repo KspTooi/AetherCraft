@@ -21,7 +21,7 @@ public class ModelWorldEntryPo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "world_id", nullable = false)
+    @JoinColumn(name = "world_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("所属世界ID")
     private ModelWorldPo world;
 

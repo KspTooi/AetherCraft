@@ -24,7 +24,7 @@ public class ModelApiKeyConfigPo {
     private String modelCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_key_id", nullable = false)
+    @JoinColumn(name = "api_key_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("关联的API密钥")
     private ApiKeyPo apiKey;
 

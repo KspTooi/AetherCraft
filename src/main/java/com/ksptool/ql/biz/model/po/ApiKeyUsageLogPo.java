@@ -20,12 +20,12 @@ public class ApiKeyUsageLogPo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_key_id", nullable = false)
+    @JoinColumn(name = "api_key_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("使用的API密钥")
     private ApiKeyPo apiKey;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("使用者")
     private UserPo user;
 
