@@ -33,7 +33,6 @@ import static com.ksptool.entities.Entities.assign;
  */
 @Controller
 @RequestMapping("/panel/model/role")
-@SessionAttributes("formData")
 public class PanelModelRoleController {
 
     @Autowired
@@ -41,14 +40,6 @@ public class PanelModelRoleController {
     
     @Autowired
     private UserFileService userFileService;
-    
-    /**
-     * 初始化表单数据
-     */
-    @ModelAttribute("formData")
-    public SaveModelRoleDto initFormData() {
-        return new SaveModelRoleDto();
-    }
 
     /**
      * 获取模型角色列表视图
@@ -72,7 +63,7 @@ public class PanelModelRoleController {
         }
         
         // 检查是否有保存失败时的表单数据
-        if (model.containsAttribute("hasFormError") && formData != null && formData.getName() != null) {
+        if (formData != null && formData.getName() != null) {
             // 将表单数据应用到视图对象
             vo.setIsNew(formData.getId() == null);
             assign(formData, vo);
@@ -95,7 +86,7 @@ public class PanelModelRoleController {
         // 表单验证
         if (br.hasErrors()) {
             ra.addFlashAttribute("vo", Result.error(br.getAllErrors().get(0).getDefaultMessage()));
-            ra.addFlashAttribute("hasFormError", true);
+            ra.addFlashAttribute("formData", dto);
             return "redirect:/panel/model/role/list";
         }
         
@@ -113,10 +104,8 @@ public class PanelModelRoleController {
             // 重定向到列表页面，并选中刚保存的角色
             return "redirect:/panel/model/role/list?id=" + vo.getId();
         } catch (Exception e) {
-            // 异常处理
             ra.addFlashAttribute("vo", Result.error(e.getMessage()));
-            // 标记有表单错误
-            ra.addFlashAttribute("hasFormError", true);
+            ra.addFlashAttribute("formData", dto);
             return "redirect:/panel/model/role/list";
         }
     }
