@@ -84,6 +84,7 @@ public enum PermissionEnum {
     MODEL_CHAT_EDIT_THREAD("model:chat:edit:thread", "编辑对话标题"),
     MODEL_CHAT_CREATE_THREAD("model:chat:create:thread", "创建新对话"),
     MODEL_CHAT_REMOVE_THREAD("model:chat:remove:thread", "移除对话"),
+    MODEL_CHAT_REMOVE_HISTORY("model:chat:remove:history", "移除消息历史记录"),
     MODEL_CHAT_MESSAGE("model:chat:message", "发送消息"),
     MODEL_CHAT_TOGGLE_MODEL("model:chat:toggle_model", "切换模型"),
     MODEL_CHAT_FUNC("model:chat:func", "AI执行函数"),
