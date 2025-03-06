@@ -32,7 +32,6 @@ public class PanelApiKeyController {
      * API密钥列表页面
      */
     @GetMapping("/list")
-    @RequirePermission("panel:apikey:view")
     public ModelAndView getListView(ListApiKeyDto dto) {
         ModelAndView mv = new ModelAndView("panel-api-key");
         // 设置页面标题
@@ -46,7 +45,6 @@ public class PanelApiKeyController {
      * 创建API密钥页面
      */
     @GetMapping("/create")
-    @RequirePermission("panel:apikey:add")
     public ModelAndView getCreateView(@ModelAttribute("data") SaveApiKeyDto flash) {
         ModelAndView mv = new ModelAndView("panel-api-key-operator");
         
@@ -66,7 +64,6 @@ public class PanelApiKeyController {
      * 编辑API密钥页面
      */
     @GetMapping("/edit")
-    @RequirePermission("panel:apikey:edit")
     public ModelAndView getEditView(@RequestParam("id") Long id) {
 
         ModelAndView mav = new ModelAndView("panel-api-key-operator");
