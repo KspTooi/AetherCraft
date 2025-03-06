@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyVo;
+import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -37,13 +38,34 @@ public class PanelApiKeyService {
     }
 
     /**
+     * 获取编辑视图数据
+     * @param id API密钥ID
+     * @return 编辑视图数据
+     * @throws BizException 当API密钥不存在或无权访问时
+     */
+    public SaveApiKeyVo getEditView(Long id) throws BizException {
+        // 查询API密钥
+        ApiKeyPo po = apiKeyRepository.findById(id)
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        // 检查是否为当前用户的密钥
+        if (!po.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权访问此API密钥");
+        }
+        
+        // 转换为视图对象
+        SaveApiKeyVo vo = new SaveApiKeyVo();
+        assign(po, vo);
+        return vo;
+    }
+
+    /**
      * 保存API密钥
      * @param dto 保存请求
      * @throws BizException 业务异常
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveApiKey(SaveApiKeyDto dto) throws BizException {
-        
         // 检查名称是否重复
         if (apiKeyRepository.existsByKeyNameAndUserId(dto.getKeyName(), AuthService.getCurrentUserId(), dto.getId())) {
             throw new BizException("密钥名称已存在");
@@ -62,5 +84,4 @@ public class PanelApiKeyService {
         
         apiKeyRepository.save(po);
     }
-
 } 
