@@ -155,7 +155,7 @@ public class PanelApiKeyService {
             .orElseThrow(() -> new BizException("授权记录不存在"));
             
         // 检查API密钥是否存在且属于当前用户
-        ApiKeyPo apiKey = repository.findById(authPo.getApiKeyId())
+        ApiKeyPo apiKey = repository.findById(authPo.getApiKey().getId())
             .orElseThrow(() -> new BizException("API密钥不存在"));
             
         if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {

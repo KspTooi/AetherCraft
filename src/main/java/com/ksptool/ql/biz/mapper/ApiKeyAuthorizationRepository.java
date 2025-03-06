@@ -21,7 +21,7 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
         )
         FROM ApiKeyAuthorizationPo a
         JOIN UserPo u ON u.id = a.authorizedUserId
-        WHERE a.apiKeyId = :apiKeyId
+        WHERE a.apiKey.id = :apiKeyId
         AND (:authorizedUserName IS NULL OR u.username LIKE %:authorizedUserName%)
         ORDER BY a.updateTime DESC
     """)
@@ -39,7 +39,7 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
      * @return 是否存在
      */
     @Query("SELECT COUNT(a) > 0 FROM ApiKeyAuthorizationPo a " +
-           "WHERE a.apiKeyId = :apiKeyId " +
+           "WHERE a.apiKey.id = :apiKeyId " +
            "AND a.authorizedUserId = :authorizedUserId " +
            "AND (:excludeId IS NULL OR a.id != :excludeId)")
     boolean existsByApiKeyIdAndAuthorizedUserId(
