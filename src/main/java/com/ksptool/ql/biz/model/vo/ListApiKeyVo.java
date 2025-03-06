@@ -25,7 +25,7 @@ public class ListApiKeyVo {
     private Long usageCount;
     
     // 最后使用时间
-    private String lastUsedTime;
+    private Date lastUsedTime;
     
     // 状态：0-禁用，1-启用
     private Integer status;
