@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.model.po;
 
+import com.ksptool.ql.commons.web.ExampleQuery;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
@@ -12,7 +13,7 @@ import java.util.Date;
 @Entity
 @Table(name = "api_keys")
 @Data
-public class ApiKeyPo {
+public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -79,4 +80,9 @@ public class ApiKeyPo {
     public void preUpdate() {
         updateTime = new Date();
     }
-} 
+
+    @Override
+    protected ApiKeyPo getProbe() {
+        return this;
+    }
+}

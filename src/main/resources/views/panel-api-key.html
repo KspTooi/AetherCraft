@@ -21,108 +21,78 @@
                         </div>
                     </div>
                     <div class="card-body p-3">
-                        <!-- 搜索栏 -->
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control" placeholder="搜索密钥名称..." id="searchKeyword">
-                                    <select class="form-select" style="max-width: 150px;" id="keyTypeFilter">
-                                        <option value="">所有类型</option>
-                                        <option value="OpenAI">OpenAI</option>
-                                        <option value="Azure">Azure</option>
-                                        <option value="Gemini">Gemini</option>
-                                        <option value="Claude">Claude</option>
-                                    </select>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="searchKeys()">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
+                        <!-- 搜索表单 -->
+                        <form id="searchForm" th:action="@{/panel/model/apikey/list}" method="get" class="row g-3 mb-4" onsubmit="return processForm(this)">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="keyName" th:value="${param.keyName}" placeholder="密钥名称">
                             </div>
-                            <div class="col-md-4 text-end">
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="refreshTable()">
-                                        <i class="bi bi-arrow-clockwise"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="exportKeys()">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                </div>
+                            <div class="col-md-4">
+                                <select class="form-select" name="keyType" th:value="${param.keyType}">
+                                    <option value="">所有类型</option>
+                                    <option value="OpenAI" th:selected="${param.keyType == 'OpenAI'}">OpenAI</option>
+                                    <option value="Azure" th:selected="${param.keyType == 'Azure'}">Azure</option>
+                                    <option value="Gemini" th:selected="${param.keyType == 'Gemini'}">Gemini</option>
+                                    <option value="Claude" th:selected="${param.keyType == 'Claude'}">Claude</option>
+                                </select>
                             </div>
-                        </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-search me-1"></i>搜索
+                                </button>
+                                <a th:href="@{/panel/model/apikey/list}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>重置
+                                </a>
+                            </div>
+                            <input type="hidden" name="page" th:value="${data?.currentPage ?: 1}">
+                            <input type="hidden" name="pageSize" th:value="${data?.pageSize ?: 10}">
+                        </form>
                         
                         <!-- 数据表格 -->
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped align-middle">
+                            <table class="table table-hover table-bordered table-striped align-middle mb-0">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th scope="col" style="width: 50px;">#</th>
-                                        <th scope="col">密钥名称</th>
-                                        <th scope="col">密钥类型</th>
-                                        <th scope="col">密钥值</th>
-                                        <th scope="col">共享状态</th>
-                                        <th scope="col">使用次数</th>
-                                        <th scope="col">最后使用时间</th>
-                                        <th scope="col">状态</th>
-                                        <th scope="col" style="width: 120px;">操作</th>
+                                    <tr class="text-center">
+                                        <th style="width: 80px;">#</th>
+                                        <th>密钥名称</th>
+                                        <th>密钥类型</th>
+                                        <th>共享状态</th>
+                                        <th>使用次数</th>
+                                        <th>最后使用时间</th>
+                                        <th>状态</th>
+                                        <th style="width: 100px;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- 静态数据示例 -->
-                                    <tr>
-                                        <td>1</td>
-                                        <td>个人OpenAI密钥</td>
-                                        <td><span class="badge bg-primary">OpenAI</span></td>
-                                        <td><span class="text-muted">sk-***************************</span></td>
-                                        <td><span class="badge bg-secondary">不共享</span></td>
-                                        <td>128</td>
-                                        <td>2023-12-15 14:30:22</td>
-                                        <td><span class="badge bg-success">启用</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" onclick="editKey(1)">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" onclick="deleteKey(1)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
+                                    <tr th:if="${data?.rows?.isEmpty()}">
+                                        <td colspan="8" class="text-center py-3 text-muted">暂无数据</td>
                                     </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>团队Azure密钥</td>
-                                        <td><span class="badge bg-info">Azure</span></td>
-                                        <td><span class="text-muted">az-***************************</span></td>
-                                        <td><span class="badge bg-primary">共享</span></td>
-                                        <td>256</td>
-                                        <td>2023-12-20 09:15:45</td>
-                                        <td><span class="badge bg-success">启用</span></td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" onclick="editKey(2)">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger" onclick="deleteKey(2)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
+                                    <tr th:each="key : ${data?.rows}">
+                                        <td class="text-center" th:text="${keyStat.count}">1</td>
+                                        <td th:text="${key.keyName}">个人OpenAI密钥</td>
+                                        <td class="text-center">
+                                            <span class="badge" th:classappend="${
+                                                key.keyType == 'OpenAI' ? 'bg-primary' :
+                                                key.keyType == 'Azure' ? 'bg-info' :
+                                                key.keyType == 'Gemini' ? 'bg-warning text-dark' :
+                                                key.keyType == 'Claude' ? 'bg-secondary' : 'bg-primary'
+                                            }" th:text="${key.keyType}">OpenAI</span>
                                         </td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>测试Gemini密钥</td>
-                                        <td><span class="badge bg-warning text-dark">Gemini</span></td>
-                                        <td><span class="text-muted">gm-***************************</span></td>
-                                        <td><span class="badge bg-secondary">不共享</span></td>
-                                        <td>64</td>
-                                        <td>2023-12-18 16:45:30</td>
-                                        <td><span class="badge bg-danger">禁用</span></td>
-                                        <td>
+                                        <td class="text-center">
+                                            <span class="badge" th:classappend="${key.isShared == 1 ? 'bg-primary' : 'bg-secondary'}" 
+                                                  th:text="${key.isShared == 1 ? '共享' : '不共享'}">不共享</span>
+                                        </td>
+                                        <td class="text-center" th:text="${key.usageCount}">128</td>
+                                        <td class="text-center" th:text="${#dates.format(key.lastUsedTime, 'yyyy-MM-dd HH:mm:ss')}">2023-12-15 14:30:22</td>
+                                        <td class="text-center">
+                                            <span class="badge" th:classappend="${key.status == 1 ? 'bg-success' : 'bg-danger'}" 
+                                                  th:text="${key.status == 1 ? '启用' : '禁用'}">启用</span>
+                                        </td>
+                                        <td class="text-center">
                                             <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" onclick="editKey(3)">
+                                                <button type="button" class="btn btn-outline-primary" th:onclick="'editKey(' + ${key.id} + ')'">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-danger" onclick="deleteKey(3)">
+                                                <button type="button" class="btn btn-outline-danger" th:onclick="'deleteKey(' + ${key.id} + ')'">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -133,16 +103,33 @@
                         </div>
                         
                         <!-- 分页 -->
-                        <nav aria-label="Page navigation" class="mt-3">
-                            <ul class="pagination pagination-sm justify-content-end">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">上一页</a>
+                        <nav class="mt-3" th:if="${data != null && data.count > 0}">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                <li class="page-item" th:classappend="${!data.hasPrev ? 'disabled' : ''}">
+                                    <a class="page-link" th:href="@{/panel/model/apikey/list(
+                                        page=${data.currentPage - 1},
+                                        pageSize=${data.pageSize},
+                                        keyName=${param.keyName},
+                                        keyType=${param.keyType}
+                                    )}" tabindex="-1">上一页</a>
                                 </li>
-                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">下一页</a>
+                                <li class="page-item" 
+                                    th:each="pageNumber : ${#numbers.sequence(1, T(java.lang.Math).ceil(data.count * 1.0 / data.pageSize))}"
+                                    th:classappend="${pageNumber == data.currentPage ? 'active' : ''}">
+                                    <a class="page-link" th:href="@{/panel/model/apikey/list(
+                                        page=${pageNumber},
+                                        pageSize=${data.pageSize},
+                                        keyName=${param.keyName},
+                                        keyType=${param.keyType}
+                                    )}" th:text="${pageNumber}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${!data.hasNext ? 'disabled' : ''}">
+                                    <a class="page-link" th:href="@{/panel/model/apikey/list(
+                                        page=${data.currentPage + 1},
+                                        pageSize=${data.pageSize},
+                                        keyName=${param.keyName},
+                                        keyType=${param.keyType}
+                                    )}">下一页</a>
                                 </li>
                             </ul>
                         </nav>
@@ -190,13 +177,13 @@
                                 <div class="mb-3">
                                     <label class="form-label">共享设置</label>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="isShared" id="notShared" value="0" checked>
+                                        <input class="form-check-input" type="radio" name="isShared" id="notShared" value="false" checked>
                                         <label class="form-check-label" for="notShared">
                                             不共享（仅自己可用）
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="isShared" id="isShared" value="1">
+                                        <input class="form-check-input" type="radio" name="isShared" id="isShared" value="true">
                                         <label class="form-check-label" for="isShared">
                                             共享（所有用户可用）
                                         </label>
@@ -205,7 +192,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">状态</label>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="status" name="status" value="1" checked>
+                                        <input class="form-check-input" type="checkbox" id="status" name="status" checked>
                                         <label class="form-check-label" for="status">启用</label>
                                     </div>
                                 </div>
@@ -218,11 +205,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 删除确认对话框 -->
+            <div class="modal fade" id="deleteModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">确认删除</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>确定要删除这个API密钥吗？此操作不可恢复。</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                                <i class="bi bi-trash me-1"></i>删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
     <!-- 页面脚本 -->
     <script>
+        let deleteId = null;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
         // 打开添加模态框
         function openAddModal() {
             document.getElementById('keyModalLabel').textContent = '添加API密钥';
@@ -237,38 +248,54 @@
             document.getElementById('keyModalLabel').textContent = '编辑API密钥';
             document.getElementById('keyId').value = id;
             
-            // 这里只是模拟数据，实际应该从后端获取
-            if (id === 1) {
-                document.getElementById('keyName').value = '个人OpenAI密钥';
-                document.getElementById('keyType').value = 'OpenAI';
-                document.getElementById('keyValue').value = 'sk-dummy-value';
-                document.getElementById('notShared').checked = true;
-                document.getElementById('status').checked = true;
-            } else if (id === 2) {
-                document.getElementById('keyName').value = '团队Azure密钥';
-                document.getElementById('keyType').value = 'Azure';
-                document.getElementById('keyValue').value = 'az-dummy-value';
-                document.getElementById('isShared').checked = true;
-                document.getElementById('status').checked = true;
-            } else if (id === 3) {
-                document.getElementById('keyName').value = '测试Gemini密钥';
-                document.getElementById('keyType').value = 'Gemini';
-                document.getElementById('keyValue').value = 'gm-dummy-value';
-                document.getElementById('notShared').checked = true;
-                document.getElementById('status').checked = false;
-            }
-            
-            var keyModal = new bootstrap.Modal(document.getElementById('keyModal'));
-            keyModal.show();
+            // 从后端获取数据
+            fetch(`/panel/model/apikey/detail/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const key = data.data;
+                        document.getElementById('keyName').value = key.keyName;
+                        document.getElementById('keyType').value = key.keyType;
+                        document.getElementById('keyValue').value = key.keyValue;
+                        document.getElementById(key.isShared ? 'isShared' : 'notShared').checked = true;
+                        document.getElementById('status').checked = key.status;
+                        
+                        var keyModal = new bootstrap.Modal(document.getElementById('keyModal'));
+                        keyModal.show();
+                    } else {
+                        alert('获取密钥信息失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('获取密钥信息失败');
+                });
         }
         
         // 删除密钥
         function deleteKey(id) {
-            if (confirm('确定要删除这个API密钥吗？此操作不可恢复。')) {
-                // 这里只是模拟，实际应该调用后端API
-                alert('已删除ID为' + id + '的密钥');
-                // 刷新表格
-                // refreshTable();
+            deleteId = id;
+            deleteModal.show();
+        }
+
+        // 确认删除
+        function confirmDelete() {
+            if (deleteId) {
+                fetch(`/panel/model/apikey/delete/${deleteId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        location.reload();
+                    } else {
+                        alert('删除失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败');
+                });
             }
         }
         
@@ -282,12 +309,29 @@
                 return;
             }
             
-            // 这里只是模拟，实际应该调用后端API
-            alert('密钥保存成功！');
-            var keyModal = bootstrap.Modal.getInstance(document.getElementById('keyModal'));
-            keyModal.hide();
-            // 刷新表格
-            // refreshTable();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.status = document.getElementById('status').checked;
+            
+            fetch('/panel/model/apikey/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    location.reload();
+                } else {
+                    alert('保存失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('保存失败');
+            });
         }
         
         // 切换密钥可见性
@@ -300,24 +344,25 @@
             }
         }
         
-        // 搜索密钥
-        function searchKeys() {
-            var keyword = document.getElementById('searchKeyword').value;
-            var keyType = document.getElementById('keyTypeFilter').value;
-            // 这里只是模拟，实际应该调用后端API
-            alert('搜索关键词: ' + keyword + ', 类型: ' + (keyType || '全部'));
-        }
-        
-        // 刷新表格
-        function refreshTable() {
-            // 这里只是模拟，实际应该调用后端API
-            alert('刷新表格数据');
-        }
-        
-        // 导出密钥
-        function exportKeys() {
-            // 这里只是模拟，实际应该调用后端API
-            alert('导出密钥数据');
+        // 处理表单提交
+        function processForm(form) {
+            // 获取所有输入字段
+            const inputs = form.querySelectorAll('input[type="text"], select');
+            
+            // 处理每个输入字段
+            inputs.forEach(input => {
+                // 去除两端空格
+                let value = input.value.trim();
+                // 如果是空字符串，设置为null（提交时会被忽略）
+                if (value === '') {
+                    input.value = '';
+                    input.disabled = true;
+                } else {
+                    input.value = value;
+                }
+            });
+            
+            return true;
         }
     </script>
 </body>
