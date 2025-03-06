@@ -16,9 +16,9 @@
                         <div class="d-flex justify-content-between align-items-center px-3">
                             <h5 class="card-title mb-0 fw-bold text-dark">API密钥授权管理</h5>
                             <div>
-                                <button class="btn btn-primary btn-sm me-2" onclick="openAddModal()">
+                                <a th:href="@{/panel/model/apikey/auth/create(apiKeyId=${param.apiKeyId})}" class="btn btn-primary btn-sm me-2">
                                     <i class="bi bi-plus-lg me-1"></i>添加授权
-                                </button>
+                                </a>
                                 <a th:href="@{/panel/model/apikey/list}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-arrow-left me-1"></i>返回列表
                                 </a>
@@ -74,9 +74,9 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
-                                                <button type="button" class="btn btn-outline-primary" th:onclick="'editAuth(' + ${auth.id} + ')'">
+                                                <a th:href="@{/panel/model/apikey/auth/edit(id=${auth.id})}" class="btn btn-outline-primary">
                                                     <i class="bi bi-pencil"></i>
-                                                </button>
+                                                </a>
                                                 <button type="button" class="btn btn-outline-danger" th:onclick="'deleteAuth(' + ${auth.id} + ')'">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
