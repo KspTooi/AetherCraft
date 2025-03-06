@@ -1,11 +1,14 @@
 package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
+import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.model.dto.ListApiKeyDto;
+import com.ksptool.ql.biz.model.dto.ListApiKeyAuthDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyVo;
+import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
@@ -24,6 +27,7 @@ import static com.ksptool.entities.Entities.assign;
 public class PanelApiKeyService {
     
     private final ApiKeyRepository repository;
+    private final ApiKeyAuthorizationRepository authRepository;
     
     public PageableView<ListApiKeyVo> getListView(ListApiKeyDto dto) {
         // 构建查询条件
@@ -86,5 +90,30 @@ public class PanelApiKeyService {
         ApiKeyPo po = repository.findById(dto.getId()).orElseThrow(() -> new BizException("Api密钥不存在"));
         assign(dto, po);
         repository.save(po);
+    }
+
+    /**
+     * 获取API密钥授权列表视图
+     * @param dto 查询条件
+     * @return 分页视图
+     * @throws BizException 当API密钥不存在或无权访问时
+     */
+    public PageableView<ListApiKeyAuthVo> getAuthListView(ListApiKeyAuthDto dto) throws BizException {
+        // 检查API密钥是否存在且属于当前用户
+        ApiKeyPo apiKey = repository.findById(dto.getApiKeyId())
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权访问此API密钥");
+        }
+        
+        // 查询授权列表
+        Page<ListApiKeyAuthVo> page = authRepository.findAuthList(
+            dto.getApiKeyId(),
+            dto.getAuthorizedUserName(),
+            dto.pageRequest()
+        );
+        
+        return new PageableView<>(page);
     }
 } 

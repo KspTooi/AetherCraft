@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.ListApiKeyDto;
+import com.ksptool.ql.biz.model.dto.ListApiKeyAuthDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
@@ -38,6 +39,25 @@ public class PanelApiKeyController {
         mv.addObject("title", "API密钥管理");
         // 获取并设置数据
         mv.addObject("data", panelApiKeyService.getListView(dto));
+        return mv;
+    }
+
+    /**
+     * API密钥授权列表页面
+     */
+    @GetMapping("/auth/list")
+    public ModelAndView getAuthListView(ListApiKeyAuthDto dto) {
+        ModelAndView mv = new ModelAndView("panel-api-key-auth");
+        
+        try {
+            // 获取并设置数据
+            mv.addObject("data", panelApiKeyService.getAuthListView(dto));
+        } catch (BizException e) {
+            // API密钥不存在或无权访问时返回列表页
+            mv.setViewName("redirect:/panel/model/apikey/list");
+            mv.addObject("vo", Result.error(e.getMessage()));
+        }
+        
         return mv;
     }
 
