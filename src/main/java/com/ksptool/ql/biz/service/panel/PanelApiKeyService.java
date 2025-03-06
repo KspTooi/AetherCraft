@@ -150,11 +150,12 @@ public class PanelApiKeyService {
      * @throws BizException 当授权不存在或无权访问时
      */
     public SaveApiKeyAuthVo getAuthEditView(Long id) throws BizException {
-        var auth = authRepository.findById(id)
+
+        var authPo = authRepository.findById(id)
             .orElseThrow(() -> new BizException("授权记录不存在"));
             
         // 检查API密钥是否存在且属于当前用户
-        ApiKeyPo apiKey = repository.findById(auth.getApiKeyId())
+        ApiKeyPo apiKey = repository.findById(authPo.getApiKeyId())
             .orElseThrow(() -> new BizException("API密钥不存在"));
             
         if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
@@ -162,7 +163,13 @@ public class PanelApiKeyService {
         }
         
         SaveApiKeyAuthVo vo = new SaveApiKeyAuthVo();
-        assign(auth, vo);
+        assign(authPo, vo);
+        
+        // 查询并设置被授权用户名
+        UserPo authorizedUser = userRepository.findById(authPo.getAuthorizedUserId())
+            .orElseThrow(() -> new BizException("被授权用户不存在"));
+        vo.setAuthorizedUserName(authorizedUser.getUsername());
+        
         return vo;
     }
 
