@@ -41,4 +41,7 @@ public class ModelConfigVo {
     
     // 可用的API密钥列表
     private List<AvailableApiKeyVo> apiKeys = new ArrayList<>();
+    
+    // 当前使用的API密钥ID
+    private Long currentApiKeyId;
 } 

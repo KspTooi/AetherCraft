@@ -145,6 +145,12 @@ public class PanelModelConfigService {
         // 获取可用的API密钥列表
         config.setApiKeys(getAvailableApiKey());
         
+        // 获取当前使用的API密钥ID
+        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.findByModelCode(modelEnum.getCode()).orElse(null);
+        if (currentConfig != null) {
+            config.setCurrentApiKeyId(currentConfig.getApiKey());
+        }
+        
         return config;
     }
     
