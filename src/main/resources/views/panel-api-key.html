@@ -89,9 +89,11 @@
                                                 <a th:href="@{/panel/model/apikey/auth/list(apiKeyId=${key.id})}" class="btn btn-outline-info">
                                                     <i class="bi bi-people"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-danger" th:onclick="'deleteKey(' + ${key.id} + ')'">
+                                                <a th:href="@{/panel/model/apikey/remove/{id}(id=${key.id})}" 
+                                                   class="btn btn-outline-danger"
+                                                   onclick="return confirm('确定要移除此API密钥吗？此操作将同时移除所有相关的授权记录和模型配置。')">
                                                     <i class="bi bi-trash"></i>
-                                                </button>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

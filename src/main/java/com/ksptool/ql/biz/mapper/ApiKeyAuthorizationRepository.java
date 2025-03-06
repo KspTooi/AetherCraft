@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -61,4 +62,11 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
     List<ApiKeyAuthorizationPo> findByAuthorizedUserIdAndStatus(
             @Param("userId") Long userId,
             @Param("status") Integer status);
+
+    /**
+     * 删除指定API密钥的所有授权记录
+     */
+    @Modifying
+    @Query("DELETE FROM ApiKeyAuthorizationPo a WHERE a.apiKey.id = :apiKeyId")
+    void deleteByApiKeyId(@Param("apiKeyId") Long apiKeyId);
 } 

@@ -4,6 +4,7 @@ import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
+import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.model.dto.ListApiKeyDto;
 import com.ksptool.ql.biz.model.dto.ListApiKeyAuthDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
@@ -34,6 +35,7 @@ public class PanelApiKeyService {
     private final ApiKeyRepository repository;
     private final ApiKeyAuthorizationRepository authRepository;
     private final UserRepository userRepository;
+    private final ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
     public PageableView<ListApiKeyVo> getListView(ListApiKeyDto dto) {
         // 构建查询条件
@@ -240,5 +242,31 @@ public class PanelApiKeyService {
         
         // 删除授权记录
         authRepository.delete(auth);
+    }
+
+    /**
+     * 移除API密钥
+     * @param id API密钥ID
+     * @throws BizException 当API密钥不存在或无权访问时
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removeApiKey(Long id) throws BizException {
+        // 查询API密钥
+        ApiKeyPo apiKey = repository.findById(id)
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        // 检查是否为当前用户的密钥
+        if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权移除此API密钥");
+        }
+        
+        // 删除相关的授权记录
+        authRepository.deleteByApiKeyId(id);
+        
+        // 删除相关的模型配置
+        modelApiKeyConfigRepository.deleteByApiKey(id);
+        
+        // 删除API密钥
+        repository.delete(apiKey);
     }
 } 

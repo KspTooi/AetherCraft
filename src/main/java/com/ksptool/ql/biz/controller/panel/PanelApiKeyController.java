@@ -282,4 +282,21 @@ public class PanelApiKeyController {
         return mv;
     }
 
+    /**
+     * 移除API密钥
+     */
+    @GetMapping("/remove/{id}")
+    public ModelAndView remove(@PathVariable("id") Long id, RedirectAttributes ra) {
+        ModelAndView mv = new ModelAndView("redirect:/panel/model/apikey/list");
+        
+        try {
+            panelApiKeyService.removeApiKey(id);
+            ra.addFlashAttribute("vo", Result.success("已移除API密钥", null));
+        } catch (BizException e) {
+            ra.addFlashAttribute("vo", Result.error(e));
+        }
+        
+        return mv;
+    }
+
 } 
