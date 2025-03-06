@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title th:text="${title + ' - Quick Launcher'}">API密钥授权管理 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="h-100">
+    <!-- 引入控制台框架 -->
+    <div th:replace="~{components/com-frame-control-panel :: control-panel(~{::content})}">
+        <div th:fragment="content">
+            <!-- 页面内容 -->
+            <div class="container-fluid p-0">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2">
+                        <div class="d-flex justify-content-between align-items-center px-3">
+                            <h5 class="card-title mb-0 fw-bold text-dark" th:text="${title}">创建API密钥授权</h5>
+                            <a th:href="@{/panel/model/apikey/auth/list(apiKeyId=${data?.apiKeyId})}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>返回列表
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <form id="authForm" th:action="@{/panel/model/apikey/auth/save}" method="post" class="needs-validation" novalidate>
+                            <input type="hidden" name="id" th:value="${data?.id}">
+                            <input type="hidden" name="apiKeyId" th:value="${data?.apiKeyId}">
+                            
+                            <div class="row g-3">
+                                <!-- 被授权人用户名 -->
+                                <div class="col-md-6">
+                                    <label for="authorizedUserName" class="form-label">被授权人用户名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="authorizedUserName" name="authorizedUserName" 
+                                           th:value="${data?.authorizedUserName}" required>
+                                    <div class="invalid-feedback">请输入被授权人用户名</div>
+                                </div>
+                                
+                                <!-- 使用次数限制 -->
+                                <div class="col-md-6">
+                                    <label for="usageLimit" class="form-label">使用次数限制</label>
+                                    <input type="number" class="form-control" id="usageLimit" name="usageLimit" 
+                                           th:value="${data?.usageLimit}" min="0">
+                                    <div class="form-text">留空表示无限制</div>
+                                </div>
+                                
+                                <!-- 过期时间 -->
+                                <div class="col-md-6">
+                                    <label for="expireTime" class="form-label">过期时间</label>
+                                    <input type="datetime-local" class="form-control" id="expireTime" name="expireTime" 
+                                           th:value="${data?.expireTime != null ? #dates.format(data.expireTime, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                    <div class="form-text">留空表示永不过期</div>
+                                </div>
+                                
+                                <!-- 状态 -->
+                                <div class="col-md-6">
+                                    <label class="form-label d-block">状态</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="status" 
+                                               th:checked="${data?.status != 0}"
+                                               onchange="document.getElementById('statusValue').value = this.checked ? '1' : '0'">
+                                        <label class="form-check-label" for="status">启用</label>
+                                        <input type="hidden" id="statusValue" name="status" th:value="${data?.status ?: 1}">
+                                    </div>
+                                </div>
+                                
+                                <!-- 使用信息（仅编辑时显示） -->
+                                <div class="col-12" th:if="${data?.id != null && data?.usageCount != null}">
+                                    <div class="alert alert-info mb-0">
+                                        <strong>已使用次数：</strong>
+                                        <span th:text="${data.usageCount}">0</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 提交按钮 -->
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="bi bi-check-lg me-1"></i>保存
+                                    </button>
+                                    <a th:href="@{/panel/model/apikey/auth/list(apiKeyId=${data?.apiKeyId})}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-lg me-1"></i>取消
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面脚本 -->
+    <script>
+        // 表单验证
+        (function() {
+            'use strict';
+            var form = document.getElementById('authForm');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                // 设置状态值
+                var statusValue = document.getElementById('statusValue');
+                var statusCheckbox = document.getElementById('status');
+                statusValue.value = statusCheckbox.checked ? '1' : '0';
+                
+                form.classList.add('was-validated');
+            }, false);
+        })();
+
+        // 页面加载时初始化状态值
+        window.addEventListener('load', function() {
+            var statusValue = document.getElementById('statusValue');
+            var statusCheckbox = document.getElementById('status');
+            statusValue.value = statusCheckbox.checked ? '1' : '0';
+        });
+    </script>
+</body>
+</html> 
