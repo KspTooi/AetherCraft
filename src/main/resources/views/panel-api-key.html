@@ -27,13 +27,7 @@
                                 <input type="text" class="form-control" name="keyName" th:value="${param.keyName}" placeholder="密钥名称">
                             </div>
                             <div class="col-md-4">
-                                <select class="form-select" name="keyType" th:value="${param.keyType}">
-                                    <option value="">所有类型</option>
-                                    <option value="OpenAI" th:selected="${param.keyType == 'OpenAI'}">OpenAI</option>
-                                    <option value="Azure" th:selected="${param.keyType == 'Azure'}">Azure</option>
-                                    <option value="Gemini" th:selected="${param.keyType == 'Gemini'}">Gemini</option>
-                                    <option value="Claude" th:selected="${param.keyType == 'Claude'}">Claude</option>
-                                </select>
+                                <input type="text" class="form-control" name="keyType" th:value="${param.keyType}" placeholder="密钥类型">
                             </div>
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-primary me-2">
@@ -155,14 +149,8 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="keyType" class="form-label">密钥类型 <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="keyType" name="keyType" required>
-                                        <option value="">请选择类型</option>
-                                        <option value="OpenAI">OpenAI</option>
-                                        <option value="Azure">Azure</option>
-                                        <option value="Gemini">Gemini</option>
-                                        <option value="Claude">Claude</option>
-                                    </select>
-                                    <div class="invalid-feedback">请选择密钥类型</div>
+                                    <input type="text" class="form-control" id="keyType" name="keyType" required>
+                                    <div class="invalid-feedback">请输入密钥类型</div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="keyValue" class="form-label">密钥值 <span class="text-danger">*</span></label>

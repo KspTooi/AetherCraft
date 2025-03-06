@@ -36,14 +36,9 @@
                                 <!-- 密钥类型 -->
                                 <div class="col-md-6">
                                     <label for="keyType" class="form-label">密钥类型 <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="keyType" name="keyType" required>
-                                        <option value="">请选择类型</option>
-                                        <option value="OpenAI" th:selected="${data?.keyType == 'OpenAI'}">OpenAI</option>
-                                        <option value="Azure" th:selected="${data?.keyType == 'Azure'}">Azure</option>
-                                        <option value="Gemini" th:selected="${data?.keyType == 'Gemini'}">Gemini</option>
-                                        <option value="Claude" th:selected="${data?.keyType == 'Claude'}">Claude</option>
-                                    </select>
-                                    <div class="invalid-feedback">请选择密钥类型</div>
+                                    <input type="text" class="form-control" id="keyType" name="keyType" 
+                                           th:value="${data?.keyType}" required>
+                                    <div class="invalid-feedback">请输入密钥类型</div>
                                 </div>
                                 
                                 <!-- 密钥值 -->
