@@ -187,6 +187,7 @@ public class PanelModelConfigService {
                 .findByModelCode(dto.getModel())
                 .orElse(new ModelApiKeyConfigPo());
 
+            config.setUserId(userId);
             config.setModelCode(dto.getModel());
             config.setApiKey(dto.getApiKeyId());
             modelApiKeyConfigRepository.save(config);
