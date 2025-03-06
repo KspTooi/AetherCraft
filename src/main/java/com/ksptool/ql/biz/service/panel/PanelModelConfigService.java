@@ -2,16 +2,20 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
+import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
+import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.AvailableApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,6 +32,9 @@ public class PanelModelConfigService {
     
     @Autowired
     private ApiKeyAuthorizationRepository apiKeyAuthorizationRepository;
+    
+    @Autowired
+    private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
     /**
      * 获取当前用户可用的API密钥列表
@@ -143,8 +150,10 @@ public class PanelModelConfigService {
     
     /**
      * 保存模型配置
+     * @throws BizException 业务异常
      */
-    public void saveConfig(SaveModelConfigDto dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void saveConfig(SaveModelConfigDto dto) throws BizException {
         // 验证模型是否存在
         AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
         if (modelEnum == null) {
@@ -153,14 +162,32 @@ public class PanelModelConfigService {
         
         // 获取当前用户ID
         Long userId = AuthService.getCurrentUserId();
+
+        // 验证API密钥权限
+        if (dto.getApiKeyId() != null) {
+
+            ApiKeyPo apiKey = apiKeyRepository.findById(dto.getApiKeyId()).orElseThrow(() -> new BizException("API密钥不存在"));
+
+            // 检查是否是自己的密钥
+            if (!apiKey.getUser().getId().equals(userId)) {
+                // 不是自己的密钥，检查是否有授权
+                if (apiKeyAuthorizationRepository.countByAuthorized(userId, dto.getApiKeyId(), 1) == 0) {
+                    throw new BizException("您没有使用此API密钥的权限");
+                }
+            }
+
+            // 保存模型API密钥配置
+            ModelApiKeyConfigPo config = modelApiKeyConfigRepository
+                .findByModelCode(dto.getModel())
+                .orElse(new ModelApiKeyConfigPo());
+
+            config.setModelCode(dto.getModel());
+            config.setApiKey(dto.getApiKeyId());
+            modelApiKeyConfigRepository.save(config);
+        }
         
         // 构建配置键前缀
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-        
-        // 只在API Key不为空时保存
-        if (StringUtils.hasText(dto.getApiKey())) {
-            configService.setValue(baseKey + "apiKey", dto.getApiKey(), userId);
-        }
         
         // 保存其他配置
         configService.setValue(baseKey + "proxy", dto.getProxy(), userId);

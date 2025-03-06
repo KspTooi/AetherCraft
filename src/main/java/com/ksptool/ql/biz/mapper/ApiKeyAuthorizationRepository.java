@@ -69,4 +69,22 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
     @Modifying
     @Query("DELETE FROM ApiKeyAuthorizationPo a WHERE a.apiKey.id = :apiKeyId")
     void deleteByApiKeyId(@Param("apiKeyId") Long apiKeyId);
+
+    /**
+     * 统计指定用户和API密钥的授权记录数量
+     * @param userId 被授权用户ID
+     * @param apiKeyId API密钥ID
+     * @param status 授权状态(1:有效 0:无效)
+     * @return 符合条件的授权记录数量
+     */
+    @Query("""
+            SELECT COUNT(a) FROM ApiKeyAuthorizationPo a 
+            WHERE a.authorizedUserId = :userId 
+            AND a.apiKey.id = :apiKeyId 
+            AND a.status = :status
+            """)
+    long countByAuthorized(
+            @Param("userId") Long userId,
+            @Param("apiKeyId") Long apiKeyId,
+            @Param("status") Integer status);
 } 

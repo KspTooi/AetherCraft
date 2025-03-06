@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 模型API密钥配置数据访问层
@@ -20,7 +21,7 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
             SELECT m FROM ModelApiKeyConfigPo m 
             WHERE m.modelCode = :modelCode
             """)
-    List<ModelApiKeyConfigPo> findByModelCode(@Param("modelCode") String modelCode);
+    Optional<ModelApiKeyConfigPo> findByModelCode(@Param("modelCode") String modelCode);
     
     /**
      * 根据API密钥ID查询配置

@@ -18,8 +18,8 @@ public class SaveModelConfigDto {
     @NotBlank(message = "请选择模型")
     private String model;
     
-    // API密钥
-    private String apiKey;
+    // API密钥ID
+    private Long apiKeyId;
     
     // 代理地址
     private String proxy;

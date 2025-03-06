@@ -38,7 +38,7 @@
                                 <div class="col-md-6">
                                     <label for="apiKeySelect" class="form-label small">API Key <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
-                                        <select class="form-select form-select-sm" id="apiKeySelect" name="apiKey" required>
+                                        <select class="form-select form-select-sm" id="apiKeySelect" name="apiKeyId" required>
                                             <option value="">请选择API Key</option>
                                             <option th:each="key : ${data.apiKeys}" 
                                                     th:value="${key.apiKeyId}"
