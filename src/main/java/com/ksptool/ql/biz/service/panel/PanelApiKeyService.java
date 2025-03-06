@@ -2,14 +2,18 @@ package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
+import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.ListApiKeyDto;
 import com.ksptool.ql.biz.model.dto.ListApiKeyAuthDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
+import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
+import com.ksptool.ql.biz.model.vo.SaveApiKeyAuthVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -28,6 +32,7 @@ public class PanelApiKeyService {
     
     private final ApiKeyRepository repository;
     private final ApiKeyAuthorizationRepository authRepository;
+    private final UserRepository userRepository;
     
     public PageableView<ListApiKeyVo> getListView(ListApiKeyDto dto) {
         // 构建查询条件
@@ -115,5 +120,95 @@ public class PanelApiKeyService {
         );
         
         return new PageableView<>(page);
+    }
+
+    /**
+     * 获取API密钥授权创建视图
+     * @param apiKeyId API密钥ID
+     * @return 创建视图数据
+     * @throws BizException 当API密钥不存在或无权访问时
+     */
+    public SaveApiKeyAuthVo getAuthCreateView(Long apiKeyId) throws BizException {
+        // 检查API密钥是否存在且属于当前用户
+        ApiKeyPo apiKey = repository.findById(apiKeyId)
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权访问此API密钥");
+        }
+        
+        SaveApiKeyAuthVo vo = new SaveApiKeyAuthVo();
+        vo.setApiKeyId(apiKeyId);
+        vo.setStatus(1);
+        return vo;
+    }
+
+    /**
+     * 获取API密钥授权编辑视图
+     * @param id 授权ID
+     * @return 编辑视图数据
+     * @throws BizException 当授权不存在或无权访问时
+     */
+    public SaveApiKeyAuthVo getAuthEditView(Long id) throws BizException {
+        var auth = authRepository.findById(id)
+            .orElseThrow(() -> new BizException("授权记录不存在"));
+            
+        // 检查API密钥是否存在且属于当前用户
+        ApiKeyPo apiKey = repository.findById(auth.getApiKeyId())
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权访问此API密钥");
+        }
+        
+        SaveApiKeyAuthVo vo = new SaveApiKeyAuthVo();
+        assign(auth, vo);
+        return vo;
+    }
+
+    /**
+     * 保存API密钥授权
+     * @param dto 保存请求
+     * @throws BizException 业务异常
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void saveAuth(SaveApiKeyAuthDto dto) throws BizException {
+        var createMode = dto.getId() == null;
+
+        // 检查API密钥是否存在且属于当前用户
+        ApiKeyPo apiKey = repository.findById(dto.getApiKeyId())
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        if (!apiKey.getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权访问此API密钥");
+        }
+        
+        // 查找被授权用户
+        UserPo authorizedUser = userRepository.findByUsername(dto.getAuthorizedUserName());
+        if (authorizedUser == null) {
+            throw new BizException("被授权用户不存在");
+        }
+            
+        // 检查是否已存在授权
+        if (authRepository.existsByApiKeyIdAndAuthorizedUserId(
+                dto.getApiKeyId(), authorizedUser.getId(), dto.getId())) {
+            throw new BizException("该用户已被授权使用此密钥");
+        }
+        
+        if (createMode) {
+            var auth = as(dto, ApiKeyAuthorizationPo.class);
+            auth.setAuthorizedUserId(authorizedUser.getId());
+            auth.setAuthorizerUserId(AuthService.getCurrentUserId());
+            auth.setUsageCount(0L);
+            authRepository.save(auth);
+            return;
+        }
+        
+        var auth = authRepository.findById(dto.getId())
+            .orElseThrow(() -> new BizException("授权记录不存在"));
+            
+        assign(dto, auth);
+        auth.setAuthorizedUserId(authorizedUser.getId());
+        authRepository.save(auth);
     }
 } 

@@ -4,6 +4,8 @@ import com.ksptool.ql.biz.model.dto.ListApiKeyDto;
 import com.ksptool.ql.biz.model.dto.ListApiKeyAuthDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
+import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthDto;
+import com.ksptool.ql.biz.model.vo.SaveApiKeyAuthVo;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.exception.BizException;
@@ -42,24 +44,6 @@ public class PanelApiKeyController {
         return mv;
     }
 
-    /**
-     * API密钥授权列表页面
-     */
-    @GetMapping("/auth/list")
-    public ModelAndView getAuthListView(ListApiKeyAuthDto dto) {
-        ModelAndView mv = new ModelAndView("panel-api-key-auth");
-        
-        try {
-            // 获取并设置数据
-            mv.addObject("data", panelApiKeyService.getAuthListView(dto));
-        } catch (BizException e) {
-            // API密钥不存在或无权访问时返回列表页
-            mv.setViewName("redirect:/panel/model/apikey/list");
-            mv.addObject("vo", Result.error(e.getMessage()));
-        }
-        
-        return mv;
-    }
 
     /**
      * 创建API密钥页面
@@ -149,4 +133,120 @@ public class PanelApiKeyController {
 
         return mav;
     }
+
+
+    /**
+     * API密钥授权列表页面
+     */
+    @GetMapping("/auth/list")
+    public ModelAndView getAuthListView(ListApiKeyAuthDto dto) {
+        ModelAndView mv = new ModelAndView("panel-api-key-auth");
+        
+        try {
+            // 获取并设置数据
+            mv.addObject("data", panelApiKeyService.getAuthListView(dto));
+        } catch (BizException e) {
+            // API密钥不存在或无权访问时返回列表页
+            mv.setViewName("redirect:/panel/model/apikey/list");
+            mv.addObject("vo", Result.error(e.getMessage()));
+        }
+        
+        return mv;
+    }
+
+    /**
+     * 创建API密钥授权页面
+     */
+    @GetMapping("/auth/create")
+    public ModelAndView getAuthCreateView(@RequestParam("apiKeyId") Long apiKeyId, 
+                                        @ModelAttribute("data") SaveApiKeyAuthDto flash) {
+        ModelAndView mv = new ModelAndView("panel-api-key-auth-operator");
+        
+        try {
+            // 如果有表单验证错误或业务异常，使用flashData
+            if (flash != null && flash.getApiKeyId() != null) {
+                mv.addObject("data", as(flash, SaveApiKeyAuthVo.class));
+                return mv;
+            }
+            
+            // 获取并设置数据
+            mv.addObject("data", panelApiKeyService.getAuthCreateView(apiKeyId));
+            mv.addObject("title", "创建API密钥授权");
+        } catch (BizException e) {
+            // API密钥不存在或无权访问时返回列表页
+            mv.setViewName("redirect:/panel/model/apikey/list");
+            mv.addObject("vo", Result.error(e.getMessage()));
+        }
+        
+        return mv;
+    }
+
+    /**
+     * 编辑API密钥授权页面
+     */
+    @GetMapping("/auth/edit")
+    public ModelAndView getAuthEditView(@RequestParam("id") Long id) {
+        ModelAndView mv = new ModelAndView("panel-api-key-auth-operator");
+        
+        try {
+            // 获取并设置数据
+            mv.addObject("data", panelApiKeyService.getAuthEditView(id));
+            mv.addObject("title", "编辑API密钥授权");
+        } catch (BizException e) {
+            // 授权不存在或无权访问时返回列表页
+            mv.setViewName("redirect:/panel/model/apikey/list");
+            mv.addObject("vo", Result.error(e.getMessage()));
+        }
+        
+        return mv;
+    }
+
+    /**
+     * 保存API密钥授权
+     */
+    @PostMapping("/auth/save")
+    public ModelAndView saveAuth(@Valid SaveApiKeyAuthDto dto, BindingResult br, RedirectAttributes ra) {
+        var createMode = dto.getId() == null;
+        var editMode = dto.getId() != null;
+        
+        // 默认为创建模式，完成后返回创建页面继续创建
+        ModelAndView mv = new ModelAndView("redirect:/panel/model/apikey/auth/create?apiKeyId=" + dto.getApiKeyId());
+        
+        // 编辑模式需重定向到编辑视图
+        if (editMode) {
+            mv.setViewName("redirect:/panel/model/apikey/auth/edit?id=" + dto.getId());
+        }
+        
+        // 验证失败，返回表单页面
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("data", dto);
+            ra.addFlashAttribute("vo", Result.error(br));
+            return mv;
+        }
+        
+        try {
+            // 保存授权
+            panelApiKeyService.saveAuth(dto);
+            
+            if (createMode) {
+                ra.addFlashAttribute("vo", Result.success("已创建授权", null));
+            }
+            
+            if (editMode) {
+                ra.addFlashAttribute("vo", Result.success("已更新授权", null));
+            }
+            
+        } catch (BizException e) {
+            // 业务异常
+            ra.addFlashAttribute("vo", Result.error(e));
+            
+            // 创建模式需回显用户输入到视图
+            if (createMode) {
+                ra.addFlashAttribute("data", dto);
+            }
+        }
+        
+        return mv;
+    }
+
 } 

@@ -30,4 +30,21 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
         @Param("authorizedUserName") String authorizedUserName,
         Pageable pageable
     );
+
+    /**
+     * 检查是否已存在授权记录
+     * @param apiKeyId API密钥ID
+     * @param authorizedUserId 被授权用户ID
+     * @param excludeId 排除的授权ID（用于编辑时检查）
+     * @return 是否存在
+     */
+    @Query("SELECT COUNT(a) > 0 FROM ApiKeyAuthorizationPo a " +
+           "WHERE a.apiKeyId = :apiKeyId " +
+           "AND a.authorizedUserId = :authorizedUserId " +
+           "AND (:excludeId IS NULL OR a.id != :excludeId)")
+    boolean existsByApiKeyIdAndAuthorizedUserId(
+        @Param("apiKeyId") Long apiKeyId,
+        @Param("authorizedUserId") Long authorizedUserId,
+        @Param("excludeId") Long excludeId
+    );
 } 
