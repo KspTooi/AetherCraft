@@ -78,9 +78,11 @@
                                 <div class="col-md-6">
                                     <label class="form-label d-block">状态</label>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="status" name="status" 
-                                               th:checked="${data?.status != 0}">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="status" 
+                                               th:checked="${data?.status != 0}"
+                                               onchange="document.getElementById('statusValue').value = this.checked ? '1' : '0'">
                                         <label class="form-check-label" for="status">启用</label>
+                                        <input type="hidden" id="statusValue" name="status" th:value="${data?.status ?: 1}">
                                     </div>
                                 </div>
                                 
@@ -128,6 +130,12 @@
                     event.preventDefault();
                     event.stopPropagation();
                 }
+                
+                // 设置状态值
+                var statusValue = document.getElementById('statusValue');
+                var statusCheckbox = document.getElementById('status');
+                statusValue.value = statusCheckbox.checked ? '1' : '0';
+                
                 form.classList.add('was-validated');
             }, false);
         })();
@@ -141,6 +149,13 @@
                 keyInput.type = 'password';
             }
         }
+
+        // 页面加载时初始化状态值
+        window.addEventListener('load', function() {
+            var statusValue = document.getElementById('statusValue');
+            var statusCheckbox = document.getElementById('status');
+            statusValue.value = statusCheckbox.checked ? '1' : '0';
+        });
     </script>
 </body>
 </html> 

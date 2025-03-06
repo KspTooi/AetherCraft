@@ -12,18 +12,18 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 @Service
 @RequiredArgsConstructor
 public class PanelApiKeyService {
     
-    private final ApiKeyRepository apiKeyRepository;
+    private final ApiKeyRepository repository;
     
     public PageableView<ListApiKeyVo> getListView(ListApiKeyDto dto) {
         // 构建查询条件
@@ -33,7 +33,7 @@ public class PanelApiKeyService {
             .orderByDesc("updateTime");
 
         // 执行查询并返回分页视图
-        Page<ApiKeyPo> ret = apiKeyRepository.findAll(query.get(), dto.pageRequest().withSort(query.getSort()));
+        Page<ApiKeyPo> ret = repository.findAll(query.get(), dto.pageRequest().withSort(query.getSort()));
         return new PageableView<>(ret, ListApiKeyVo.class);
     }
 
@@ -45,7 +45,7 @@ public class PanelApiKeyService {
      */
     public SaveApiKeyVo getEditView(Long id) throws BizException {
         // 查询API密钥
-        ApiKeyPo po = apiKeyRepository.findById(id)
+        ApiKeyPo po = repository.findById(id)
             .orElseThrow(() -> new BizException("API密钥不存在"));
             
         // 检查是否为当前用户的密钥
@@ -66,22 +66,25 @@ public class PanelApiKeyService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveApiKey(SaveApiKeyDto dto) throws BizException {
+
+        var createMode = dto.getId() == null;
+
         // 检查名称是否重复
-        if (apiKeyRepository.existsByKeyNameAndUserId(dto.getKeyName(), AuthService.getCurrentUserId(), dto.getId())) {
+        if (repository.existsByKeyNameAndUserId(dto.getKeyName(), AuthService.getCurrentUserId(), dto.getId())) {
             throw new BizException("密钥名称已存在");
         }
 
-        // 保存密钥
-        ApiKeyPo po = new ApiKeyPo();
-        assign(dto, po);
-        
-        if (dto.getId() == null) {
-            po.setUsageCount(0L);
+        if(createMode){
+            ApiKeyPo create = as(dto,ApiKeyPo.class);
             UserPo user = new UserPo();
             user.setId(AuthService.getCurrentUserId());
-            po.setUser(user);
+            create.setUser(user);
+            repository.save(create);
+            return;
         }
-        
-        apiKeyRepository.save(po);
+
+        ApiKeyPo po = repository.findById(dto.getId()).orElseThrow(() -> new BizException("Api密钥不存在"));
+        assign(dto, po);
+        repository.save(po);
     }
 } 
