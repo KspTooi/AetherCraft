@@ -12,6 +12,7 @@ import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
+import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
@@ -244,9 +246,33 @@ public class PanelApiKeyService {
         if (!auth.getApiKey().getUser().getId().equals(AuthService.getCurrentUserId())) {
             throw new BizException("无权移除此授权");
         }
+
+        // 删除相关的模型配置
+        modelApiKeyConfigRepository.deleteByApiKey(auth.getApiKey().getId());
         
         // 删除授权记录
         authRepository.delete(auth);
+    }
+
+    /**
+     * 判断当前用户是否有权限使用指定的API密钥
+     * @param apiKeyId API密钥ID
+     * @return 是否有权限使用
+     * @throws BizException 当API密钥不存在时
+     */
+    public boolean hasApiKeyPermission(Long apiKeyId) throws BizException {
+        // 查询API密钥
+        ApiKeyPo apiKey = repository.findById(apiKeyId)
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+            
+        // 检查是否是自己的密钥
+        Long currentUserId = AuthService.getCurrentUserId();
+        if (apiKey.getUser().getId().equals(currentUserId)) {
+            return true;
+        }
+        
+        // 检查是否有授权记录
+        return authRepository.countByAuthorized(currentUserId, apiKeyId, 1) > 0;
     }
 
     /**
