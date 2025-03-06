@@ -151,7 +151,7 @@ public class PanelApiKeyController {
      * API密钥授权列表页面
      */
     @GetMapping("/auth/list")
-    public ModelAndView getAuthListView(ListApiKeyAuthDto dto) {
+    public ModelAndView getAuthListView(ListApiKeyAuthDto dto,RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView("panel-api-key-auth");
         
         try {
@@ -160,7 +160,7 @@ public class PanelApiKeyController {
         } catch (BizException e) {
             // API密钥不存在或无权访问时返回列表页
             mv.setViewName("redirect:/panel/model/apikey/list");
-            mv.addObject("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
         }
         
         return mv;
