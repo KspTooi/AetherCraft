@@ -199,6 +199,11 @@ public class PanelApiKeyService {
         if (authorizedUser == null) {
             throw new BizException("被授权用户不存在");
         }
+        
+        // 检查是否为自授权
+        if (authorizedUser.getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无需授权，您已经可以使用自己创建的API密钥");
+        }
             
         // 检查是否已存在授权
         if (authRepository.existsByApiKeyIdAndAuthorizedUserId(
