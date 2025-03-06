@@ -49,7 +49,7 @@ public class PanelModelConfigService {
                 vo.setApiKeyId(key.getId());
                 vo.setKeyName(key.getKeyName());
                 vo.setKeyType(key.getKeyType());
-                vo.setOwnerUsername(key.getUser().getUsername());
+                vo.setOwnerUsername("");
                 result.add(vo);
             }
         }

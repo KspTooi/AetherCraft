@@ -221,4 +221,24 @@ public class PanelApiKeyService {
         auth.setAuthorizedUserId(authorizedUser.getId());
         authRepository.save(auth);
     }
+    
+    /**
+     * 移除API密钥授权
+     * @param id 授权ID
+     * @throws BizException 当授权不存在或无权访问时
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removeAuth(Long id) throws BizException {
+        // 查询授权记录
+        var auth = authRepository.findById(id)
+            .orElseThrow(() -> new BizException("授权记录不存在"));
+            
+        // 检查API密钥是否属于当前用户
+        if (!auth.getApiKey().getUser().getId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权移除此授权");
+        }
+        
+        // 删除授权记录
+        authRepository.delete(auth);
+    }
 } 

@@ -261,4 +261,25 @@ public class PanelApiKeyController {
         return mv;
     }
 
+    /**
+     * 移除API密钥授权
+     */
+    @GetMapping("/auth/remove/{id}")
+    public ModelAndView removeAuth(@PathVariable("id") Long id, 
+                                 @RequestParam("apiKeyId") Long apiKeyId, 
+                                 RedirectAttributes ra) {
+        ModelAndView mv = new ModelAndView("redirect:/panel/model/apikey/auth/list");
+        mv.addObject("apiKeyId", apiKeyId);
+        
+        try {
+            // 移除授权
+            panelApiKeyService.removeAuth(id);
+            ra.addFlashAttribute("vo", Result.success("已移除授权", null));
+        } catch (BizException e) {
+            ra.addFlashAttribute("vo", Result.error(e));
+        }
+        
+        return mv;
+    }
+
 } 
