@@ -523,7 +523,7 @@ public class ModelChatService {
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String proxyConfig = configService.get(baseKey + "proxy", userId);
-            String apiKey = configService.get(baseKey + "apiKey", userId);
+            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
             }
@@ -889,7 +889,7 @@ public class ModelChatService {
             // 设置API URL和API Key
             String baseKey = "ai.model.cfg." + model + ".";
             String proxyUrl = configService.get(baseKey + "proxy", userId);
-            String apiKey = configService.get(baseKey + "apiKey", userId);
+            String apiKey = panelApiKeyService.getApiKey(model, userId);
             
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
