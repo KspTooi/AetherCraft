@@ -23,18 +23,9 @@ public class ModelApiKeyConfigPo {
     @Comment("模型代码")
     private String modelCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_key_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Column(name = "api_key_id", nullable = false)
     @Comment("关联的API密钥")
-    private ApiKeyPo apiKey;
-
-    @Column(name = "priority", nullable = false)
-    @Comment("优先级，数值越小优先级越高")
-    private Integer priority;
-
-    @Column(name = "weight", nullable = false)
-    @Comment("权重，用于负载均衡")
-    private Integer weight;
+    private Long apiKey;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
@@ -46,12 +37,6 @@ public class ModelApiKeyConfigPo {
 
     @PrePersist
     public void prePersist() {
-        if (priority == null) {
-            priority = 100;
-        }
-        if (weight == null) {
-            weight = 1;
-        }
         createTime = new Date();
         updateTime = new Date();
     }
