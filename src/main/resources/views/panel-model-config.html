@@ -36,16 +36,17 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="apiKey" class="form-label small">API Key <span class="text-danger">*</span></label>
+                                    <label for="apiKeySelect" class="form-label small">API Key <span class="text-danger">*</span></label>
                                     <div class="input-group input-group-sm">
-                                        <input type="password" class="form-control form-control-sm" id="apiKey" name="apiKey" 
-                                               th:placeholder="${data.hasApiKey ? 'APIKEY已保存 你无法再次查看' : '请输入API Key'}"
-                                               th:required="${!data.hasApiKey}">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKey()">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
+                                        <select class="form-select form-select-sm" id="apiKeySelect" name="apiKey" required>
+                                            <option value="">请选择API Key</option>
+                                            <option th:each="key : ${data.apiKeys}" 
+                                                    th:value="${key.apiKeyId}"
+                                                    th:text="|${key.keyName} (${key.keyType}) - ${key.ownerUsername}|">
+                                            </option>
+                                        </select>
                                     </div>
-                                    <div class="invalid-feedback">请输入API Key</div>
+                                    <div class="invalid-feedback">请选择API Key</div>
                                 </div>
 
                                 <div class="col-md-12">
@@ -134,15 +135,6 @@
             var forms = document.querySelectorAll('.needs-validation');
             Array.prototype.slice.call(forms).forEach(function(form) {
                 form.addEventListener('submit', function(event) {
-                    // 获取API Key输入框
-                    var apiKeyInput = form.querySelector('#apiKey');
-                    var hasApiKey = apiKeyInput.getAttribute('placeholder').includes('APIKEY已保存');
-                    
-                    // 如果API Key已保存且没有新输入，则不验证API Key
-                    if (hasApiKey && !apiKeyInput.value) {
-                        apiKeyInput.setCustomValidity('');
-                    }
-
                     // 验证最大输出长度
                     var maxOutputTokensInput = form.querySelector('#maxOutputTokens');
                     var maxOutputTokensValue = parseInt(maxOutputTokensInput.value);
@@ -160,16 +152,6 @@
                 }, false);
             });
         })();
-
-        // 切换API Key显示
-        function toggleApiKey() {
-            var input = document.getElementById('apiKey');
-            if (input.type === 'password') {
-                input.type = 'text';
-            } else {
-                input.type = 'password';
-            }
-        }
 
         // 更新温度值
         function updateTemperature(value) {
