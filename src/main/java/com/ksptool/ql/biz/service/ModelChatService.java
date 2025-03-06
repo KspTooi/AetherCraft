@@ -501,6 +501,11 @@ public class ModelChatService {
             // 获取当前用户ID
             Long userId = AuthService.getCurrentUserId();
 
+            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+            if (!StringUtils.hasText(apiKey)) {
+                throw new BizException("未配置API Key");
+            }
+
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(dto.getThread(), userId, modelEnum.getCode());
 
@@ -523,10 +528,7 @@ public class ModelChatService {
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String proxyConfig = configService.get(baseKey + "proxy", userId);
-            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
-            if (!StringUtils.hasText(apiKey)) {
-                throw new BizException("未配置API Key");
-            }
+
 
             // 创建HTTP客户端
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
