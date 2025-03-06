@@ -20,15 +20,17 @@ public class ApiKeyAuthorizationPo {
     @Comment("授权ID")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "api_key_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("被授权的API密钥")
-    private ApiKeyPo apiKey;
+    @Column(name = "api_key_id", nullable = false)
+    @Comment("被授权的API密钥ID")
+    private Long apiKeyId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "authorized_user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("被授权的用户")
-    private UserPo authorizedUser;
+    @Column(name = "authorizer_user_id", nullable = false)
+    @Comment("授权者用户ID")
+    private Long authorizerUserId;
+
+    @Column(name = "authorized_user_id", nullable = false)
+    @Comment("被授权的用户ID")
+    private Long authorizedUserId;
 
     @Column(name = "usage_limit")
     @Comment("使用次数限制，null表示无限制")
