@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAuthorizationPo, Long> {
 
     @Query("""
@@ -47,4 +49,16 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
         @Param("authorizedUserId") Long authorizedUserId,
         @Param("excludeId") Long excludeId
     );
+
+    /**
+     * 根据被授权用户ID和状态查询授权记录
+     */
+    @Query("""
+            SELECT a FROM ApiKeyAuthorizationPo a 
+            WHERE a.authorizedUserId = :userId 
+            AND a.status = :status
+            """)
+    List<ApiKeyAuthorizationPo> findByAuthorizedUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") Integer status);
 } 

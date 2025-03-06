@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.model.vo;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import lombok.Data;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -37,4 +38,7 @@ public class ModelConfigVo {
     
     // 可用的模型列表
     private List<AIModelEnum> models = Arrays.asList(AIModelEnum.values());
+    
+    // 可用的API密钥列表
+    private List<AvailableApiKeyVo> apiKeys = new ArrayList<>();
 } 

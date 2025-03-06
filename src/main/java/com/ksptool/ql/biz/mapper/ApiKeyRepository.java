@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ApiKeyRepository extends JpaRepository<ApiKeyPo, Long> {
 
     /**
@@ -28,4 +30,13 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyPo, Long> {
         @Param("userId") Long userId,
         @Param("excludeId") Long excludeId
     );
+
+    /**
+     * 根据用户ID查询API密钥列表
+     */
+    @Query("""
+            SELECT k FROM ApiKeyPo k 
+            WHERE k.user.id = :userId
+            """)
+    List<ApiKeyPo> findByUserId(@Param("userId") Long userId);
 } 

@@ -1,6 +1,11 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
+import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
+import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
+import com.ksptool.ql.biz.model.po.ApiKeyPo;
+import com.ksptool.ql.biz.model.vo.AvailableApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
@@ -8,12 +13,77 @@ import com.ksptool.ql.commons.enums.AIModelEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class PanelModelConfigService {
     
     @Autowired
     private ConfigService configService;
+    
+    @Autowired
+    private ApiKeyRepository apiKeyRepository;
+    
+    @Autowired
+    private ApiKeyAuthorizationRepository apiKeyAuthorizationRepository;
+    
+    /**
+     * 获取当前用户可用的API密钥列表
+     */
+    public List<AvailableApiKeyVo> getAvailableApiKey() {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        List<AvailableApiKeyVo> result = new ArrayList<>();
+        
+        // 查询用户自己的API密钥
+        List<ApiKeyPo> ownedKeys = apiKeyRepository.findByUserId(userId);
+        if (!ownedKeys.isEmpty()) {
+            for (ApiKeyPo key : ownedKeys) {
+                if (key.getStatus() != 1) {
+                    continue;
+                }
+                AvailableApiKeyVo vo = new AvailableApiKeyVo();
+                vo.setApiKeyId(key.getId());
+                vo.setKeyName(key.getKeyName());
+                vo.setKeyType(key.getKeyType());
+                vo.setOwnerUsername(key.getUser().getUsername());
+                result.add(vo);
+            }
+        }
+        
+        // 查询被授权的API密钥
+        List<ApiKeyAuthorizationPo> authorizedKeys = apiKeyAuthorizationRepository.findByAuthorizedUserIdAndStatus(userId, 1);
+        if (!authorizedKeys.isEmpty()) {
+            for (ApiKeyAuthorizationPo auth : authorizedKeys) {
+                ApiKeyPo key = auth.getApiKey();
+                if (key.getStatus() != 1) {
+                    continue;
+                }
+                
+                // 检查使用限制
+                if (auth.getUsageLimit() != null && auth.getUsageCount() >= auth.getUsageLimit()) {
+                    continue;
+                }
+                
+                // 检查是否过期
+                if (auth.getExpireTime() != null && auth.getExpireTime().before(new Date())) {
+                    continue;
+                }
+                
+                AvailableApiKeyVo vo = new AvailableApiKeyVo();
+                vo.setApiKeyId(key.getId());
+                vo.setKeyName(key.getKeyName());
+                vo.setKeyType(key.getKeyType());
+                vo.setOwnerUsername(key.getUser().getUsername());
+                result.add(vo);
+            }
+        }
+        
+        return result;
+    }
     
     /**
      * 获取模型配置编辑视图
@@ -64,6 +134,9 @@ public class PanelModelConfigService {
         // 获取最大输出长度，默认800
         String maxOutputTokensStr = configService.getValue(baseKey + "maxOutputTokens", userId);
         config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800);
+        
+        // 获取可用的API密钥列表
+        config.setApiKeys(getAvailableApiKey());
         
         return config;
     }
