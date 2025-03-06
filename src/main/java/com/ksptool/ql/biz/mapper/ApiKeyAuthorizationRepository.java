@@ -87,4 +87,17 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
             @Param("userId") Long userId,
             @Param("apiKeyId") Long apiKeyId,
             @Param("status") Integer status);
+
+    /**
+     * 根据API密钥ID和被授权用户ID查询授权记录
+     */
+    @Query("""
+            SELECT a FROM ApiKeyAuthorizationPo a 
+            WHERE a.apiKey.id = :apiKeyId 
+            AND a.authorizedUserId = :authorizedUserId 
+            AND a.status = 1
+            """)
+    ApiKeyAuthorizationPo findByApiKeyIdAndAuthorizedUserId(
+            @Param("apiKeyId") Long apiKeyId,
+            @Param("authorizedUserId") Long authorizedUserId);
 } 

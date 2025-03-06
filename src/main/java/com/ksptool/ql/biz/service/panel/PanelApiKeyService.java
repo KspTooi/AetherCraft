@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Date;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
@@ -312,6 +313,7 @@ public class PanelApiKeyService {
      * @return API密钥字符串
      * @throws BizException 当无权限或配置不存在时
      */
+    @Transactional(rollbackFor = Exception.class)
     public String getApiKey(String modelCode, Long userId) throws BizException {
         ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelCode, userId);
         if (config == null) {
@@ -322,10 +324,25 @@ public class PanelApiKeyService {
             .orElseThrow(() -> new BizException("API密钥不存在"));
 
         if (apiKey.getUser().getId().equals(userId)) {
+            // 更新使用次数和最后使用时间
+            apiKey.setUsageCount(apiKey.getUsageCount() + 1);
+            apiKey.setLastUsedTime(new Date());
+            repository.save(apiKey);
             return apiKey.getKeyValue();
         }
 
         if (authRepository.countByAuthorized(userId, apiKey.getId(), 1) > 0) {
+            // 更新使用次数和最后使用时间
+            apiKey.setUsageCount(apiKey.getUsageCount() + 1);
+            apiKey.setLastUsedTime(new Date());
+            repository.save(apiKey);
+
+            // 更新授权记录的使用次数
+            ApiKeyAuthorizationPo auth = authRepository.findByApiKeyIdAndAuthorizedUserId(apiKey.getId(), userId);
+            if (auth != null) {
+                auth.setUsageCount(auth.getUsageCount() + 1);
+                authRepository.save(auth);
+            }
             return apiKey.getKeyValue();
         }
 
