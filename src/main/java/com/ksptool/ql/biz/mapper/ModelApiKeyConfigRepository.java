@@ -18,10 +18,10 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
      * 根据模型代码查询配置
      */
     @Query("""
-            SELECT m FROM ModelApiKeyConfigPo m 
-            WHERE m.modelCode = :modelCode
+            SELECT m FROM ModelApiKeyConfigPo m
+            WHERE m.modelCode = :modelCode AND m.userId = :userId
             """)
-    Optional<ModelApiKeyConfigPo> findByModelCode(@Param("modelCode") String modelCode);
+    ModelApiKeyConfigPo getByUserIdAnyModeCode(@Param("modelCode") String modelCode, @Param("userId") Long userId);
     
     /**
      * 根据API密钥ID查询配置

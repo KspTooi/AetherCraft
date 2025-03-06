@@ -146,7 +146,8 @@ public class PanelModelConfigService {
         config.setApiKeys(getAvailableApiKey());
         
         // 获取当前使用的API密钥ID
-        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.findByModelCode(modelEnum.getCode()).orElse(null);
+        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelEnum.getCode(),userId);
+
         if (currentConfig != null) {
             config.setCurrentApiKeyId(currentConfig.getApiKey());
         }
@@ -183,9 +184,11 @@ public class PanelModelConfigService {
             }
 
             // 保存模型API密钥配置
-            ModelApiKeyConfigPo config = modelApiKeyConfigRepository
-                .findByModelCode(dto.getModel())
-                .orElse(new ModelApiKeyConfigPo());
+            ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelEnum.getCode(),userId);
+
+            if (config == null) {
+                config = new ModelApiKeyConfigPo();
+            }
 
             config.setUserId(userId);
             config.setModelCode(dto.getModel());
