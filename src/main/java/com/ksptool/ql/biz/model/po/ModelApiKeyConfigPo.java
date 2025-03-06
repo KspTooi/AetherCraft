@@ -19,6 +19,10 @@ public class ModelApiKeyConfigPo {
     @Comment("配置ID")
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    @Comment("用户ID")
+    private Long userId;
+
     @Column(name = "model_code", nullable = false, length = 50)
     @Comment("模型代码")
     private String modelCode;

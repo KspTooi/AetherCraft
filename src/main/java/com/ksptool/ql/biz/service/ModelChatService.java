@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
+import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
@@ -79,6 +80,9 @@ public class ModelChatService {
     
     @Autowired
     private ModelGeminiService modelGeminiService;
+
+    @Autowired
+    private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
     /**
      * 验证会话ID是否有效
@@ -117,7 +121,7 @@ public class ModelChatService {
         thread.setUserId(userId);
         thread.setTitle("新对话" + (count + 1));
         thread.setModelCode(modelCode);
-        
+
         thread = threadRepository.save(thread);
         return thread.getId();
     }

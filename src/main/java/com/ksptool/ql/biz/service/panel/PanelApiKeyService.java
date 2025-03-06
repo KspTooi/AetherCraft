@@ -38,13 +38,17 @@ public class PanelApiKeyService {
     private final ApiKeyAuthorizationRepository authRepository;
     private final UserRepository userRepository;
     private final ModelApiKeyConfigRepository modelApiKeyConfigRepository;
-    
+
     public PageableView<ListApiKeyVo> getListView(ListApiKeyDto dto) {
+
+        var probe = new ApiKeyPo();
+        probe.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+
         // 构建查询条件
-        var query = SimpleExample.of(new ApiKeyPo())
-            .assign(dto)
-            .like("keyName", "keyType")
-            .orderByDesc("updateTime");
+        var query = SimpleExample.of(probe)
+                .assign(dto)
+                .like("keyName", "keyType")
+                .orderByDesc("updateTime");
 
         // 执行查询并返回分页视图
         Page<ApiKeyPo> ret = repository.findAll(query.get(), dto.pageRequest().withSort(query.getSort()));
