@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
@@ -164,6 +165,7 @@ public class PanelApiKeyService {
         
         SaveApiKeyAuthVo vo = new SaveApiKeyAuthVo();
         assign(authPo, vo);
+        vo.setApiKeyId(authPo.getApiKey().getId());
         
         // 查询并设置被授权用户名
         UserPo authorizedUser = userRepository.findById(authPo.getAuthorizedUserId())
@@ -206,6 +208,7 @@ public class PanelApiKeyService {
             var auth = as(dto, ApiKeyAuthorizationPo.class);
             auth.setAuthorizedUserId(authorizedUser.getId());
             auth.setAuthorizerUserId(AuthService.getCurrentUserId());
+            auth.setApiKey(Any.of().val("id",apiKey.getId()).as(ApiKeyPo.class));
             auth.setUsageCount(0L);
             authRepository.save(auth);
             return;
