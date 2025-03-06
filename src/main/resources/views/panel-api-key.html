@@ -86,6 +86,9 @@
                                                 <a th:href="@{/panel/model/apikey/edit(id=${key.id})}" class="btn btn-outline-primary">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                                <a th:href="@{/panel/model/apikey/auth/list(apiKeyId=${key.id})}" class="btn btn-outline-info">
+                                                    <i class="bi bi-people"></i>
+                                                </a>
                                                 <button type="button" class="btn btn-outline-danger" th:onclick="'deleteKey(' + ${key.id} + ')'">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
