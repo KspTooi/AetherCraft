@@ -304,4 +304,32 @@ public class PanelApiKeyService {
         // 删除API密钥
         repository.delete(apiKey);
     }
+
+    /**
+     * 根据模型代码和用户ID获取API密钥
+     * @param modelCode 模型代码
+     * @param userId 用户ID
+     * @return API密钥字符串
+     * @throws BizException 当无权限或配置不存在时
+     */
+    public String getApiKey(String modelCode, Long userId) throws BizException {
+        ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelCode, userId);
+        if (config == null) {
+            throw new BizException("未找到模型API密钥配置");
+        }
+
+        ApiKeyPo apiKey = repository.findById(config.getApiKey())
+            .orElseThrow(() -> new BizException("API密钥不存在"));
+
+        if (apiKey.getUser().getId().equals(userId)) {
+            return apiKey.getKeyValue();
+        }
+
+        if (authRepository.countByAuthorized(userId, apiKey.getId(), 1) > 0) {
+            return apiKey.getKeyValue();
+        }
+
+        throw new BizException("无权使用此API密钥");
+    }
+
 } 

@@ -39,6 +39,8 @@ import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
+
 @Slf4j
 @Service
 public class ModelChatService {
@@ -84,6 +86,9 @@ public class ModelChatService {
     @Autowired
     private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
+    @Autowired
+    private PanelApiKeyService panelApiKeyService;
+
     /**
      * 验证会话ID是否有效
      * @param threadId 会话ID
@@ -218,7 +223,7 @@ public class ModelChatService {
             ///设置API URL和API Key Proxy
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             String proxyUrl = configService.get(baseKey + "proxy");
-            String apiKey = configService.get(baseKey + "apiKey");
+            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), AuthService.getCurrentUserId());
 
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
@@ -359,7 +364,7 @@ public class ModelChatService {
             String apiUrl = GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent" + SSE_PARAM;
 
             //获取所有配置 - 使用传入的userId
-            String apiKey = configService.get(baseKey + "apiKey", userId);
+            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
             if (!StringUtils.hasText(apiKey)) {
                 throw new BizException("未配置API Key");
             }
