@@ -80,7 +80,7 @@ public class PanelApiKeyController {
      * 编辑API密钥页面
      */
     @GetMapping("/edit")
-    public ModelAndView getEditView(@RequestParam("id") Long id) {
+    public ModelAndView getEditView(@RequestParam("id") Long id, RedirectAttributes ra) {
 
         ModelAndView mav = new ModelAndView("panel-api-key-operator");
 
@@ -90,7 +90,7 @@ public class PanelApiKeyController {
         } catch (BizException e) {
             // API密钥不存在时返回列表页
             mav.setViewName("redirect:/panel/model/apikey/list");
-            mav.addObject("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("vo", Result.error(e));
         }
 
         return mav;
@@ -197,7 +197,7 @@ public class PanelApiKeyController {
      * 编辑API密钥授权页面
      */
     @GetMapping("/auth/edit")
-    public ModelAndView getAuthEditView(@RequestParam("id") Long id) {
+    public ModelAndView getAuthEditView(@RequestParam("id") Long id,RedirectAttributes ra) {
         ModelAndView mv = new ModelAndView("panel-api-key-auth-operator");
         
         try {
@@ -207,7 +207,7 @@ public class PanelApiKeyController {
         } catch (BizException e) {
             // 授权不存在或无权访问时返回列表页
             mv.setViewName("redirect:/panel/model/apikey/list");
-            mv.addObject("vo", Result.error(e.getMessage()));
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
         }
         
         return mv;
