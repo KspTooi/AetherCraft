@@ -63,6 +63,14 @@ public class PageableView<T> {
         calculatePaging();
     }
 
+    public PageableView(Page<T> page) {
+        this.rows = page.getContent();
+        this.count = page.getTotalElements();
+        this.currentPage = page.getNumber() + 1;
+        this.pageSize = page.getSize();
+        calculatePaging();
+    }
+
     public PageableView(Page<?> page, Class<T> targetClass) {
         this.rows = as(page.getContent(), targetClass);
         this.count = page.getTotalElements();
