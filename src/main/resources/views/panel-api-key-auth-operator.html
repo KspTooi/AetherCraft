@@ -46,7 +46,7 @@
                                 <div class="col-md-6">
                                     <label for="expireTime" class="form-label">过期时间</label>
                                     <input type="datetime-local" class="form-control" id="expireTime" name="expireTime" 
-                                           th:value="${data?.expireTime != null ? #dates.format(data.expireTime, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                           th:value="${data?.expireTime != null ? #dates.format(data.expireTime, 'yyyy-MM-dd''T''HH:mm:ss') : ''}">
                                     <div class="form-text">留空表示永不过期</div>
                                 </div>
                                 
