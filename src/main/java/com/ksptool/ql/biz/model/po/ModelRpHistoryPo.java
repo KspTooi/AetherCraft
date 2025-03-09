@@ -29,6 +29,10 @@ public class ModelRpHistoryPo {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String rpContent;
 
+    @Comment("消息序号")
+    @Column(nullable = false)
+    private Integer sequence;
+
     @Comment("消息类型：0-用户消息，1-AI消息")
     @Column(nullable = false)
     private Integer type;
