@@ -1,6 +1,6 @@
 package com.ksptool.oxygen.test;
 
-import com.ksptool.ql.QuickLauncher;
+import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.dto.ServiceQueryDto;
 import com.ksptool.ql.biz.model.vo.WindowsServiceVo;
 import com.ksptool.ql.biz.service.WindowsNativeService;
@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = QuickLauncher.class)
+@SpringBootTest(classes = AetherLauncher.class)
 public class WindowsNativeServiceTest {
 
     @Autowired

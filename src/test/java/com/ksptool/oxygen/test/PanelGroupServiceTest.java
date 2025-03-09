@@ -1,6 +1,6 @@
 package com.ksptool.oxygen.test;
 
-import com.ksptool.ql.QuickLauncher;
+import com.ksptool.ql.AetherLauncher;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.service.panel.PanelGroupService;
@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
-
-@SpringBootTest(classes = QuickLauncher.class)
+@SpringBootTest(classes = AetherLauncher.class)
 public class PanelGroupServiceTest {
 
     @Autowired

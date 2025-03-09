@@ -12,6 +12,12 @@
     <!-- 使用 div 布局左右导航项 -->
     <div class="collapse navbar-collapse" id="navbarContent">
       <div class="nav-left d-flex align-items-center">
+        <div class="nav-item" sec:authorize="model:chat:view">
+          <a class="nav-link" th:href="@{/model/chat/view}">聊天</a>
+        </div>
+        <div class="nav-item" sec:authorize="model:chat:view">
+          <a class="nav-link" th:href="@{/model/chat/view}">聊天(RP)</a>
+        </div>
         <div class="nav-item" sec:authorize="app:view">
           <a class="nav-link" th:href="@{/appCenter}">应用中心</a>
         </div>
@@ -26,12 +32,6 @@
         </div>
         <div class="nav-item">
           <a class="nav-link" th:href="@{/ssr/demo}">组件展示</a>
-        </div>
-        <div class="nav-item" sec:authorize="model:chat:view">
-          <a class="nav-link" th:href="@{/model/chat/view}">聊天</a>
-        </div>
-        <div class="nav-item" sec:authorize="model:chat:view">
-          <a class="nav-link" th:href="@{/model/chat/view}">聊天(RP)</a>
         </div>
 <!--         <div class="nav-item">
           <a class="nav-link" th:href="@{/settings}">功能</a>

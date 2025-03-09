@@ -3,6 +3,8 @@ package com.ksptool.ql;
 import com.ksptool.ql.commons.H2Server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -15,7 +17,9 @@ import java.sql.SQLException;
 @EnableScheduling
 @EnableTransactionManagement
 @SpringBootApplication
-public class QuickLauncher {
+@EntityScan(basePackages = {"com.ksptool.ql.biz.model"})
+@EnableJpaRepositories(basePackages = {"com.ksptool.ql.biz.mapper"})
+public class AetherLauncher {
 
     public static void main(String[] args) throws SQLException {
 
@@ -24,7 +28,7 @@ public class QuickLauncher {
             h2.start();
         }
 
-        SpringApplication.run(QuickLauncher.class, args);
+        SpringApplication.run(AetherLauncher.class, args);
     }
 
     public static boolean isPortInUse(int port) {

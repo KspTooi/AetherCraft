@@ -1,6 +1,6 @@
 package com.ksptool.ql.biz.mapper;
 
-import com.ksptool.ql.QuickLauncher;
+import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -17,7 +16,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = QuickLauncher.class)
+@SpringBootTest(classes = AetherLauncher.class)
 //@Transactional
 public class UserSessionRepositoryTest {
 
