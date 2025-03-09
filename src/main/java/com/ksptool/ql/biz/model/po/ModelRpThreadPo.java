@@ -11,8 +11,8 @@ import java.util.List;
 @Entity
 // 一个模型角色只能有一个激活的对话
 // 注意：需要在数据库层面添加部分唯一索引 WHERE active = 1
-@Table(name = "model_rp_thread",
-    uniqueConstraints = {@UniqueConstraint(name = "uk_model_role_active", columnNames = {"model_role_id", "active"})}
+@Table(name = "model_rp_thread"
+    //uniqueConstraints = {@UniqueConstraint(name = "uk_model_role_active", columnNames = {"model_role_id", "active"})}
 )
 public class ModelRpThreadPo {
     
