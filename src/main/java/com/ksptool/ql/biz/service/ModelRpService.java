@@ -1,12 +1,11 @@
 package com.ksptool.ql.biz.service;
 
-import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
 import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
-import com.ksptool.ql.biz.model.dto.DeactiveThreadDto;
+import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
@@ -16,8 +15,6 @@ import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
-import com.ksptool.ql.commons.web.SimpleExample;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -27,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class ModelRpService {
@@ -134,7 +129,7 @@ public class ModelRpService {
      * 取消激活RP对话
      */
     @Transactional
-    public void deactiveThread(DeactiveThreadDto dto) throws BizException {
+    public void deActiveThread(DeActiveThreadDto dto) throws BizException {
         // 1. 查询用户拥有的存档
         ModelRpThreadPo thread = threadRepository.findById(dto.getThreadId())
             .orElseThrow(() -> new BizException("存档不存在"));
