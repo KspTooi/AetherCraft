@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
 import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
+import com.ksptool.ql.biz.model.dto.DeactiveThreadDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
@@ -127,5 +128,29 @@ public class ModelRpService {
         
         vo.setMessages(messages);
         return vo;
+    }
+
+    /**
+     * 取消激活RP对话
+     */
+    @Transactional
+    public void deactiveThread(DeactiveThreadDto dto) throws BizException {
+        // 1. 查询用户拥有的存档
+        ModelRpThreadPo thread = threadRepository.findById(dto.getThreadId())
+            .orElseThrow(() -> new BizException("存档不存在"));
+
+        // 2. 验证权限
+        if (!thread.getUserId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权操作此存档");
+        }
+
+        // 3. 检查是否已经是非激活状态
+        if (thread.getActive() == 0) {
+            throw new BizException("存档已经是非激活状态");
+        }
+
+        // 4. 设置为非激活状态
+        thread.setActive(0);
+        threadRepository.save(thread);
     }
 } 

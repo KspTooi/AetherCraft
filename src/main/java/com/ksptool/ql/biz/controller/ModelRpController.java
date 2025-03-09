@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
+import com.ksptool.ql.biz.model.dto.DeactiveThreadDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.service.ModelRpService;
@@ -35,5 +36,14 @@ public class ModelRpController {
     @PostMapping("/recoverRpChat")
     public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
         return Result.success(modelRpService.recoverRpChat(dto));
+    }
+
+    /**
+     * 取消激活RP对话
+     */
+    @PostMapping("/deactiveThread")
+    public Result<String> deactiveThread(@RequestBody @Valid DeactiveThreadDto dto) throws BizException {
+        modelRpService.deactiveThread(dto);
+        return Result.success("存档已取消激活");
     }
 } 
