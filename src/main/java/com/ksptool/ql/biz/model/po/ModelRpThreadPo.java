@@ -39,14 +39,12 @@ public class ModelRpThreadPo {
     
     @Comment("用户选择的角色")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_role_id", nullable = false, 
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "user_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ModelUserRolePo userRole;
     
     @Comment("模型扮演的角色")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_role_id", nullable = false,
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "model_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ModelRolePo modelRole;
     
     @Comment("是否为当前激活的对话 0-存档 1-激活")
