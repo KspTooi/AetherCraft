@@ -29,6 +29,10 @@ public class ModelChatThreadPo {
     @Column(length = 50, nullable = false)
     private String modelCode;
     
+    @Comment("会话类型 0:CHAT 1:RP")
+    @Column(nullable = false)
+    private Integer type;
+    
     @Comment("是否已生成过标题 0-未生成 1-已生成")
     @Column(nullable = false)
     private Integer titleGenerated;
@@ -50,6 +54,9 @@ public class ModelChatThreadPo {
         updateTime = new Date();
         if (titleGenerated == null) {
             titleGenerated = 0; // 默认未生成
+        }
+        if (type == null) {
+            type = 0; // 默认为CHAT类型
         }
     }
     

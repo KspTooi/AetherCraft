@@ -15,6 +15,23 @@ import org.springframework.stereotype.Repository;
 public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
     
     /**
+     * 获取用户的角色列表（分页）
+     * 
+     * @param userId 用户ID
+     * @param keyword 关键字（角色名称，为空时不过滤）
+     * @param pageable 分页参数
+     * @return 分页结果
+     */
+    @Query("SELECT r FROM ModelRolePo r WHERE r.userId = :userId " +
+           "AND (:keyword IS NULL OR :keyword = '' OR r.name LIKE %:keyword%) " +
+           "ORDER BY r.sortOrder ASC, r.updateTime DESC")
+    Page<ModelRolePo> getModelRoleList(
+        @Param("userId") Long userId,
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
+    
+    /**
      * 根据关键字查询模型角色（分页）
      * 
      * @param keyword 关键字（角色名称或描述）

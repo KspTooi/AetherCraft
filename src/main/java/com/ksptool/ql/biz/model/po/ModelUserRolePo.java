@@ -3,8 +3,6 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.Date;
