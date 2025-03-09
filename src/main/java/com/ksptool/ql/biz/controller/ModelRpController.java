@@ -1,8 +1,11 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
+import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
+import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.service.ModelRpService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -16,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/model/rp")
 public class ModelRpController {
 
-
     @Autowired
     private ModelRpService modelRpService;
 
@@ -25,5 +27,13 @@ public class ModelRpController {
         return Result.success(modelRpService.getModelRoleList(queryDto));
     }
 
-
+    /**
+     * 恢复或创建RP对话
+     * 如果存在激活的存档，则返回存档内容
+     * 如果不存在，则创建新存档并返回首条消息
+     */
+    @PostMapping("/recoverRpChat")
+    public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
+        return Result.success(modelRpService.recoverRpChat(dto));
+    }
 } 

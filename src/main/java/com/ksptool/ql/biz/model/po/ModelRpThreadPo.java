@@ -39,7 +39,7 @@ public class ModelRpThreadPo {
     
     @Comment("用户选择的角色")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "user_role_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ModelUserRolePo userRole;
     
     @Comment("模型扮演的角色")
