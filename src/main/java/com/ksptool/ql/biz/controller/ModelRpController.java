@@ -12,6 +12,7 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,32 +51,38 @@ public class ModelRpController {
     }
 
     /**
-     * 批量完成RP对话
+     * 批量完成RP对话 - 长轮询方式
      * 处理发送消息、查询响应流和终止AI响应等操作
      */
     @PostMapping("/rpCompleteBatch")
     public Result<RpSegmentVo> rpCompleteBatch(@RequestBody @Valid BatchRpCompleteDto dto) throws BizException {
-        // 根据queryKind调用不同的处理方法
+
+        // 发送消息
         if (dto.getQueryKind() == 0) {
-            // 发送消息
+            if (StringUtils.isBlank(dto.getMessage())) {
+                throw new BizException("发送消息时，消息内容不能为空");
+            }
+            
+            if (StringUtils.isBlank(dto.getModel())) {
+                throw new BizException("发送消息时，模型代码不能为空");
+            }
+            
             return Result.success(modelRpService.rpCompleteSendBatch(dto));
         }
-        
+
+        // 查询响应流
         if (dto.getQueryKind() == 1) {
-            // 查询响应流
             return Result.success(modelRpService.rpCompleteQueryBatch(dto));
         }
-        
+
+        // 终止AI响应
         if (dto.getQueryKind() == 2) {
-            // 终止AI响应
             modelRpService.rpCompleteTerminateBatch(dto);
             return Result.success(null);
         }
         
         throw new BizException("无效的查询类型");
     }
-
-
 
 
 
