@@ -189,41 +189,13 @@ public class ModelRpService {
     }
 
     /**
-     * 批量完成RP对话
-     * 处理发送消息、查询响应流和终止AI响应等操作
-     * @param dto 批量完成RP对话的请求参数
-     * @return 返回对话片段信息
-     * @throws BizException 业务异常
-     */
-    @Transactional
-    public RpSegmentVo rpCompleteBatch(BatchRpCompleteDto dto) throws BizException {
-        // 根据queryKind调用不同的处理方法
-        if (dto.getQueryKind() == 0) {
-            // 发送消息
-            return rpCompleteSendBatch(dto);
-        }
-        
-        if (dto.getQueryKind() == 1) {
-            // 查询响应流
-            return rpCompleteQueryBatch(dto);
-        }
-        
-        if (dto.getQueryKind() == 2) {
-            // 终止AI响应
-            rpCompleteTerminateBatch(dto);
-            return null;
-        }
-        
-        throw new BizException("无效的查询类型");
-    }
-    
-    /**
      * 发送RP对话消息
      * @param dto 批量完成RP对话的请求参数
      * @return 返回对话片段信息
      * @throws BizException 业务异常
      */
-    private RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
+    @Transactional
+    public RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
         Long threadId = dto.getThread();
 
         // 检查该会话是否正在处理中
@@ -355,7 +327,7 @@ public class ModelRpService {
      * @return 返回对话片段信息
      * @throws BizException 业务异常
      */
-    private RpSegmentVo rpCompleteQueryBatch(BatchRpCompleteDto dto) throws BizException {
+    public RpSegmentVo rpCompleteQueryBatch(BatchRpCompleteDto dto) throws BizException {
         // 暂时返回null，后续实现
         return null;
     }
@@ -365,7 +337,7 @@ public class ModelRpService {
      * @param dto 批量完成RP对话的请求参数
      * @throws BizException 业务异常
      */
-    private void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
+    public void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
         // 暂时不实现，后续添加
     }
 

@@ -55,8 +55,24 @@ public class ModelRpController {
      */
     @PostMapping("/rpCompleteBatch")
     public Result<RpSegmentVo> rpCompleteBatch(@RequestBody @Valid BatchRpCompleteDto dto) throws BizException {
-        // 调用服务层方法
-        return Result.success(modelRpService.rpCompleteBatch(dto));
+        // 根据queryKind调用不同的处理方法
+        if (dto.getQueryKind() == 0) {
+            // 发送消息
+            return Result.success(modelRpService.rpCompleteSendBatch(dto));
+        }
+        
+        if (dto.getQueryKind() == 1) {
+            // 查询响应流
+            return Result.success(modelRpService.rpCompleteQueryBatch(dto));
+        }
+        
+        if (dto.getQueryKind() == 2) {
+            // 终止AI响应
+            modelRpService.rpCompleteTerminateBatch(dto);
+            return Result.success(null);
+        }
+        
+        throw new BizException("无效的查询类型");
     }
 
 
