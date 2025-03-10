@@ -37,6 +37,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
+import com.ksptool.ql.biz.model.vo.ModelChatContext;
 
 import static com.ksptool.entities.Entities.assign;
 
@@ -46,10 +49,10 @@ public class ModelRpService {
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-    // 存储正在处理中的会话ID和对应的contextId
-    private final ConcurrentHashMap<Long, String> rpThreadProcessingStatus = new ConcurrentHashMap<>();
-
-    // 存储已终止的contextId
+    // 线程安全的容器，记录RP聊天状态 <threadId, contextId>
+    private final ConcurrentHashMap<Long, String> rpThreadToContextIdMap = new ConcurrentHashMap<>();
+    
+    // 终止列表，存储已经被终止的contextId
     private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
 
     @Autowired
@@ -224,7 +227,7 @@ public class ModelRpService {
         Long threadId = dto.getThread();
 
         // 检查该会话是否正在处理中
-        if (rpThreadProcessingStatus.containsKey(threadId)) {
+        if (rpThreadToContextIdMap.containsKey(threadId)) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -311,91 +314,8 @@ public class ModelRpService {
             modelGeminiService.sendMessageStream(
                     client,
                     modelChatParam,
-                    // 统一回调 - 处理所有类型的消息
-                    context -> {
-                        try {
-                            // 从ModelChatContext中获取contextId
-                            String contextId = context.getContextId();
-
-                            // 检查该contextId是否已被终止
-                            if (terminatedContextIds.containsKey(contextId)) {
-                                // 如果是完成或错误回调，从终止列表中移除
-                                if (context.getType() == 1 || context.getType() == 2) {
-                                    terminatedContextIds.remove(contextId);
-                                }
-                                return;
-                            }
-
-                            // 首次收到消息时，将contextId存入映射表
-                            if (!rpThreadProcessingStatus.containsValue(contextId)) {
-                                rpThreadProcessingStatus.put(threadId, contextId);
-                            }
-
-                            // 获取当前最大序号
-                            int nextSequence = segmentRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
-                            
-                            // 根据context.type处理不同类型的消息
-                            if (context.getType() == 0) {
-                                // 数据类型 - 创建数据片段
-                                ModelRpSegmentPo dataSegment = new ModelRpSegmentPo();
-                                dataSegment.setUserId(userId);
-                                dataSegment.setThread(thread);
-                                dataSegment.setSequence(nextSequence);
-                                dataSegment.setContent(context.getContent());
-                                dataSegment.setStatus(0); // 未读状态
-                                dataSegment.setType(1); // 数据类型
-                                segmentRepository.save(dataSegment);
-                                return;
-                            }
-                            
-                            if (context.getType() == 1) {
-                                // 保存AI响应到历史记录
-                                ModelRpHistoryPo aiHistory = new ModelRpHistoryPo();
-                                aiHistory.setThread(thread);
-                                aiHistory.setType(1); // AI消息
-                                aiHistory.setRawContent(context.getContent());
-                                aiHistory.setRpContent(context.getContent()); // 这里可能需要通过RpHandler处理
-                                aiHistory.setSequence(historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
-                                historyRepository.save(aiHistory);
-                                
-                                // 完成类型 - 创建结束片段
-                                ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
-                                endSegment.setUserId(userId);
-                                endSegment.setThread(thread);
-                                endSegment.setSequence(nextSequence);
-                                endSegment.setContent(null);
-                                endSegment.setStatus(0); // 未读状态
-                                endSegment.setType(2); // 结束类型
-                                endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
-                                segmentRepository.save(endSegment);
-
-                                // 更新会话使用的模型
-                                thread.setModelCode(modelEnum.getCode());
-                                threadRepository.save(thread);
-                                
-                                // 清理会话状态
-                                rpThreadProcessingStatus.remove(thread.getId());
-                                return;
-                            }
-                            
-                            if (context.getType() == 2) {
-                                // 错误类型 - 创建错误片段
-                                ModelRpSegmentPo errorSegment = new ModelRpSegmentPo();
-                                errorSegment.setUserId(userId);
-                                errorSegment.setThread(thread);
-                                errorSegment.setSequence(nextSequence);
-                                errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
-                                errorSegment.setStatus(0); // 未读状态
-                                errorSegment.setType(10); // 错误类型
-                                segmentRepository.save(errorSegment);
-
-                                // 清理会话状态
-                                rpThreadProcessingStatus.remove(thread.getId());
-                            }
-                        } catch (Exception e) {
-                            log.error("处理RP对话片段失败", e);
-                        }
-                    }
+                    // 使用封装后的回调函数
+                    onModelRpMessageRcv(thread, userId)
             );
 
             // 返回用户消息作为第一次响应
@@ -416,7 +336,7 @@ public class ModelRpService {
 
         } catch (Exception e) {
             // 发生异常时清理会话状态
-            rpThreadProcessingStatus.remove(threadId);
+            rpThreadToContextIdMap.remove(threadId);
 
             // 清理所有片段
             try {
@@ -447,5 +367,103 @@ public class ModelRpService {
      */
     private void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
         // 暂时不实现，后续添加
+    }
+
+    /**
+     * 创建处理模型消息回调的Consumer
+     * @param thread RP聊天线程
+     * @param userId 用户ID
+     * @return 处理模型消息的Consumer
+     */
+    private Consumer<ModelChatContext> onModelRpMessageRcv(ModelRpThreadPo thread, Long userId) {
+        return context -> {
+            try {
+                // 从ModelChatContext中获取contextId
+                String contextId = context.getContextId();
+                Long threadId = thread.getId();
+                String modelCode = context.getModelCode();
+                AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
+
+                // 检查该contextId是否已被终止
+                if (terminatedContextIds.containsKey(contextId)) {
+                    // 如果是完成或错误回调，从终止列表中移除
+                    if (context.getType() == 1 || context.getType() == 2) {
+                        terminatedContextIds.remove(contextId);
+                    }
+                    return;
+                }
+
+                // 首次收到消息时，将contextId存入映射表
+                if (!rpThreadToContextIdMap.containsValue(contextId)) {
+                    rpThreadToContextIdMap.put(threadId, contextId);
+                }
+
+                // 获取当前最大序号
+                int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+                
+                // 根据context.type处理不同类型的消息
+                if (context.getType() == 0) {
+                    // 数据类型 - 创建数据片段
+                    ModelRpSegmentPo dataSegment = new ModelRpSegmentPo();
+                    dataSegment.setUserId(userId);
+                    dataSegment.setThread(thread);
+                    dataSegment.setSequence(nextSequence);
+                    dataSegment.setContent(context.getContent());
+                    dataSegment.setStatus(0); // 未读状态
+                    dataSegment.setType(1); // 数据类型
+                    segmentRepository.save(dataSegment);
+                    return;
+                }
+                
+                if (context.getType() == 1) {
+                    // 保存AI响应到历史记录
+                    ModelRpHistoryPo aiHistory = new ModelRpHistoryPo();
+                    aiHistory.setThread(thread);
+                    aiHistory.setType(1); // AI消息
+                    aiHistory.setRawContent(context.getContent());
+                    aiHistory.setRpContent(context.getContent()); // 这里可能需要通过RpHandler处理
+                    aiHistory.setSequence(historyRepository.findMaxSequenceByThreadId(threadId) + 1);
+                    historyRepository.save(aiHistory);
+                    
+                    // 完成类型 - 创建结束片段
+                    ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
+                    endSegment.setUserId(userId);
+                    endSegment.setThread(thread);
+                    endSegment.setSequence(nextSequence);
+                    endSegment.setContent(null);
+                    endSegment.setStatus(0); // 未读状态
+                    endSegment.setType(2); // 结束类型
+                    endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
+                    segmentRepository.save(endSegment);
+
+                    // 更新会话使用的模型
+                    if (modelEnum != null) {
+                        thread.setModelCode(modelEnum.getCode());
+                        threadRepository.save(thread);
+                    }
+                    
+                    // 清理会话状态
+                    rpThreadToContextIdMap.remove(threadId);
+                    return;
+                }
+                
+                if (context.getType() == 2) {
+                    // 错误类型 - 创建错误片段
+                    ModelRpSegmentPo errorSegment = new ModelRpSegmentPo();
+                    errorSegment.setUserId(userId);
+                    errorSegment.setThread(thread);
+                    errorSegment.setSequence(nextSequence);
+                    errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
+                    errorSegment.setStatus(0); // 未读状态
+                    errorSegment.setType(10); // 错误类型
+                    segmentRepository.save(errorSegment);
+
+                    // 清理会话状态
+                    rpThreadToContextIdMap.remove(threadId);
+                }
+            } catch (Exception e) {
+                log.error("处理RP对话片段失败", e);
+            }
+        };
     }
 }

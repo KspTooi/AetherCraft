@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.ArrayList;
 import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
@@ -540,7 +542,7 @@ public class ModelChatService {
             modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
             modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
-
+            
             // 异步调用ModelGeminiService发送流式请求
             modelGeminiService.sendMessageStream(
                     client,
