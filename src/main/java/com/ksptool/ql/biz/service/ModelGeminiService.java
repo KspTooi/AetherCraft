@@ -96,12 +96,12 @@ public class ModelGeminiService {
     /**
      * 流式发送消息并通过回调处理响应
      * @param client HTTP客户端
-     * @param dto 聊天请求参数
+     * @param param 聊天请求参数
      * @param callback 统一回调 - 处理所有类型的消息和错误
      */
     public void sendMessageStream(
             OkHttpClient client, 
-            ModelChatParam dto, 
+            ModelChatParam param,
             Consumer<ModelChatContext> callback) {
         
         // 生成唯一的上下文ID
@@ -116,22 +116,22 @@ public class ModelGeminiService {
             
             try {
                 // 验证参数
-                validateParams(dto);
+                validateParams(param);
                 
                 // 构建请求
                 GeminiRequest geminiRequest = GeminiRequest.ofHistory(
-                        as(dto.getHistories(), ModelChatHistoryPo.class),
-                        dto.getMessage(),
-                        dto.getTemperature(),
-                        dto.getTopP(),
-                        dto.getTopK(),
-                        dto.getMaxOutputTokens()
+                        as(param.getHistories(), ModelChatHistoryPo.class),
+                        param.getMessage(),
+                        param.getTemperature(),
+                        param.getTopP(),
+                        param.getTopK(),
+                        param.getMaxOutputTokens()
                 );
                 String jsonBody = gson.toJson(geminiRequest);
                 
                 // 创建请求对象 - 使用流式API
                 Request request = new Request.Builder()
-                    .url(dto.getUrl() + SSE_PARAM + "&key=" + dto.getApiKey())
+                    .url(param.getUrl() + SSE_PARAM + "&key=" + param.getApiKey())
                     .post(RequestBody.create(jsonBody, JSON))
                     .build();
                 
@@ -175,7 +175,7 @@ public class ModelGeminiService {
                 
                 // 记录完整请求和响应
                 log.info("Gemini API 流式请求响应 - 模型: {}, 请求: {}, 完整响应长度: {}", 
-                    dto.getModelCode(), 
+                    param.getModelCode(),
                     jsonBody.replaceAll("\\s+", ""), 
                     fullResponse.length());
                 
@@ -186,6 +186,7 @@ public class ModelGeminiService {
                     context.setType(1); // 结束类型
                     context.setContent(fullResponse);
                     context.setSequence(sequence.get()); // 使用当前序列号
+                    context.setModelCode(param.getModelCode());
                     callback.accept(context);
                 }
                 

@@ -40,6 +40,7 @@ import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
+import com.ksptool.ql.biz.model.vo.ModelChatContext;
 
 @Slf4j
 @Service
@@ -58,7 +59,7 @@ public class ModelChatService {
 
 
     // 线程安全的容器，记录聊天状态 <threadId, contextId>
-    private final ConcurrentHashMap<Long, String> chatThreadProcessingStatus = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, String> threadToContextIdMap = new ConcurrentHashMap<>();
     
     // 终止列表，存储已经被终止的contextId
     private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
@@ -487,7 +488,7 @@ public class ModelChatService {
         Long threadId = dto.getThread();
 
         // 检查该会话是否正在处理中
-        if (chatThreadProcessingStatus.containsKey(threadId)) {
+        if (threadToContextIdMap.containsKey(threadId)) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -544,93 +545,8 @@ public class ModelChatService {
             modelGeminiService.sendMessageStream(
                     client,
                     modelChatParam,
-                    // 统一回调 - 处理所有类型的消息
-                    context -> {
-                        try {
-                            // 从ModelChatContext中获取contextId
-                            String contextId = context.getContextId();
-
-                            // 检查该contextId是否已被终止
-                            if (terminatedContextIds.containsKey(contextId)) {
-                                // 如果是完成或错误回调，从终止列表中移除
-                                if (context.getType() == 1 || context.getType() == 2) {
-                                    terminatedContextIds.remove(contextId);
-                                }
-                                return;
-                            }
-
-                            // 首次收到消息时，将contextId存入映射表
-                            if (!chatThreadProcessingStatus.containsValue(contextId)) {
-                                chatThreadProcessingStatus.put(threadId, contextId);
-                            }
-
-                            // 获取当前最大序号
-                            int nextSequence = segmentRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
-                            
-                            // 根据context.type处理不同类型的消息
-                            if (context.getType() == 0) {
-                                // 数据类型 - 创建数据片段
-                                ModelChatSegmentPo dataSegment = new ModelChatSegmentPo();
-                                dataSegment.setUserId(userId);
-                                dataSegment.setThread(thread);
-                                dataSegment.setSequence(nextSequence);
-                                dataSegment.setContent(context.getContent());
-                                dataSegment.setStatus(0); // 未读状态
-                                dataSegment.setType(1); // 数据类型
-                                segmentRepository.save(dataSegment);
-                                return;
-                            }
-                            
-                            if (context.getType() == 1) {
-                                // 保存AI响应到历史记录
-                                ModelChatHistoryPo aiHistory = createHistory(thread, context.getContent(), 1);
-                                
-                                // 完成类型 - 创建结束片段
-                                ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
-                                endSegment.setUserId(userId);
-                                endSegment.setThread(thread);
-                                endSegment.setSequence(nextSequence);
-                                endSegment.setContent(null);
-                                endSegment.setStatus(0); // 未读状态
-                                endSegment.setType(2); // 结束类型
-                                endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
-                                segmentRepository.save(endSegment);
-
-                                // 更新会话使用的模型
-                                thread.setModelCode(modelEnum.getCode());
-                                threadRepository.save(thread);
-                                
-                                // 尝试生成会话标题
-                                try {
-                                    generateThreadTitle(thread.getId(), modelEnum.getCode());
-                                } catch (Exception e) {
-                                    log.error("生成会话标题失败", e);
-                                    // 生成标题失败不影响主流程
-                                }
-                                
-                                // 清理会话状态
-                                chatThreadProcessingStatus.remove(thread.getId());
-                                return;
-                            }
-                            
-                            if (context.getType() == 2) {
-                                // 错误类型 - 创建错误片段
-                                ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
-                                errorSegment.setUserId(userId);
-                                errorSegment.setThread(thread);
-                                errorSegment.setSequence(nextSequence);
-                                errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
-                                errorSegment.setStatus(0); // 未读状态
-                                errorSegment.setType(10); // 错误类型
-                                segmentRepository.save(errorSegment);
-
-                                // 清理会话状态
-                                chatThreadProcessingStatus.remove(thread.getId());
-                            }
-                        } catch (Exception e) {
-                            log.error("处理聊天片段失败", e);
-                        }
-                    }
+                    // 使用封装后的回调函数
+                    onModelMessageRcv(thread, userId)
             );
 
             // 返回用户消息作为第一次响应
@@ -645,7 +561,7 @@ public class ModelChatService {
 
         } catch (Exception e) {
             // 发生异常时清理会话状态
-            chatThreadProcessingStatus.remove(threadId);
+            threadToContextIdMap.remove(threadId);
 
             // 清理所有片段
             try {
@@ -657,6 +573,7 @@ public class ModelChatService {
             throw new BizException("发送批量聊天消息失败: " + e.getMessage());
         }
     }
+
 
     /**
      * 查询批量聊天响应
@@ -685,7 +602,7 @@ public class ModelChatService {
             }
             
             // 如果没有未读片段，且会话不在处理中，直接返回null
-            if (!chatThreadProcessingStatus.containsKey(threadId)) {
+            if (!threadToContextIdMap.containsKey(threadId)) {
                 // 没有未读片段
                 return null;
             }
@@ -761,7 +678,7 @@ public class ModelChatService {
         }
 
         // 获取当前正在进行的contextId
-        String contextId = chatThreadProcessingStatus.get(threadId);
+        String contextId = threadToContextIdMap.get(threadId);
         if (contextId == null) {
             throw new BizException("该会话未在进行中或已经终止");
         }
@@ -770,7 +687,7 @@ public class ModelChatService {
         terminatedContextIds.put(contextId, true);
         
         // 清理会话状态
-        chatThreadProcessingStatus.remove(threadId);
+        threadToContextIdMap.remove(threadId);
 
         // 获取当前最大序号
         int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
@@ -958,5 +875,110 @@ public class ModelChatService {
         historyRepository.delete(history);
         
         log.info("已删除会话 {} 的历史消息 {}", threadId, historyId);
+    }
+
+
+
+
+
+    /**
+     * 创建处理模型消息回调的Consumer
+     *
+     * @param thread 聊天线程
+     * @param userId 用户ID
+     * @return 处理模型消息的Consumer
+     */
+    private Consumer<ModelChatContext> onModelMessageRcv(ModelChatThreadPo thread, Long userId) {
+        return context -> {
+            try {
+                // 从ModelChatContext中获取contextId
+                String contextId = context.getContextId();
+                Long threadId = thread.getId();
+                String modelCode = context.getModelCode();
+                AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
+
+                // 检查该contextId是否已被终止
+                if (terminatedContextIds.containsKey(contextId)) {
+                    // 如果是完成或错误回调，从终止列表中移除
+                    if (context.getType() == 1 || context.getType() == 2) {
+                        terminatedContextIds.remove(contextId);
+                    }
+                    return;
+                }
+
+                // 首次收到消息时，将contextId存入映射表
+                if (!threadToContextIdMap.containsValue(contextId)) {
+                    threadToContextIdMap.put(threadId, contextId);
+                }
+
+                // 获取当前最大序号
+                int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+
+                // 根据context.type处理不同类型的消息
+                if (context.getType() == 0) {
+                    // 数据类型 - 创建数据片段
+                    ModelChatSegmentPo dataSegment = new ModelChatSegmentPo();
+                    dataSegment.setUserId(userId);
+                    dataSegment.setThread(thread);
+                    dataSegment.setSequence(nextSequence);
+                    dataSegment.setContent(context.getContent());
+                    dataSegment.setStatus(0); // 未读状态
+                    dataSegment.setType(1); // 数据类型
+                    segmentRepository.save(dataSegment);
+                    return;
+                }
+
+                if (context.getType() == 1) {
+                    // 保存AI响应到历史记录
+                    ModelChatHistoryPo aiHistory = createHistory(thread, context.getContent(), 1);
+
+                    // 完成类型 - 创建结束片段
+                    ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
+                    endSegment.setUserId(userId);
+                    endSegment.setThread(thread);
+                    endSegment.setSequence(nextSequence);
+                    endSegment.setContent(null);
+                    endSegment.setStatus(0); // 未读状态
+                    endSegment.setType(2); // 结束类型
+                    endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
+                    segmentRepository.save(endSegment);
+
+                    // 更新会话使用的模型
+                    if (modelEnum != null) {
+                        thread.setModelCode(modelEnum.getCode());
+                        threadRepository.save(thread);
+
+                        // 尝试生成会话标题
+                        try {
+                            generateThreadTitle(thread.getId(), modelEnum.getCode());
+                        } catch (Exception e) {
+                            log.error("生成会话标题失败", e);
+                            // 生成标题失败不影响主流程
+                        }
+                    }
+
+                    // 清理会话状态
+                    threadToContextIdMap.remove(threadId);
+                    return;
+                }
+
+                if (context.getType() == 2) {
+                    // 错误类型 - 创建错误片段
+                    ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
+                    errorSegment.setUserId(userId);
+                    errorSegment.setThread(thread);
+                    errorSegment.setSequence(nextSequence);
+                    errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
+                    errorSegment.setStatus(0); // 未读状态
+                    errorSegment.setType(10); // 错误类型
+                    segmentRepository.save(errorSegment);
+
+                    // 清理会话状态
+                    threadToContextIdMap.remove(threadId);
+                }
+            } catch (Exception e) {
+                log.error("处理聊天片段失败", e);
+            }
+        };
     }
 }

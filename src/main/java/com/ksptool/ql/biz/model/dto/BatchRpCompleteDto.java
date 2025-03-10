@@ -17,6 +17,6 @@ public class BatchRpCompleteDto {
     private String message;
 
     @NotNull
-    private Integer queryKind; //0:发送消息 1:查询响应流 2:终止AI响应
+    private Integer queryKind; //0:发送消息 1:查询响应流 2:终止AI响应 3:重新生成AI最后一条回复
 
 } 

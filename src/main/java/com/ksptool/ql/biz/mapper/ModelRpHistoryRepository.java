@@ -19,4 +19,12 @@ public interface ModelRpHistoryRepository extends JpaRepository<ModelRpHistoryPo
      */
     @Query("SELECT h FROM ModelRpHistoryPo h WHERE h.thread.id = :threadId ORDER BY h.sequence ASC")
     List<ModelRpHistoryPo> findByThreadIdOrderBySequence(@Param("threadId") Long threadId);
+    
+    /**
+     * 查询会话的最大序号
+     * @param threadId 会话ID
+     * @return 最大序号，如果没有记录则返回0
+     */
+    @Query("SELECT COALESCE(MAX(h.sequence), 0) FROM ModelRpHistoryPo h WHERE h.thread.id = :threadId")
+    int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
 } 
