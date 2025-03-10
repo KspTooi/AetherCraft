@@ -542,7 +542,7 @@ public class ModelChatService {
             modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
             modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
-            
+
             // 异步调用ModelGeminiService发送流式请求
             modelGeminiService.sendMessageStream(
                     client,
