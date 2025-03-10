@@ -1,13 +1,15 @@
 package com.ksptool.ql.biz.model.dto;
 
+import com.ksptool.ql.commons.web.PageQuery;
 import lombok.Data;
-import jakarta.validation.constraints.Min;
+import lombok.EqualsAndHashCode;
 
 /**
  * 模型角色列表查询条件
  */
 @Data
-public class ListModelRoleDto {
+@EqualsAndHashCode(callSuper = true)
+public class ListModelRoleDto extends PageQuery {
     
     /**
      * 当前选中的角色ID
@@ -23,16 +25,4 @@ public class ListModelRoleDto {
      * 角色名称或描述（模糊查询）
      */
     private String keyword;
-    
-    /**
-     * 当前页码
-     */
-    @Min(value = 1, message = "页码最小为1")
-    private Integer currentPage = 1;
-    
-    /**
-     * 每页条数
-     */
-    @Min(value = 1, message = "每页条数最小为1")
-    private Integer pageSize = 10;
 } 

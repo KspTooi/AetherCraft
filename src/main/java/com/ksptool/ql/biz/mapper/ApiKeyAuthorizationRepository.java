@@ -55,8 +55,8 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
      * 根据被授权用户ID和状态查询授权记录
      */
     @Query("""
-            SELECT a FROM ApiKeyAuthorizationPo a 
-            WHERE a.authorizedUserId = :userId 
+            SELECT a FROM ApiKeyAuthorizationPo a
+            WHERE a.authorizedUserId = :userId
             AND a.status = :status
             """)
     List<ApiKeyAuthorizationPo> findByAuthorizedUserIdAndStatus(

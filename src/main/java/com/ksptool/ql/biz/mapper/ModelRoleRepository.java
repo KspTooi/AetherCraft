@@ -30,19 +30,7 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
         @Param("keyword") String keyword,
         Pageable pageable
     );
-    
-    /**
-     * 根据关键字查询模型角色（分页）
-     * 
-     * @param keyword 关键字（角色名称或描述）
-     * @param pageable 分页参数
-     * @return 分页结果
-     */
-    @Query("SELECT r FROM ModelRolePo r WHERE " +
-           "(:keyword IS NULL OR r.name LIKE %:keyword% OR r.description LIKE %:keyword%) " +
-           "ORDER BY r.sortOrder ASC, r.updateTime DESC")
-    Page<ModelRolePo> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
-    
+
     /**
      * 根据ID查询模型角色（包含对话示例）
      * 
@@ -68,6 +56,6 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      * @param id 当前角色ID
      * @return 是否存在
      */
-    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name AND r.id != :id")
-    boolean existsByNameAndIdNot(@Param("name") String name, @Param("id") Long id);
+    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name AND r.userId = :userId AND r.id != :id")
+    boolean existsByNameAndIdNot(@Param("userId") Long userId,@Param("name") String name, @Param("id") Long id);
 } 

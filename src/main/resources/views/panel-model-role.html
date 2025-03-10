@@ -156,7 +156,7 @@
                                             <button class="btn btn-primary" type="submit">搜索</button>
                                         </div>
                                         <!-- 保留当前页码和每页条数 -->
-                                        <input type="hidden" name="currentPage" th:value="${data.roleList.currentPage}">
+                                        <input type="hidden" name="page" th:value="${data.roleList.currentPage}">
                                         <input type="hidden" name="pageSize" th:value="${data.roleList.pageSize}">
                                         <!-- 保留当前选中的角色ID和isNew状态 -->
                                         <input type="hidden" name="id" th:value="${data.id}">
@@ -168,7 +168,7 @@
                                         <div th:each="role : ${data.roleList.rows}" 
                                              th:class="${role.id == data.id && !data.isNew ? 'role-item p-2 mb-2 d-flex align-items-center active' : 'role-item p-2 mb-2 d-flex align-items-center'}"
                                              th:attr="data-id=${role.id}">
-                                            <a th:href="@{/panel/model/role/list(id=${role.id}, keyword=${data.keyword}, currentPage=${data.roleList.currentPage}, pageSize=${data.roleList.pageSize})}" 
+                                            <a th:href="@{/panel/model/role/list(id=${role.id}, keyword=${data.keyword}, page=${data.roleList.currentPage}, pageSize=${data.roleList.pageSize})}" 
                                                class="text-decoration-none">
                                                <span class="visually-hidden" th:text="${role.name}">角色名称</span>
                                             </a>
@@ -201,16 +201,16 @@
                                             <nav>
                                                 <ul class="pagination pagination-sm">
                                                     <li th:class="${!data.roleList.hasPrev ? 'page-item disabled' : 'page-item'}">
-                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, currentPage=${data.roleList.currentPage - 1}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" aria-label="上一页">
+                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, page=${data.roleList.currentPage - 1}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" aria-label="上一页">
                                                             <span aria-hidden="true">&laquo;</span>
                                                         </a>
                                                     </li>
                                                     <li th:each="page : ${#numbers.sequence(1, T(Math).ceil(data.roleList.count * 1.0 / data.roleList.pageSize))}" 
                                                         th:class="${page == data.roleList.currentPage ? 'page-item active' : 'page-item'}">
-                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, currentPage=${page}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" th:text="${page}">1</a>
+                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, page=${page}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" th:text="${page}">1</a>
                                                     </li>
                                                     <li th:class="${!data.roleList.hasNext ? 'page-item disabled' : 'page-item'}">
-                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, currentPage=${data.roleList.currentPage + 1}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" aria-label="下一页">
+                                                        <a class="page-link" th:href="@{/panel/model/role/list(keyword=${data.keyword}, page=${data.roleList.currentPage + 1}, pageSize=${data.roleList.pageSize}, id=${data.id}, isNew=${data.isNew})}" aria-label="下一页">
                                                             <span aria-hidden="true">&raquo;</span>
                                                         </a>
                                                     </li>
@@ -227,7 +227,7 @@
                                     <!-- 角色详情表单 -->
                                     <form th:if="${data.id != null || data.isNew == true}" th:action="@{/panel/model/role/save}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
                                         <input type="hidden" name="id" th:value="${data.id}">
-                                        <input type="hidden" name="currentPage" th:value="${data.roleList.currentPage}">
+                                        <input type="hidden" name="page" th:value="${data.roleList.currentPage}">
                                         <input type="hidden" name="pageSize" th:value="${data.roleList.pageSize}">
                                         <input type="hidden" name="keyword" th:value="${data.keyword}">
                                         <input type="hidden" name="isNew" th:value="${data.isNew}">
@@ -416,7 +416,7 @@
             // 获取当前状态
             const isNew = form.querySelector('input[name="isNew"]').value === 'true';
             const id = form.querySelector('input[name="id"]').value;
-            const currentPage = form.querySelector('input[name="currentPage"]').value;
+            const page = form.querySelector('input[name="page"]').value;
             const pageSize = form.querySelector('input[name="pageSize"]').value;
             const keyword = form.querySelector('input[name="keyword"]').value;
             const avatarPath = form.querySelector('input[name="avatarPath"]').value;
@@ -427,7 +427,7 @@
             // 恢复重要字段
             form.querySelector('input[name="isNew"]').value = isNew;
             form.querySelector('input[name="id"]').value = id;
-            form.querySelector('input[name="currentPage"]').value = currentPage;
+            form.querySelector('input[name="page"]').value = page;
             form.querySelector('input[name="pageSize"]').value = pageSize;
             form.querySelector('input[name="keyword"]').value = keyword;
             form.querySelector('input[name="avatarPath"]').value = avatarPath;

@@ -2,11 +2,10 @@ package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
+import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
-import com.ksptool.ql.biz.model.vo.SaveModelRoleVo;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
-import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.SessionAttributes;
-import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -92,17 +89,13 @@ public class PanelModelRoleController {
         
         try {
             // 调用服务保存角色
-            SaveModelRoleVo vo = panelModelRoleService.saveModelRole(dto);
-            
-            if (!vo.getSuccess()) {
-                throw new BizException(vo.getMessage());
-            }
-            
+            ModelRolePo po = panelModelRoleService.saveModelRole(dto);
+
             // 保存成功，添加成功消息
-            ra.addFlashAttribute("vo", Result.success(vo.getMessage(), vo));
+            ra.addFlashAttribute("vo", Result.success("角色已保存:"+po.getName(),null));
             
             // 重定向到列表页面，并选中刚保存的角色
-            return "redirect:/panel/model/role/list?id=" + vo.getId();
+            return "redirect:/panel/model/role/list?id=" + po.getId();
         } catch (Exception e) {
             ra.addFlashAttribute("vo", Result.error(e.getMessage()));
             ra.addFlashAttribute("formData", dto);

@@ -1,5 +1,6 @@
 package com.ksptool.ql.commons.web;
 
+import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * 处理业务异常
+     */
+    @ExceptionHandler(BizException.class)
+    @ResponseBody
+    public ResponseEntity<Result<Object>> handleBizException(BizException ex) {
+        log.warn("业务异常: {}", ex.getMessage());
+        return new ResponseEntity<>(Result.error(ex), HttpStatus.OK);
+    }
 
     /**
      * 处理所有RuntimeException
