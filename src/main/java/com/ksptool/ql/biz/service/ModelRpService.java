@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
 import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
+import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
@@ -12,6 +13,7 @@ import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatHistoryVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
+import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -147,5 +149,18 @@ public class ModelRpService {
         // 4. 设置为非激活状态
         thread.setActive(0);
         threadRepository.save(thread);
+    }
+
+    /**
+     * 批量完成RP对话
+     * 处理发送消息、查询响应流和终止AI响应等操作
+     * @param dto 批量完成RP对话的请求参数
+     * @return 返回对话片段信息
+     * @throws BizException 业务异常
+     */
+    @Transactional
+    public RpSegmentVo rpCompleteBatch(BatchRpCompleteDto dto) throws BizException {
+        // 暂时返回null，后续实现具体逻辑
+        return null;
     }
 } 

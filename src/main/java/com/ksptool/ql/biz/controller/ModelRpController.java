@@ -1,10 +1,12 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
+import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.biz.service.ModelRpService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -45,6 +47,16 @@ public class ModelRpController {
     public Result<String> deActiveThread(@RequestBody @Valid DeActiveThreadDto dto) throws BizException {
         modelRpService.deActiveThread(dto);
         return Result.success("存档已取消激活");
+    }
+
+    /**
+     * 批量完成RP对话
+     * 处理发送消息、查询响应流和终止AI响应等操作
+     */
+    @PostMapping("/rpCompleteBatch")
+    public Result<RpSegmentVo> rpCompleteBatch(@RequestBody @Valid BatchRpCompleteDto dto) throws BizException {
+        // 调用服务层方法
+        return Result.success(modelRpService.rpCompleteBatch(dto));
     }
 
 
