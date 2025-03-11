@@ -8,9 +8,23 @@ import java.util.List;
 @Data
 public class GeminiRequest {
 
+    private SystemInstruction systemInstruction;
     private List<Content> contents;
     private List<SafetySetting> safetySettings;
     private GenerationConfig generationConfig;
+
+    @Data
+    public static class SystemInstruction {
+        private List<Part> parts;
+
+        public static SystemInstruction of(String text) {
+            SystemInstruction instruction = new SystemInstruction();
+            Part part = new Part();
+            part.setText(text);
+            instruction.setParts(List.of(part));
+            return instruction;
+        }
+    }
 
     @Data
     public static class Content {
@@ -113,6 +127,17 @@ public class GeminiRequest {
         // 添加用户的最新消息
         messages.add(new ChatMessage("user", userMessage));
         return of(messages, temperature, topP, topK, maxOutputTokens);
+    }
+
+    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens, String systemPrompt) {
+        GeminiRequest request = ofHistory(histories, userMessage, temperature, topP, topK, maxOutputTokens);
+        
+        // 添加系统提示词
+        if (systemPrompt != null && !systemPrompt.trim().isEmpty()) {
+            request.setSystemInstruction(SystemInstruction.of(systemPrompt));
+        }
+        
+        return request;
     }
     
     @Data
