@@ -1,4 +1,7 @@
 
+*.mv.db
+*.db
+*.mv
 userdata/**
 target/
 !.mvn/wrapper/maven-wrapper.jar
