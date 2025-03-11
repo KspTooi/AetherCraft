@@ -17,6 +17,7 @@ public class GrokResponse {
     public static class Choice {
         private Integer index;
         private Message message;
+        private Message delta;
         private String finishReason;
     }
 
@@ -32,6 +33,7 @@ public class GrokResponse {
         private Integer promptTokens;
         private Integer completionTokens;
         private Integer totalTokens;
+        private Integer reasoningTokens;
         private PromptTokensDetails promptTokensDetails;
     }
 
