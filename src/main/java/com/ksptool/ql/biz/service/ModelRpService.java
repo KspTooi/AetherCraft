@@ -13,6 +13,7 @@ import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.po.ModelRpSegmentPo;
 import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
+import com.ksptool.ql.biz.model.po.ModelUserRolePo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatHistoryVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
@@ -20,6 +21,7 @@ import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
@@ -196,59 +198,69 @@ public class ModelRpService {
      */
     @Transactional
     public RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
 
         // 检查该会话是否正在处理中
-        if (rpThreadToContextIdMap.containsKey(threadId)) {
+        if (rpThreadToContextIdMap.containsKey(dto.getThread())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
+        //获取会话信息
+        ModelRpThreadPo query = new ModelRpThreadPo();
+        query.setId(dto.getThread());
+        query.setUserId(AuthService.getCurrentUserId());
+        query.setActive(1); //是否为当前激活的对话 0-存档 1-激活
+
+        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("会话不存在或不可用"));
+
+        //获取并验证模型配置
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+
+        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), thread.getUserId());
+        if (StringUtils.isBlank(apiKey)) {
+            throw new BizException("未配置API Key");
+        }
+
+        //获取用户扮演的角色信息
+        ModelUserRolePo userRole = thread.getUserRole();
+        if (userRole == null) {
+            throw new BizException("用户角色信息不存在");
+        }
+
+        //获取模型扮演的角色信息
+        ModelRolePo modelRole = thread.getModelRole();
+        if (modelRole == null) {
+            throw new BizException("模型角色信息不存在");
+        }
+
+        PreparedPrompt ctxPrompt  = PreparedPrompt.prepare("");
+        ctxPrompt.setParameter("model",modelRole.getName());
+        ctxPrompt.setParameter("user",userRole.getName());
+
+        // 保存用户消息
+        ModelRpHistoryPo userHistory = new ModelRpHistoryPo();
+        userHistory.setThread(thread);
+        userHistory.setType(0); // 用户消息
+        userHistory.setRawContent(dto.getMessage());
+        userHistory.setRpContent(dto.getMessage()); // 这里可能需要通过RpHandler处理
+        userHistory.setSequence(historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
+        historyRepository.save(userHistory);
+
         try {
-            // 获取并验证模型配置
-            AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
-            if (modelEnum == null) {
-                throw new BizException("无效的模型代码");
-            }
 
-            // 获取当前用户ID
-            Long userId = AuthService.getCurrentUserId();
 
-            // 获取API Key
-            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
-            if (StringUtils.isBlank(apiKey)) {
-                throw new BizException("未配置API Key");
-            }
 
-            // 获取会话
-            ModelRpThreadPo thread = threadRepository.findById(threadId)
-                .orElseThrow(() -> new BizException("会话不存在"));
-                
-            // 验证用户权限
-            if (!thread.getUserId().equals(userId)) {
-                throw new BizException("无权访问该会话");
-            }
-            
-            // 获取角色信息
-            ModelRolePo modelRole = thread.getModelRole();
-            if (modelRole == null) {
-                throw new BizException("角色信息不存在");
-            }
 
-            // 保存用户消息
-            ModelRpHistoryPo userHistory = new ModelRpHistoryPo();
-            userHistory.setThread(thread);
-            userHistory.setType(0); // 用户消息
-            userHistory.setRawContent(dto.getMessage());
-            userHistory.setRpContent(dto.getMessage()); // 这里可能需要通过RpHandler处理
-            userHistory.setSequence(historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
-            historyRepository.save(userHistory);
 
             // 清理之前的片段（如果有）
             segmentRepository.deleteByThreadId(thread.getId());
 
             // 创建开始片段并返回
             ModelRpSegmentPo startSegment = new ModelRpSegmentPo();
-            startSegment.setUserId(userId);
+            startSegment.setUserId(thread.getUserId());
             startSegment.setThread(thread);
             startSegment.setSequence(1);
             startSegment.setContent(null);
@@ -258,7 +270,7 @@ public class ModelRpService {
 
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            String proxyConfig = configService.get(baseKey + "proxy", userId);
+            String proxyConfig = configService.get(baseKey + "proxy", thread.getUserId());
 
             // 创建HTTP客户端
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
@@ -286,8 +298,7 @@ public class ModelRpService {
             modelGeminiService.sendMessageStream(
                     client,
                     modelChatParam,
-                    // 使用封装后的回调函数
-                    onModelRpMessageRcv(thread, userId)
+                    onModelRpMessageRcv(thread, thread.getUserId())
             );
 
             // 返回用户消息作为第一次响应
@@ -300,19 +311,19 @@ public class ModelRpService {
             vo.setType(0); // 起始类型
             
             // 设置角色信息
-            vo.setRoleId(thread.getUserRole() != null ? thread.getUserRole().getId() : null);
-            vo.setRoleName(thread.getUserRole() != null ? thread.getUserRole().getName() : "用户");
-            vo.setRoleAvatarPath(thread.getUserRole() != null ? thread.getUserRole().getAvatarPath() : null);
+            vo.setRoleId(userRole.getId());
+            vo.setRoleName(userRole.getName());
+            vo.setRoleAvatarPath(userRole.getAvatarPath());
             
             return vo;
 
         } catch (Exception e) {
             // 发生异常时清理会话状态
-            rpThreadToContextIdMap.remove(threadId);
+            rpThreadToContextIdMap.remove(thread.getId());
 
             // 清理所有片段
             try {
-                segmentRepository.deleteByThreadId(threadId);
+                segmentRepository.deleteByThreadId(thread.getId());
             } catch (Exception ex) {
                 log.error("清理RP对话片段失败", ex);
             }
