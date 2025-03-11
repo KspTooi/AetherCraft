@@ -20,6 +20,7 @@ import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.web.PageableView;
@@ -77,6 +78,8 @@ public class ModelRpService {
     
     @Autowired
     private PanelApiKeyService panelApiKeyService;
+    @Autowired
+    private GlobalConfigService globalConfigService;
 
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto queryDto) {
         Page<ModelRolePo> page = modelRoleRepository.getModelRoleList(
@@ -226,9 +229,9 @@ public class ModelRpService {
 
         //获取用户扮演的角色信息
         ModelUserRolePo userRole = thread.getUserRole();
-        if (userRole == null) {
-            throw new BizException("用户角色信息不存在");
-        }
+        //if (userRole == null) {
+        //    throw new BizException("用户角色信息不存在");
+        //}
 
         //获取模型扮演的角色信息
         ModelRolePo modelRole = thread.getModelRole();
@@ -236,9 +239,22 @@ public class ModelRpService {
             throw new BizException("模型角色信息不存在");
         }
 
-        PreparedPrompt ctxPrompt  = PreparedPrompt.prepare("");
+        PreparedPrompt ctxPrompt  = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey()));
         ctxPrompt.setParameter("model",modelRole.getName());
-        ctxPrompt.setParameter("user",userRole.getName());
+        ctxPrompt.setParameter("user","user");
+
+        PreparedPrompt rolePrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey()));
+        rolePrompt.setParameter("userDesc","");
+        rolePrompt.setParameter("modelDescription",modelRole.getDescription());
+        rolePrompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
+        rolePrompt.setParameter("modelScenario",modelRole.getScenario());
+
+        if(userRole != null){
+            ctxPrompt.setParameter("user", userRole.getName());
+        }
+
+        String finalPrompt = ctxPrompt.execute() + rolePrompt.execute();
+
 
         // 保存用户消息历史
         ModelRpHistoryPo userHistory = new ModelRpHistoryPo();

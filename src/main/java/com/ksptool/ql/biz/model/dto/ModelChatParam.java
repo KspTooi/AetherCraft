@@ -54,4 +54,6 @@ public class ModelChatParam {
      */
     private String apiKey;
 
+    private String systemPrompt;
+
 } 

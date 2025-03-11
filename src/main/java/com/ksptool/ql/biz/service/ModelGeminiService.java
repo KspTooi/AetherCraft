@@ -55,7 +55,8 @@ public class ModelGeminiService {
                     dto.getTemperature(),
                     dto.getTopP(),
                     dto.getTopK(),
-                    dto.getMaxOutputTokens()
+                    dto.getMaxOutputTokens(),
+                    dto.getSystemPrompt()
             );
             String jsonBody = gson.toJson(geminiRequest);
             
@@ -125,7 +126,8 @@ public class ModelGeminiService {
                         param.getTemperature(),
                         param.getTopP(),
                         param.getTopK(),
-                        param.getMaxOutputTokens()
+                        param.getMaxOutputTokens(),
+                        param.getSystemPrompt()
                 );
                 String jsonBody = gson.toJson(geminiRequest);
                 
