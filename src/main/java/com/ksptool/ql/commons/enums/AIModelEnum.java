@@ -15,8 +15,6 @@ public enum AIModelEnum {
     GEMINI_15_FLASH_8B("gemini-1.5-flash-8b", "Gemini 1.5 Flash 8B"),
     GEMINI_15_PRO("gemini-1.5-pro", "Gemini 1.5 Pro"),
 
-
-
     /*实验模型*/
     GEMINI_2_PRO_EXP("gemini-2.0-pro-exp", "Gemini 2.0 Pro Exp"),
     GEMINI_2_PRO_EXP_0205("gemini-2.0-pro-exp-02-05", "Gemini 2.0 Pro Exp 2025-02-05"),
@@ -36,6 +34,13 @@ public enum AIModelEnum {
     GEMINI_15_FLASH_001("gemini-1.5-flash-001", "Gemini 1.5 Flash #001"),
     GEMINI_15_FLASH_002("gemini-1.5-flash-002", "Gemini 1.5 Flash #002"),
 
+
+    
+
+
+    //目前暂不会计划支持DeepSeek
+//    DEEPSEEK_CHAT("deepseek-chat", "DeepSeek"),
+//    DEEPSEEK_REASONER("deepseek-reasoner", "DeepSeek-Reasoner(R1)"),
 
     ;
 
