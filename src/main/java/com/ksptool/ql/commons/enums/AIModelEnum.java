@@ -35,7 +35,14 @@ public enum AIModelEnum {
     GEMINI_15_FLASH_002("gemini-1.5-flash-002", "Gemini 1.5 Flash #002"),
 
 
-    
+    //GROK_3("grok-3", "Grok 3"),
+    //GROK_2_1212("grok-2-1212", "Grok 2 #1212"),
+    //GROK_2_VISION_1212("grok-2-vision-1212", "Grok 2 Vision #1212"),
+
+    //GROK_BETA("grok-beta", "Grok Beta"),
+    //GROK_BETA_VISION("grok-vision-beta", "Grok Beta Vision"),
+
+
 
 
     //目前暂不会计划支持DeepSeek

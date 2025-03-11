@@ -73,6 +73,7 @@ public class ModelGrokService {
                 );
                 // 设置流式输出
                 grokRequest.setStream(true);
+                grokRequest.setModel(param.getModelCode());
                 
                 String jsonBody = gson.toJson(grokRequest);
                 
