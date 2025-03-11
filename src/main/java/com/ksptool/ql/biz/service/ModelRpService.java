@@ -585,4 +585,164 @@ public class ModelRpService {
             }
         };
     }
+
+    /**
+     * 重新生成AI最后一条回复
+     * @param dto 批量完成RP对话的请求参数
+     * @return 返回对话片段信息
+     * @throws BizException 业务异常
+     */
+    @Transactional
+    public RpSegmentVo rpCompleteRegenerateBatch(BatchRpCompleteDto dto) throws BizException {
+        Long threadId = dto.getThread();
+        Long userId = AuthService.getCurrentUserId();
+
+        // 检查会话是否存在
+        ModelRpThreadPo thread = threadRepository.findById(threadId)
+                .orElseThrow(() -> new BizException("会话不存在"));
+
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+
+        // 获取所有历史记录
+        List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(threadId);
+        if (histories.isEmpty()) {
+            throw new BizException("会话历史记录为空");
+        }
+
+        // 获取最后一条历史记录
+        ModelRpHistoryPo lastHistory = histories.get(histories.size() - 1);
+        String messageToRegenerate;
+
+        // 如果最后一条是AI的回复，则删除它
+        if (lastHistory.getType() == 1) {
+            histories.removeLast();
+            historyRepository.delete(lastHistory);
+            
+            if (histories.isEmpty()) {
+                throw new BizException("未找到任何历史消息");
+            }
+            
+            lastHistory = histories.getLast();
+            if (lastHistory.getType() != 0) {
+                throw new BizException("未找到用户消息");
+            }
+        }
+
+        // 使用最后一条用户消息作为当前要发送的消息
+        messageToRegenerate = lastHistory.getRawContent();
+
+        // 获取并验证模型配置
+        AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+
+        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+        if (StringUtils.isBlank(apiKey)) {
+            throw new BizException("未配置API Key");
+        }
+
+        // 获取角色信息
+        ModelRolePo modelRole = thread.getModelRole();
+        ModelUserRolePo userRole = thread.getUserRole();
+        if (modelRole == null) {
+            throw new BizException("模型角色信息不存在");
+        }
+
+        // 准备提示词
+        PreparedPrompt ctxPrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey()));
+        ctxPrompt.setParameter("model", modelRole.getName());
+        ctxPrompt.setParameter("user", userRole != null ? userRole.getName() : "user");
+
+        PreparedPrompt rolePrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey()));
+        rolePrompt.setParameter("userDesc", "");
+        rolePrompt.setParameter("modelDescription", modelRole.getDescription());
+        rolePrompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
+        rolePrompt.setParameter("modelScenario", modelRole.getScenario());
+
+        String finalPrompt = ctxPrompt.execute() + rolePrompt.execute();
+
+        try {
+            // 清理之前的片段（如果有）
+            segmentRepository.deleteByThreadId(thread.getId());
+
+            // 创建开始片段并返回
+            ModelRpSegmentPo startSegment = new ModelRpSegmentPo();
+            startSegment.setUserId(userId);
+            startSegment.setThread(thread);
+            startSegment.setSequence(1);
+            startSegment.setContent(null);
+            startSegment.setStatus(0); // 未读状态
+            startSegment.setType(0); // 开始类型
+            segmentRepository.save(startSegment);
+
+            // 获取配置
+            String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+            String proxyConfig = configService.get(baseKey + "proxy", userId);
+
+            // 创建HTTP客户端
+            OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
+
+            // 创建请求参数
+            ModelChatParam modelChatParam = new ModelChatParam();
+            modelChatParam.setMessage(messageToRegenerate);
+            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
+            modelChatParam.setApiKey(apiKey);
+            modelChatParam.setModelCode(thread.getModelCode());
+            modelChatParam.setSystemPrompt(finalPrompt);
+
+            // 转换历史记录为ModelChatParamHistory
+            List<ModelChatParamHistory> paramHistories = new ArrayList<>();
+            for (ModelRpHistoryPo history : histories) {
+                ModelChatParamHistory paramHistory = new ModelChatParamHistory();
+                paramHistory.setRole(history.getType());
+                paramHistory.setContent(history.getRawContent());
+                paramHistories.add(paramHistory);
+            }
+            modelChatParam.setHistories(paramHistories);
+
+            // 异步调用ModelGeminiService发送流式请求
+            modelGeminiService.sendMessageStream(
+                    client,
+                    modelChatParam,
+                    onModelRpMessageRcv(thread, userId)
+            );
+
+            // 返回开始片段
+            RpSegmentVo vo = new RpSegmentVo();
+            vo.setThreadId(thread.getId());
+            vo.setSequence(startSegment.getSequence());
+            vo.setContent(messageToRegenerate); // 返回用户的最后一条消息
+            vo.setType(0); // 起始类型
+            vo.setRole(0); // 用户角色
+            
+            // 设置用户角色信息
+            vo.setRoleId(null);
+            vo.setRoleName("user");
+            vo.setRoleAvatarPath(null);
+            if(userRole != null){
+                vo.setRoleId(userRole.getId());
+                vo.setRoleName(userRole.getName());
+                vo.setRoleAvatarPath(userRole.getAvatarPath());
+            }
+
+            return vo;
+
+        } catch (Exception e) {
+            // 发生异常时清理会话状态
+            rpThreadToContextIdMap.remove(thread.getId());
+
+            // 清理所有片段
+            try {
+                segmentRepository.deleteByThreadId(thread.getId());
+            } catch (Exception ex) {
+                log.error("清理RP对话片段失败", ex);
+            }
+
+            throw new BizException("重新生成AI回复失败: " + e.getMessage());
+        }
+    }
 }

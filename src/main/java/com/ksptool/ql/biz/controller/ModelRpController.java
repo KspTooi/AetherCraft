@@ -80,6 +80,11 @@ public class ModelRpController {
             modelRpService.rpCompleteTerminateBatch(dto);
             return Result.success(null);
         }
+
+        // 重新生成AI最后一条回复
+        if (dto.getQueryKind() == 3) {
+            return Result.success(modelRpService.rpCompleteRegenerateBatch(dto));
+        }
         
         throw new BizException("无效的查询类型");
     }
