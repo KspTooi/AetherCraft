@@ -240,7 +240,7 @@ public class ModelRpService {
         ctxPrompt.setParameter("model",modelRole.getName());
         ctxPrompt.setParameter("user",userRole.getName());
 
-        // 保存用户消息
+        // 保存用户消息历史
         ModelRpHistoryPo userHistory = new ModelRpHistoryPo();
         userHistory.setThread(thread);
         userHistory.setType(0); // 用户消息
@@ -250,10 +250,6 @@ public class ModelRpService {
         historyRepository.save(userHistory);
 
         try {
-
-
-
-
 
             // 清理之前的片段（如果有）
             segmentRepository.deleteByThreadId(thread.getId());

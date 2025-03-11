@@ -655,7 +655,6 @@ public class ModelChatService {
         
         // 直接设置角色为AI助手，因为chatCompleteQueryBatch不会获取到用户消息
         vo.setRole(1); // AI助手角色
-        
         return vo;
     }
 
