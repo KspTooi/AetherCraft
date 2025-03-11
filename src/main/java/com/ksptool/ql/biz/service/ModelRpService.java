@@ -351,8 +351,87 @@ public class ModelRpService {
      * @throws BizException 业务异常
      */
     public RpSegmentVo rpCompleteQueryBatch(BatchRpCompleteDto dto) throws BizException {
-        // 暂时返回null，后续实现
-        return null;
+        Long threadId = dto.getThread();
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 最大等待次数和等待时间
+        final int MAX_WAIT_TIMES = 10;
+        final long WAIT_INTERVAL_MS = 300;
+        
+        // 尝试获取未读片段，最多等待10次
+        List<ModelRpSegmentPo> unreadSegments = null;
+        int waitTimes = 0;
+        
+        while (waitTimes < MAX_WAIT_TIMES) {
+            unreadSegments = segmentRepository.findNextUnreadByThreadId(threadId);
+            
+            // 如果有未读片段，跳出循环
+            if (!unreadSegments.isEmpty()) {
+                break;
+            }
+            
+            // 如果没有未读片段，且会话不在处理中，直接返回null
+            if (!rpThreadToContextIdMap.containsKey(threadId)) {
+                return null;
+            }
+            
+            // 等待一段时间后再次尝试
+            try {
+                Thread.sleep(WAIT_INTERVAL_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new BizException("等待片段时被中断");
+            }
+            
+            waitTimes++;
+        }
+        
+        // 如果等待超时仍未获取到片段
+        if (unreadSegments == null || unreadSegments.isEmpty()) {
+            throw new BizException("等待片段超时，请稍后再试");
+        }
+        
+        // 获取第一个未读片段
+        ModelRpSegmentPo segment = unreadSegments.get(0);
+        
+        // 检查权限
+        if (!segment.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+        
+        // 检查是否为错误片段
+        if (segment.getType() == 10) {
+            // 标记为已读
+            segment.setStatus(1);
+            segmentRepository.save(segment);
+            throw new BizException(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+        }
+        
+        // 标记为已读
+        segment.setStatus(1);
+        segmentRepository.save(segment);
+        
+        // 转换为VO
+        RpSegmentVo vo = new RpSegmentVo();
+        vo.setThreadId(threadId);
+        vo.setHistoryId(segment.getHistoryId());
+        vo.setSequence(segment.getSequence());
+        vo.setContent(segment.getContent());
+        vo.setType(segment.getType());
+        vo.setRole(1); // AI助手角色
+        
+        // 如果是数据片段或结束片段，需要设置模型角色信息
+        if (segment.getType() == 1 || segment.getType() == 2) {
+            ModelRpThreadPo thread = segment.getThread();
+            ModelRolePo modelRole = thread.getModelRole();
+            if (modelRole != null) {
+                vo.setRoleId(modelRole.getId());
+                vo.setRoleName(modelRole.getName());
+                vo.setRoleAvatarPath(modelRole.getAvatarPath());
+            }
+        }
+        
+        return vo;
     }
     
     /**
@@ -361,7 +440,44 @@ public class ModelRpService {
      * @throws BizException 业务异常
      */
     public void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
-        // 暂时不实现，后续添加
+        Long threadId = dto.getThread();
+        Long userId = AuthService.getCurrentUserId();
+
+        // 检查会话是否存在
+        ModelRpThreadPo thread = threadRepository.findById(threadId).orElse(null);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+
+        // 获取当前正在进行的contextId
+        String contextId = rpThreadToContextIdMap.get(threadId);
+        if (contextId == null) {
+            throw new BizException("该会话未在进行中或已经终止");
+        }
+
+        // 将contextId加入终止列表
+        terminatedContextIds.put(contextId, true);
+        
+        // 清理会话状态
+        rpThreadToContextIdMap.remove(threadId);
+
+        // 获取当前最大序号
+        int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+
+        // 创建终止片段
+        ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
+        endSegment.setUserId(userId);
+        endSegment.setThread(thread);
+        endSegment.setSequence(nextSequence);
+        endSegment.setContent("用户终止了AI响应");
+        endSegment.setStatus(0); // 未读状态
+        endSegment.setType(2); // 结束类型
+        segmentRepository.save(endSegment);
     }
 
     /**
