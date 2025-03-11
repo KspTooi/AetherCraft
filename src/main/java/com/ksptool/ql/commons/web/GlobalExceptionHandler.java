@@ -18,6 +18,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     @ResponseBody
     public ResponseEntity<Result<Object>> handleBizException(BizException ex) {
+        log.error(ex.getMessage(),ex);
         log.warn("业务异常: {}", ex.getMessage());
         return new ResponseEntity<>(Result.error(ex), HttpStatus.OK);
     }

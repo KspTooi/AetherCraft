@@ -292,6 +292,9 @@ public class ModelRpService {
             modelChatParam.setMessage(dto.getMessage());
             modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
+            modelChatParam.setModelCode(dto.getModel());
+            modelChatParam.setSystemPrompt(finalPrompt);
+
             
             // 获取历史记录并转换为ModelChatParamHistory
             List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(thread.getId());
@@ -323,10 +326,15 @@ public class ModelRpService {
             vo.setType(0); // 起始类型
             
             // 设置角色信息
-            vo.setRoleId(userRole.getId());
-            vo.setRoleName(userRole.getName());
-            vo.setRoleAvatarPath(userRole.getAvatarPath());
-            
+            vo.setRoleId(null);
+            vo.setRoleName("user");
+            vo.setRoleAvatarPath(null);
+            if(userRole != null){
+                vo.setRoleId(userRole.getId());
+                vo.setRoleName(userRole.getName());
+                vo.setRoleAvatarPath(userRole.getAvatarPath());
+            }
+
             return vo;
 
         } catch (Exception e) {
