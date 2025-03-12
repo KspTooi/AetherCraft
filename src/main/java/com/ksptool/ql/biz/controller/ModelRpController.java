@@ -14,10 +14,8 @@ import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 @RequestMapping("/model/rp")
@@ -25,6 +23,12 @@ public class ModelRpController {
 
     @Autowired
     private ModelRpService modelRpService;
+
+    @GetMapping("/view")
+    public ModelAndView getModelRpView() {
+        ModelAndView modelAndView = new ModelAndView("model-rp");
+        return modelAndView;
+    }
 
     @PostMapping("/getRoleList")
     public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto queryDto) {
@@ -88,7 +92,5 @@ public class ModelRpController {
         
         throw new BizException("无效的查询类型");
     }
-
-
 
 } 

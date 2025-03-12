@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手(RP)</title>
+    
+    <!-- 引入公共库 -->
+    <script th:src="@{/commons/vue3.global.prod.js}"></script>
+    <script th:src="@{/commons/axios.min.js}"></script>
+    <script th:src="@{/commons/marked.min.js}"></script>
+</head>
+
+<style>
+    /* 覆盖 frame-theme 的样式 */
+    .glass-container {
+        top: 45px !important;  /* 导航栏实际高度 */
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        padding: 0 !important; /* 移除内边距 */
+    }
+    
+    .glass-box {
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important; /* 移除外边距 */
+    }
+
+    .chat-container {
+        color: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 会话列表区域 */
+    .thread-list {
+        width: 240px;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .new-chat-btn {
+        margin: 12px;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(79, 172, 254, 0.2);
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .new-chat-btn i {
+        font-size: 16px;
+    }
+
+    .new-chat-btn:hover {
+        background: rgba(79, 172, 254, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .new-chat-btn:active {
+        transform: translateY(0);
+    }
+
+    .thread-items {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .thread-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-left: 3px solid transparent;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .thread-item .thread-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 8px;
+    }
+
+    .thread-item .thread-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .thread-item .edit-btn,
+    .thread-item .delete-btn {
+        transition: all 0.3s;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .thread-item .edit-btn:hover,
+    .thread-item .delete-btn:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .thread-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .thread-item.active {
+        background: rgba(79, 172, 254, 0.2);
+        border-left-color: #4facfe;
+    }
+
+    /* 自定义滚动条 - 会话列表 */
+    .thread-items::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .thread-items::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .thread-items::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+
+    .thread-items::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 主聊天区域 */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+        overflow: hidden;
+    }
+    
+    /* 模型选择区域 */
+    .model-select {
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .model-select label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    
+    .model-select select {
+        flex: 1;
+        padding: 6px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .model-select select:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .model-select select:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .model-select select option {
+        background: #2c2c2c;
+        color: #fff;
+    }
+
+    /* 布局容器 */
+    .chat-layout {
+        display: flex;
+        height: 100%;
+    }
+
+    /* 消息容器包装器 */
+    .chat-messages-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        position: relative;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 48px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 12px 16px;
+        border-radius: 8px;
+        line-height: 1.5;
+        font-size: 15px;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .message > span {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        background: rgba(79, 172, 254, 0.3);
+        margin-left: 20%;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.assistant {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.2);
+        margin-right: 20%;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 输入区域样式 */
+    .chat-input {
+        padding: 12px 20px;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-input-wrapper {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-height: 48px;
+        max-height: 150px;
+        padding: 4px;
+    }
+
+    .chat-input textarea {
+        flex: 1;
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px;
+        background: transparent;
+        border: none;
+        color: #fff;
+        resize: none;
+        font-size: 15px;
+        line-height: 1.5;
+        transition: all 0.3s;
+        overflow-y: hidden;
+        max-height: 120px;
+        display: block;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .chat-input textarea::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.5;
+        padding: 0;
+        margin: 0;
+    }
+
+    .chat-input textarea:focus {
+        outline: none;
+    }
+
+    .chat-input-wrapper:focus-within {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .send-btn {
+        padding: 8px 24px;
+        border: none;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #4facfe 0%, #00ffb8c4 100%);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        align-self: center;
+        font-size: 15px;
+        height: 48px;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.05);
+        background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
+    }
+
+    .send-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* 响应式布局 */
+    @media (max-width: 768px) {
+        .glass-container {
+            top: 40px !important;
+        }
+        
+        .chat-layout {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-select {
+            padding: 6px 12px;
+            margin-top: 4px;
+        }
+
+        .model-select select {
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        .model-select label {
+            font-size: 13px;
+        }
+        
+        .thread-list {
+            position: absolute;
+            left: -240px;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .thread-list.show {
+            transform: translateX(240px);
+        }
+        
+        .mobile-menu-btn {
+            display: block;
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            z-index: 101;
+            background: rgba(79, 172, 254, 0.3);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .mobile-menu-btn.hide {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-20px);
+        }
+        
+        .thread-list-mask {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+        
+        .thread-list-mask.show {
+            display: block;
+        }
+    }
+</style>
+
+<body>
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="chat-container">
+            <div id="app" class="chat-layout">
+                <!-- 移动端菜单按钮 -->
+                <button class="mobile-menu-btn d-md-none" @click="toggleThreadList">
+                    <i class="bi bi-chat-left-text"></i>
+                </button>
+                
+                <!-- 遮罩层 -->
+                <div class="thread-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleThreadList"></div>
+                
+                <!-- 会话列表 -->
+                <div class="thread-list" :class="{ show: isMobileMenuOpen }">
+                    <button class="new-chat-btn" @click="startNewChat">
+                        <i class="bi bi-plus-lg"></i>
+                        新对话
+                    </button>
+                    <div class="thread-items">
+                        <div v-for="thread in threads" 
+                             :key="thread.id"
+                             @click="loadThread(thread.id)"
+                             :class="['thread-item', { active: thread.id === currentThreadId }]">
+                            <div class="thread-title">{{ thread.title }}</div>
+                            <div class="thread-actions">
+                                <button class="edit-btn" 
+                                        @click.stop="editThreadTitle(thread)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="delete-btn" @click.stop="deleteThread(thread.id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主聊天区域 -->
+                <div class="chat-main">
+                    <div class="model-select">
+                        <label>选择模型：</label>
+                        <select v-model="selectedModel">
+                            <option v-for="model in models" 
+                                    :key="model.code"
+                                    :value="model.code">
+                                {{ model.name }}
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <!-- 聊天消息区域 -->
+                    <div class="chat-messages-wrapper">
+                        <div class="chat-messages" ref="messagesContainer">
+                            <div v-for="(message, index) in messages" 
+                                 :key="index"
+                                 :class="['message', message.role === 0 ? 'user' : 'assistant']">
+                                <span v-if="message.role === 0">{{ message.content }}</span>
+                                <span v-else v-html="renderMarkdown(message.content)"></span>
+                                <button class="message-delete-btn" 
+                                        @click="deleteMessage(message.id)"
+                                        title="删除消息">×</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 聊天输入区域 -->
+                    <div class="chat-input">
+                        <div class="chat-input-wrapper">
+                            <textarea 
+                                v-model="messageInput"
+                                ref="messageTextarea"
+                                placeholder="怎麽不问问神奇的 Gemini 呢?"
+                                @keydown="handleKeyPress"
+                                @input="adjustTextareaHeight"></textarea>
+                        </div>
+                        <button class="send-btn" 
+                                @click="sendMessage"
+                                :disabled="!messageInput.trim() || isLoading">
+                            发送
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 创建Vue应用
+        const app = Vue.createApp({
+            data() {
+                return {
+                    threads: [],
+                    messages: [],
+                    currentThreadId: null,
+                    selectedModel: 'gemini-pro',
+                    messageInput: '',
+                    isLoading: false,
+                    isMobileMenuOpen: false,
+                    models: [
+                        { code: 'gemini-pro', name: 'Gemini Pro' },
+                        { code: 'gpt-4', name: 'GPT-4' }
+                    ]
+                }
+            },
+            methods: {
+                toggleThreadList() {
+                    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+                    if (this.isMobileMenuOpen) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                },
+                startNewChat() {
+                    // 创建新对话的逻辑
+                    console.log('创建新对话');
+                },
+                loadThread(threadId) {
+                    // 加载对话的逻辑
+                    console.log('加载对话:', threadId);
+                },
+                editThreadTitle(thread) {
+                    // 编辑对话标题的逻辑
+                    console.log('编辑对话标题:', thread);
+                },
+                deleteThread(threadId) {
+                    // 删除对话的逻辑
+                    console.log('删除对话:', threadId);
+                },
+                deleteMessage(messageId) {
+                    // 删除消息的逻辑
+                    console.log('删除消息:', messageId);
+                },
+                renderMarkdown(content) {
+                    return marked.parse(content);
+                },
+                handleKeyPress(event) {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        this.sendMessage();
+                    }
+                },
+                adjustTextareaHeight() {
+                    const textarea = this.$refs.messageTextarea;
+                    textarea.style.height = '40px';
+                    const scrollHeight = textarea.scrollHeight;
+                    
+                    if (scrollHeight <= 40 || !this.messageInput.trim()) {
+                        textarea.style.height = '40px';
+                        textarea.style.overflowY = 'hidden';
+                        return;
+                    }
+                    
+                    if (scrollHeight > 120) {
+                        textarea.style.height = '120px';
+                        textarea.style.overflowY = 'auto';
+                    } else {
+                        textarea.style.height = scrollHeight + 'px';
+                        textarea.style.overflowY = 'hidden';
+                    }
+                },
+                sendMessage() {
+                    if (!this.messageInput.trim() || this.isLoading) return;
+                    
+                    // 发送消息的逻辑
+                    console.log('发送消息:', this.messageInput);
+                    
+                    // 添加用户消息到列表
+                    this.messages.push({
+                        role: 0,
+                        content: this.messageInput,
+                        id: Date.now()
+                    });
+                    
+                    // 清空输入框
+                    this.messageInput = '';
+                    this.$nextTick(() => {
+                        this.adjustTextareaHeight();
+                        this.scrollToBottom();
+                    });
+                },
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = this.$refs.messagesContainer;
+                        container.scrollTop = container.scrollHeight;
+                    });
+                }
+            },
+            mounted() {
+                // 初始化时调整输入框高度
+                this.$nextTick(() => {
+                    this.adjustTextareaHeight();
+                });
+                
+                // 监听窗口大小变化
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 768 && this.isMobileMenuOpen) {
+                        this.toggleThreadList();
+                    }
+                });
+            }
+        });
+
+        // 挂载Vue应用
+        app.mount('#app');
+    </script>
+</body>
+</html>
