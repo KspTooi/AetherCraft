@@ -139,7 +139,10 @@ public class ModelRpService {
         RecoverRpChatVo vo = new RecoverRpChatVo();
         vo.setThreadId(thread.getId());
         vo.setModelCode(thread.getModelCode());
-        
+
+        //查询用户角色
+        ModelUserRolePo userRole = thread.getUserRole();
+
         // 5. 获取历史记录
         List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(thread.getId());
         List<RecoverRpChatHistoryVo> messages = new ArrayList<>();
@@ -152,8 +155,12 @@ public class ModelRpService {
             
             // 设置发送者信息
             if (history.getType() == 0) { // 用户消息
-                message.setName(thread.getUserRole().getName());
-                message.setAvatarPath(thread.getUserRole().getAvatarPath());
+                message.setName("user");
+                message.setAvatarPath("");
+                if(userRole != null){
+                    message.setName(thread.getUserRole().getName());
+                    message.setAvatarPath(thread.getUserRole().getAvatarPath());
+                }
             }
 
             // AI消息

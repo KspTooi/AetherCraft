@@ -44,8 +44,7 @@ public enum AIModelEnum {
 
 
 
-
-    //目前暂不会计划支持DeepSeek
+    //目前不会计划支持DeepSeek
 //    DEEPSEEK_CHAT("deepseek-chat", "DeepSeek"),
 //    DEEPSEEK_REASONER("deepseek-reasoner", "DeepSeek-Reasoner(R1)"),
 
