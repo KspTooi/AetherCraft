@@ -12,7 +12,7 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "model_rp_chat_segment")
+@Table(name = "model_rp_segment")
 public class ModelRpSegmentPo {
     
     @Id
