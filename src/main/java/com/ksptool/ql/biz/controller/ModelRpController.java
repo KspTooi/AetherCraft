@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
+import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
@@ -118,6 +119,15 @@ public class ModelRpController {
     public Result<String> removeRpHistory(@RequestBody @Valid RemoveRpHistoryDto dto) throws BizException {
         modelRpService.removeRpHistory(dto);
         return Result.success("已删除消息");
+    }
+
+    /**
+     * 编辑消息历史记录
+     */
+    @PostMapping("/editHistory")
+    public Result<String> editRpHistory(@RequestBody @Valid EditRpHistoryDto dto) throws BizException {
+        modelRpService.editRpHistory(dto);
+        return Result.success("已编辑消息");
     }
 
 } 

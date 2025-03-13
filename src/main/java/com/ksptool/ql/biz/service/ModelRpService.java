@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
+import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 
 @Slf4j
 @Service
@@ -780,5 +781,27 @@ public class ModelRpService {
         
         // 删除消息
         historyRepository.delete(history);
+    }
+
+    /**
+     * 编辑RP对话历史记录
+     * @param dto 编辑RP对话历史记录的请求参数
+     * @throws BizException 业务异常
+     */
+    @Transactional
+    public void editRpHistory(EditRpHistoryDto dto) throws BizException {
+        // 1. 查询历史记录
+        ModelRpHistoryPo history = historyRepository.findById(dto.getHistoryId())
+                .orElseThrow(() -> new BizException("历史记录不存在"));
+
+        // 2. 验证用户权限
+        if (!history.getThread().getUserId().equals(AuthService.getCurrentUserId())) {
+            throw new BizException("无权编辑此消息");
+        }
+
+        // 3. 更新消息内容
+        history.setRawContent(dto.getContent());
+        history.setRpContent(dto.getContent()); // 这里可能需要通过RpHandler处理
+        historyRepository.save(history);
     }
 }
