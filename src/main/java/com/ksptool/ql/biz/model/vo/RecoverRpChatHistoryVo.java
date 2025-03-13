@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
+import java.util.Date;
 
 @Data
 public class RecoverRpChatHistoryVo {
@@ -19,4 +20,7 @@ public class RecoverRpChatHistoryVo {
 
     //消息内容-原始消息(展示给用户看的消息,不含系统Prompt等)
     private String rawContent;
+    
+    //消息创建时间
+    private Date createTime;
 }

@@ -153,6 +153,7 @@ public class ModelRpService {
             message.setId(history.getId());
             message.setType(history.getType());
             message.setRawContent(history.getRawContent());
+            message.setCreateTime(history.getCreateTime());
             
             // 设置发送者信息
             if (history.getType() == 0) { // 用户消息
