@@ -1045,19 +1045,19 @@
                             const userMessageData = response.data.data;
                             
                             // 添加用户消息到列表（使用后端返回的数据）
-                            this.messages.push({
+                    this.messages.push({
                                 role: userMessageData.role,
                                 content: userMessageData.content,
                                 id: userMessageData.historyId,
                                 name: userMessageData.roleName || (this.currentUserRole ? this.currentUserRole.name : '用户'),
                                 avatarPath: userMessageData.roleAvatarPath || (this.currentUserRole ? this.currentUserRole.avatar : null),
-                                createTime: new Date().toISOString(),
-                                isEditing: false,
+                        createTime: new Date().toISOString(),
+                        isEditing: false,
                                 editContent: userMessageData.content
-                            });
-                            
+                    });
+
                             // 滚动到底部
-                            this.scrollToBottom();
+                        this.scrollToBottom();
                             
                             // 创建AI助手的空消息（等待响应）
                             const assistantMessage = {
