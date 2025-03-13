@@ -997,7 +997,7 @@
                 },
                 async sendMessage() {
                     if (!this.messageInput.trim() || this.isLoading) return;
-                    
+
                     // 验证threadId是否存在
                     if (!this.currentThreadId) {
                         showToast("danger", "会话ID不存在，请重新选择角色");
@@ -1006,44 +1006,14 @@
                     
                     // 保存用户输入，以便在出错时恢复
                     const userMessage = this.messageInput.trim();
-                    
-                    // 添加用户消息到列表
-                    this.messages.push({
-                        role: 0,
-                        content: userMessage,
-                        id: Date.now(),
-                        name: this.currentUserRole ? this.currentUserRole.name : '用户',
-                        avatarPath: this.currentUserRole ? this.currentUserRole.avatar : null,
-                        createTime: new Date().toISOString(),
-                        isEditing: false,
-                        editContent: userMessage
-                    });
-                    
-                    // 清空输入框并滚动到底部
+
+                    // 清空输入框
                     this.messageInput = '';
                     await this.$nextTick();
                     this.adjustTextareaHeight();
-                    this.scrollToBottom();
-                    
+
                     // 设置加载状态
                     this.isLoading = true;
-                    
-                    // 创建AI助手的空消息（等待响应）
-                    const assistantMessage = {
-                        role: 1,
-                        content: '正在输入……',  // 初始显示"正在输入……"
-                        id: Date.now() + 1,
-                        name: this.currentRole ? this.currentRole.name : 'AI助手',
-                        avatarPath: this.currentRole ? this.currentRole.avatar : null,
-                        createTime: new Date().toISOString(),
-                        isEditing: false,
-                        editContent: '',
-                        isTyping: true,  // 添加打字状态标记
-                        hasReceivedData: false  // 添加是否已接收数据的标记
-                    };
-                    
-                    // 添加到消息列表
-                    this.messages.push(assistantMessage);
                     
                     try {
                         // 发送消息到后端
@@ -1055,6 +1025,44 @@
                         });
                         
                         if (response.data.code === 0) {
+                            // 获取响应中的用户消息数据
+                            const userMessageData = response.data.data;
+                            
+                            // 添加用户消息到列表（使用后端返回的数据）
+                            this.messages.push({
+                                role: userMessageData.role,
+                                content: userMessageData.content,
+                                id: userMessageData.historyId,
+                                name: userMessageData.roleName || (this.currentUserRole ? this.currentUserRole.name : '用户'),
+                                avatarPath: userMessageData.roleAvatarPath || (this.currentUserRole ? this.currentUserRole.avatar : null),
+                                createTime: new Date().toISOString(),
+                                isEditing: false,
+                                editContent: userMessageData.content
+                            });
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
+                            // 创建AI助手的空消息（等待响应）
+                            const assistantMessage = {
+                                role: 1,
+                                content: '正在输入……',  // 初始显示"正在输入……"
+                                id: Date.now() + 1,
+                                name: this.currentRole ? this.currentRole.name : 'AI助手',
+                                avatarPath: this.currentRole ? this.currentRole.avatar : null,
+                                createTime: new Date().toISOString(),
+                                isEditing: false,
+                                editContent: '',
+                                isTyping: true,  // 添加打字状态标记
+                                hasReceivedData: false  // 添加是否已接收数据的标记
+                            };
+                            
+                            // 添加到消息列表
+                            this.messages.push(assistantMessage);
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
                             // 发送成功，开始轮询获取响应
                             await this.pollAIResponse(assistantMessage);
                         } else {
@@ -1065,6 +1073,9 @@
                             this.isLoading = false;
                             if (this.currentRoleId) {
                                 this.loadRole(this.currentRoleId, true);
+                            } else {
+                                // 如果没有currentRoleId，则恢复用户输入
+                                this.messageInput = userMessage;
                             }
                         }
                     } catch (error) {
