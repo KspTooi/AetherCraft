@@ -4,9 +4,12 @@ import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
+import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
 import com.ksptool.ql.commons.web.Result;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,13 +41,17 @@ public class PanelModelRoleController {
     @Autowired
     private UserFileService userFileService;
 
+    @Autowired
+    private ConfigService configService;
+
     /**
      * 获取模型角色列表视图
      * @param dto 查询参数
      * @return 模型角色列表视图
      */
     @GetMapping("/list")
-    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, Model model) {
+    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, Model model, HttpServletRequest request) {
+        
         // 调用服务获取视图数据
         ListModelRoleVo vo = panelModelRoleService.getListView(dto);
         

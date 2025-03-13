@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.service.ConfigService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,8 +62,16 @@ public class Router {
     @RequirePermission("panel:access")
     @GetMapping("/dashboard")
     public ModelAndView dashboard(HttpServletRequest request) {
+        // 获取重定向参数
+        String redirectView = request.getParameter("redirect");
+        
         ModelAndView mav = new ModelAndView("demo-control-panel");
         mav.addObject("title", "管理台");
+
+        // 如果指定了视图参数，则重定向到指定视图
+        if (StringUtils.isNotBlank(redirectView)) {
+            return new ModelAndView("redirect:" + redirectView);
+        } 
         
         // 获取来源页面的URL并保存到当前用户的配置中
         String referer = request.getHeader("Referer");
