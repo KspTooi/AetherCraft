@@ -253,6 +253,32 @@
         max-width: 100%;
     }
 
+    .empty-state {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        display: block;
+    }
+
+    .empty-state .title {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .empty-state .subtitle {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
     .chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -516,7 +542,14 @@
                     
                     <!-- 聊天消息区域 -->
                     <div class="chat-messages-wrapper">
-                        <div class="chat-messages" ref="messagesContainer">
+                        <!-- 空状态提示 -->
+                        <div v-if="!currentThreadId" class="empty-state">
+                            <i class="bi bi-chat-square-text"></i>
+                            <div class="title">请选择一个角色开始对话</div>
+                            <div class="subtitle">从左侧列表选择一个角色，开始精彩的对话之旅</div>
+                        </div>
+                        
+                        <div v-else class="chat-messages" ref="messagesContainer">
                             <div v-for="(message, index) in messages" 
                                  :key="index"
                                  :class="['message', message.role === 0 ? 'user' : 'assistant']">
