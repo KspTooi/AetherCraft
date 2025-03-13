@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class RemoveHistoryDto {
+public class RemoveRpHistoryDto {
 
     // 消息历史ID
     @NotNull(message = "消息ID不能为空")

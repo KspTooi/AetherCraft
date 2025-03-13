@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
+import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 
 @Slf4j
 @Service
@@ -765,7 +765,7 @@ public class ModelRpService {
      * @throws BizException 如果消息不存在或不属于当前用户
      */
     @Transactional
-    public void removeHistory(RemoveHistoryDto dto) throws BizException {
+    public void removeRpHistory(RemoveRpHistoryDto dto) throws BizException {
         Long currentUserId = AuthService.getCurrentUserId();
         
         // 查询消息记录
