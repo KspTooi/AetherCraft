@@ -174,6 +174,9 @@ public class ModelRpService {
         }
         
         vo.setMessages(messages);
+        messages.forEach(m->{
+            m.setAvatarPath("/res/"+m.getAvatarPath());
+        });
         return vo;
     }
 

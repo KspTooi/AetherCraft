@@ -35,7 +35,7 @@
     }
 
     /* 会话列表区域 */
-    .thread-list {
+    .role-list {
         width: 240px;
         background: rgba(0, 0, 0, 0.2);
         display: flex;
@@ -73,7 +73,7 @@
         transform: translateY(0);
     }
 
-    .thread-items {
+    .role-items {
         flex: 1;
         overflow-y: auto;
         display: flex;
@@ -82,7 +82,7 @@
         border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .thread-item {
+    .role-item {
         padding: 12px 16px;
         cursor: pointer;
         transition: all 0.3s;
@@ -95,7 +95,7 @@
         gap: 12px;
     }
 
-    .thread-item .avatar {
+    .role-item .avatar {
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -107,39 +107,39 @@
         justify-content: center;
     }
 
-    .thread-item .avatar img {
+    .role-item .avatar img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    .thread-item .avatar.no-image {
+    .role-item .avatar.no-image {
         color: rgba(255, 255, 255, 0.6);
         font-size: 18px;
     }
 
-    .thread-item .thread-content {
+    .role-item .role-content {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
     }
 
-    .thread-item .thread-title {
+    .role-item .role-name {
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .thread-item .thread-actions {
+    .role-item .role-actions {
         display: flex;
         align-items: center;
         gap: 4px;
     }
 
-    .thread-item .edit-btn,
-    .thread-item .delete-btn {
+    .role-item .edit-btn,
+    .role-item .delete-btn {
         transition: all 0.3s;
         background: transparent;
         border: none;
@@ -152,36 +152,36 @@
         justify-content: center;
     }
 
-    .thread-item .edit-btn:hover,
-    .thread-item .delete-btn:hover {
+    .role-item .edit-btn:hover,
+    .role-item .delete-btn:hover {
         color: rgba(255, 255, 255, 0.9);
         background: rgba(255, 255, 255, 0.1);
     }
 
-    .thread-item:hover {
+    .role-item:hover {
         background: rgba(255, 255, 255, 0.1);
     }
 
-    .thread-item.active {
+    .role-item.active {
         background: rgba(79, 172, 254, 0.2);
         border-left-color: #4facfe;
     }
 
-    /* 自定义滚动条 - 会话列表 */
-    .thread-items::-webkit-scrollbar {
+    /* 自定义滚动条 - 角色列表 */
+    .role-items::-webkit-scrollbar {
         width: 4px;
     }
 
-    .thread-items::-webkit-scrollbar-track {
+    .role-items::-webkit-scrollbar-track {
         background: transparent;
     }
 
-    .thread-items::-webkit-scrollbar-thumb {
+    .role-items::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
         border-radius: 2px;
     }
 
-    .thread-items::-webkit-scrollbar-thumb:hover {
+    .role-items::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
     }
 
@@ -470,7 +470,7 @@
             font-size: 13px;
         }
         
-        .thread-list {
+        .role-list {
             position: absolute;
             left: -240px;
             top: 0;
@@ -480,7 +480,7 @@
             background: rgba(0, 0, 0, 0.8);
         }
         
-        .thread-list.show {
+        .role-list.show {
             transform: translateX(240px);
         }
         
@@ -510,7 +510,7 @@
             transform: translateX(-20px);
         }
         
-        .thread-list-mask {
+        .role-list-mask {
             display: none;
             position: absolute;
             left: 0;
@@ -521,7 +521,7 @@
             z-index: 99;
         }
         
-        .thread-list-mask.show {
+        .role-list-mask.show {
             display: block;
         }
     }
@@ -534,30 +534,30 @@
         <div th:fragment="content" class="chat-container">
             <div id="app" class="chat-layout">
                 <!-- 移动端菜单按钮 -->
-                <button class="mobile-menu-btn d-md-none" @click="toggleThreadList">
+                <button class="mobile-menu-btn d-md-none" @click="toggleRoleList">
                     <i class="bi bi-chat-left-text"></i>
                 </button>
                 
                 <!-- 遮罩层 -->
-                <div class="thread-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleThreadList"></div>
+                <div class="role-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleRoleList"></div>
                 
-                <!-- 会话列表 -->
-                <div class="thread-list" :class="{ show: isMobileMenuOpen }">
+                <!-- 角色列表 -->
+                <div class="role-list" :class="{ show: isMobileMenuOpen }">
                     <a href="/panel/model/role/list" class="manage-role-btn">
                         <i class="bi bi-gear"></i>
                         管理角色
                     </a>
-                    <div class="thread-items">
-                        <div v-for="thread in threads" 
-                             :key="thread.id"
-                             @click="loadThread(thread.id)"
-                             :class="['thread-item', { active: thread.id === currentThreadId }]">
-                            <div class="avatar" :class="{ 'no-image': !thread.avatar }">
-                                <img v-if="thread.avatar" :src="thread.avatar" :alt="thread.title">
+                    <div class="role-items">
+                        <div v-for="role in roles" 
+                             :key="role.id"
+                             @click="loadRole(role.id)"
+                             :class="['role-item', { active: role.id === currentRoleId }]">
+                            <div class="avatar" :class="{ 'no-image': !role.avatar }">
+                                <img v-if="role.avatar" :src="role.avatar" :alt="role.name">
                                 <i v-else class="bi bi-person"></i>
                             </div>
-                            <div class="thread-content">
-                                <div class="thread-title">{{ thread.title }}</div>
+                            <div class="role-content">
+                                <div class="role-name">{{ role.name }}{{ role.id }}</div>
                             </div>
                         </div>
                     </div>
@@ -578,7 +578,7 @@
                     <!-- 聊天消息区域 -->
                     <div class="chat-messages-wrapper">
                         <!-- 空状态提示 -->
-                        <div v-if="!currentThreadId" class="empty-state">
+                        <div v-if="!currentRoleId" class="empty-state">
                             <i class="bi bi-chat-square-text"></i>
                             <div class="title">请选择一个角色开始对话</div>
                             <div class="subtitle">从左侧列表选择一个角色，开始精彩的对话之旅</div>
@@ -630,9 +630,9 @@
         const app = Vue.createApp({
             data() {
                 return {
-                    threads: [],
+                    roles: [],
                     messages: [],
-                    currentThreadId: null,
+                    currentRoleId: null,
                     selectedModel: '[[${defaultModel}]]',
                     messageInput: '',
                     isLoading: false,
@@ -644,7 +644,7 @@
                 }
             },
             methods: {
-                toggleThreadList() {
+                toggleRoleList() {
                     this.isMobileMenuOpen = !this.isMobileMenuOpen;
                     if (this.isMobileMenuOpen) {
                         document.body.style.overflow = 'hidden';
@@ -652,29 +652,29 @@
                         document.body.style.overflow = '';
                     }
                 },
-                loadThread(threadId) {
+                loadRole(roleId) {
                     // 关闭移动端菜单
                     if (this.isMobileMenuOpen) {
-                        this.toggleThreadList();
+                        this.toggleRoleList();
                     }
                     
-                    // 设置当前选中的对话ID
-                    this.currentThreadId = threadId;
+                    // 设置当前选中的角色ID
+                    this.currentRoleId = roleId;
                     
                     // 清空消息列表
                     this.messages = [];
                     
                     // 调用recoverRpChat接口
                     axios.post('/model/rp/recoverRpChat', {
-                        modelRoleId: threadId,
+                        modelRoleId: roleId,
                         modelCode: this.selectedModel
                     })
                     .then(response => {
                         if (response.data.code === 0) {
                             const data = response.data.data;
                             
-                            // 更新当前对话ID
-                            this.currentThreadId = data.threadId;
+                            // 更新当前角色ID
+                            this.currentRoleId = roleId;
                             
                             // 更新选中的模型
                             if (data.modelCode) {
@@ -687,7 +687,7 @@
                                 role: msg.type, // 0-用户消息，1-AI消息
                                 content: msg.rawContent,
                                 name: msg.name,
-                                avatarPath: msg.avatarPath ? '/res/' + msg.avatarPath : null
+                                avatarPath: msg.avatarPath
                             }));
                             
                             // 滚动到底部
@@ -770,12 +770,13 @@
                         
                         if (response.data.code === 0) {  // 成功状态码是0
                             const pageData = response.data.data;
-                            this.threads = pageData.rows.map(role => ({
+                            this.roles = pageData.rows.map(role => ({
                                 id: role.id,
-                                title: role.name || '未命名对话',
-                                avatar: role.avatarPath || null  // 使用 avatarPath 字段
+                                name: role.name || '未命名角色',
+                                avatar: role.avatarPath ? role.avatarPath : null
                             }));
-                            
+
+
                             // 更新分页信息
                             this.currentPage = pageData.currentPage;
                             this.hasMore = pageData.hasNext;
@@ -802,7 +803,7 @@
                 // 监听窗口大小变化
                 window.addEventListener('resize', () => {
                     if (window.innerWidth > 768 && this.isMobileMenuOpen) {
-                        this.toggleThreadList();
+                        this.toggleRoleList();
                     }
                 });
             }
