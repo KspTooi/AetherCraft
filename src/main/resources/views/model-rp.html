@@ -283,38 +283,43 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 48px 20px 20px;
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 4px;
         min-height: 0;
         width: 100%;
         max-width: 100%;
     }
 
     .message {
-        max-width: 80%;
-        padding: 12px 16px;
-        border-radius: 8px;
+        width: 100%;
+        padding: 8px 16px;
         line-height: 1.5;
-        font-size: 15px;
+        font-size: 14px;
         word-wrap: break-word;
         word-break: break-word;
         overflow-wrap: break-word;
         position: relative;
         box-sizing: border-box;
+        display: flex;
+        gap: 12px;
+        transition: background-color 0.2s;
+    }
+
+    .message:hover {
+        background: rgba(255, 255, 255, 0.05);
     }
 
     .message .message-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 8px;
-        margin-bottom: 8px;
     }
 
     .message .message-header .avatar {
-        width: 24px;
-        height: 24px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.1);
         flex-shrink: 0;
@@ -335,33 +340,65 @@
         font-size: 14px;
     }
 
-    .message .message-header .name {
+    .message .message-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .message .message-content .name {
         font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .message .message-content .name .time {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .message .message-content .text {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+    }
+
+    .message .message-actions {
+        position: absolute;
+        right: 12px;
+        top: 8px;
+        display: none;
+    }
+
+    .message:hover .message-actions {
+        display: flex;
+        gap: 4px;
+    }
+
+    .message .message-delete-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 16px;
+        line-height: 1;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .message .message-delete-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.8);
     }
 
-    .message > span {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        overflow-wrap: break-word;
-        word-break: break-word;
-    }
-
     .message.user {
-        align-self: flex-end;
-        background: rgba(79, 172, 254, 0.3);
-        margin-left: 20%;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        background: transparent;
     }
 
     .message.assistant {
-        align-self: flex-start;
-        background: rgba(255, 255, 255, 0.2);
-        margin-right: 20%;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        background: transparent;
     }
 
     /* 输入区域样式 */
@@ -593,13 +630,22 @@
                                         <img v-if="message.avatarPath" :src="message.avatarPath" :alt="message.name">
                                         <i v-else class="bi bi-person"></i>
                                     </div>
-                                    <div class="name">{{ message.name }}</div>
                                 </div>
-                                <span v-if="message.role === 0">{{ message.content }}</span>
-                                <span v-else v-html="renderMarkdown(message.content)"></span>
-                                <button class="message-delete-btn" 
-                                        @click="deleteMessage(message.id)"
-                                        title="删除消息">×</button>
+                                <div class="message-content">
+                                    <div class="name">
+                                        {{ message.name }}
+                                        <span class="time">{{ formatTime(message.createTime) }}</span>
+                                    </div>
+                                    <div class="text" v-if="message.role === 0">{{ message.content }}</div>
+                                    <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
+                                </div>
+                                <div class="message-actions">
+                                    <button class="message-delete-btn" 
+                                            @click="deleteMessage(message.id)"
+                                            title="删除消息">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -687,7 +733,8 @@
                                 role: msg.type, // 0-用户消息，1-AI消息
                                 content: msg.rawContent,
                                 name: msg.name,
-                                avatarPath: msg.avatarPath
+                                avatarPath: msg.avatarPath,
+                                createTime: msg.createTime
                             }));
                             
                             // 滚动到底部
@@ -745,7 +792,9 @@
                     this.messages.push({
                         role: 0,
                         content: this.messageInput,
-                        id: Date.now()
+                        id: Date.now(),
+                        name: 'user',
+                        createTime: new Date().toISOString()
                     });
 
                     // 清空输入框
@@ -788,6 +837,26 @@
                     } catch (error) {
                         console.error('加载角色列表出错:', error);
                         alert('加载角色列表出错，请检查网络连接');
+                    }
+                },
+                formatTime(timestamp) {
+                    if (!timestamp) return '';
+                    
+                    try {
+                        const date = new Date(timestamp);
+                        if (isNaN(date.getTime())) return '';
+                        
+                        const year = date.getFullYear();
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        const seconds = date.getSeconds().toString().padStart(2, '0');
+                        
+                        return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+                    } catch (e) {
+                        console.error('时间格式化错误:', e);
+                        return '';
                     }
                 }
             },
