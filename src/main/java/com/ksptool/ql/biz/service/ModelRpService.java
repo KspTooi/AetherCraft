@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.service;
 
-import com.ksptool.entities.Entities;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
 import com.ksptool.ql.biz.mapper.ModelRpSegmentRepository;
@@ -37,14 +36,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-
-import static com.ksptool.entities.Entities.assign;
 
 @Slf4j
 @Service
@@ -215,13 +211,13 @@ public class ModelRpService {
     public RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
 
         // 检查该会话是否正在处理中
-        if (rpThreadToContextIdMap.containsKey(dto.getThread())) {
+        if (rpThreadToContextIdMap.containsKey(dto.getThreadId())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
         //获取会话信息
         ModelRpThreadPo query = new ModelRpThreadPo();
-        query.setId(dto.getThread());
+        query.setId(dto.getThreadId());
         query.setUserId(AuthService.getCurrentUserId());
         query.setActive(1); //是否为当前激活的对话 0-存档 1-激活
 
@@ -371,7 +367,7 @@ public class ModelRpService {
      * @throws BizException 业务异常
      */
     public RpSegmentVo rpCompleteQueryBatch(BatchRpCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+        Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
         
         // 最大等待次数和等待时间
@@ -460,7 +456,7 @@ public class ModelRpService {
      * @throws BizException 业务异常
      */
     public void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+        Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
 
         // 检查会话是否存在
@@ -606,7 +602,7 @@ public class ModelRpService {
      */
     @Transactional
     public RpSegmentVo rpCompleteRegenerateBatch(BatchRpCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+        Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
 
         // 检查会话是否存在

@@ -8,7 +8,7 @@ public class BatchRpCompleteDto {
 
     //RP对话ID
     @NotNull
-    private Long thread;
+    private Long threadId;
 
     //模型代码
     private String model;
