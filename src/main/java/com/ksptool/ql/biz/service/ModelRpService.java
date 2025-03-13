@@ -449,7 +449,7 @@ public class ModelRpService {
             if (modelRole != null) {
                 vo.setRoleId(modelRole.getId());
                 vo.setRoleName(modelRole.getName());
-                vo.setRoleAvatarPath(modelRole.getAvatarPath());
+                vo.setRoleAvatarPath("/res/"+modelRole.getAvatarPath());
             }
         }
         
