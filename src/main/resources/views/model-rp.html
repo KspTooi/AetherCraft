@@ -376,7 +376,10 @@
         gap: 4px;
     }
 
-    .message .message-delete-btn {
+    .message .message-delete-btn,
+    .message .message-edit-btn,
+    .message .message-confirm-btn,
+    .message .message-cancel-btn {
         background: transparent;
         border: none;
         color: rgba(255, 255, 255, 0.4);
@@ -388,9 +391,49 @@
         transition: all 0.2s;
     }
 
-    .message .message-delete-btn:hover {
+    .message .message-delete-btn:hover,
+    .message .message-edit-btn:hover,
+    .message .message-confirm-btn:hover,
+    .message .message-cancel-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.8);
+    }
+
+    .message .message-confirm-btn {
+        color: rgba(75, 210, 143, 0.7);
+    }
+
+    .message .message-confirm-btn:hover {
+        color: rgba(75, 210, 143, 1);
+    }
+
+    .message .message-cancel-btn {
+        color: rgba(255, 107, 107, 0.7);
+    }
+
+    .message .message-cancel-btn:hover {
+        color: rgba(255, 107, 107, 1);
+    }
+
+    .message .editable-content {
+        width: 100%;
+        min-height: 60px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none;
+        font-family: inherit;
+        overflow-y: auto;
+    }
+
+    .message .editable-content:focus {
+        outline: none;
+        border-color: rgba(79, 172, 254, 0.5);
+        background: rgba(255, 255, 255, 0.15);
     }
 
     .message.user {
@@ -562,6 +605,27 @@
             display: block;
         }
     }
+
+    .markdown-preview {
+        margin-top: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .preview-title {
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 12px;
+        color: #aaa;
+    }
+    
+    .preview-content {
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        color: #ddd;
+    }
 </style>
 
 <body>
@@ -636,15 +700,41 @@
                                         {{ message.name }}
                                         <span class="time">{{ formatTime(message.createTime) }}</span>
                                     </div>
-                                    <div class="text" v-if="message.role === 0">{{ message.content }}</div>
-                                    <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
+                                    <div v-if="!message.isEditing">
+                                        <div class="text" v-if="message.role === 0">{{ message.content }}</div>
+                                        <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
+                                    </div>
+                                    <div v-else>
+                                        <textarea class="editable-content" 
+                                                  v-model="message.editContent" 
+                                                  ref="editTextarea"></textarea>
+                                    </div>
                                 </div>
                                 <div class="message-actions">
-                                    <button class="message-delete-btn" 
-                                            @click="deleteMessage(message.id)"
-                                            title="删除消息">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <template v-if="!message.isEditing">
+                                        <button class="message-edit-btn" 
+                                                @click="editMessage(message)"
+                                                title="编辑消息">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="message-delete-btn" 
+                                                @click="deleteMessage(message.id)"
+                                                title="删除消息">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </template>
+                                    <template v-else>
+                                        <button class="message-confirm-btn" 
+                                                @click="confirmEdit(message)"
+                                                title="确认编辑">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="message-cancel-btn" 
+                                                @click="cancelEdit(message)"
+                                                title="取消编辑">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -734,7 +824,9 @@
                                 content: msg.rawContent,
                                 name: msg.name,
                                 avatarPath: msg.avatarPath,
-                                createTime: msg.createTime
+                                createTime: msg.createTime,
+                                isEditing: false,
+                                editContent: msg.rawContent
                             }));
                             
                             // 滚动到底部
@@ -777,6 +869,7 @@
                     });
                 },
                 renderMarkdown(content) {
+                    if (!content) return '';
                     return marked.parse(content);
                 },
                 handleKeyPress(event) {
@@ -816,7 +909,9 @@
                         content: this.messageInput,
                         id: Date.now(),
                         name: 'user',
-                        createTime: new Date().toISOString()
+                        createTime: new Date().toISOString(),
+                        isEditing: false,
+                        editContent: this.messageInput
                     });
 
                     // 清空输入框
@@ -880,7 +975,99 @@
                         console.error('时间格式化错误:', e);
                         return '';
                     }
-                }
+                },
+                editMessage(message) {
+                    message.isEditing = true;
+                    message.editContent = message.content;
+                    this.$nextTick(() => {
+                        if (this.$refs.editTextarea && this.$refs.editTextarea.length > 0) {
+                            const textarea = this.$refs.editTextarea[0];
+                            textarea.focus();
+                            // 动态调整编辑框高度
+                            this.adjustEditTextareaHeight(textarea, message);
+                            
+                            // 检查是否是最后一条消息，如果是则滚动到底部
+                            const lastMessage = this.messages[this.messages.length - 1];
+                            if (lastMessage && lastMessage.id === message.id) {
+                                this.scrollToBottom();
+                            }
+                        }
+                    });
+                },
+                confirmEdit(message) {
+                    if (!message.editContent || message.editContent.trim() === '') {
+                        this.$message.error('消息内容不能为空');
+                        return;
+                    }
+                    
+                    if (message.content === message.editContent) {
+                        message.isEditing = false;
+                        return;
+                    }
+                    
+                    // 更新消息内容
+                    message.content = message.editContent;
+                    message.isEditing = false;
+                    
+                    // 后端API尚未实现，暂时只更新本地消息
+                    // 如果后端API已实现，可以取消下面的注释
+                    /*
+                    axios.post('/api/model-rp/updateHistory', {
+                        historyId: message.id,
+                        content: message.editContent
+                    }).then(response => {
+                        if (response.data.code === 0) {
+                            message.content = message.editContent;
+                            message.isEditing = false;
+                            this.$message.success('更新成功');
+                        } else {
+                            this.$message.error(response.data.msg || '更新失败');
+                        }
+                    }).catch(error => {
+                        console.error('更新消息失败:', error);
+                        this.$message.error('更新失败，请稍后重试');
+                    });
+                    */
+                },
+                cancelEdit(message) {
+                    // 取消编辑，恢复原始内容
+                    message.editContent = message.content;
+                    message.isEditing = false;
+                },
+                adjustEditTextareaHeight(textarea, message) {
+                    // 创建一个临时元素来计算原始内容的高度
+                    const tempDiv = document.createElement('div');
+                    tempDiv.className = 'text';
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.visibility = 'hidden';
+                    tempDiv.style.width = textarea.offsetWidth + 'px';
+                    tempDiv.style.fontSize = '14px';
+                    tempDiv.style.lineHeight = '1.5';
+                    tempDiv.style.padding = '8px';
+                    
+                    // 根据消息类型设置内容
+                    if (message.role === 0) {
+                        tempDiv.textContent = message.content;
+                    } else {
+                        tempDiv.innerHTML = this.renderMarkdown(message.content);
+                    }
+                    
+                    document.body.appendChild(tempDiv);
+                    
+                    // 获取内容高度并设置编辑框高度
+                    const contentHeight = tempDiv.offsetHeight;
+                    const minHeight = 60; // 最小高度
+                    const maxHeight = 300; // 最大高度
+                    
+                    // 设置高度，但限制最大高度
+                    textarea.style.height = Math.min(Math.max(contentHeight, minHeight), maxHeight) + 'px';
+                    
+                    // 移除临时元素
+                    document.body.removeChild(tempDiv);
+                },
+                adjustEditingTextarea(event, message) {
+                    // 移除此方法，不再动态调整高度
+                },
             },
             mounted() {
                 // 初始化时调整输入框高度
