@@ -392,6 +392,36 @@
         line-height: 1.5;
     }
 
+    /* 打字指示器样式 */
+    .typing-indicator {
+        color: rgba(255, 255, 255, 0.7);
+        font-style: italic;
+    }
+    
+    .typing-dots span {
+        opacity: 0;
+        animation: typingDot 1.4s infinite;
+        display: inline-block;
+    }
+    
+    .typing-dots span:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .typing-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typingDot {
+        0% { opacity: 0; }
+        20% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+
     .message .message-actions {
         position: absolute;
         right: 12px;
@@ -756,6 +786,10 @@
                                     </div>
                                     <div v-if="!message.isEditing">
                                         <div class="text" v-if="message.role === 0">{{ message.content }}</div>
+                                        <div v-else-if="message.isTyping" class="text typing-indicator">
+                                            <span>{{ message.content }}</span>
+                                            <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+                                        </div>
                                         <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
                                     </div>
                                     <div v-else>
@@ -837,6 +871,8 @@
                     pageSize: 2000,
                     isEditing: false,  // 添加编辑状态标记
                     loadingRoleId: null,  // 添加加载状态标记
+                    currentRole: null,  // 当前选中的AI角色
+                    currentUserRole: null  // 当前用户角色
                 }
             },
             methods: {
@@ -867,6 +903,9 @@
                     
                     // 设置加载状态
                     this.loadingRoleId = roleId;
+                    
+                    // 从角色列表中获取当前选中的角色信息
+                    this.currentRole = this.roles.find(role => role.id === roleId) || null;
                     
                     // 调用recoverRpChat接口
                     axios.post('/model/rp/recoverRpChat', {
@@ -1019,13 +1058,15 @@
                     const assistantMessageIndex = this.messages.length;
                     this.messages.push({
                         role: 1,
-                        content: '',
+                        content: '正在输入……',  // 初始显示"正在输入……"
                         id: Date.now() + 1,
                         name: this.currentRole ? this.currentRole.name : 'AI助手',
                         avatarPath: this.currentRole ? this.currentRole.avatar : null,
                         createTime: new Date().toISOString(),
                         isEditing: false,
-                        editContent: ''
+                        editContent: '',
+                        isTyping: true,  // 添加打字状态标记
+                        hasReceivedData: false  // 添加是否已接收数据的标记
                     });
                     
                     // 发送消息到后端
@@ -1088,20 +1129,30 @@
                                     // 开始片段，不做特殊处理
                                 } else if (segment.type === 1) {
                                     // 数据片段，追加内容
+                                    // 如果是第一个数据片段，清除"正在输入……"文本
+                                    if (!this.messages[assistantMessageIndex].hasReceivedData) {
+                                        this.messages[assistantMessageIndex].content = '';
+                                        this.messages[assistantMessageIndex].hasReceivedData = true;
+                                        this.messages[assistantMessageIndex].isTyping = false;
+                                    }
                                     this.messages[assistantMessageIndex].content += segment.content;
                                     this.scrollToBottom();
                                 } else if (segment.type === 2) {
                                     // 结束片段，完成响应
+                                    // 如果是第一个数据片段，清除"正在输入……"文本
+                                    if (!this.messages[assistantMessageIndex].hasReceivedData) {
+                                        this.messages[assistantMessageIndex].content = '';
+                                        this.messages[assistantMessageIndex].hasReceivedData = true;
+                                        this.messages[assistantMessageIndex].isTyping = false;
+                                    }
+                                    
                                     if (segment.content) {
                                         this.messages[assistantMessageIndex].content += segment.content;
                                     }
                                     
-                                    // 更新消息的角色信息
-                                    if (segment.roleName) {
-                                        this.messages[assistantMessageIndex].name = segment.roleName;
-                                    }
-                                    if (segment.roleAvatarPath) {
-                                        this.messages[assistantMessageIndex].avatarPath = segment.roleAvatarPath;
+                                    // 更新historyId
+                                    if (segment.historyId) {
+                                        this.messages[assistantMessageIndex].id = segment.historyId;
                                     }
                                     
                                     // 渲染Markdown并结束轮询
@@ -1131,12 +1182,24 @@
                             } else {
                                 // API返回错误
                                 showToast("danger", response.data.msg || '获取AI响应失败');
+                                
+                                // 如果AI消息还在"正在输入"状态，则移除它
+                                if (this.messages[assistantMessageIndex] && this.messages[assistantMessageIndex].isTyping) {
+                                    this.messages.splice(assistantMessageIndex, 1);
+                                }
+                                
                                 this.isLoading = false;
                                 clearInterval(pollInterval);
                             }
                         }).catch(error => {
                             console.error('轮询AI响应错误:', error);
                             showToast("danger", '获取AI响应失败: ' + (error.response?.data?.msg || error.message));
+                            
+                            // 如果AI消息还在"正在输入"状态，则移除它
+                            if (this.messages[assistantMessageIndex] && this.messages[assistantMessageIndex].isTyping) {
+                                this.messages.splice(assistantMessageIndex, 1);
+                            }
+                            
                             this.isLoading = false;
                             clearInterval(pollInterval);
                         });
@@ -1153,12 +1216,22 @@
                         return;
                     }
                     
+                    // 保存当前正在生成的AI消息的索引
+                    const currentAIMessageIndex = this.messages.findIndex(msg => msg.isTyping);
+                    
                     axios.post('/model/rp/rpCompleteBatch', {
                         threadId: this.currentThreadId,
                         queryKind: 2 // 2:终止AI响应
                     }).then(response => {
                         if (response.data.code === 0) {
                             showToast("success", '已终止AI响应');
+                            
+                            // 如果找到了正在生成的AI消息，则删除它
+                            if (currentAIMessageIndex !== -1) {
+                                this.messages.splice(currentAIMessageIndex, 1);
+                            }
+                            
+                            this.isLoading = false;
                         } else {
                             showToast("danger", response.data.msg || '终止AI响应失败');
                         }
@@ -1187,6 +1260,12 @@
                                 name: role.name || '未命名角色',
                                 avatar: role.avatarPath ? role.avatarPath : null
                             }));
+                            
+                            // 设置默认用户角色
+                            this.currentUserRole = {
+                                name: '用户',
+                                avatar: null
+                            };
                         } else {
                             console.error('加载角色列表失败:', response.data.message);
                             alert('加载角色列表失败: ' + response.data.message);
