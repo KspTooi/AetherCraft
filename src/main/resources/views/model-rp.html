@@ -21,6 +21,15 @@
         padding: 0 !important; /* 移除内边距 */
     }
     
+    /* 添加消息悬浮效果 */
+    .message-hover-effect {
+        transition: background-color 0.5s ease !important;
+    }
+    
+    .message-hover-effect:not(.editing):hover {
+        background-color: rgba(0, 0, 0, 0.15) !important;
+    }
+    
     .glass-box {
         border-radius: 0 !important;
         padding: 0 !important;
@@ -304,11 +313,9 @@
         box-sizing: border-box;
         display: flex;
         gap: 12px;
-        transition: background-color 0.2s;
-    }
-
-    .message:hover {
-        background: rgba(255, 255, 255, 0.05);
+        transition: background-color 0.5s ease;
+        border-radius: 6px;
+        background-color: transparent;
     }
 
     .message .message-header {
@@ -397,6 +404,12 @@
     .message .message-cancel-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.8);
+    }
+
+    .message .message-confirm-btn:disabled,
+    .message .message-cancel-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .message .message-confirm-btn {
@@ -688,7 +701,7 @@
                         <div v-else class="chat-messages" ref="messagesContainer">
                             <div v-for="(message, index) in messages" 
                                  :key="index"
-                                 :class="['message', message.role === 0 ? 'user' : 'assistant']">
+                                 :class="['message', 'message-hover-effect', message.role === 0 ? 'user' : 'assistant', { 'editing': message.isEditing }]">
                                 <div class="message-header">
                                     <div class="avatar" :class="{ 'no-image': !message.avatarPath }">
                                         <img v-if="message.avatarPath" :src="message.avatarPath" :alt="message.name">
@@ -726,11 +739,13 @@
                                     <template v-else>
                                         <button class="message-confirm-btn" 
                                                 @click="confirmEdit(message)"
+                                                :disabled="isEditing"
                                                 title="确认编辑">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
                                         <button class="message-cancel-btn" 
                                                 @click="cancelEdit(message)"
+                                                :disabled="isEditing"
                                                 title="取消编辑">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
@@ -776,7 +791,8 @@
                     currentPage: 1,
                     pageSize: 2000,
                     hasMore: false,
-                    totalCount: 0
+                    totalCount: 0,
+                    isEditing: false  // 添加编辑状态标记
                 }
             },
             methods: {
@@ -996,7 +1012,7 @@
                 },
                 confirmEdit(message) {
                     if (!message.editContent || message.editContent.trim() === '') {
-                        this.$message.error('消息内容不能为空');
+                        alert('消息内容不能为空');
                         return;
                     }
                     
@@ -1005,29 +1021,30 @@
                         return;
                     }
                     
-                    // 更新消息内容
-                    message.content = message.editContent;
-                    message.isEditing = false;
+                    // 设置编辑中状态
+                    this.isEditing = true;
                     
-                    // 后端API尚未实现，暂时只更新本地消息
-                    // 如果后端API已实现，可以取消下面的注释
-                    /*
-                    axios.post('/api/model-rp/updateHistory', {
+                    // 调用后端API保存编辑后的消息
+                    axios.post('/model/rp/editHistory', {
                         historyId: message.id,
                         content: message.editContent
                     }).then(response => {
                         if (response.data.code === 0) {
+                            // 更新本地消息内容
                             message.content = message.editContent;
                             message.isEditing = false;
-                            this.$message.success('更新成功');
+                            console.log('消息编辑成功');
                         } else {
-                            this.$message.error(response.data.msg || '更新失败');
+                            alert(response.data.message || '更新失败');
+                            console.error('更新消息失败:', response.data);
                         }
                     }).catch(error => {
                         console.error('更新消息失败:', error);
-                        this.$message.error('更新失败，请稍后重试');
+                        alert('更新失败，请稍后重试');
+                    }).finally(() => {
+                        // 无论成功失败，都重置编辑状态
+                        this.isEditing = false;
                     });
-                    */
                 },
                 cancelEdit(message) {
                     // 取消编辑，恢复原始内容
