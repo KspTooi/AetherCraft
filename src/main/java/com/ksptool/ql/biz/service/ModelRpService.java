@@ -309,7 +309,6 @@ public class ModelRpService {
             modelChatParam.setModelCode(dto.getModel());
             modelChatParam.setSystemPrompt(finalPrompt);
 
-            
             // 获取历史记录并转换为ModelChatParamHistory
             List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(thread.getId());
             List<ModelChatParamHistory> paramHistories = new ArrayList<>();
@@ -329,6 +328,10 @@ public class ModelRpService {
                     modelChatParam,
                     onModelRpMessageRcv(thread, thread.getUserId())
             );
+
+            //将新模型选项保存到Thread
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
 
             // 返回用户消息作为第一次响应
             RpSegmentVo vo = new RpSegmentVo();
@@ -724,6 +727,10 @@ public class ModelRpService {
                     modelChatParam,
                     onModelRpMessageRcv(thread, userId)
             );
+
+            //将新模型选项保存到Thread
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
 
             // 返回开始片段
             RpSegmentVo vo = new RpSegmentVo();
