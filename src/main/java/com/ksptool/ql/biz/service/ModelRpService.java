@@ -652,7 +652,7 @@ public class ModelRpService {
         messageToRegenerate = lastHistory.getRawContent();
 
         // 获取并验证模型配置
-        AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
         if (modelEnum == null) {
             throw new BizException("无效的模型代码");
         }
@@ -708,7 +708,7 @@ public class ModelRpService {
             modelChatParam.setMessage(messageToRegenerate);
             modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
-            modelChatParam.setModelCode(thread.getModelCode());
+            modelChatParam.setModelCode(modelEnum.getCode());
             modelChatParam.setSystemPrompt(finalPrompt);
 
             // 转换历史记录为ModelChatParamHistory
@@ -727,10 +727,6 @@ public class ModelRpService {
                     modelChatParam,
                     onModelRpMessageRcv(thread, userId)
             );
-
-            //将新模型选项保存到Thread
-            thread.setModelCode(modelEnum.getCode());
-            threadRepository.save(thread);
 
             // 返回开始片段
             RpSegmentVo vo = new RpSegmentVo();
