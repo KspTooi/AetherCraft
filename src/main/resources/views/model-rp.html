@@ -98,7 +98,6 @@
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-right: 8px;
     }
 
     .thread-item .thread-actions {
@@ -461,15 +460,6 @@
                              @click="loadThread(thread.id)"
                              :class="['thread-item', { active: thread.id === currentThreadId }]">
                             <div class="thread-title">{{ thread.title }}</div>
-                            <div class="thread-actions">
-                                <button class="edit-btn" 
-                                        @click.stop="editThreadTitle(thread)">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="delete-btn" @click.stop="deleteThread(thread.id)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -538,7 +528,11 @@
                     models: [
                         { code: 'gemini-pro', name: 'Gemini Pro' },
                         { code: 'gpt-4', name: 'GPT-4' }
-                    ]
+                    ],
+                    currentPage: 1,
+                    pageSize: 2000,
+                    hasMore: false,
+                    totalCount: 0
                 }
             },
             methods: {
@@ -558,14 +552,6 @@
                     // 加载对话的逻辑
                     console.log('加载对话:', threadId);
                 },
-                editThreadTitle(thread) {
-                    // 编辑对话标题的逻辑
-                    console.log('编辑对话标题:', thread);
-                },
-                deleteThread(threadId) {
-                    // 删除对话的逻辑
-                    console.log('删除对话:', threadId);
-                },
                 deleteMessage(messageId) {
                     // 删除消息的逻辑
                     console.log('删除消息:', messageId);
@@ -583,13 +569,13 @@
                     const textarea = this.$refs.messageTextarea;
                     textarea.style.height = '40px';
                     const scrollHeight = textarea.scrollHeight;
-                    
+
                     if (scrollHeight <= 40 || !this.messageInput.trim()) {
                         textarea.style.height = '40px';
                         textarea.style.overflowY = 'hidden';
                         return;
                     }
-                    
+
                     if (scrollHeight > 120) {
                         textarea.style.height = '120px';
                         textarea.style.overflowY = 'auto';
@@ -600,17 +586,17 @@
                 },
                 sendMessage() {
                     if (!this.messageInput.trim() || this.isLoading) return;
-                    
+
                     // 发送消息的逻辑
                     console.log('发送消息:', this.messageInput);
-                    
+
                     // 添加用户消息到列表
                     this.messages.push({
                         role: 0,
                         content: this.messageInput,
                         id: Date.now()
                     });
-                    
+
                     // 清空输入框
                     this.messageInput = '';
                     this.$nextTick(() => {
@@ -623,6 +609,35 @@
                         const container = this.$refs.messagesContainer;
                         container.scrollTop = container.scrollHeight;
                     });
+                },
+                async loadRoleList() {
+                    try {
+                        const response = await axios.post('/model/rp/getRoleList', {
+                            currentPage: this.currentPage,
+                            pageSize: this.pageSize
+                        });
+                        
+                        if (response.data.code === 0) {  // 成功状态码是0
+                            const pageData = response.data.data;
+                            this.threads = pageData.rows.map(role => ({
+                                id: role.id,
+                                title: role.name || '未命名对话',
+                                active: role.active
+                            }));
+                            
+                            // 更新分页信息
+                            this.currentPage = pageData.currentPage;
+                            this.hasMore = pageData.hasNext;
+                            this.totalCount = pageData.count;
+                        } else {
+                            console.error('加载角色列表失败:', response.data.message);
+                            // 可以添加一个提示
+                            alert('加载角色列表失败: ' + response.data.message);
+                        }
+                    } catch (error) {
+                        console.error('加载角色列表出错:', error);
+                        alert('加载角色列表出错，请检查网络连接');
+                    }
                 }
             },
             mounted() {
@@ -630,7 +645,10 @@
                 this.$nextTick(() => {
                     this.adjustTextareaHeight();
                 });
-                
+
+                // 加载角色列表
+                this.loadRoleList();
+
                 // 监听窗口大小变化
                 window.addEventListener('resize', () => {
                     if (window.innerWidth > 768 && this.isMobileMenuOpen) {
