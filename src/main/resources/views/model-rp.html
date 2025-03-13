@@ -407,7 +407,8 @@
     .message .message-delete-btn,
     .message .message-edit-btn,
     .message .message-confirm-btn,
-    .message .message-cancel-btn {
+    .message .message-cancel-btn,
+    .message .message-regenerate-btn {
         background: transparent;
         border: none;
         color: rgba(255, 255, 255, 0.4);
@@ -422,7 +423,8 @@
     .message .message-delete-btn:hover,
     .message .message-edit-btn:hover,
     .message .message-confirm-btn:hover,
-    .message .message-cancel-btn:hover {
+    .message .message-cancel-btn:hover,
+    .message .message-regenerate-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.8);
     }
@@ -447,6 +449,14 @@
 
     .message .message-cancel-btn:hover {
         color: rgba(255, 107, 107, 1);
+    }
+
+    .message .message-regenerate-btn {
+        color: rgba(79, 172, 254, 0.7);
+    }
+
+    .message .message-regenerate-btn:hover {
+        color: rgba(79, 172, 254, 1);
     }
 
     .message .editable-content {
@@ -766,6 +776,12 @@
                                 </div>
                                 <div class="message-actions">
                                     <template v-if="!message.isEditing">
+                                        <button v-if="index === messages.length - 1" 
+                                                class="message-regenerate-btn" 
+                                                @click="regenerateAIResponse(message)"
+                                                title="重新生成">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
                                         <button class="message-edit-btn" 
                                                 @click="editMessage(message)"
                                                 title="编辑消息">
@@ -1372,6 +1388,72 @@
                     
                     // 移除临时元素
                     document.body.removeChild(tempDiv);
+                },
+                // 重新生成AI响应
+                async regenerateAIResponse(message) {
+                    if (this.isLoading) return;
+                    
+                    // 验证threadId是否存在
+                    if (!this.currentThreadId) {
+                        showToast("danger", "会话ID不存在，无法重新生成");
+                        return;
+                    }
+                    
+                    // 设置加载状态
+                    this.isLoading = true;
+                    
+                    try {
+                        // 发送重新生成请求
+                        const response = await axios.post('/model/rp/rpCompleteBatch', {
+                            threadId: this.currentThreadId,
+                            model: this.selectedModel,
+                            queryKind: 3 // 3:重新生成最后一条AI消息
+                        });
+                        
+                        if (response.data.code === 0) {
+                            // 如果当前消息是用户消息，需要创建一个新的AI消息
+                            if (message.role === 0) {
+                                // 创建AI助手的空消息（等待响应）
+                                const assistantMessage = {
+                                    role: 1,
+                                    content: '正在输入(RE)...',  // 初始显示"正在生成..."
+                                    id: Date.now() + 1,
+                                    name: this.currentRole ? this.currentRole.name : 'AI助手',
+                                    avatarPath: this.currentRole ? this.currentRole.avatar : null,
+                                    createTime: new Date().toISOString(),
+                                    isEditing: false,
+                                    editContent: '',
+                                    isTyping: true,  // 添加打字状态标记
+                                    hasReceivedData: false  // 添加是否已接收数据的标记
+                                };
+                                
+                                // 添加到消息列表
+                                this.messages.push(assistantMessage);
+                                
+                                // 滚动到底部
+                                this.scrollToBottom();
+                                
+                                // 开始轮询获取新的响应
+                                await this.pollAIResponse(assistantMessage);
+                            } else {
+                                // 更新消息内容为"正在重新生成..."
+                                message.content = '正在输入(RE)...';
+                                message.hasReceivedData = false;
+                                message.isTyping = true;
+                                
+                                // 开始轮询获取新的响应
+                                await this.pollAIResponse(message);
+                            }
+                        } else {
+                            // 重新生成失败，显示错误信息
+                            showToast("danger", response.data.msg || '重新生成失败');
+                            this.isLoading = false;
+                        }
+                    } catch (error) {
+                        console.error('重新生成错误:', error);
+                        showToast("danger", '重新生成失败: ' + (error.response?.data?.msg || error.message));
+                        this.isLoading = false;
+                    }
                 },
             },
             mounted() {
