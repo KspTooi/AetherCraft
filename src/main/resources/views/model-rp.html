@@ -21,6 +21,31 @@
         padding: 0 !important; /* 移除内边距 */
     }
     
+    /* 添加消息淡入动画效果 */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease forwards;
+    }
+    
+    .messages-container-fade-in {
+        opacity: 0;
+        animation: fadeIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+    }
+    
+    /* 角色头像加载动画 - 简化版 */
+    .avatar-loading {
+        filter: grayscale(100%);
+    }
+    
+    .avatar-loading-fade-out {
+        filter: grayscale(0%);
+        transition: filter 0.5s ease;
+    }
+    
     /* 添加消息悬浮效果 */
     .message-hover-effect {
         transition: background-color 0.5s ease !important;
@@ -665,8 +690,9 @@
                         <div v-for="role in roles" 
                              :key="role.id"
                              @click="loadRole(role.id)"
-                             :class="['role-item', { active: role.id === currentRoleId }]">
-                            <div class="avatar" :class="{ 'no-image': !role.avatar }">
+                             :class="['role-item', { active: role.id === currentRoleId }]"
+                             :data-role-id="role.id">
+                            <div class="avatar" :class="{ 'no-image': !role.avatar, 'avatar-loading': loadingRoleId === role.id }">
                                 <img v-if="role.avatar" :src="role.avatar" :alt="role.name">
                                 <i v-else class="bi bi-person"></i>
                             </div>
@@ -698,7 +724,7 @@
                             <div class="subtitle">从左侧列表选择一个角色，开始精彩的对话之旅</div>
                         </div>
                         
-                        <div v-else class="chat-messages" ref="messagesContainer">
+                        <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer">
                             <div v-for="(message, index) in messages" 
                                  :key="index"
                                  :class="['message', 'message-hover-effect', message.role === 0 ? 'user' : 'assistant', { 'editing': message.isEditing }]">
@@ -792,7 +818,8 @@
                     pageSize: 2000,
                     hasMore: false,
                     totalCount: 0,
-                    isEditing: false  // 添加编辑状态标记
+                    isEditing: false,  // 添加编辑状态标记
+                    loadingRoleId: null  // 添加加载状态标记
                 }
             },
             methods: {
@@ -815,6 +842,19 @@
                     
                     // 清空消息列表
                     this.messages = [];
+                    
+                    // 设置加载状态
+                    this.loadingRoleId = roleId;
+                    
+                    // 重置消息容器的动画效果
+                    this.$nextTick(() => {
+                        const messagesContainer = this.$refs.messagesContainer;
+                        if (messagesContainer) {
+                            messagesContainer.classList.remove('messages-container-fade-in');
+                            void messagesContainer.offsetWidth; // 触发重绘
+                            messagesContainer.classList.add('messages-container-fade-in');
+                        }
+                    });
                     
                     // 调用recoverRpChat接口
                     axios.post('/model/rp/recoverRpChat', {
@@ -845,17 +885,38 @@
                                 editContent: msg.rawContent
                             }));
                             
-                            // 滚动到底部
+                            // 滚动到底部并确保动画效果
                             this.$nextTick(() => {
+                                // 确保消息容器有动画效果
+                                const messagesContainer = this.$refs.messagesContainer;
+                                if (messagesContainer) {
+                                    messagesContainer.classList.remove('messages-container-fade-in');
+                                    void messagesContainer.offsetWidth; // 触发重绘
+                                    messagesContainer.classList.add('messages-container-fade-in');
+                                }
+                                
                                 this.scrollToBottom();
+                                
+                                // 添加淡出动画，然后移除加载状态
+                                setTimeout(() => {
+                                    // 找到当前加载的角色元素并添加淡出效果
+                                    const roleAvatar = document.querySelector(`.role-item[data-role-id="${roleId}"] .avatar`);
+                                    if (roleAvatar) {
+                                        roleAvatar.classList.add('avatar-loading-fade-out');
+                                    }
+                                    // 移除加载状态
+                                    this.loadingRoleId = null;
+                                }, 500);
                             });
                         } else {
                             alert('加载对话失败: ' + response.data.message);
+                            this.loadingRoleId = null;
                         }
                     })
                     .catch(error => {
                         console.error('加载对话出错:', error);
                         alert('加载对话出错，请检查网络连接');
+                        this.loadingRoleId = null;
                     });
                 },
                 deleteMessage(messageId) {
