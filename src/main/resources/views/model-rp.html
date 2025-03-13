@@ -112,6 +112,42 @@
         border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    /* 角色列表为空时的提示样式 */
+    .empty-role-tip {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 20px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-role-tip i {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .empty-role-tip .tip-text {
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+
+    .create-role-btn {
+        padding: 8px 16px;
+        background: rgba(79, 172, 254, 0.3);
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .create-role-btn:hover {
+        background: rgba(79, 172, 254, 0.5);
+        transform: translateY(-2px);
+    }
+
     .role-item {
         padding: 12px 16px;
         cursor: pointer;
@@ -712,6 +748,14 @@
                         管理角色
                     </a>
                     <div class="role-items">
+                        <!-- 角色列表为空时的提示 -->
+                        <div v-if="roles.length === 0" class="empty-role-tip">
+                            <i class="bi bi-person-plus"></i>
+                            <div class="tip-text">您还没有创建角色</div>
+                            <a href="/panel/model/role/list" class="create-role-btn">
+                                创建角色
+                            </a>
+                        </div>
                         <div v-for="role in roles" 
                              :key="role.id"
                              @click="loadRole(role.id)"
