@@ -51,7 +51,7 @@ public class PanelModelRoleController {
      */
     @GetMapping("/list")
     public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, Model model, HttpServletRequest request) {
-        
+
         // 调用服务获取视图数据
         ListModelRoleVo vo = panelModelRoleService.getListView(dto);
         

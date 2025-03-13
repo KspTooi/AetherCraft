@@ -4,6 +4,7 @@
     <title>模型角色管理 - Quick Launcher</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/commons/popper.min.js"></script>
     <style>
         .role-item {
             cursor: pointer;
@@ -293,9 +294,15 @@
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="mb-3">
-                                                        <label for="roleDescription" class="form-label small">角色描述</label>
+                                                        <label for="roleDescription" class="form-label small">
+                                                            角色描述
+                                                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                                  title="角色描述是AI角色扮演的关键指引，会被嵌入每次对话的提示中。需简明概述角色的姓名、年龄、职业、背景故事，性格思维、情感表达、价值观与行为特点，知识技能范围，独特的语言习惯与语气，以及回应问题的规则、限制和禁忌。描述形式不限，建议500-3000字，细节越丰富，AI表现越生动。">
+                                                                <i class="bi bi-info-circle-fill text-primary" style="font-size: 0.8rem;"></i>
+                                                            </span>
+                                                        </label>
                                                         <textarea class="form-control" id="roleDescription" name="description" 
-                                                                  rows="3" placeholder="请输入角色描述" th:text="${data.description}"></textarea>
+                                                                  rows="5" placeholder="描述角色的背景、性格、知识、能力和限制等" th:text="${data.description}"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -307,23 +314,41 @@
                                             <div class="row g-3">
                                                 <div class="col-md-12">
                                                     <div class="mb-3">
-                                                        <label for="roleSummary" class="form-label small">角色设定摘要</label>
+                                                        <label for="roleSummary" class="form-label small">
+                                                            角色设定摘要
+                                                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                                  title="简要概括角色的核心特点和设定，作为角色描述的浓缩版本。">
+                                                                <i class="bi bi-info-circle-fill text-primary" style="font-size: 0.8rem;"></i>
+                                                            </span>
+                                                        </label>
                                                         <textarea class="form-control" id="roleSummary" name="roleSummary" 
-                                                                  rows="2" placeholder="简要描述角色的设定和特点" th:text="${data.roleSummary}"></textarea>
+                                                                  rows="2" placeholder="简要描述角色的核心特点和设定" th:text="${data.roleSummary}"></textarea>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="mb-3">
-                                                        <label for="roleScenario" class="form-label small">情景</label>
+                                                        <label for="roleScenario" class="form-label small">
+                                                            情景
+                                                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                                  title="描述角色所处的具体场景或环境，有助于创建更加真实的对话体验。">
+                                                                <i class="bi bi-info-circle-fill text-primary" style="font-size: 0.8rem;"></i>
+                                                            </span>
+                                                        </label>
                                                         <textarea class="form-control" id="roleScenario" name="scenario" 
-                                                                  rows="3" placeholder="描述角色所处的情景和背景" th:text="${data.scenario}"></textarea>
+                                                                  rows="3" placeholder="描述角色所处的具体场景或环境" th:text="${data.scenario}"></textarea>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="mb-3">
-                                                        <label for="firstMessage" class="form-label small">首次对话内容</label>
+                                                        <label for="firstMessage" class="form-label small">
+                                                            首次对话内容
+                                                            <span class="ms-1" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                                                  title="角色在对话开始时的第一句话，应体现角色的语言风格和个性特点。">
+                                                                <i class="bi bi-info-circle-fill text-primary" style="font-size: 0.8rem;"></i>
+                                                            </span>
+                                                        </label>
                                                         <textarea class="form-control" id="firstMessage" name="firstMessage" 
-                                                                  rows="3" placeholder="角色首次对话时的内容" th:text="${data.firstMessage}"></textarea>
+                                                                  rows="3" placeholder="角色在对话开始时的第一句话" th:text="${data.firstMessage}"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -365,6 +390,12 @@
     <script>
         // 最小化的JavaScript代码，仅处理必要的客户端交互
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化所有tooltip
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
             // 表单验证
             const forms = document.querySelectorAll('.needs-validation');
             Array.from(forms).forEach(form => {
