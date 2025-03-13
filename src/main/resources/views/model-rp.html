@@ -27,10 +27,6 @@
         to { opacity: 1; }
     }
     
-    .fade-in {
-        animation: fadeIn 0.5s ease forwards;
-    }
-    
     .messages-container-fade-in {
         opacity: 0;
         animation: fadeIn 0.6s ease forwards;
@@ -553,14 +549,33 @@
     }
 
     .send-btn:hover {
-        transform: scale(1.05);
-        background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
+        background: rgba(79, 172, 254, 0.8);
     }
 
     .send-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
+    }
+
+    .stop-btn {
+        min-width: 100px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(254, 79, 79, 0.6);
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+    }
+    
+    .stop-btn:hover {
+        background: rgba(254, 79, 79, 0.8);
     }
 
     /* 响应式布局 */
@@ -791,10 +806,14 @@
                                 @keydown="handleKeyPress"
                                 @input="adjustTextareaHeight"></textarea>
                         </div>
-                        <button class="send-btn" 
+                        <button v-if="!isLoading" class="send-btn" 
                                 @click="sendMessage"
-                                :disabled="!messageInput.trim() || isLoading">
+                                :disabled="!messageInput.trim()">
                             发送
+                        </button>
+                        <button v-else class="stop-btn" 
+                                @click="terminateAIResponse">
+                            停止生成
                         </button>
                     </div>
                 </div>
@@ -810,16 +829,14 @@
                     roles: [],
                     messages: [],
                     currentRoleId: null,
+                    currentThreadId: null,
                     selectedModel: '[[${defaultModel}]]',
                     messageInput: '',
                     isLoading: false,
                     isMobileMenuOpen: false,
-                    currentPage: 1,
                     pageSize: 2000,
-                    hasMore: false,
-                    totalCount: 0,
                     isEditing: false,  // 添加编辑状态标记
-                    loadingRoleId: null  // 添加加载状态标记
+                    loadingRoleId: null,  // 添加加载状态标记
                 }
             },
             methods: {
@@ -862,6 +879,9 @@
                             
                             // 更新当前角色ID
                             this.currentRoleId = roleId;
+                            
+                            // 保存会话ID
+                            this.currentThreadId = data.threadId;
                             
                             // 更新选中的模型
                             if (data.modelCode) {
@@ -963,26 +983,188 @@
                 },
                 sendMessage() {
                     if (!this.messageInput.trim() || this.isLoading) return;
-
-                    // 发送消息的逻辑
-                    console.log('发送消息:', this.messageInput);
-
+                    
+                    // 验证threadId是否存在
+                    if (!this.currentThreadId) {
+                        showToast("danger", "会话ID不存在，请重新选择角色");
+                        return;
+                    }
+                    
+                    // 保存用户输入，以便在出错时恢复
+                    const userMessage = this.messageInput.trim();
+                    
                     // 添加用户消息到列表
                     this.messages.push({
                         role: 0,
-                        content: this.messageInput,
+                        content: userMessage,
                         id: Date.now(),
-                        name: 'user',
+                        name: this.currentUserRole ? this.currentUserRole.name : '用户',
+                        avatarPath: this.currentUserRole ? this.currentUserRole.avatar : null,
                         createTime: new Date().toISOString(),
                         isEditing: false,
-                        editContent: this.messageInput
+                        editContent: userMessage
                     });
-
-                    // 清空输入框
+                    
+                    // 清空输入框并滚动到底部
                     this.messageInput = '';
                     this.$nextTick(() => {
                         this.adjustTextareaHeight();
                         this.scrollToBottom();
+                    });
+                    
+                    // 设置加载状态
+                    this.isLoading = true;
+                    
+                    // 添加AI助手的空消息（等待响应）
+                    const assistantMessageIndex = this.messages.length;
+                    this.messages.push({
+                        role: 1,
+                        content: '',
+                        id: Date.now() + 1,
+                        name: this.currentRole ? this.currentRole.name : 'AI助手',
+                        avatarPath: this.currentRole ? this.currentRole.avatar : null,
+                        createTime: new Date().toISOString(),
+                        isEditing: false,
+                        editContent: ''
+                    });
+                    
+                    // 发送消息到后端
+                    axios.post('/model/rp/rpCompleteBatch', {
+                        threadId: this.currentThreadId,
+                        model: this.selectedModel,
+                        message: userMessage,
+                        queryKind: 0 // 0:发送消息
+                    }).then(response => {
+                        if (response.data.code === 0) {
+                            // 发送成功，开始轮询获取响应
+                            this.pollAIResponse(assistantMessageIndex);
+                        } else {
+                            // 发送失败，显示错误信息
+                            showToast("danger", response.data.msg || '发送消息失败');
+                            this.isLoading = false;
+                            // 移除AI助手的空消息
+                            this.messages.splice(assistantMessageIndex, 1);
+                            // 恢复用户输入
+                            this.messageInput = userMessage;
+                        }
+                    }).catch(error => {
+                        console.error('发送消息错误:', error);
+                        showToast("danger", '发送消息失败: ' + (error.response?.data?.msg || error.message));
+                        this.isLoading = false;
+                        // 移除AI助手的空消息
+                        this.messages.splice(assistantMessageIndex, 1);
+                        // 恢复用户输入
+                        this.messageInput = userMessage;
+                    });
+                },
+                
+                // 轮询获取AI响应
+                pollAIResponse(assistantMessageIndex) {
+                    // 验证threadId是否存在
+                    if (!this.currentThreadId) {
+                        showToast("danger", "会话ID不存在，无法获取响应");
+                        this.isLoading = false;
+                        return;
+                    }
+                    
+                    const pollInterval = setInterval(() => {
+                        if (!this.isLoading) {
+                            clearInterval(pollInterval);
+                            return;
+                        }
+                        
+                        axios.post('/model/rp/rpCompleteBatch', {
+                            threadId: this.currentThreadId,
+                            queryKind: 1 // 1:查询响应流
+                        }).then(response => {
+                            if (response.data.code === 0) {
+                                const segment = response.data.data;
+                                
+                                // 如果没有新的片段，继续轮询
+                                if (!segment) return;
+                                
+                                // 处理不同类型的片段
+                                if (segment.type === 0) {
+                                    // 开始片段，不做特殊处理
+                                } else if (segment.type === 1) {
+                                    // 数据片段，追加内容
+                                    this.messages[assistantMessageIndex].content += segment.content;
+                                    this.scrollToBottom();
+                                } else if (segment.type === 2) {
+                                    // 结束片段，完成响应
+                                    if (segment.content) {
+                                        this.messages[assistantMessageIndex].content += segment.content;
+                                    }
+                                    
+                                    // 更新消息的角色信息
+                                    if (segment.roleName) {
+                                        this.messages[assistantMessageIndex].name = segment.roleName;
+                                    }
+                                    if (segment.roleAvatarPath) {
+                                        this.messages[assistantMessageIndex].avatarPath = segment.roleAvatarPath;
+                                    }
+                                    
+                                    // 渲染Markdown并结束轮询
+                                    this.$nextTick(() => {
+                                        // 重新渲染Markdown
+                                        const renderedContent = this.renderMarkdown(this.messages[assistantMessageIndex].content);
+                                        // 在Vue中不能直接修改DOM，所以这里只是触发重新渲染
+                                        this.messages = [...this.messages];
+                                        this.scrollToBottom();
+                                    });
+                                    
+                                    this.isLoading = false;
+                                    clearInterval(pollInterval);
+                                } else if (segment.type === 10) {
+                                    // 错误片段，显示错误信息
+                                    showToast("danger", segment.content || '生成回复时出错');
+                                    
+                                    // 移除AI助手的消息
+                                    this.messages.splice(assistantMessageIndex, 1);
+                                    
+                                    // 恢复用户输入
+                                    this.messageInput = this.messages[assistantMessageIndex - 1].content;
+                                    
+                                    this.isLoading = false;
+                                    clearInterval(pollInterval);
+                                }
+                            } else {
+                                // API返回错误
+                                showToast("danger", response.data.msg || '获取AI响应失败');
+                                this.isLoading = false;
+                                clearInterval(pollInterval);
+                            }
+                        }).catch(error => {
+                            console.error('轮询AI响应错误:', error);
+                            showToast("danger", '获取AI响应失败: ' + (error.response?.data?.msg || error.message));
+                            this.isLoading = false;
+                            clearInterval(pollInterval);
+                        });
+                    }, 500); // 每500毫秒轮询一次
+                },
+                
+                // 终止AI响应
+                terminateAIResponse() {
+                    if (!this.isLoading) return;
+                    
+                    // 验证threadId是否存在
+                    if (!this.currentThreadId) {
+                        showToast("danger", "会话ID不存在，无法终止响应");
+                        return;
+                    }
+                    
+                    axios.post('/model/rp/rpCompleteBatch', {
+                        threadId: this.currentThreadId,
+                        queryKind: 2 // 2:终止AI响应
+                    }).then(response => {
+                        if (response.data.code === 0) {
+                            showToast("success", '已终止AI响应');
+                        } else {
+                            showToast("danger", response.data.msg || '终止AI响应失败');
+                        }
+                    }).catch(error => {
+                        console.error('终止AI响应错误:', error);
+                        showToast("danger", '终止AI响应失败: ' + (error.response?.data?.msg || error.message));
                     });
                 },
                 scrollToBottom() {
@@ -994,7 +1176,7 @@
                 async loadRoleList() {
                     try {
                         const response = await axios.post('/model/rp/getRoleList', {
-                            currentPage: this.currentPage,
+                            currentPage: 1,
                             pageSize: this.pageSize
                         });
                         
@@ -1005,12 +1187,6 @@
                                 name: role.name || '未命名角色',
                                 avatar: role.avatarPath ? role.avatarPath : null
                             }));
-
-
-                            // 更新分页信息
-                            this.currentPage = pageData.currentPage;
-                            this.hasMore = pageData.hasNext;
-                            this.totalCount = pageData.count;
                         } else {
                             console.error('加载角色列表失败:', response.data.message);
                             alert('加载角色列表失败: ' + response.data.message);
@@ -1129,9 +1305,6 @@
                     
                     // 移除临时元素
                     document.body.removeChild(tempDiv);
-                },
-                adjustEditingTextarea(event, message) {
-                    // 移除此方法，不再动态调整高度
                 },
             },
             mounted() {
