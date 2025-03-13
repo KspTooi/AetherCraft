@@ -87,6 +87,11 @@ public class ModelRpService {
             queryDto.getKeyword(),
             queryDto.pageRequest()
         );
+        page.getContent().forEach(po -> {
+            if(StringUtils.isNotBlank(po.getAvatarPath())){
+                po.setAvatarPath("/res/"+po.getAvatarPath());
+            }
+        });
         return new PageableView<>(page, GetModelRoleListVo.class);
     }
 

@@ -91,14 +91,45 @@
         text-overflow: ellipsis;
         border-left: 3px solid transparent;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 12px;
+    }
+
+    .thread-item .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .thread-item .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .thread-item .avatar.no-image {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 18px;
+    }
+
+    .thread-item .thread-content {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .thread-item .thread-title {
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .thread-item .thread-actions {
@@ -460,7 +491,13 @@
                              :key="thread.id"
                              @click="loadThread(thread.id)"
                              :class="['thread-item', { active: thread.id === currentThreadId }]">
-                            <div class="thread-title">{{ thread.title }}</div>
+                            <div class="avatar" :class="{ 'no-image': !thread.avatar }">
+                                <img v-if="thread.avatar" :src="thread.avatar" :alt="thread.title">
+                                <i v-else class="bi bi-person"></i>
+                            </div>
+                            <div class="thread-content">
+                                <div class="thread-title">{{ thread.title }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -470,10 +507,9 @@
                     <div class="model-select">
                         <label>选择模型：</label>
                         <select v-model="selectedModel">
-                            <option v-for="model in models" 
-                                    :key="model.code"
-                                    :value="model.code">
-                                {{ model.name }}
+                            <option th:each="model : ${models}"
+                                    th:value="${model.code}"
+                                    th:text="${model.name}">
                             </option>
                         </select>
                     </div>
@@ -522,14 +558,10 @@
                     threads: [],
                     messages: [],
                     currentThreadId: null,
-                    selectedModel: 'gemini-pro',
+                    selectedModel: '[[${defaultModel}]]',
                     messageInput: '',
                     isLoading: false,
                     isMobileMenuOpen: false,
-                    models: [
-                        { code: 'gemini-pro', name: 'Gemini Pro' },
-                        { code: 'gpt-4', name: 'GPT-4' }
-                    ],
                     currentPage: 1,
                     pageSize: 2000,
                     hasMore: false,
@@ -619,7 +651,7 @@
                             this.threads = pageData.rows.map(role => ({
                                 id: role.id,
                                 title: role.name || '未命名对话',
-                                active: role.active
+                                avatar: role.avatarPath || null  // 使用 avatarPath 字段
                             }));
                             
                             // 更新分页信息
@@ -628,7 +660,6 @@
                             this.totalCount = pageData.count;
                         } else {
                             console.error('加载角色列表失败:', response.data.message);
-                            // 可以添加一个提示
                             alert('加载角色列表失败: ' + response.data.message);
                         }
                     } catch (error) {
