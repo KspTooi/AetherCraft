@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
+import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
 
 @Slf4j
 @Service
@@ -756,5 +757,28 @@ public class ModelRpService {
 
             throw new BizException("重新生成AI回复失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 删除指定的消息历史记录
+     * @param dto 包含要删除的消息ID
+     * @throws BizException 如果消息不存在或不属于当前用户
+     */
+    @Transactional
+    public void removeHistory(RemoveHistoryDto dto) throws BizException {
+        Long currentUserId = AuthService.getCurrentUserId();
+        
+        // 查询消息记录
+        ModelRpHistoryPo history = historyRepository.findById(dto.getHistoryId())
+            .orElseThrow(() -> new BizException("消息不存在"));
+        
+        // 验证消息所属的会话是否属于当前用户
+        ModelRpThreadPo thread = history.getThread();
+        if (!thread.getUserId().equals(currentUserId)) {
+            throw new BizException("无权删除此消息");
+        }
+        
+        // 删除消息
+        historyRepository.delete(history);
     }
 }

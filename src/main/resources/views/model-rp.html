@@ -751,8 +751,30 @@
                     });
                 },
                 deleteMessage(messageId) {
-                    // 删除消息的逻辑
-                    console.log('删除消息:', messageId);
+                    if (!messageId) return;
+                    
+                    if (!confirm('确定要删除这条消息吗？')) {
+                        return;
+                    }
+                    
+                    axios.post('/model/rp/removeHistory', {
+                        historyId: messageId
+                    })
+                    .then(response => {
+                        if (response.data.code === 0) {
+                            // 从本地消息列表中移除该消息
+                            const index = this.messages.findIndex(msg => msg.id === messageId);
+                            if (index !== -1) {
+                                this.messages.splice(index, 1);
+                            }
+                        } else {
+                            alert('删除消息失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('删除消息出错:', error);
+                        alert('删除消息出错，请检查网络连接');
+                    });
                 },
                 renderMarkdown(content) {
                     return marked.parse(content);

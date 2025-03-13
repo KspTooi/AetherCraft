@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
+import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
@@ -108,6 +109,15 @@ public class ModelRpController {
         }
         
         throw new BizException("无效的查询类型");
+    }
+
+    /**
+     * 删除消息历史记录
+     */
+    @PostMapping("/removeHistory")
+    public Result<String> removeHistory(@RequestBody @Valid RemoveHistoryDto dto) throws BizException {
+        modelRpService.removeHistory(dto);
+        return Result.success("已删除消息");
     }
 
 } 
