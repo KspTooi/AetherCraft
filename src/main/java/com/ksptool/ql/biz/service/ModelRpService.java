@@ -403,16 +403,17 @@ public class ModelRpService {
         Long userId = AuthService.getCurrentUserId();
         
         // 最大等待次数和等待时间
-        final int MAX_WAIT_TIMES = 10;
+        final int MAX_WAIT_TIMES = 3;
         final long WAIT_INTERVAL_MS = 300;
         
-        // 尝试获取未读片段，最多等待10次
+        // 尝试获取所有未读片段，最多等待3次
         List<ModelRpSegmentPo> unreadSegments = null;
         int waitTimes = 0;
         
         while (waitTimes < MAX_WAIT_TIMES) {
-            unreadSegments = segmentRepository.findNextUnreadByThreadId(threadId);
-            
+            // 一次性查询所有未读片段，按sequence排序
+            unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId);
+
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
                 break;
@@ -435,50 +436,93 @@ public class ModelRpService {
         }
         
         // 如果等待超时仍未获取到片段
-        if (unreadSegments == null || unreadSegments.isEmpty()) {
-            throw new BizException("等待片段超时，请稍后再试");
+        if (unreadSegments.isEmpty()) {
+            return null;
         }
-        
-        // 获取第一个未读片段
-        ModelRpSegmentPo segment = unreadSegments.get(0);
         
         // 检查权限
-        if (!segment.getUserId().equals(userId)) {
+        if (!unreadSegments.getFirst().getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
-        
-        // 检查是否为错误片段
-        if (segment.getType() == 10) {
-            // 标记为已读
-            segment.setStatus(1);
-            segmentRepository.save(segment);
-            throw new BizException(segment.getContent() != null ? segment.getContent() : "AI响应出错");
-        }
-        
-        // 标记为已读
-        segment.setStatus(1);
-        segmentRepository.save(segment);
-        
-        // 转换为VO
-        RpSegmentVo vo = new RpSegmentVo();
-        vo.setThreadId(threadId);
-        vo.setHistoryId(segment.getHistoryId());
-        vo.setSequence(segment.getSequence());
-        vo.setContent(segment.getContent());
-        vo.setType(segment.getType());
-        vo.setRole(1); // AI助手角色
-        
-        // 如果是数据片段或结束片段，需要设置模型角色信息
-        if (segment.getType() == 1 || segment.getType() == 2) {
-            ModelRpThreadPo thread = segment.getThread();
-            ModelRolePo modelRole = thread.getModelRole();
-            if (modelRole != null) {
-                vo.setRoleId(modelRole.getId());
-                vo.setRoleName(modelRole.getName());
-                vo.setRoleAvatarPath("/res/"+modelRole.getAvatarPath());
+
+        // 优先处理错误片段(type=10)和开始片段(type=0)
+        for (ModelRpSegmentPo segment : unreadSegments) {
+            //开始片段，只标记该片段为已读并返回
+            if (segment.getType() == 0) {
+                segment.setStatus(1);
+                segmentRepository.save(segment);
+                RpSegmentVo vo = new RpSegmentVo();
+                vo.setThreadId(threadId);
+                vo.setHistoryId(segment.getHistoryId());
+                vo.setSequence(segment.getSequence());
+                vo.setContent(segment.getContent());
+                vo.setType(segment.getType());
+                vo.setRole(1);
+                return vo;
+            }
+
+            //错误片段，标记所有片段为已读并返回错误信息
+            if (segment.getType() == 10) {
+                for (ModelRpSegmentPo seg : unreadSegments) {
+                    seg.setStatus(1);
+                }
+                segmentRepository.saveAll(unreadSegments);
+                RpSegmentVo vo = new RpSegmentVo();
+                vo.setThreadId(threadId);
+                vo.setSequence(segment.getSequence());
+                vo.setContent(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+                vo.setType(segment.getType());
+                vo.setRole(1);
+                return vo;
             }
         }
+
+        // 获取第一个片段
+        ModelRpSegmentPo firstSegment = unreadSegments.getFirst();
         
+        // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
+        if (firstSegment.getType() == 1) {
+            StringBuilder combinedContent = new StringBuilder();
+            List<ModelRpSegmentPo> segmentsToMark = new ArrayList<>();
+            
+            // 遍历所有片段，合并type=1的片段，直到遇到非type=1的片段
+            for (ModelRpSegmentPo segment : unreadSegments) {
+
+                if (segment.getType() != 1) {
+                    break;
+                }
+                
+                if (StringUtils.isNotBlank(segment.getContent())) {
+                    combinedContent.append(segment.getContent());
+                }
+                segment.setStatus(1);
+                segmentsToMark.add(segment);
+            }
+
+            segmentRepository.saveAll(segmentsToMark);
+            
+            // 返回合并后的数据片段
+            RpSegmentVo vo = new RpSegmentVo();
+            vo.setThreadId(threadId);
+            vo.setHistoryId(null);
+            vo.setSequence(firstSegment.getSequence());
+            vo.setContent(combinedContent.toString());
+            vo.setType(1);
+            vo.setRole(1);
+            return vo;
+        }
+        
+        // 如果第一个片段是type=2结束片段
+        firstSegment.setStatus(1);
+        segmentRepository.save(firstSegment);
+        
+        RpSegmentVo vo = new RpSegmentVo();
+        vo.setThreadId(threadId);
+        vo.setHistoryId(firstSegment.getHistoryId());
+        vo.setSequence(firstSegment.getSequence());
+        vo.setContent(firstSegment.getContent());
+        vo.setType(firstSegment.getType());
+        vo.setRole(1);
         return vo;
     }
     
