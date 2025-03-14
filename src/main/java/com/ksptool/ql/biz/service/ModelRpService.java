@@ -49,6 +49,7 @@ import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 public class ModelRpService {
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
     // 线程安全的容器，记录RP聊天状态 <threadId, contextId>
     private final ConcurrentHashMap<Long, String> rpThreadToContextIdMap = new ConcurrentHashMap<>();
@@ -333,6 +334,7 @@ public class ModelRpService {
             modelChatParam.setHistories(paramHistories);
 
             if(dto.getModel().contains("grok")){
+                modelChatParam.setUrl(GROK_BASE_URL);
                 // 异步调用ModelGrokService发送流式请求
                 modelGrokService.sendMessageStream(
                         client,
@@ -743,6 +745,7 @@ public class ModelRpService {
             modelChatParam.setHistories(paramHistories);
 
             if(dto.getModel().contains("grok")){
+                modelChatParam.setUrl(GROK_BASE_URL);
                 // 异步调用ModelGrokService发送流式请求
                 modelGrokService.sendMessageStream(
                         client,

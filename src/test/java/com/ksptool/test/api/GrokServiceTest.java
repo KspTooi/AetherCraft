@@ -62,7 +62,7 @@ public class GrokServiceTest {
         
         // 创建请求参数
         ModelChatParam param = new ModelChatParam();
-        param.setModelCode("grok-3");
+        param.setModelCode("grok-2");
         param.setMessage("测试消息：请简要介绍一下你自己。");
         param.setUrl(apiUrl);
         param.setApiKey(apiKey);
