@@ -80,16 +80,17 @@ public class ModelRpController {
     @PostMapping("/rpCompleteBatch")
     public Result<RpSegmentVo> rpCompleteBatch(@RequestBody @Valid BatchRpCompleteDto dto) throws BizException {
 
+
         // 发送消息
         if (dto.getQueryKind() == 0) {
             if (StringUtils.isBlank(dto.getMessage())) {
                 throw new BizException("发送消息时，消息内容不能为空");
             }
-            
+
             if (StringUtils.isBlank(dto.getModel())) {
                 throw new BizException("发送消息时，模型代码不能为空");
             }
-            
+
             return Result.success(modelRpService.rpCompleteSendBatch(dto));
         }
 

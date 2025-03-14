@@ -26,12 +26,12 @@ import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
+import com.ksptool.ql.commons.web.SimpleExample;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,13 +78,23 @@ public class ModelRpService {
     private PanelApiKeyService panelApiKeyService;
     @Autowired
     private GlobalConfigService globalConfigService;
+    @Autowired
+    private ModelGrokService modelGrokService;
 
-    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto queryDto) {
-        Page<ModelRolePo> page = modelRoleRepository.getModelRoleList(
-            AuthService.getCurrentUserId(),
-            queryDto.getKeyword(),
-            queryDto.pageRequest()
-        );
+    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
+
+        var query = new ModelRolePo();
+        query.setName(dto.getKeyword());
+        query.setStatus(1);
+        query.setUserId(AuthService.getCurrentUserId());
+
+        SimpleExample<ModelRolePo> example = SimpleExample.of(query);
+        example.like("name").orderBy("sortOrder");
+
+        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), example.getSort());
+
+        Page<ModelRolePo> page = modelRoleRepository.findAll(example.get(), pageable);
+
         page.getContent().forEach(po -> {
             if(StringUtils.isNotBlank(po.getAvatarPath())){
                 po.setAvatarPath("/res/"+po.getAvatarPath());
@@ -322,12 +332,23 @@ public class ModelRpService {
             
             modelChatParam.setHistories(paramHistories);
 
-            // 异步调用ModelGeminiService发送流式请求
-            modelGeminiService.sendMessageStream(
-                    client,
-                    modelChatParam,
-                    onModelRpMessageRcv(thread, thread.getUserId())
-            );
+            if(dto.getModel().contains("grok")){
+                // 异步调用ModelGrokService发送流式请求
+                modelGrokService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelRpMessageRcv(thread, thread.getUserId())
+                );
+            }
+
+            if(dto.getModel().contains("gemini")){
+                // 异步调用ModelGeminiService发送流式请求
+                modelGeminiService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelRpMessageRcv(thread, thread.getUserId())
+                );
+            }
 
             //将新模型选项保存到Thread
             thread.setModelCode(modelEnum.getCode());
@@ -609,7 +630,7 @@ public class ModelRpService {
      * @return 返回对话片段信息
      * @throws BizException 业务异常
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public RpSegmentVo rpCompleteRegenerateBatch(BatchRpCompleteDto dto) throws BizException {
         Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
@@ -721,12 +742,23 @@ public class ModelRpService {
             }
             modelChatParam.setHistories(paramHistories);
 
-            // 异步调用ModelGeminiService发送流式请求
-            modelGeminiService.sendMessageStream(
-                    client,
-                    modelChatParam,
-                    onModelRpMessageRcv(thread, userId)
-            );
+            if(dto.getModel().contains("grok")){
+                // 异步调用ModelGrokService发送流式请求
+                modelGrokService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelRpMessageRcv(thread, thread.getUserId())
+                );
+            }
+
+            if(dto.getModel().contains("gemini")){
+                // 异步调用ModelGeminiService发送流式请求
+                modelGeminiService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelRpMessageRcv(thread, thread.getUserId())
+                );
+            }
 
             // 返回开始片段
             RpSegmentVo vo = new RpSegmentVo();

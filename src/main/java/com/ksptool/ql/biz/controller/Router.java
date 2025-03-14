@@ -70,7 +70,7 @@ public class Router {
 
         // 如果指定了视图参数，则重定向到指定视图
         if (StringUtils.isNotBlank(redirectView)) {
-            return new ModelAndView("redirect:" + redirectView);
+            mav.setViewName("redirect:" + redirectView);
         } 
         
         // 获取来源页面的URL并保存到当前用户的配置中

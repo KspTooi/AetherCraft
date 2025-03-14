@@ -743,7 +743,7 @@
                 
                 <!-- 角色列表 -->
                 <div class="role-list" :class="{ show: isMobileMenuOpen }">
-                    <a href="/panel/model/role/list" class="manage-role-btn">
+                    <a href="/dashboard?redirect=/panel/model/role/list" class="manage-role-btn">
                         <i class="bi bi-gear"></i>
                         管理角色
                     </a>
@@ -1127,7 +1127,7 @@
                             await this.pollAIResponse(assistantMessage);
                         } else {
                             // 发送失败，显示错误信息
-                            showToast("danger", response.data.msg || '发送消息失败');
+                            showToast("danger", response.data.message || '发送消息失败');
                             
                             // 重新加载当前对话
                             this.isLoading = false;
@@ -1236,7 +1236,7 @@
                                 }
                             } else {
                                 // API返回错误
-                                showToast("danger", response.data.msg || '获取AI响应失败');
+                                showToast("danger", response.data.message || '获取AI响应失败');
                                 
                                 // 重新加载当前对话
                                 this.isLoading = false;
@@ -1287,7 +1287,7 @@
                                 this.loadRole(this.currentRoleId, true);
                             }
                         } else {
-                            showToast("danger", response.data.msg || '终止AI响应失败');
+                            showToast("danger", response.data.message || '终止AI响应失败');
                         }
                     } catch (error) {
                         console.error('终止AI响应错误:', error);
@@ -1490,12 +1490,12 @@
                             }
                         } else {
                             // 重新生成失败，显示错误信息
-                            showToast("danger", response.data.msg || '重新生成失败');
+                            showToast("danger", response.data.message || '重新生成失败');
                             this.isLoading = false;
                         }
                     } catch (error) {
                         console.error('重新生成错误:', error);
-                        showToast("danger", '重新生成失败: ' + (error.response?.data?.msg || error.message));
+                        showToast("danger", '重新生成失败: ' + (error.response?.data?.message || error.message));
                         this.isLoading = false;
                     }
                 },
