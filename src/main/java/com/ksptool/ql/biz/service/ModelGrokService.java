@@ -31,11 +31,73 @@ import static com.ksptool.entities.Entities.as;
  */
 @Slf4j
 @Service
-public class ModelGrokService {
+public class ModelGrokService implements ModelRestCI{
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     // Grok API 不使用URL参数来指定流式输出，而是在请求体中设置stream字段
     private final Gson gson = new Gson();
+
+    @Override
+    public String sendMessageSync(OkHttpClient client, ModelChatParam dto) throws BizException {
+        try {
+            // 验证参数
+            validateParams(dto);
+            
+            // 构建请求
+            GrokRequest grokRequest = GrokRequest.ofHistory(
+                    as(dto.getHistories(), ModelChatHistoryPo.class),
+                    dto.getMessage(),
+                    dto.getTemperature(),
+                    dto.getTopP(),
+                    dto.getMaxOutputTokens(),
+                    dto.getSystemPrompt()
+            );
+            // 设置为非流式输出
+            grokRequest.setStream(false);
+            grokRequest.setModel(dto.getModelCode());
+            
+            String jsonBody = gson.toJson(grokRequest);
+            
+            // 创建请求对象
+            Request request = new Request.Builder()
+                .url(dto.getUrl())
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + dto.getApiKey())
+                .post(RequestBody.create(jsonBody, JSON))
+                .build();
+            
+            // 发送请求并处理响应
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new BizException("调用Grok API失败: " + response.body().string());
+                }
+                
+                String responseBody = response.body().string();
+                
+                // 记录请求和响应
+                log.info("Grok API 同步请求响应 - 模型: {}, 请求: {}, 响应长度: {}", 
+                    dto.getModelCode(), 
+                    jsonBody.replaceAll("\\s+", ""), 
+                    responseBody.length());
+                
+                GrokResponse grokResponse = gson.fromJson(responseBody, GrokResponse.class);
+                
+                // 从响应中提取内容
+                if (grokResponse.getChoices() == null || grokResponse.getChoices().isEmpty()) {
+                    throw new BizException("Grok API 返回内容为空");
+                }
+                
+                GrokResponse.Choice choice = grokResponse.getChoices().get(0);
+                if (choice.getMessage() == null || !StringUtils.hasText(choice.getMessage().getContent())) {
+                    throw new BizException("Grok API 返回内容为空");
+                }
+                
+                return choice.getMessage().getContent();
+            }
+        } catch (IOException e) {
+            throw new BizException("发送消息失败: " + e.getMessage());
+        }
+    }
 
     /**
      * 流式发送消息并通过回调处理响应
