@@ -1172,7 +1172,7 @@
                             <div class="subtitle">从左侧列表选择一个角色，开始精彩的对话之旅</div>
                         </div>
                         
-                        <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="currentRoleId">
+                        <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="`${currentRoleId}-${currentThreadId}`">
                             <div v-for="(message, index) in messages" 
                                  :key="index"
                                  :class="['message', 'message-hover-effect', message.role === 0 ? 'user' : 'assistant', { 'editing': message.isEditing }]">
@@ -1411,7 +1411,6 @@
                 
                 // 加载指定的会话
                 async loadThread(threadId, closeModal = true) {
-
                     // 查找当前线程信息
                     const thread = this.threadList.find(t => t.id === threadId);
                     if (!thread) {
@@ -1421,6 +1420,17 @@
                     
                     // 使用loadRoleThread加载指定会话
                     await this.loadRoleThread(this.selectedRoleId, true, false, threadId);
+                    
+                    // 确保动画效果正确触发
+                    this.$nextTick(() => {
+                        const messagesContainer = this.$refs.messagesContainer;
+                        if (messagesContainer) {
+                            // 重置动画
+                            messagesContainer.style.animation = 'none';
+                            messagesContainer.offsetHeight; // 触发重绘
+                            messagesContainer.style.animation = '';
+                        }
+                    });
 
                     if(closeModal){
                         //关闭模态框
