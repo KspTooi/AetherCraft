@@ -1092,7 +1092,7 @@
                                 <div v-for="thread in threadList" 
                                      :key="thread.id" 
                                      :class="['thread-item', { 'active': thread.active === 1 }]">
-                                    <div class="thread-info" @click="loadThread(thread.id)">
+                                    <div class="thread-info" @click="loadThread(thread.id, true)">
                                         <div class="thread-title">
                                             {{ thread.title }}
                                             <span v-if="thread.active === 1" class="thread-active-badge">当前活动</span>
@@ -1101,7 +1101,7 @@
                                         <div class="thread-message" v-if="thread.lastMessage">{{ thread.lastMessage }}</div>
                                     </div>
                                     <div class="thread-actions">
-                                        <button class="thread-action-btn" @click="activeThread(thread.id)" :disabled="thread.active === 1">
+                                        <button class="thread-action-btn" @click="loadThread(thread.id,false)" :disabled="thread.active === 1">
                                             <i class="bi bi-lightning-charge"></i>
                                         </button>
                                         <button class="thread-action-btn" @click="deleteThread(thread.id)" :disabled="threadList.length <= 1">
@@ -1410,10 +1410,8 @@
                 },
                 
                 // 加载指定的会话
-                async loadThread(threadId) {
-                    // 关闭模态框
-                    this.showThreadModal = false;
-                    
+                async loadThread(threadId, closeModal = true) {
+
                     // 查找当前线程信息
                     const thread = this.threadList.find(t => t.id === threadId);
                     if (!thread) {
@@ -1423,31 +1421,15 @@
                     
                     // 使用loadRoleThread加载指定会话
                     await this.loadRoleThread(this.selectedRoleId, true, false, threadId);
-                },
-                
-                // 实际加载会话的方法
-                async doLoadThread(threadId) {
-                    // 此方法已合并到loadThread方法中，保留此空方法以避免潜在调用问题
-                    console.log('doLoadThread已废弃，请直接使用loadThread');
-                    await this.loadThread(threadId);
-                },
-                
-                // 激活指定的会话
-                async activeThread(threadId) {
-                    // 查找当前线程信息
-                    const thread = this.threadList.find(t => t.id === threadId);
-                    if (!thread) {
-                        showToast("danger", "找不到会话信息");
-                        return;
+
+                    if(closeModal){
+                        //关闭模态框
+                        this.showThreadModal = false;
+                        return
                     }
-                    
-                    // 1. 使用loadRoleThread加载角色的会话
-                    await this.loadRoleThread(this.selectedRoleId, true, false, threadId);
-                    
-                    // 2. 刷新模态框表格数据
+
+                    //刷新模态框表格数据
                     await this.fetchThreadList(this.selectedRoleId);
-                    
-                    // 显示成功消息
                     showToast("success", "已激活会话");
                 },
                 
