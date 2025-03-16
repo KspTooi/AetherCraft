@@ -21,9 +21,6 @@ public class ModelConfigVo {
     // 是否已保存API Key
     private boolean hasApiKey;
     
-    // 代理地址
-    private String proxy;
-    
     // 全局代理配置
     private String globalProxyConfig;
     

@@ -145,8 +145,6 @@ public class PanelModelConfigService {
         String apiKey = userConfigService.getValue(baseKey + "apiKey");
         config.setHasApiKey(StringUtils.isNotBlank(apiKey));
         
-        config.setProxy(userConfigService.getValue(baseKey + "proxy"));
-        
         // 获取全局代理配置和用户代理配置
         config.setGlobalProxyConfig(globalConfigService.getValue("model.proxy.config"));
         config.setUserProxyConfig(userConfigService.getValue("model.proxy.config"));
@@ -225,7 +223,6 @@ public class PanelModelConfigService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
         
         // 保存其他配置
-        userConfigService.setValue(baseKey + "proxy", dto.getProxy());
         userConfigService.setValue(baseKey + "temperature", String.valueOf(dto.getTemperature()));
         userConfigService.setValue(baseKey + "topP", String.valueOf(dto.getTopP()));
         userConfigService.setValue(baseKey + "topK", String.valueOf(dto.getTopK()));

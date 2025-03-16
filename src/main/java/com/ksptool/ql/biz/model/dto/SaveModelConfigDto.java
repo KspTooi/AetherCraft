@@ -21,9 +21,6 @@ public class SaveModelConfigDto {
     // API密钥ID
     private Long apiKeyId;
     
-    // 代理地址
-    private String proxy;
-    
     // 全局代理配置
     private String globalProxyConfig;
     

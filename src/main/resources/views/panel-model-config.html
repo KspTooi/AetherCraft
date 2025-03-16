@@ -50,13 +50,6 @@
                                     <div class="invalid-feedback">请选择API Key</div>
                                 </div>
 
-                                <div class="col-md-12">
-                                    <label for="proxy" class="form-label small">代理地址</label>
-                                    <input type="text" class="form-control form-control-sm" id="proxy" name="proxy" 
-                                           th:value="${data.proxy}" placeholder="http://127.0.0.1:7890">
-                                    <div class="form-text small">代理服务器地址，如不需要代理可留空</div>
-                                </div>
-                                
                                 <div class="col-md-6">
                                     <label for="temperature" class="form-label small">温度值</label>
                                     <div class="d-flex gap-2 align-items-center">
@@ -133,7 +126,7 @@
 
                                 <div class="col-12">
                                     <div class="text-end mt-3">
-                                        <button type="button" class="btn btn-info btn-sm me-2" onclick="testModelConnection()">
+                                        <button type="button" class="btn btn-info btn-sm me-2 text-white" onclick="testModelConnection()">
                                             <i class="bi bi-lightning-charge me-1"></i>测试连接
                                         </button>
                                         <button type="submit" class="btn btn-primary btn-sm">
