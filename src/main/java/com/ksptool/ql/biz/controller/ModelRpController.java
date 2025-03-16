@@ -64,11 +64,17 @@ public class ModelRpController {
      * @param dto 包含 modelRoleId、modelCode 和 newThread 参数
      *            newThread=0：创建新会话并将已有激活的存档置为未激活
      *            newThread=1：优先尝试获取已有激活的存档，没有则创建新存档（默认行为）
+     *            threadId：如果提供了threadId，则优先加载并激活指定的会话，忽略newThread参数
      * @return 返回会话信息和历史消息
      * @throws BizException 业务异常
      */
     @PostMapping("/recoverRpChat")
     public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
+        // 如果提供了threadId，将会优先激活并加载该会话，忽略newThread参数
+        if (dto.getThreadId() != null) {
+            // 记录日志，表示将通过threadId加载指定会话
+            System.out.println("Loading specific thread by ID: " + dto.getThreadId());
+        }
         return Result.success(modelRpService.recoverRpChat(dto));
     }
 

@@ -27,6 +27,8 @@ import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import com.ksptool.ql.commons.web.SimpleExample;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
@@ -85,6 +87,9 @@ public class ModelRpService {
     @Autowired
     private ModelGrokService modelGrokService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
         var query = new ModelRolePo();
@@ -125,7 +130,28 @@ public class ModelRpService {
 
         ModelRolePo modelRole = modelRoleRepository.findOne(Example.of(example))
             .orElseThrow(() -> new BizException("模型角色不存在或无权访问"));
-            
+
+
+        //处理存档激活逻辑
+        if(dto.getThreadId()!=null){
+
+            //查询指定ID的存档
+            var query = new ModelRpThreadPo();
+            query.setUserId(AuthService.getCurrentUserId());
+            query.setModelRole(modelRole);
+            query.setId(dto.getThreadId());
+
+            ModelRpThreadPo thread = threadRepository.findOne(Example.of(query)).orElseThrow(() -> new BizException("ThreadId无效!"));
+
+            //取消全部Thread的激活状态
+            threadRepository.setAllThreadActive(AuthService.getCurrentUserId(),modelRole.getId(),0);
+            entityManager.clear();
+
+            //激活指定存档
+            thread.setActive(1);
+            threadRepository.save(thread);
+        }
+
         // 2. 查询激活的存档
         ModelRpThreadPo thread = threadRepository.findActiveThreadByModelRoleId(dto.getModelRoleId());
 

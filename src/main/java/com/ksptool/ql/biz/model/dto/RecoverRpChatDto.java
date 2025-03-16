@@ -17,4 +17,7 @@ public class RecoverRpChatDto {
     
     //是否创建新会话 0:创建新会话Thread 1:总是尝试获取旧Thread
     private Integer newThread = 1;
+    
+    //指定要加载的会话ID，如果提供则直接加载该会话，无视newThread参数
+    private Long threadId;
 }
