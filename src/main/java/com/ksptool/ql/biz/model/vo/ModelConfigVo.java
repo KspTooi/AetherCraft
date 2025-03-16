@@ -24,6 +24,12 @@ public class ModelConfigVo {
     // 代理地址
     private String proxy;
     
+    // 全局代理配置
+    private String globalProxyConfig;
+    
+    // 用户代理配置
+    private String userProxyConfig;
+    
     // 温度值
     private Double temperature = 0.7;
     

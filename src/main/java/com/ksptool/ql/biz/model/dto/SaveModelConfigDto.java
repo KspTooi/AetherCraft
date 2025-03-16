@@ -24,6 +24,12 @@ public class SaveModelConfigDto {
     // 代理地址
     private String proxy;
     
+    // 全局代理配置
+    private String globalProxyConfig;
+    
+    // 用户代理配置
+    private String userProxyConfig;
+    
     // 温度值
     @NotNull(message = "请设置温度值")
     @DecimalMin(value = "0.0", message = "温度值最小为0")

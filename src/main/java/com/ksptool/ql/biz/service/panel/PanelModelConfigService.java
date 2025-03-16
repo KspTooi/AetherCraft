@@ -11,12 +11,13 @@ import com.ksptool.ql.biz.model.vo.AvailableApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +26,10 @@ import java.util.List;
 public class PanelModelConfigService {
     
     @Autowired
-    private ConfigService configService;
+    private ConfigService userConfigService;
+    
+    @Autowired
+    private GlobalConfigService globalConfigService;
     
     @Autowired
     private ApiKeyRepository apiKeyRepository;
@@ -121,25 +125,29 @@ public class PanelModelConfigService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
         
         // 检查API Key是否已保存，但不返回具体值
-        String apiKey = configService.getValue(baseKey + "apiKey", userId);
-        config.setHasApiKey(StringUtils.hasText(apiKey));
+        String apiKey = userConfigService.getValue(baseKey + "apiKey");
+        config.setHasApiKey(StringUtils.isNotBlank(apiKey));
         
-        config.setProxy(configService.getValue(baseKey + "proxy", userId));
+        config.setProxy(userConfigService.getValue(baseKey + "proxy"));
+        
+        // 获取全局代理配置和用户代理配置
+        config.setGlobalProxyConfig(globalConfigService.getValue("model.proxy.config"));
+        config.setUserProxyConfig(userConfigService.getValue("model.proxy.config"));
         
         // 获取温度值，默认0.7
-        String tempStr = configService.getValue(baseKey + "temperature", userId);
+        String tempStr = userConfigService.getValue(baseKey + "temperature");
         config.setTemperature(tempStr != null ? Double.parseDouble(tempStr) : 0.7);
         
         // 获取top_p值，默认1.0
-        String topPStr = configService.getValue(baseKey + "topP", userId);
+        String topPStr = userConfigService.getValue(baseKey + "topP");
         config.setTopP(topPStr != null ? Double.parseDouble(topPStr) : 1.0);
         
         // 获取top_k值，默认40
-        String topKStr = configService.getValue(baseKey + "topK", userId);
+        String topKStr = userConfigService.getValue(baseKey + "topK");
         config.setTopK(topKStr != null ? Integer.parseInt(topKStr) : 40);
         
         // 获取最大输出长度，默认800
-        String maxOutputTokensStr = configService.getValue(baseKey + "maxOutputTokens", userId);
+        String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
         config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800);
         
         // 获取可用的API密钥列表
@@ -200,10 +208,28 @@ public class PanelModelConfigService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
         
         // 保存其他配置
-        configService.setValue(baseKey + "proxy", dto.getProxy(), userId);
-        configService.setValue(baseKey + "temperature", String.valueOf(dto.getTemperature()), userId);
-        configService.setValue(baseKey + "topP", String.valueOf(dto.getTopP()), userId);
-        configService.setValue(baseKey + "topK", String.valueOf(dto.getTopK()), userId);
-        configService.setValue(baseKey + "maxOutputTokens", String.valueOf(dto.getMaxOutputTokens()), userId);
+        userConfigService.setValue(baseKey + "proxy", dto.getProxy());
+        userConfigService.setValue(baseKey + "temperature", String.valueOf(dto.getTemperature()));
+        userConfigService.setValue(baseKey + "topP", String.valueOf(dto.getTopP()));
+        userConfigService.setValue(baseKey + "topK", String.valueOf(dto.getTopK()));
+        userConfigService.setValue(baseKey + "maxOutputTokens", String.valueOf(dto.getMaxOutputTokens()));
+
+        // 保存用户代理配置
+        userConfigService.setValue("model.proxy.config", null);
+
+        if(StringUtils.isNotBlank(dto.getUserProxyConfig())){
+            userConfigService.setValue("model.proxy.config", dto.getUserProxyConfig());
+        }
+
+        //保存全局代理配置
+        if(AuthService.hasPermission("panel:model:edit:global:proxy")){
+
+            globalConfigService.setValue("model.proxy.config", null);
+
+            if(StringUtils.isNotBlank(dto.getGlobalProxyConfig())){
+                globalConfigService.setValue("model.proxy.config", dto.getGlobalProxyConfig());
+            }
+
+        }
     }
 } 

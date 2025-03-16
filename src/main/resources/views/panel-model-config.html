@@ -56,7 +56,7 @@
                                            th:value="${data.proxy}" placeholder="http://127.0.0.1:7890">
                                     <div class="form-text small">代理服务器地址，如不需要代理可留空</div>
                                 </div>
-
+                                
                                 <div class="col-md-6">
                                     <label for="temperature" class="form-label small">温度值</label>
                                     <div class="d-flex gap-2 align-items-center">
@@ -112,6 +112,23 @@
                                     </div>
                                     <div class="invalid-feedback">最大输出长度必须在1-8192000之间</div>
                                     <div class="form-text small">控制响应的最大长度，范围1-8192000，默认800，单次响应超过将自动截断</div>
+                                </div>
+                                
+                                <!-- 添加清除浮动 -->
+                                <div class="w-100"></div>
+                                
+                                <div class="col-md-6" sec:authorize="panel:model:edit:global:proxy">
+                                    <label for="globalProxyConfig" class="form-label small">全局代理配置</label>
+                                    <input type="text" class="form-control form-control-sm" id="globalProxyConfig" name="globalProxyConfig" 
+                                           th:value="${data.globalProxyConfig}" placeholder="http://global-proxy:7890">
+                                    <div class="form-text small">全局代理配置，适用于所有用户</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="userProxyConfig" class="form-label small">用户代理配置</label>
+                                    <input type="text" class="form-control form-control-sm" id="userProxyConfig" name="userProxyConfig" 
+                                           th:value="${data.userProxyConfig}" placeholder="http://user-proxy:7890">
+                                    <div class="form-text small">用户专属代理配置，仅对当前用户生效</div>
                                 </div>
 
                                 <div class="col-12">
