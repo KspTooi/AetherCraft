@@ -1104,7 +1104,7 @@
                                         <button class="thread-action-btn" @click="activeThread(thread.id)" :disabled="thread.active === 1">
                                             <i class="bi bi-lightning-charge"></i>
                                         </button>
-                                        <button class="thread-action-btn" @click="confirmDeleteThread(thread.id)">
+                                        <button class="thread-action-btn" @click="deleteThread(thread.id)">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -1451,22 +1451,15 @@
                     showToast("success", "已激活会话");
                 },
                 
-                // 确认删除会话
-                confirmDeleteThread(threadId) {
-                    if (confirm('确定要删除这个会话吗？此操作不可恢复。')) {
-                        this.deleteThread(threadId);
-                    }
-                },
-                
                 // 删除指定的会话
                 async deleteThread(threadId) {
-                    // 目前后端未实现deleteThread API，显示提示信息
-                    showToast("info", "删除会话功能即将上线");
+                    // 先确认用户是否真的要删除
+                    if (!confirm('确定要删除这个会话吗？此操作不可恢复。')) {
+                        return;
+                    }
                     
-                    /* 
-                    下面是后端实现deleteThread API后可以使用的代码
                     try {
-                        const response = await axios.post('/model/rp/deleteThread', {
+                        const response = await axios.post('/model/rp/removeThread', {
                             threadId: threadId
                         });
                         
@@ -1476,9 +1469,12 @@
                             
                             showToast("success", "已删除会话");
                             
-                            // 如果删除的是当前激活的会话，刷新页面
+                            // 刷新模态框表格数据
+                            await this.fetchThreadList(this.selectedRoleId);
+                            
+                            // 如果删除的是当前激活的会话，加载一个新会话
                             if (threadId === this.currentThreadId) {
-                                await this.loadRoleThread(this.currentRoleId, true, false);
+                                await this.loadRoleThread(this.currentRoleId, true, false, null);
                             }
                         } else {
                             showToast("danger", response.data.message || "删除会话失败");
@@ -1487,7 +1483,6 @@
                         console.error('删除会话出错:', error);
                         showToast("danger", "删除会话失败，请检查网络连接");
                     }
-                    */
                 },
                 
                 // 关闭会话模态框
