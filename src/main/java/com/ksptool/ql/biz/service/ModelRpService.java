@@ -43,6 +43,9 @@ import java.util.function.Consumer;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
+import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
+import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
+import com.ksptool.ql.biz.service.AuthService;
 
 @Slf4j
 @Service
@@ -904,5 +907,69 @@ public class ModelRpService {
         history.setRawContent(dto.getContent());
         history.setRpContent(dto.getContent()); // 这里可能需要通过RpHandler处理
         historyRepository.save(history);
+    }
+
+    /**
+     * 获取指定模型角色的所有会话列表
+     * 用于用户管理和选择不同的会话
+     * 
+     * @param dto 包含模型角色ID的DTO
+     * @return 会话列表
+     * @throws BizException 业务异常
+     */
+    public List<ModelRoleThreadListVo> getModelRoleThreadList(GetModelRoleThreadListDto dto) throws BizException {
+        // 构建查询条件
+        ModelRpThreadPo query = new ModelRpThreadPo();
+        query.setUserId(AuthService.getCurrentUserId()); // 获取当前用户ID
+        
+        // 使用Example构建查询
+        SimpleExample<ModelRpThreadPo> example = SimpleExample.of(query);
+        
+        // 添加排序（按更新时间倒序）
+        example.orderByDesc("updateTime");
+        
+        // 执行查询，查询指定modelRoleId的记录
+        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get());
+        
+        // 过滤出指定modelRoleId的记录，同时获取每个线程的最后一条消息作为预览
+        List<ModelRoleThreadListVo> result = new ArrayList<>();
+        
+        for (ModelRpThreadPo thread : threads) {
+            // 判断是否是指定角色的线程
+            if (thread.getModelRole() != null && thread.getModelRole().getId().equals(dto.getModelRoleId())) {
+                ModelRoleThreadListVo vo = new ModelRoleThreadListVo();
+                
+                // 将PO的基本字段映射到VO
+                vo.setId(thread.getId());
+                vo.setTitle(thread.getTitle());
+                vo.setDescription(thread.getDescription());
+                vo.setModelCode(thread.getModelCode());
+                vo.setActive(thread.getActive());
+                vo.setCreateTime(thread.getCreateTime());
+                vo.setUpdateTime(thread.getUpdateTime());
+                
+                // 获取最后一条消息（如果有）作为预览
+                String lastMessage = "";
+                if (thread.getHistories() != null && !thread.getHistories().isEmpty()) {
+                    // 找出序号最大的那条消息
+                    ModelRpHistoryPo lastHistoryItem = thread.getHistories().stream()
+                        .max((h1, h2) -> h1.getSequence().compareTo(h2.getSequence()))
+                        .orElse(null);
+                    
+                    if (lastHistoryItem != null) {
+                        // 截取前50个字符作为预览
+                        String content = lastHistoryItem.getRawContent();
+                        lastMessage = content.length() > 50 ? 
+                            content.substring(0, 50) + "..." : 
+                            content;
+                    }
+                }
+                vo.setLastMessage(lastMessage);
+                
+                result.add(vo);
+            }
+        }
+        
+        return result;
     }
 }

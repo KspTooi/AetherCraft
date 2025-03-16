@@ -6,9 +6,11 @@ import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
+import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
+import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
 import com.ksptool.ql.biz.service.ModelRpService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -68,6 +70,18 @@ public class ModelRpController {
     @PostMapping("/recoverRpChat")
     public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
         return Result.success(modelRpService.recoverRpChat(dto));
+    }
+
+    /**
+     * 获取指定角色的全部会话列表
+     * 
+     * @param dto 包含modelRoleId参数
+     * @return 返回该角色下的所有会话列表
+     * @throws BizException 业务异常
+     */
+    @PostMapping("/getModelRoleThreadList")
+    public Result<List<ModelRoleThreadListVo>> getModelRoleThreadList(@RequestBody @Valid GetModelRoleThreadListDto dto) throws BizException {
+        return Result.success(modelRpService.getModelRoleThreadList(dto));
     }
 
     /**
