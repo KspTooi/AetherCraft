@@ -138,7 +138,7 @@ public class Router {
     @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){
-        return Result.success("1.1L-M7");
+        return Result.success("1.1P-M8");
     }
 
 
