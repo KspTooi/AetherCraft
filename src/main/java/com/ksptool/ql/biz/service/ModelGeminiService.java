@@ -30,7 +30,7 @@ import static com.ksptool.entities.Entities.as;
  */
 @Slf4j
 @Service
-public class ModelGeminiService {
+public class ModelGeminiService implements ModelRestCI{
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final String SSE_PARAM = "?alt=sse";

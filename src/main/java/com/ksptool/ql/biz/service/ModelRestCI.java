@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  */
 public interface ModelRestCI {
 
-    public String sendMessageSync(OkHttpClient client, ModelChatParam dto) throws BizException;
+    String sendMessageSync(OkHttpClient client, ModelChatParam dto) throws BizException;
 
     void sendMessageStream(OkHttpClient client, ModelChatParam param, Consumer<ModelChatContext> callback);
 
