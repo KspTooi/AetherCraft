@@ -1104,7 +1104,7 @@
                                         <button class="thread-action-btn" @click="activeThread(thread.id)" :disabled="thread.active === 1">
                                             <i class="bi bi-lightning-charge"></i>
                                         </button>
-                                        <button class="thread-action-btn" @click="deleteThread(thread.id)">
+                                        <button class="thread-action-btn" @click="deleteThread(thread.id)" :disabled="threadList.length <= 1">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -1453,6 +1453,12 @@
                 
                 // 删除指定的会话
                 async deleteThread(threadId) {
+                    // 如果只剩下最后一个会话，不允许删除
+                    if (this.threadList.length <= 1) {
+                        showToast("warning", "至少需要保留一个会话");
+                        return;
+                    }
+                    
                     // 先确认用户是否真的要删除
                     if (!confirm('确定要删除这个会话吗？此操作不可恢复。')) {
                         return;
