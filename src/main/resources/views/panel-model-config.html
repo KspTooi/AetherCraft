@@ -133,6 +133,9 @@
 
                                 <div class="col-12">
                                     <div class="text-end mt-3">
+                                        <button type="button" class="btn btn-info btn-sm me-2" onclick="testModelConnection()">
+                                            <i class="bi bi-lightning-charge me-1"></i>测试连接
+                                        </button>
                                         <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="bi bi-check-lg me-1"></i>保存配置
                                         </button>
@@ -249,6 +252,32 @@
             
             // 重定向到选中模型的配置页面
             window.location.href = '/panel/model/edit/' + modelCode;
+        }
+        
+        // 测试模型连接
+        function testModelConnection() {
+            var modelCode = document.getElementById('model').value;
+            if (!modelCode) {
+                alert('请先选择模型！');
+                return;
+            }
+            
+            // 创建表单并提交
+            var testForm = document.createElement('form');
+            testForm.method = 'post';
+            testForm.action = '/panel/model/test';
+            
+            // 添加模型参数
+            var modelInput = document.createElement('input');
+            modelInput.type = 'hidden';
+            modelInput.name = 'model';
+            modelInput.value = modelCode;
+            testForm.appendChild(modelInput);
+            
+            // 添加到页面并提交
+            document.body.appendChild(testForm);
+            testForm.submit();
+            
         }
     </script>
 </body>

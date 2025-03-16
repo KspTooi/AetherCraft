@@ -21,6 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import com.ksptool.ql.biz.model.dto.ModelChatParam;
+import com.ksptool.ql.biz.service.ModelGeminiService;
+import com.ksptool.ql.biz.service.ModelGrokService;
+import com.ksptool.ql.commons.utils.HttpClientUtils;
+import okhttp3.OkHttpClient;
 
 @Service
 public class PanelModelConfigService {
@@ -40,6 +45,18 @@ public class PanelModelConfigService {
     @Autowired
     private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
+    @Autowired
+    private PanelApiKeyService panelApiKeyService;
+    
+    @Autowired
+    private ModelGeminiService modelGeminiService;
+    
+    @Autowired
+    private ModelGrokService modelGrokService;
+    
+    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
+
     /**
      * 获取当前用户可用的API密钥列表
      */
@@ -230,6 +247,84 @@ public class PanelModelConfigService {
                 globalConfigService.setValue("model.proxy.config", dto.getGlobalProxyConfig());
             }
 
+        }
+    }
+
+    /**
+     * 测试模型配置是否能够联通
+     * @param modelCode 模型代码
+     * @return 测试结果，成功返回模型响应内容，失败抛出异常
+     * @throws BizException 业务异常
+     */
+    public String testModelConfig(String modelCode) throws BizException {
+        // 验证模型是否存在
+        AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+        
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 获取API密钥
+        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+        if (StringUtils.isBlank(apiKey)) {
+            throw new BizException("未配置API Key，请先选择API Key并保存配置");
+        }
+        
+        // 构建配置键前缀
+        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+        
+        // 获取代理配置 - 首先检查用户级别的代理配置
+        String proxyConfig = userConfigService.getValue("model.proxy.config");
+        
+        // 如果用户未配置代理，则使用全局代理配置
+        if (StringUtils.isBlank(proxyConfig)) {
+            proxyConfig = globalConfigService.getValue("model.proxy.config");
+        }
+        
+        // 获取其他参数
+        String tempStr = userConfigService.getValue(baseKey + "temperature");
+        double temperature = tempStr != null ? Double.parseDouble(tempStr) : 0.7;
+        
+        String topPStr = userConfigService.getValue(baseKey + "topP");
+        double topP = topPStr != null ? Double.parseDouble(topPStr) : 1.0;
+        
+        String topKStr = userConfigService.getValue(baseKey + "topK");
+        int topK = topKStr != null ? Integer.parseInt(topKStr) : 40;
+        
+        String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
+        int maxOutputTokens = maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800;
+        
+        try {
+            // 创建HTTP客户端
+            OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 30);
+            
+            // 创建请求参数
+            ModelChatParam modelChatParam = new ModelChatParam();
+            modelChatParam.setModelCode(modelEnum.getCode());
+            modelChatParam.setMessage("你好，这是一条测试消息，请简短回复。");
+            modelChatParam.setTemperature(temperature);
+            modelChatParam.setTopP(topP);
+            modelChatParam.setTopK(topK);
+            modelChatParam.setMaxOutputTokens(maxOutputTokens);
+            modelChatParam.setHistories(new ArrayList<>());
+            modelChatParam.setSystemPrompt("你是一个有用的AI助手。这是一条测试消息，请简短回复。");
+            
+            // 根据模型类型设置不同的URL并调用相应的服务
+            if (modelEnum.getCode().contains("grok")) {
+                modelChatParam.setUrl(GROK_BASE_URL);
+                modelChatParam.setApiKey(apiKey);
+                return modelGrokService.sendMessageSync(client, modelChatParam);
+            } else if (modelEnum.getCode().contains("gemini")) {
+                modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent");
+                modelChatParam.setApiKey(apiKey);
+                return modelGeminiService.sendMessageSync(client, modelChatParam);
+            } else {
+                throw new BizException("不支持的模型类型");
+            }
+        } catch (Exception e) {
+            throw new BizException("测试失败: " + e.getMessage());
         }
     }
 } 

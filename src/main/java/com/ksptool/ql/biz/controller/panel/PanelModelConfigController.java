@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -60,5 +61,26 @@ public class PanelModelConfigController {
         }
         
         return "redirect:/panel/model/edit/" + dto.getModel();
+    }
+    
+    /**
+     * 测试AI模型配置连通性
+     */
+    @PostMapping("/test")
+    @RequirePermission("panel:model:edit")
+    public String testModelConfig(@RequestParam(name = "model", required = true) String model, RedirectAttributes ra) {
+        try {
+            // 测试模型配置
+            String response = panelModelConfigService.testModelConfig(model);
+            // 截取响应，避免太长
+            if (response.length() > 100) {
+                response = response.substring(0, 100) + "...";
+            }
+            ra.addFlashAttribute("vo", Result.success(String.format("模型[%s]连接测试成功，响应: %s", model, response), null));
+        } catch (Exception e) {
+            ra.addFlashAttribute("vo", Result.error("测试失败: " + e.getMessage()));
+        }
+        
+        return "redirect:/panel/model/edit/" + model;
     }
 } 
