@@ -10,8 +10,8 @@ import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -171,7 +171,7 @@ public class ModelGeminiService implements ModelRestCI{
                 
                 // 获取完整响应
                 String fullResponse = responseBuilder.toString();
-                if (!StringUtils.hasText(fullResponse)) {
+                if (StringUtils.isBlank(fullResponse)) {
                     throw new BizException("Gemini API 返回内容为空");
                 }
                 
@@ -221,20 +221,20 @@ public class ModelGeminiService implements ModelRestCI{
             throw new BizException("请求参数不能为空");
         }
         
-        if (!StringUtils.hasText(dto.getModelCode())) {
-            throw new BizException("模型代码不能为空");
+        if (StringUtils.isBlank(dto.getModelCode())) {
+            throw new IllegalArgumentException("模型代码不能为空");
         }
         
-        if (!StringUtils.hasText(dto.getMessage())) {
-            throw new BizException("消息内容不能为空");
+        if (StringUtils.isBlank(dto.getMessage())) {
+            throw new IllegalArgumentException("消息内容不能为空");
         }
         
-        if (!StringUtils.hasText(dto.getUrl())) {
-            throw new BizException("API URL不能为空");
+        if (StringUtils.isBlank(dto.getUrl())) {
+            throw new IllegalArgumentException("API URL不能为空");
         }
         
-        if (!StringUtils.hasText(dto.getApiKey())) {
-            throw new BizException("API Key不能为空");
+        if (StringUtils.isBlank(dto.getApiKey())) {
+            throw new IllegalArgumentException("API Key不能为空");
         }
     }
 } 
