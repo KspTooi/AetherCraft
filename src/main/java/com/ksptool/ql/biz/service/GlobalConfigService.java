@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +51,7 @@ public class GlobalConfigService {
      */
     public String get(String key, String defaultValue) {
         String value = get(key);
-        return StringUtils.hasText(value) ? value : defaultValue;
+        return StringUtils.isNotBlank(value) ? value : defaultValue;
     }
 
     /**
@@ -59,7 +59,7 @@ public class GlobalConfigService {
      */
     public int getInt(String key, int defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -74,7 +74,7 @@ public class GlobalConfigService {
      */
     public long getLong(String key, long defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -89,7 +89,7 @@ public class GlobalConfigService {
      */
     public double getDouble(String key, double defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -104,7 +104,7 @@ public class GlobalConfigService {
      */
     public boolean getBoolean(String key, boolean defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         return Boolean.parseBoolean(value);
