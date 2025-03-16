@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
+import com.ksptool.ql.biz.model.po.ModelRolePo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,10 +17,12 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
     /**
      * 查询模型角色的激活存档
      */
-    @Query("SELECT t FROM ModelRpThreadPo t " +
-           "LEFT JOIN FETCH t.histories h " +
-           "WHERE t.modelRole.id = :modelRoleId AND t.active = 1 " +
-           "ORDER BY h.sequence ASC")
+    @Query("""
+           SELECT t FROM ModelRpThreadPo t 
+           LEFT JOIN FETCH t.histories h 
+           WHERE t.modelRole.id = :modelRoleId AND t.active = 1 
+           ORDER BY h.sequence ASC
+           """)
     ModelRpThreadPo findActiveThreadByModelRoleId(@Param("modelRoleId") Long modelRoleId);
 
     /**
@@ -35,4 +38,25 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
     void setAllThreadActive(@Param("userId") Long userId, 
                           @Param("modelRoleId") Long modelRoleId, 
                           @Param("active") Integer active);
+    
+    /**
+     * 查找用户除指定ID外最新更新的会话
+     * 
+     * @param userId 用户ID
+     * @param modelRole 模型角色
+     * @param threadId 要排除的会话ID
+     * @return 最新更新的会话
+     */
+    @Query("""
+           SELECT t FROM ModelRpThreadPo t 
+           WHERE t.userId = :userId 
+           AND t.modelRole = :modelRole 
+           AND t.id != :threadId 
+           ORDER BY t.updateTime DESC
+           LIMIT 1
+           """)
+    ModelRpThreadPo findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
+        @Param("userId") Long userId,
+        @Param("modelRole") ModelRolePo modelRole,
+        @Param("threadId") Long threadId);
 } 

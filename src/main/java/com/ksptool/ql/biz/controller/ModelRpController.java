@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
+import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
@@ -75,6 +76,7 @@ public class ModelRpController {
             // 记录日志，表示将通过threadId加载指定会话
             System.out.println("Loading specific thread by ID: " + dto.getThreadId());
         }
+
         return Result.success(modelRpService.recoverRpChat(dto));
     }
 
@@ -97,6 +99,19 @@ public class ModelRpController {
     public Result<String> deActiveThread(@RequestBody @Valid DeActiveThreadDto dto) throws BizException {
         modelRpService.deActiveThread(dto);
         return Result.success("存档已取消激活");
+    }
+
+    /**
+     * 删除指定的会话及相关历史记录
+     * 
+     * @param dto 包含threadId参数
+     * @return 返回操作结果
+     * @throws BizException 业务异常
+     */
+    @PostMapping("/removeThread")
+    public Result<String> removeThread(@RequestBody @Valid RemoveThreadDto dto) throws BizException {
+        modelRpService.removeThread(dto);
+        return Result.success("会话已删除");
     }
 
     /**

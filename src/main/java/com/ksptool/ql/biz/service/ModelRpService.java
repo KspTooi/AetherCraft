@@ -8,6 +8,9 @@ import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
+import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
+import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
+import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.po.ModelRpSegmentPo;
@@ -34,6 +37,7 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,8 +47,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
-import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 import com.ksptool.ql.biz.service.AuthService;
@@ -997,5 +999,50 @@ public class ModelRpService {
         }
         
         return result;
+    }
+
+    /**
+     * 删除指定的会话及其相关历史记录
+     * 
+     * @param dto 包含threadId参数
+     * @throws BizException 业务异常
+     */
+    @Transactional
+    public void removeThread(RemoveThreadDto dto) throws BizException {
+        Long currentUserId = AuthService.getCurrentUserId();
+        Long threadId = dto.getThreadId();
+        
+        // 1. 根据用户ID+ThreadID查询是否有该Thread
+        ModelRpThreadPo query = new ModelRpThreadPo();
+        query.setId(threadId);
+        query.setUserId(currentUserId);
+        
+        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+            .orElseThrow(() -> new BizException("会话不存在或无权删除"));
+        
+        // 2. 判断该thread是否为激活的
+        if (thread.getActive() == 1) {
+            // 如果当前是激活的，需要查询updateTime最新的一个thread将其设置为激活
+            ModelRpThreadPo newActiveThread = threadRepository.findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
+                currentUserId, 
+                thread.getModelRole(), 
+                threadId
+            );
+            
+            if (newActiveThread != null) {
+                // 将找到的最新线程设置为激活状态
+                newActiveThread.setActive(1);
+                threadRepository.save(newActiveThread);
+            }
+        }
+        
+        // 3. 删除该thread下的所有history
+        historyRepository.deleteByThreadId(threadId);
+        
+        // 4. 删除该thread下的所有segment
+        segmentRepository.deleteByThreadId(threadId);
+        
+        // 5. 最后删除thread本身
+        threadRepository.delete(thread);
     }
 }
