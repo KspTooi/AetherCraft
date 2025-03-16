@@ -6,7 +6,8 @@ import com.ksptool.ql.commons.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import static org.springframework.util.StringUtils.getFilenameExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class UserFileService {
      */
     private Path getStorageBasePath() throws BizException {
         String storagePath = globalConfigService.get("user.file.storage.path");
-        if (!StringUtils.hasText(storagePath)) {
+        if (StringUtils.isBlank(storagePath)) {
             throw new BizException("未配置文件存储路径 它位于全局配置:user.file.storage.path");
         }
         String userDir = System.getProperty("user.dir");
@@ -58,7 +59,7 @@ public class UserFileService {
 
             Long userId = AuthService.getCurrentUserId();
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = StringUtils.getFilenameExtension(originalFilename);
+            String fileExtension = getFilenameExtension(originalFilename);
             
             // 生成新文件名：userId_UUID.extension
             String newFilename = userId + "_" + UUID.randomUUID().toString() + 
@@ -94,7 +95,7 @@ public class UserFileService {
      * @return 文件对象，如果文件不存在或用户无权限则返回null
      */
     public File getUserFile(String filename, Long userId) {
-        if (!StringUtils.hasText(filename) || userId == null) {
+        if (StringUtils.isBlank(filename) || userId == null) {
             return null;
         }
 
@@ -118,7 +119,7 @@ public class UserFileService {
      * @return 文件对象，如果文件不存在或用户无权限则返回null
      */
     public File getUserFile(String filename) {
-        if (!StringUtils.hasText(filename)) {
+        if (StringUtils.isBlank(filename)) {
             return null;
         }
         return getUserFile(filename, AuthService.getCurrentUserId());
