@@ -73,7 +73,7 @@ public class ModelRpService {
     private ModelGeminiService modelGeminiService;
     
     @Autowired
-    private ConfigService configService;
+    private UserConfigService userConfigService;
     
     @Autowired
     private PanelApiKeyService panelApiKeyService;
@@ -309,7 +309,7 @@ public class ModelRpService {
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyConfig = configService.get("model.proxy.config", thread.getUserId());
+            String proxyConfig = userConfigService.get("model.proxy.config", thread.getUserId());
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyConfig)) {
@@ -773,7 +773,7 @@ public class ModelRpService {
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyConfig = configService.get("model.proxy.config", userId);
+            String proxyConfig = userConfigService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyConfig)) {

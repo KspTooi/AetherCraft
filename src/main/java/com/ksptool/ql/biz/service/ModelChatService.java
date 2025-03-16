@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.ArrayList;
 import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
@@ -69,7 +68,7 @@ public class ModelChatService {
     private final Gson gson = new Gson();
     
     @Autowired
-    private ConfigService configService;
+    private UserConfigService userConfigService;
     
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -196,10 +195,10 @@ public class ModelChatService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
         
         // 获取配置参数
-        double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
-        double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
-        int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
-        int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800, userId);
+        double temperature = userConfigService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
+        double topP = userConfigService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
+        int topK = userConfigService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
+        int maxOutputTokens = userConfigService.getInt(baseKey + "maxOutputTokens", 800, userId);
         
         // 创建并填充DTO
         ModelChatParam dto = new ModelChatParam();
@@ -227,7 +226,7 @@ public class ModelChatService {
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyUrl = configService.get("model.proxy.config");
+            String proxyUrl = userConfigService.get("model.proxy.config");
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyUrl)) {
@@ -384,17 +383,17 @@ public class ModelChatService {
             ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, modelEnum.getCode());
 
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyConfig = configService.get("model.proxy.config", userId);
+            String proxyConfig = userConfigService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyConfig)) {
                 proxyConfig = globalConfigService.get("model.proxy.config");
             }
 
-            double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
-            double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
-            int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
-            int maxOutputTokens = configService.getInt(baseKey + "maxOutputTokens", 800, userId);
+            double temperature = userConfigService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
+            double topP = userConfigService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
+            int topK = userConfigService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
+            int maxOutputTokens = userConfigService.getInt(baseKey + "maxOutputTokens", 800, userId);
             
             //保存用户消息
             createHistory(thread, dto.getMessage(), 0);
@@ -547,7 +546,7 @@ public class ModelChatService {
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
             
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyConfig = configService.get("model.proxy.config", userId);
+            String proxyConfig = userConfigService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyConfig)) {
@@ -832,7 +831,7 @@ public class ModelChatService {
             String baseKey = "ai.model.cfg." + model + ".";
             
             // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyUrl = configService.get("model.proxy.config", userId);
+            String proxyUrl = userConfigService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
             if (StringUtils.isBlank(proxyUrl)) {

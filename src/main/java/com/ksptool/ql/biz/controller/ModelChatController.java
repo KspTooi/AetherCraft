@@ -21,7 +21,7 @@ import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.UserConfigService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
@@ -36,7 +36,7 @@ public class ModelChatController {
     private ModelChatService modelChatService;
 
     @Autowired
-    private ConfigService configService;
+    private UserConfigService userConfigService;
 
     @RequirePermission("model:chat:create:thread")
     @GetMapping("/chat/newThread")
@@ -59,7 +59,7 @@ public class ModelChatController {
         
         // 如果threadId为空，尝试从缓存获取
         if (threadId == null) {
-            String cachedThreadId = configService.get("model.chat.current.thread");
+            String cachedThreadId = userConfigService.get("model.chat.current.thread");
             if (cachedThreadId != null) {
                 try {
                     Long cachedId = Long.parseLong(cachedThreadId);
@@ -75,12 +75,12 @@ public class ModelChatController {
         
         // 如果是新对话，清除缓存
         if (threadId != null && threadId == -1) {
-            configService.setValue("model.chat.current.thread", null);
+            userConfigService.setValue("model.chat.current.thread", null);
         }
         
         // 如果是有效的会话ID，更新缓存
         if (threadId != null && threadId != -1 && modelChatService.isValidThread(threadId)) {
-            configService.setValue("model.chat.current.thread", threadId.toString());
+            userConfigService.setValue("model.chat.current.thread", threadId.toString());
         }
         
         mav.addObject("data", modelChatService.getChatView(threadId));

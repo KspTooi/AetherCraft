@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Service
 public class FileExplorerService {
     @Autowired
-    private ConfigService configService;
+    private UserConfigService userConfigService;
     @Autowired
     private WindowsNativeService windowsNativeService;
 
@@ -35,7 +35,7 @@ public class FileExplorerService {
      */
     public String getLastPath() {
         Long userId = AuthService.getCurrentUserId();
-        String path = configService.getValue(EXPLORER_PATH_KEY, userId);
+        String path = userConfigService.getValue(EXPLORER_PATH_KEY, userId);
         return StringUtils.isNotBlank(path) ? path : "@";
     }
 
@@ -44,7 +44,7 @@ public class FileExplorerService {
      */
     public void saveCurrentPath(String path) {
         Long userId = AuthService.getCurrentUserId();
-        configService.setValue(EXPLORER_PATH_KEY, path, userId);
+        userConfigService.setValue(EXPLORER_PATH_KEY, path, userId);
     }
 
     /**
@@ -229,11 +229,11 @@ public class FileExplorerService {
         Long userId = AuthService.getCurrentUserId();
         
         // 获取用户自定义运行命令，如果没有则尝试获取全局配置
-        String command = configService.getValue(EXPLORER_CONFIG_KEY, userId);
+        String command = userConfigService.getValue(EXPLORER_CONFIG_KEY, userId);
         if (StringUtils.isBlank(command)) {
             // 如果没有配置，添加默认配置到用户作用域
             command = DEFAULT_EXPLORER_CMD + " #{path}";
-            configService.setValue(EXPLORER_CONFIG_KEY, command, userId);
+            userConfigService.setValue(EXPLORER_CONFIG_KEY, command, userId);
         }
 
         // 替换路径占位符并执行命令

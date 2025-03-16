@@ -10,7 +10,7 @@ import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.AvailableApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -31,7 +31,7 @@ import okhttp3.OkHttpClient;
 public class PanelModelConfigService {
     
     @Autowired
-    private ConfigService userConfigService;
+    private UserConfigService userConfigService;
     
     @Autowired
     private GlobalConfigService globalConfigService;

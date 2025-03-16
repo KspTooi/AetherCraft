@@ -4,8 +4,7 @@ import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
-import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
 import com.ksptool.ql.commons.web.Result;
@@ -42,7 +41,7 @@ public class PanelModelRoleController {
     private UserFileService userFileService;
 
     @Autowired
-    private ConfigService configService;
+    private UserConfigService userConfigService;
 
     /**
      * 获取模型角色列表视图

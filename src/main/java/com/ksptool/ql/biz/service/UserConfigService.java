@@ -2,22 +2,17 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.po.ConfigPo;
-import com.ksptool.ql.commons.enums.GlobalConfigEnum;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
-public class ConfigService {
+public class UserConfigService {
 
     private final ConfigRepository configRepository;
 
-    public ConfigService(ConfigRepository configRepository) {
+    public UserConfigService(ConfigRepository configRepository) {
         this.configRepository = configRepository;
     }
 

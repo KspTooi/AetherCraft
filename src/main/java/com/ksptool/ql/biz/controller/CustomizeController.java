@@ -2,10 +2,9 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.WallpaperDto;
 import com.ksptool.ql.biz.model.po.UserFilePo;
-import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
-import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ import java.io.File;
 public class CustomizeController {
     
     private final UserFileService userFileService;
-    private final ConfigService configService;
+    private final UserConfigService userConfigService;
     private final GlobalConfigService globalConfigService;
     
     // 用户壁纸路径的配置键
@@ -43,7 +42,7 @@ public class CustomizeController {
     public Result<?> resetWallpaper() {
         try {
             // 通过设置为 null 来移除壁纸配置项
-            configService.setValue(USER_WALLPAPER_PATH_KEY, null);
+            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, null);
             return Result.success("已恢复默认壁纸");
         } catch (Exception e) {
             return Result.error("恢复默认壁纸失败：" + e.getMessage());
@@ -59,7 +58,7 @@ public class CustomizeController {
             String defaultWallpaperPath = globalConfigService.get("customize.wallpaper.default.path","/img/bg1.jpg");
             
             // 从用户配置中获取壁纸路径
-            String wallpaperPath = configService.get(USER_WALLPAPER_PATH_KEY);
+            String wallpaperPath = userConfigService.get(USER_WALLPAPER_PATH_KEY);
             if (!StringUtils.hasText(wallpaperPath)) {
                 return ResponseEntity.status(302)
                     .header("Location", defaultWallpaperPath)
@@ -112,7 +111,7 @@ public class CustomizeController {
             UserFilePo userFile = userFileService.receive(multipartFile);
 
             // 3. 更新用户配置，保存壁纸路径
-            configService.setValue(USER_WALLPAPER_PATH_KEY, userFile.getFilepath());
+            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, userFile.getFilepath());
 
             return Result.success("壁纸设置成功");
         } catch (Exception e) {

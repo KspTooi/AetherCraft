@@ -5,7 +5,7 @@ import com.ksptool.ql.biz.model.dto.RenameFileDto;
 import com.ksptool.ql.biz.model.dto.OpenPathDto;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.service.FileExplorerService;
-import com.ksptool.ql.biz.service.ConfigService;
+import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -17,18 +17,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
-import org.springframework.util.StringUtils;
+
 import java.io.IOException;
 
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.awt.Desktop;
-import java.awt.Desktop.Action;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import com.ksptool.ql.biz.service.WindowsNativeService;
 import com.ksptool.ql.commons.exception.BizException;
@@ -39,7 +37,7 @@ import com.ksptool.ql.commons.exception.BizException;
 public class FileExplorerController {
 
     private final FileExplorerService fileExplorerService;
-    private final ConfigService configService;
+    private final UserConfigService userConfigService;
     private final AuthService authService;
     @Autowired
     private WindowsNativeService windowsNativeService;
