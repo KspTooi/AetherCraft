@@ -18,7 +18,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.PreparedStatement;
@@ -113,8 +113,8 @@ public class ModelChatService {
      * @throws BizException 如果模型代码无效
      */
     public Long createNewThread(String modelCode) throws BizException {
-        if (!StringUtils.hasText(modelCode)) {
-            throw new BizException("模型代码不能为空");
+        if (StringUtils.isBlank(modelCode)) {
+            modelCode = AIModelEnum.values()[0].getCode();
         }
 
         AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
@@ -230,13 +230,13 @@ public class ModelChatService {
             String proxyUrl = configService.get("model.proxy.config");
             
             // 如果用户未配置代理，则使用全局代理配置
-            if (!StringUtils.hasText(proxyUrl)) {
+            if (StringUtils.isBlank(proxyUrl)) {
                 proxyUrl = globalConfigService.get("model.proxy.config");
             }
             
             String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), AuthService.getCurrentUserId());
 
-            if (!StringUtils.hasText(apiKey)) {
+            if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
             }
             
@@ -376,7 +376,7 @@ public class ModelChatService {
 
             //获取所有配置 - 使用传入的userId
             String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
-            if (!StringUtils.hasText(apiKey)) {
+            if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
             }
             
@@ -387,7 +387,7 @@ public class ModelChatService {
             String proxyConfig = configService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
-            if (!StringUtils.hasText(proxyConfig)) {
+            if (StringUtils.isBlank(proxyConfig)) {
                 proxyConfig = globalConfigService.get("model.proxy.config");
             }
 
@@ -447,7 +447,7 @@ public class ModelChatService {
                         // 完成类型
                         // 保存完整的AI响应
                         String fullResponse = context.getContent();
-            if (!StringUtils.hasText(fullResponse)) {
+            if (StringUtils.isBlank(fullResponse)) {
                 throw new BizException("Gemini API 返回内容为空");
             }
             
@@ -520,7 +520,7 @@ public class ModelChatService {
             Long userId = AuthService.getCurrentUserId();
 
             String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
-            if (!StringUtils.hasText(apiKey)) {
+            if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
             }
 
@@ -550,7 +550,7 @@ public class ModelChatService {
             String proxyConfig = configService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
-            if (!StringUtils.hasText(proxyConfig)) {
+            if (StringUtils.isBlank(proxyConfig)) {
                 proxyConfig = globalConfigService.get("model.proxy.config");
             }
 
@@ -738,8 +738,8 @@ public class ModelChatService {
             throw new BizException("会话ID不能为空");
         }
         
-        if (!StringUtils.hasText(newTitle)) {
-            throw new BizException("会话标题不能为空");
+        if (StringUtils.isBlank(newTitle)) {
+            throw new BizException("标题不能为空");
         }
         
         // 限制标题长度
@@ -810,7 +810,7 @@ public class ModelChatService {
                 }
             }
             
-            if (firstUserMessage == null || !StringUtils.hasText(firstUserMessage.getContent())) {
+            if (firstUserMessage == null || StringUtils.isBlank(firstUserMessage.getContent())) {
                 return; // 没有找到用户消息或消息内容为空
             }
             
@@ -835,13 +835,13 @@ public class ModelChatService {
             String proxyUrl = configService.get("model.proxy.config", userId);
             
             // 如果用户未配置代理，则使用全局代理配置
-            if (!StringUtils.hasText(proxyUrl)) {
+            if (StringUtils.isBlank(proxyUrl)) {
                 proxyUrl = globalConfigService.get("model.proxy.config");
             }
             
             String apiKey = panelApiKeyService.getApiKey(model, userId);
             
-            if (!StringUtils.hasText(apiKey)) {
+            if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
             }
             
