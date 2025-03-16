@@ -225,7 +225,15 @@ public class ModelChatService {
 
             ///设置API URL和API Key Proxy
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            String proxyUrl = configService.get(baseKey + "proxy");
+            
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyUrl = configService.get("model.proxy.config");
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (!StringUtils.hasText(proxyUrl)) {
+                proxyUrl = globalConfigService.get("model.proxy.config");
+            }
+            
             String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), AuthService.getCurrentUserId());
 
             if (!StringUtils.hasText(apiKey)) {
@@ -375,7 +383,14 @@ public class ModelChatService {
             //获取或创建会话，使用传入的userId而不是从AuthContext获取
             ModelChatThreadPo thread = createOrRetrieveThread(dto.getChatThread(), userId, modelEnum.getCode());
 
-            String proxyConfig = configService.get(baseKey + "proxy", userId);
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyConfig = configService.get("model.proxy.config", userId);
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (!StringUtils.hasText(proxyConfig)) {
+                proxyConfig = globalConfigService.get("model.proxy.config");
+            }
+
             double temperature = configService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
             double topP = configService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
             int topK = configService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
@@ -530,7 +545,14 @@ public class ModelChatService {
 
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            String proxyConfig = configService.get(baseKey + "proxy", userId);
+            
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyConfig = configService.get("model.proxy.config", userId);
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (!StringUtils.hasText(proxyConfig)) {
+                proxyConfig = globalConfigService.get("model.proxy.config");
+            }
 
 
             // 创建HTTP客户端
@@ -808,7 +830,15 @@ public class ModelChatService {
             
             // 设置API URL和API Key
             String baseKey = "ai.model.cfg." + model + ".";
-            String proxyUrl = configService.get(baseKey + "proxy", userId);
+            
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyUrl = configService.get("model.proxy.config", userId);
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (!StringUtils.hasText(proxyUrl)) {
+                proxyUrl = globalConfigService.get("model.proxy.config");
+            }
+            
             String apiKey = panelApiKeyService.getApiKey(model, userId);
             
             if (!StringUtils.hasText(apiKey)) {

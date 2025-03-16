@@ -307,9 +307,15 @@ public class ModelRpService {
 
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            String proxyConfig = configService.get(baseKey + "proxy", thread.getUserId());
-
-            // 创建HTTP客户端
+            
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyConfig = configService.get("model.proxy.config", thread.getUserId());
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (StringUtils.isBlank(proxyConfig)) {
+                proxyConfig = globalConfigService.get("model.proxy.config");
+            }
+            
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
 
             // 创建请求参数
@@ -765,9 +771,15 @@ public class ModelRpService {
 
             // 获取配置
             String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            String proxyConfig = configService.get(baseKey + "proxy", userId);
-
-            // 创建HTTP客户端
+            
+            // 获取代理配置 - 首先检查用户级别的代理配置
+            String proxyConfig = configService.get("model.proxy.config", userId);
+            
+            // 如果用户未配置代理，则使用全局代理配置
+            if (StringUtils.isBlank(proxyConfig)) {
+                proxyConfig = globalConfigService.get("model.proxy.config");
+            }
+            
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
 
             // 创建请求参数
