@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,7 @@ public class ConfigService {
      */
     public String get(String key, String defaultValue) {
         String value = get(key);
-        return StringUtils.hasText(value) ? value : defaultValue;
+        return StringUtils.isNotBlank(value) ? value : defaultValue;
     }
 
     /**
@@ -72,7 +72,7 @@ public class ConfigService {
      */
     public int getInt(String key, int defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -87,7 +87,7 @@ public class ConfigService {
      */
     public long getLong(String key, long defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -102,7 +102,7 @@ public class ConfigService {
      */
     public double getDouble(String key, double defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -117,7 +117,7 @@ public class ConfigService {
      */
     public boolean getBoolean(String key, boolean defaultValue) {
         String value = get(key);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         return Boolean.parseBoolean(value);
@@ -135,7 +135,7 @@ public class ConfigService {
      */
     public String get(String key, String defaultValue, Long userId) {
         String value = get(key, userId);
-        return StringUtils.hasText(value) ? value : defaultValue;
+        return StringUtils.isNotBlank(value) ? value : defaultValue;
     }
 
     /**
@@ -143,7 +143,7 @@ public class ConfigService {
      */
     public int getInt(String key, int defaultValue, Long userId) {
         String value = get(key, userId);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -158,7 +158,7 @@ public class ConfigService {
      */
     public long getLong(String key, long defaultValue, Long userId) {
         String value = get(key, userId);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -173,7 +173,7 @@ public class ConfigService {
      */
     public double getDouble(String key, double defaultValue, Long userId) {
         String value = get(key, userId);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         try {
@@ -188,7 +188,7 @@ public class ConfigService {
      */
     public boolean getBoolean(String key, boolean defaultValue, Long userId) {
         String value = get(key, userId);
-        if (!StringUtils.hasText(value)) {
+        if (StringUtils.isBlank(value)) {
             return defaultValue;
         }
         return Boolean.parseBoolean(value);
