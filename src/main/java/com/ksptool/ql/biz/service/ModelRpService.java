@@ -126,6 +126,13 @@ public class ModelRpService {
         // 2. 查询激活的存档
         ModelRpThreadPo thread = threadRepository.findActiveThreadByModelRoleId(dto.getModelRoleId());
 
+        // 如果 newThread=0，将已有激活的存档置为未激活
+        if (dto.getNewThread() == 0) {
+            thread.setActive(0);
+            threadRepository.save(thread);
+            thread = null; // 重置thread，后续会创建新的存档
+        }
+
         // 3. 如果没有激活的存档，创建新存档
         if (thread == null) {
 

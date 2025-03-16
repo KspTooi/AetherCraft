@@ -58,6 +58,12 @@ public class ModelRpController {
      * 恢复或创建RP对话
      * 如果存在激活的存档，则返回存档内容
      * 如果不存在，则创建新存档并返回首条消息
+     * 
+     * @param dto 包含 modelRoleId、modelCode 和 newThread 参数
+     *            newThread=0：创建新会话并将已有激活的存档置为未激活
+     *            newThread=1：优先尝试获取已有激活的存档，没有则创建新存档（默认行为）
+     * @return 返回会话信息和历史消息
+     * @throws BizException 业务异常
      */
     @PostMapping("/recoverRpChat")
     public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
