@@ -5,7 +5,7 @@ import com.ksptool.ql.commons.utils.FileUtils;
 import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class FileExplorerService {
     public String getLastPath() {
         Long userId = AuthService.getCurrentUserId();
         String path = configService.getValue(EXPLORER_PATH_KEY, userId);
-        return StringUtils.hasText(path) ? path : "@";
+        return StringUtils.isNotBlank(path) ? path : "@";
     }
 
     /**
@@ -230,7 +230,7 @@ public class FileExplorerService {
         
         // 获取用户自定义运行命令，如果没有则尝试获取全局配置
         String command = configService.getValue(EXPLORER_CONFIG_KEY, userId);
-        if (!StringUtils.hasText(command)) {
+        if (StringUtils.isBlank(command)) {
             // 如果没有配置，添加默认配置到用户作用域
             command = DEFAULT_EXPLORER_CMD + " #{path}";
             configService.setValue(EXPLORER_CONFIG_KEY, command, userId);
