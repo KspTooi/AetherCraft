@@ -19,8 +19,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
 
 session:
   expires: 86400
+
+application:
+  version: 1.1V-M8  # 应用版本号
 
