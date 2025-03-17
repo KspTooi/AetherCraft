@@ -1059,6 +1059,9 @@
                         <div class="menu-item" @click.stop="manageAllSessions(openMenuId)">
                             <i class="bi bi-folder2-open"></i> 管理全部会话
                         </div>
+                        <div class="menu-item" @click.stop="editRole(openMenuId)">
+                            <i class="bi bi-pencil-square"></i> 编辑角色
+                        </div>
                     </div>
                 </div>
                 
@@ -2205,6 +2208,13 @@
                     if (confirm('确定要删除这条消息吗？此操作不可恢复。')) {
                         this.deleteMessage(messageId);
                     }
+                },
+                editRole(roleId) {
+                    // 关闭菜单
+                    this.openMenuId = null;
+                    
+                    // 跳转到角色编辑页面
+                    window.location.href = `/panel/model/role/list?id=${roleId}`;
                 }
             },
             mounted() {
