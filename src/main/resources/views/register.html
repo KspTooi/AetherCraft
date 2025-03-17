@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickLauncher 注册</title>
+
+    <style>
+        /* 通用页面样式 */
+        .page {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('/img/bg1.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f2f2f2;
+        }
+
+        /* 注册框使用蓝色基调的毛玻璃效果与扁平化设计 */
+        .register-box {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 320px;
+            text-align: left;
+        }
+
+        /* 注册框标题：添加渐变文本特效 */
+        .register-box__header {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+            background-image: linear-gradient(to right, #3c3c3c, #3c82ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* 表单组 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group__label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #e0f0ff;
+            padding-left: 2px;
+        }
+
+        .input-group__input {
+            width: calc(100% - 20px);
+            margin: 0 10px;
+            padding: 10px;
+            border: 1px solid rgba(0, 123, 255, 0.5);
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group__input:focus {
+            outline: none;
+            border-color: #007BFF;
+        }
+
+        .input-group__input::placeholder {
+            color: #666;
+        }
+
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 0 10px;
+        }
+
+        .btn {
+            background-color: #3596ff;
+            color: #fff;
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.02);
+        }
+
+        .btn--secondary {
+            background-color: #6c757d;
+        }
+
+        .btn--secondary:hover {
+            background-color: #545b62;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 350px) {
+            .register-box {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body class="page">
+    <div class="register-box">
+        <h2 class="register-box__header">用户注册</h2>
+        <form action="/register" method="post">
+            <div class="input-group">
+                <label class="input-group__label" for="username">用户名:</label>
+                <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="input-group">
+                <label class="input-group__label" for="email">邮箱:</label>
+                <input class="input-group__input" type="email" id="email" name="email" placeholder="请输入邮箱" required>
+            </div>
+            <div class="input-group">
+                <label class="input-group__label" for="password">密码:</label>
+                <input class="input-group__input" type="password" id="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div class="input-group">
+                <label class="input-group__label" for="confirmPassword">确认密码:</label>
+                <input class="input-group__input" type="password" id="confirmPassword" name="confirmPassword" placeholder="请再次输入密码" required>
+            </div>
+            <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn--secondary" type="button" onclick="window.location.href='/login'">返回登录</button>
+                <button class="btn" type="submit">注册</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+<div th:replace="components/com-scripts"></div>
+
+</html> 
