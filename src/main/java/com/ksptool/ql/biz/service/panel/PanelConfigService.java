@@ -6,8 +6,10 @@ import com.ksptool.ql.biz.model.dto.SavePanelConfigDto;
 import com.ksptool.ql.biz.model.po.ConfigPo;
 import com.ksptool.ql.biz.model.vo.ListPanelConfigVo;
 import com.ksptool.ql.biz.model.vo.SavePanelConfigVo;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.commons.web.SimpleExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,11 +32,19 @@ public class PanelConfigService {
      * 获取配置项列表视图
      */
     public PageableView<ListPanelConfigVo> getListView(ListPanelConfigDto dto) {
+
+        Long userId = AuthService.getCurrentUserId();
+
+        //如果当前用户有权限查询全局配置项
+        if(AuthService.hasPermission("panel:config:view:global")){
+            userId = null;
+        }
+
         // 创建分页对象
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), Sort.Direction.DESC, "updateTime");
-        
+
         // 调用Repository查询
-        Page<ListPanelConfigVo> page = configRepository.getListView(dto.getKeyOrValue(), dto.getDescription(), pageable);
+        Page<ListPanelConfigVo> page = configRepository.getListView(dto.getKeyOrValue(), dto.getDescription(), userId,pageable);
         
         // 返回分页视图
         return new PageableView<>(page.getContent(), page.getTotalElements(), dto.getPage(), dto.getPageSize());

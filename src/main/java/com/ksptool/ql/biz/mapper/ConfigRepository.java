@@ -29,8 +29,10 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
             LEFT JOIN UserPo u ON c.userId = u.id
             WHERE (TRIM(COALESCE(:keyOrValue, '')) = '' OR c.configKey LIKE %:keyOrValue% OR c.configValue LIKE %:keyOrValue%)
             AND (TRIM(COALESCE(:description, '')) = '' OR c.description LIKE %:description%)
+            AND (:userId IS NULL OR c.userId = :userId)
             """)
     Page<ListPanelConfigVo> getListView(@Param("keyOrValue") String keyOrValue,
                                        @Param("description") String description,
+                                       @Param("userId") Long userId,
                                        Pageable pageable);
 } 
