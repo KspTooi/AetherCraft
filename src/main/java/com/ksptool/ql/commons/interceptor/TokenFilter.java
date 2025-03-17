@@ -34,7 +34,8 @@ public class TokenFilter implements Filter {
             "/h2-console/**",
             "/error",
             "/register",
-            "/userRegister"
+            "/userRegister",
+            "/install-wizard/**"
     );
 
     @Override
