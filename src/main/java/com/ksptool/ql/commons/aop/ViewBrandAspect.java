@@ -21,4 +21,13 @@ public class ViewBrandAspect {
         }
         return brandName;
     }
+    
+    @ModelAttribute("panelBrand")
+    public String injectPanelBrandName() {
+        String brandName = globalConfigService.getValue(GlobalConfigEnum.PAGE_PANEL_BRAND.getKey());
+        if (StringUtils.isBlank(brandName)) {
+            return "管理台";
+        }
+        return brandName;
+    }
 }

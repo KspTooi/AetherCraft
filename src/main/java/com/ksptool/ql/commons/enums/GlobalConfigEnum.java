@@ -10,6 +10,7 @@ public enum GlobalConfigEnum {
 
     PAGE_LOGIN_BRAND("page.login.brand","Aether Craft","登录页展示的品牌名"),
     PAGE_TOP_BAR_BRAND("page.top.bar.brand","Aether Craft","导航栏展示的品牌名"),
+    PAGE_PANEL_BRAND("page.panel.brand","Aether Craft Admin","管理台展示的品牌名"),
 
 
     USER_FILE_STORAGE_PATH("user.file.storage.path", "/userdata/res", "用户文件的存储位置(相对路径)"),
