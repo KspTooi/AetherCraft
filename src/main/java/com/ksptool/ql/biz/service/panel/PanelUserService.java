@@ -40,6 +40,8 @@ public class PanelUserService {
     private GroupRepository groupRepository;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    @Autowired
     private AuthService authService;
 
 
