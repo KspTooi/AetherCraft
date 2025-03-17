@@ -11,6 +11,7 @@ import com.ksptool.ql.biz.model.vo.ListPanelUserVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserPermissionVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +40,7 @@ public class PanelUserService {
     private GroupRepository groupRepository;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private AuthService authService;
 
 
     /**
@@ -131,6 +133,7 @@ public class PanelUserService {
      * @throws BizException 业务异常
      */
     public void saveUser(SavePanelUserDto dto) throws BizException {
+
         // 检查用户名是否已存在
         UserPo existingUserByName = userRepository.findByUsername(dto.getUsername());
         if (existingUserByName != null && (dto.getId() == null || !existingUserByName.getId().equals(dto.getId()))) {
@@ -165,6 +168,9 @@ public class PanelUserService {
         assign(dto, user);
         user.setGroups(getGroupSet(dto.getGroupIds()));
         userRepository.save(user);
+
+        //刷新用户的会话(如果在线)
+        authService.refreshUserSession(user.getId());
     }
 
     private HashSet<GroupPo> getGroupSet(List<Long> groupIds) {

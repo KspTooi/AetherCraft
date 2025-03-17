@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.controller.panel;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.model.dto.ListPanelUserDto;
 import com.ksptool.ql.biz.model.dto.SavePanelUserDto;
-import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserGroupVo;
 import com.ksptool.ql.biz.model.vo.SavePanelUserVo;
 import com.ksptool.ql.biz.service.panel.PanelUserService;
@@ -21,7 +20,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
-import static com.ksptool.entities.Entities.assign;
 
 /**
  * 用户管理控制器
@@ -38,7 +36,7 @@ public class PanelUserController {
      */
     @GetMapping("/list")
     @RequirePermission("panel:user:view")
-    public ModelAndView userManager(ListPanelUserDto dto) {
+    public ModelAndView getListView(ListPanelUserDto dto) {
         ModelAndView mav = new ModelAndView("panel-user-manager");
         mav.addObject("data", panelUserService.getListView(dto));
         return mav;
@@ -50,6 +48,7 @@ public class PanelUserController {
     @GetMapping({"/create", "/edit"})
     @RequirePermission("panel:user:edit")
     public ModelAndView userOperator(@RequestParam(name = "id", required = false) Long id, @ModelAttribute("data") SavePanelUserVo flashData) {
+
         ModelAndView mav = new ModelAndView("panel-user-operator");
         
         try {
@@ -118,23 +117,6 @@ public class PanelUserController {
         }
         
         return mav;
-    }
-
-    private SavePanelUserVo convertToVo(SavePanelUserDto dto) {
-        SavePanelUserVo vo = as(dto, SavePanelUserVo.class);
-        
-        // 获取所有用户组
-        List<SavePanelUserGroupVo> groups = panelUserService.getCreateView().getGroups();
-        
-        // 如果DTO中有选中的用户组，标记它们
-        if (dto.getGroupIds() != null) {
-            for (SavePanelUserGroupVo group : groups) {
-                group.setHasGroup(dto.getGroupIds().contains(group.getId()));
-            }
-        }
-        
-        vo.setGroups(groups);
-        return vo;
     }
 
     /**
