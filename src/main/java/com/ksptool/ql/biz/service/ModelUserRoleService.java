@@ -215,4 +215,28 @@ public class ModelUserRoleService {
             throw new BizException("创建默认角色失败: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * 获取用户当前扮演的角色
+     * @param userId 用户ID
+     * @return 用户当前扮演的角色，如果未找到则返回null
+     */
+    public ModelUserRolePo getUserPlayRole(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+
+        // 创建查询条件
+        ModelUserRolePo query = new ModelUserRolePo();
+        query.setUserId(userId);
+        query.setIsDefault(1);
+        
+        // 使用Example查询单个结果
+        Example<ModelUserRolePo> example = Example.of(query);
+        try {
+            return rep.findOne(example).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 } 

@@ -51,6 +51,10 @@ public class UserPo {
     @Comment("用户状态 0:正常 1:被封禁")
     private Integer status = 0;
 
+    @Column(name = "encrypted_dek", length = 512)
+    @Comment("用户数据加密密钥(!已加密)")
+    private String encryptedDek;
+
     @Column(name = "last_login_time")
     @Comment("最后登录时间")
     private Date lastLoginTime;

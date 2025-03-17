@@ -1,9 +1,6 @@
 package com.ksptool.ql.biz.service;
 
-import com.ksptool.ql.biz.mapper.ModelRoleRepository;
-import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
-import com.ksptool.ql.biz.mapper.ModelRpSegmentRepository;
-import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
+import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
@@ -91,6 +88,7 @@ public class ModelRpService {
 
     @PersistenceContext
     private EntityManager entityManager;
+    private ModelUserRoleRepository modelUserRoleRepository;
 
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
@@ -125,14 +123,13 @@ public class ModelRpService {
             throw new BizException("无效的模型代码");
         }
 
-        // 1. 查询用户拥有的模型角色
+        //查询用户拥有的模型角色
         ModelRolePo example = new ModelRolePo();
         example.setId(dto.getModelRoleId());
         example.setUserId(AuthService.getCurrentUserId());
 
         ModelRolePo modelRole = modelRoleRepository.findOne(Example.of(example))
             .orElseThrow(() -> new BizException("模型角色不存在或无权访问"));
-
 
         //处理存档激活逻辑
         if(dto.getThreadId()!=null){
@@ -164,18 +161,25 @@ public class ModelRpService {
             thread = null; // 重置thread，后续会创建新的存档
         }
 
-        // 3. 如果没有激活的存档，创建新存档
+        // 如果没有激活的Thread，创建新Thread
         if (thread == null) {
+
+            //查询用户所扮演的角色
+            ModelUserRolePo qUserRole = new ModelUserRolePo();
+            qUserRole.setUserId(AuthService.getCurrentUserId());
+            qUserRole.setIsDefault(1);
+            ModelUserRolePo userRole = modelUserRoleRepository.findOne(Example.of(qUserRole)).orElseThrow(() -> new BizException("未找到用户所扮演的角色!"));
 
             thread = new ModelRpThreadPo();
             thread.setUserId(AuthService.getCurrentUserId());
             thread.setModelCode(dto.getModelCode());
             thread.setModelRole(modelRole);
+            thread.setUserRole(userRole);
             thread.setTitle("与" + modelRole.getName() + "的对话");
             thread.setActive(1);
             thread = threadRepository.save(thread);
             
-            // 创建首条消息
+            // 创建首条消息(如果有)
             if (StringUtils.isNotBlank(modelRole.getFirstMessage())) {
                 ModelRpHistoryPo history = new ModelRpHistoryPo();
                 history.setThread(thread);
@@ -271,6 +275,9 @@ public class ModelRpService {
         if (rpThreadToContextIdMap.containsKey(dto.getThreadId())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
+
+
+
 
         //获取会话信息
         ModelRpThreadPo query = new ModelRpThreadPo();
