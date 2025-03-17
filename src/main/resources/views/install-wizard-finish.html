@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>安装完成 - 安装向导 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入通用脚本和样式 -->
+    <div th:replace="~{components/com-scripts}"></div>
+    <div th:replace="~{components/com-styles}"></div>
+    <style>
+        /* 安装向导样式 */
+        .wizard-container {
+            min-height: 100vh;
+            background-color: var(--bs-light);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .wizard-header {
+            background: var(--bs-dark);
+            color: var(--bs-white);
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .wizard-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        /* 品牌名称渐变效果 */
+        .brand-gradient {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 10%, #fad0c4 20%, #a18cd1 30%, #fbc2eb 40%, #8fd3f4 50%, #84fab0 60%, #8fd3f4 70%, #fbc2eb 80%, #a18cd1 90%, #ff9a9e 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 600;
+            text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            animation: gradient-shift 8s linear infinite;
+            letter-spacing: 0.5px;
+        }
+        
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+        
+        .wizard-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .wizard-footer {
+            padding: 1rem 2rem;
+            background: var(--bs-white);
+            border-top: 1px solid var(--bs-border-color);
+            text-align: right;
+        }
+        
+        .wizard-card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .wizard-progress::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--bs-gray-300);
+            z-index: 1;
+        }
+        
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            background: var(--bs-light);
+            padding: 0 8px;
+        }
+        
+        .progress-step.active .step-circle {
+            background: var(--bs-primary);
+            color: white;
+        }
+        
+        .progress-step.completed .step-circle {
+            background: var(--bs-success);
+            color: white;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bs-gray-200);
+            color: var(--bs-gray-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 0.5rem;
+        }
+        
+        .step-label {
+            font-size: 0.875rem;
+            text-align: center;
+            color: var(--bs-gray-700);
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--bs-primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--bs-success);
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bs-success);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bs-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .feature-content {
+            flex: 1;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body class="h-100">
+    <div class="wizard-container">
+        <!-- 向导头部 -->
+        <div class="wizard-header">
+            <div class="container">
+                <div class="d-flex align-items-center">
+                    <span class="wizard-title brand-gradient">Quick Launcher 安装向导</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 向导内容 -->
+        <div class="wizard-content">
+            <!-- 进度指示器 -->
+            <div class="wizard-progress">
+                <div class="progress-step completed">
+                    <div class="step-circle">
+                        <i class="bi bi-check"></i>
+                    </div>
+                    <div class="step-label">系统介绍</div>
+                </div>
+                <div class="progress-step completed">
+                    <div class="step-circle">
+                        <i class="bi bi-check"></i>
+                    </div>
+                    <div class="step-label">数据初始化</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">完成安装</div>
+                </div>
+            </div>
+            
+            <div class="card wizard-card text-center">
+                <div class="card-body p-4">
+                    <div class="success-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h4 class="card-title mb-3">恭喜！安装已完成</h4>
+                    <p class="card-text mb-4">
+                        Quick Launcher 已成功安装并初始化完成。您现在可以开始使用系统的所有功能。
+                    </p>
+                    
+                    <div class="alert alert-success mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        系统已创建默认管理员账号，用户名：<strong>admin</strong>，密码：<strong>admin</strong>。
+                        请尽快登录系统并修改默认密码以确保安全。
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card wizard-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">系统功能概览</h5>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">快速启动</div>
+                            <p>通过简单的命令或快捷方式，快速启动您常用的应用程序和文件。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">多用户支持</div>
+                            <p>支持多用户使用，每个用户拥有独立的应用程序列表和配置。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">权限管理</div>
+                            <p>完善的权限控制系统，可以精确控制每个用户的操作权限。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="bi bi-gear"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">系统配置</div>
+                            <p>灵活的系统配置选项，可以根据需要自定义系统行为。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card wizard-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">后续步骤</h5>
+                    <ol class="mb-0">
+                        <li class="mb-2">登录系统并修改默认管理员密码</li>
+                        <li class="mb-2">添加您常用的应用程序到快速启动列表</li>
+                        <li class="mb-2">根据需要创建其他用户账号</li>
+                        <li class="mb-2">自定义系统配置以满足您的需求</li>
+                        <li>探索系统的其他功能和特性</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 向导底部 -->
+        <div class="wizard-footer">
+            <a href="/install-wizard/data-init" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i>上一步
+            </a>
+            <a href="/panel" class="btn btn-success" id="btnFinish">
+                <i class="bi bi-check-circle me-1"></i>完成并进入系统
+            </a>
+        </div>
+    </div>
+
+    <!-- 自定义脚本 -->
+    <script>
+        $(document).ready(function() {
+            // 完成安装并进入系统
+            $('#btnFinish').on('click', function(e) {
+                e.preventDefault();
+                
+                // 调用后端接口，设置安装向导已完成标志
+                $.ajax({
+                    url: '/install-wizard/complete',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            // 跳转到系统首页
+                            window.location.href = '/panel';
+                        } else {
+                            alert('完成安装失败：' + (response.message || '未知错误'));
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert('完成安装失败：' + errorMsg);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

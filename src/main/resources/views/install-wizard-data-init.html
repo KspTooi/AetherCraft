@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<head>
+    <title>数据初始化 - 安装向导 - Quick Launcher</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入通用脚本和样式 -->
+    <div th:replace="~{components/com-scripts}"></div>
+    <div th:replace="~{components/com-styles}"></div>
+    <style>
+        /* 安装向导样式 */
+        .wizard-container {
+            min-height: 100vh;
+            background-color: var(--bs-light);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .wizard-header {
+            background: var(--bs-dark);
+            color: var(--bs-white);
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .wizard-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        /* 品牌名称渐变效果 */
+        .brand-gradient {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 10%, #fad0c4 20%, #a18cd1 30%, #fbc2eb 40%, #8fd3f4 50%, #84fab0 60%, #8fd3f4 70%, #fbc2eb 80%, #a18cd1 90%, #ff9a9e 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 600;
+            text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            animation: gradient-shift 8s linear infinite;
+            letter-spacing: 0.5px;
+        }
+        
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+        
+        .wizard-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .wizard-footer {
+            padding: 1rem 2rem;
+            background: var(--bs-white);
+            border-top: 1px solid var(--bs-border-color);
+            text-align: right;
+        }
+        
+        .wizard-card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .wizard-progress::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--bs-gray-300);
+            z-index: 1;
+        }
+        
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            background: var(--bs-light);
+            padding: 0 8px;
+        }
+        
+        .progress-step.active .step-circle {
+            background: var(--bs-primary);
+            color: white;
+        }
+        
+        .progress-step.completed .step-circle {
+            background: var(--bs-success);
+            color: white;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bs-gray-200);
+            color: var(--bs-gray-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 0.5rem;
+        }
+        
+        .step-label {
+            font-size: 0.875rem;
+            text-align: center;
+            color: var(--bs-gray-700);
+        }
+        
+        .progress-step.active .step-label {
+            color: var(--bs-primary);
+            font-weight: 600;
+        }
+        
+        .progress-step.completed .step-label {
+            color: var(--bs-success);
+        }
+        
+        .init-item {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .init-item-header {
+            padding: 1rem;
+            background: var(--bs-gray-100);
+            border-bottom: 1px solid var(--bs-border-color);
+            font-weight: 600;
+        }
+        
+        .init-item-body {
+            padding: 1rem;
+            background: white;
+        }
+        
+        .init-item-status {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+        
+        .status-icon.pending {
+            background: var(--bs-gray-200);
+            color: var(--bs-gray-600);
+        }
+        
+        .status-icon.success {
+            background: var(--bs-success);
+            color: white;
+        }
+        
+        .status-icon.error {
+            background: var(--bs-danger);
+            color: white;
+        }
+        
+        .status-text {
+            flex: 1;
+        }
+        
+        .status-action {
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body class="h-100">
+    <div class="wizard-container">
+        <!-- 向导头部 -->
+        <div class="wizard-header">
+            <div class="container">
+                <div class="d-flex align-items-center">
+                    <span class="wizard-title brand-gradient">Quick Launcher 安装向导</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 向导内容 -->
+        <div class="wizard-content">
+            <!-- 进度指示器 -->
+            <div class="wizard-progress">
+                <div class="progress-step completed">
+                    <div class="step-circle">
+                        <i class="bi bi-check"></i>
+                    </div>
+                    <div class="step-label">系统介绍</div>
+                </div>
+                <div class="progress-step active">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">数据初始化</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">完成安装</div>
+                </div>
+            </div>
+            
+            <div class="card wizard-card">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-4">系统数据初始化</h4>
+                    <p class="card-text mb-4">
+                        在这一步，我们将初始化系统所需的基础数据，包括权限节点、用户组、默认用户和全局配置等。
+                        请按顺序完成以下初始化操作，确保系统能够正常运行。
+                    </p>
+                    
+                    <!-- 初始化项目列表 -->
+                    <div class="init-items">
+                        <!-- 权限节点初始化 -->
+                        <div class="init-item" id="permissionInit">
+                            <div class="init-item-header d-flex justify-content-between align-items-center">
+                                <span>1. 权限节点初始化</span>
+                                <span class="badge bg-primary">必须</span>
+                            </div>
+                            <div class="init-item-body">
+                                <p>初始化系统内置权限节点，确保权限控制功能正常运行。</p>
+                                <div class="init-item-status">
+                                    <div class="status-icon pending" id="permissionStatus">
+                                        <i class="bi bi-hourglass"></i>
+                                    </div>
+                                    <div class="status-text" id="permissionMessage">等待初始化...</div>
+                                    <div class="status-action">
+                                        <button id="btnInitPermission" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-shield-check me-1"></i>初始化
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 用户组初始化 -->
+                        <div class="init-item" id="groupInit">
+                            <div class="init-item-header d-flex justify-content-between align-items-center">
+                                <span>2. 用户组初始化</span>
+                                <span class="badge bg-primary">必须</span>
+                            </div>
+                            <div class="init-item-body">
+                                <p>初始化系统内置用户组，包括管理员组、普通用户组和访客组。</p>
+                                <div class="init-item-status">
+                                    <div class="status-icon pending" id="groupStatus">
+                                        <i class="bi bi-hourglass"></i>
+                                    </div>
+                                    <div class="status-text" id="groupMessage">等待初始化...</div>
+                                    <div class="status-action">
+                                        <button id="btnInitGroup" class="btn btn-sm btn-primary" disabled>
+                                            <i class="bi bi-people-fill me-1"></i>初始化
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 用户初始化 -->
+                        <div class="init-item" id="userInit">
+                            <div class="init-item-header d-flex justify-content-between align-items-center">
+                                <span>3. 用户初始化</span>
+                                <span class="badge bg-primary">必须</span>
+                            </div>
+                            <div class="init-item-body">
+                                <p>初始化系统内置用户，包括管理员用户。</p>
+                                <div class="init-item-status">
+                                    <div class="status-icon pending" id="userStatus">
+                                        <i class="bi bi-hourglass"></i>
+                                    </div>
+                                    <div class="status-text" id="userMessage">等待初始化...</div>
+                                    <div class="status-action">
+                                        <button id="btnInitUser" class="btn btn-sm btn-primary" disabled>
+                                            <i class="bi bi-person-check-fill me-1"></i>初始化
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 全局配置初始化 -->
+                        <div class="init-item" id="configInit">
+                            <div class="init-item-header d-flex justify-content-between align-items-center">
+                                <span>4. 全局配置初始化</span>
+                                <span class="badge bg-primary">必须</span>
+                            </div>
+                            <div class="init-item-body">
+                                <p>初始化系统全局配置项，确保系统功能正常运行。</p>
+                                <div class="init-item-status">
+                                    <div class="status-icon pending" id="configStatus">
+                                        <i class="bi bi-hourglass"></i>
+                                    </div>
+                                    <div class="status-text" id="configMessage">等待初始化...</div>
+                                    <div class="status-action">
+                                        <button id="btnInitConfig" class="btn btn-sm btn-primary" disabled>
+                                            <i class="bi bi-gear-fill me-1"></i>初始化
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 向导底部 -->
+        <div class="wizard-footer">
+            <a href="/install-wizard/index" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i>上一步
+            </a>
+            <a href="/install-wizard/finish" class="btn btn-primary" id="btnNextStep" disabled>
+                <i class="bi bi-arrow-right-circle me-1"></i>下一步
+            </a>
+        </div>
+    </div>
+
+    <!-- 自定义脚本 -->
+    <script>
+        $(document).ready(function() {
+            // 权限节点初始化
+            $('#btnInitPermission').on('click', function() {
+                const $btn = $(this);
+                const $status = $('#permissionStatus');
+                const $message = $('#permissionMessage');
+                
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>初始化中...');
+                $status.removeClass('pending').addClass('pending');
+                $status.html('<i class="bi bi-arrow-repeat spin"></i>');
+                $message.text('正在初始化权限节点...');
+                
+                // 调用后端接口进行权限校验
+                $.ajax({
+                    url: '/panel/maintain/validSystemPermission',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            $status.removeClass('pending').addClass('success');
+                            $status.html('<i class="bi bi-check-lg"></i>');
+                            $message.text(response.message);
+                            
+                            // 启用下一步按钮
+                            $('#btnInitGroup').prop('disabled', false);
+                        } else {
+                            $status.removeClass('pending').addClass('error');
+                            $status.html('<i class="bi bi-x-lg"></i>');
+                            $message.text(response.message || '初始化失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        $status.removeClass('pending').addClass('error');
+                        $status.html('<i class="bi bi-x-lg"></i>');
+                        $message.text(errorMsg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', true).html('<i class="bi bi-shield-check me-1"></i>初始化');
+                    }
+                });
+            });
+
+            // 用户组初始化
+            $('#btnInitGroup').on('click', function() {
+                const $btn = $(this);
+                const $status = $('#groupStatus');
+                const $message = $('#groupMessage');
+                
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>初始化中...');
+                $status.removeClass('pending').addClass('pending');
+                $status.html('<i class="bi bi-arrow-repeat spin"></i>');
+                $message.text('正在初始化用户组...');
+                
+                // 调用后端接口进行用户组校验
+                $.ajax({
+                    url: '/panel/maintain/validSystemGroup',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            $status.removeClass('pending').addClass('success');
+                            $status.html('<i class="bi bi-check-lg"></i>');
+                            $message.text(response.message);
+                            
+                            // 启用下一步按钮
+                            $('#btnInitUser').prop('disabled', false);
+                        } else {
+                            $status.removeClass('pending').addClass('error');
+                            $status.html('<i class="bi bi-x-lg"></i>');
+                            $message.text(response.message || '初始化失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        $status.removeClass('pending').addClass('error');
+                        $status.html('<i class="bi bi-x-lg"></i>');
+                        $message.text(errorMsg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', true).html('<i class="bi bi-people-fill me-1"></i>初始化');
+                    }
+                });
+            });
+
+            // 用户初始化
+            $('#btnInitUser').on('click', function() {
+                const $btn = $(this);
+                const $status = $('#userStatus');
+                const $message = $('#userMessage');
+                
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>初始化中...');
+                $status.removeClass('pending').addClass('pending');
+                $status.html('<i class="bi bi-arrow-repeat spin"></i>');
+                $message.text('正在初始化用户...');
+                
+                // 调用后端接口进行用户校验
+                $.ajax({
+                    url: '/panel/maintain/validSystemUsers',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            $status.removeClass('pending').addClass('success');
+                            $status.html('<i class="bi bi-check-lg"></i>');
+                            $message.text(response.message);
+                            
+                            // 启用下一步按钮
+                            $('#btnInitConfig').prop('disabled', false);
+                        } else {
+                            $status.removeClass('pending').addClass('error');
+                            $status.html('<i class="bi bi-x-lg"></i>');
+                            $message.text(response.message || '初始化失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        $status.removeClass('pending').addClass('error');
+                        $status.html('<i class="bi bi-x-lg"></i>');
+                        $message.text(errorMsg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', true).html('<i class="bi bi-person-check-fill me-1"></i>初始化');
+                    }
+                });
+            });
+
+            // 全局配置初始化
+            $('#btnInitConfig').on('click', function() {
+                const $btn = $(this);
+                const $status = $('#configStatus');
+                const $message = $('#configMessage');
+                
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>初始化中...');
+                $status.removeClass('pending').addClass('pending');
+                $status.html('<i class="bi bi-arrow-repeat spin"></i>');
+                $message.text('正在初始化全局配置...');
+                
+                // 调用后端接口进行全局配置校验
+                $.ajax({
+                    url: '/panel/maintain/validSystemConfigs',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.code === 0) {
+                            $status.removeClass('pending').addClass('success');
+                            $status.html('<i class="bi bi-check-lg"></i>');
+                            $message.text(response.message);
+                            
+                            // 启用下一步按钮
+                            $('#btnNextStep').prop('disabled', false);
+                        } else {
+                            $status.removeClass('pending').addClass('error');
+                            $status.html('<i class="bi bi-x-lg"></i>');
+                            $message.text(response.message || '初始化失败');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = '请求出错，请稍后重试';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        $status.removeClass('pending').addClass('error');
+                        $status.html('<i class="bi bi-x-lg"></i>');
+                        $message.text(errorMsg);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', true).html('<i class="bi bi-gear-fill me-1"></i>初始化');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
