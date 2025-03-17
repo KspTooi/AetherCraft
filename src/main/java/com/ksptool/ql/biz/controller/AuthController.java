@@ -5,12 +5,15 @@ import com.ksptool.ql.biz.model.dto.LoginDto;
 import com.ksptool.ql.biz.model.dto.RegisterDto;
 import com.ksptool.ql.biz.model.vo.LoginVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -26,6 +29,8 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private GlobalConfigService globalConfigService;
 
     @PostMapping(value = "/login")
     public String login(@Valid LoginDto dto, HttpServletResponse response, RedirectAttributes ra) {
@@ -51,6 +56,12 @@ public class AuthController {
     @PostMapping(value = "/register")
     @ResponseBody
     public Result<String> login(@Valid @RequestBody RegisterDto dto) {
+
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+
+        if(StringUtils.isBlank(allowRegister) || allowRegister.equals("false")){
+            return Result.error("管理员已禁用注册");
+        }
 
         try{
             var register = userService.register(dto.getUsername(), dto.getPassword());
@@ -80,6 +91,14 @@ public class AuthController {
 
     @PostMapping("/userRegister")
     public ModelAndView userRegister(@Valid RegisterDto dto, BindingResult bindingResult, RedirectAttributes ra) {
+
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+
+        if(StringUtils.isBlank(allowRegister) || allowRegister.equals("false")){
+            ra.addFlashAttribute("vo", Result.error("管理员已禁用注册!"));
+            return new ModelAndView("redirect:/login");
+        }
+
         ModelAndView mav = new ModelAndView();
         
         if (bindingResult.hasErrors()) {

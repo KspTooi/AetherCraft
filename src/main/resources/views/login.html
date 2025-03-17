@@ -175,7 +175,7 @@
             <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
             </div>
             <button class="btn" type="submit">继续</button>
-            <div class="register-guide">
+            <div class="register-guide" th:if="${allowRegister}">
                 还没有账号？<a href="/register">立即注册</a>
             </div>
         </form>

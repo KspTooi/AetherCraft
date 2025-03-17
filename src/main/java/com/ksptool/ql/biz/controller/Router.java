@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class Router {
@@ -45,15 +46,25 @@ public class Router {
         }
 
         String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+        
         ModelAndView mav = new ModelAndView("login");
         mav.addObject("loginBrand", StringUtils.isBlank(loginBrand) ? "" : loginBrand);
+        mav.addObject("allowRegister", StringUtils.isNotBlank(allowRegister) && "true".equals(allowRegister));
         return mav;
     }
 
     @GetMapping("/register")
-    public ModelAndView register(HttpServletRequest hsr) {
+    public ModelAndView register(HttpServletRequest hsr, RedirectAttributes ra) {
+
         if (authService.verifyUser(hsr) != null) {
             return new ModelAndView("redirect:/appCenter");
+        }
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+
+        if(StringUtils.isBlank(allowRegister) || allowRegister.equals("false")){
+            ra.addFlashAttribute("vo", Result.error("管理员已禁用注册!"));
+            return new ModelAndView("redirect:/login");
         }
 
         String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
@@ -157,7 +168,7 @@ public class Router {
     @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){
-        return Result.success("1.1P-M8");
+        return Result.success("1.1R-M8");
     }
 
 
