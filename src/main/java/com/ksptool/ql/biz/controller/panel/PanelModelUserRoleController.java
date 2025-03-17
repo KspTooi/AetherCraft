@@ -6,7 +6,6 @@ import com.ksptool.ql.biz.model.vo.ListModelUserRoleVo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
 import com.ksptool.ql.biz.service.ModelUserRoleService;
 import com.ksptool.ql.biz.service.UserFileService;
-import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +45,7 @@ public class PanelModelUserRoleController {
         ListModelUserRoleVo listVo = new ListModelUserRoleVo();
         
         // 查询角色列表
-        List<ModelUserRoleVo> roles = modelUserRoleService.findRoles(queryDto);
+        List<ModelUserRoleVo> roles = modelUserRoleService.getModelUserRoleList(queryDto);
         listVo.setRoles(roles);
         
         // 查询当前选中的角色
@@ -77,7 +76,7 @@ public class PanelModelUserRoleController {
         
         // 如果指定了选中角色ID
         if (queryDto.getSelectedId() != null) {
-            selectedRole = modelUserRoleService.findById(queryDto.getSelectedId());
+            selectedRole = modelUserRoleService.getById(queryDto.getSelectedId());
             
             // 检查是否有表单数据需要回显
             SaveModelUserRoleDto formData = (SaveModelUserRoleDto) model.asMap().get("formData");

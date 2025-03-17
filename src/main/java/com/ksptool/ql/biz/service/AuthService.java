@@ -42,6 +42,39 @@ public class AuthService {
 
     @Value("${session.expires}")
     private long expiresInSeconds;
+    @Autowired
+    private ModelUserRoleService modelUserRoleService;
+
+    /**
+     * 用户使用用户名与密码登录系统
+     * @param username 用户名
+     * @param password 密码
+     */
+    public String loginByPassword(String username, String password) throws BizException {
+        // 根据用户名查询用户
+        UserPo user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new BizException("用户名或密码错误");
+        }
+        // 使用用户名作为盐，对密码进行加密：password + username
+        String salted = password + username;
+        String hashedPassword = hashSHA256(salted);
+        if (!hashedPassword.equals(user.getPassword())) {
+            throw new BizException("用户名或密码错误");
+        }
+
+        // 更新登录次数和最后登录时间
+        user.setLoginCount(user.getLoginCount() + 1);
+        user.setLastLoginTime(new Date());
+        userRepository.save(user);
+
+        //为用户创建他默认所扮演的角色
+        modelUserRoleService.createDefaultUserRole(user.getId());
+
+        // 登录成功，创建或返回 token
+        return createUserSession(user.getId()).getToken();
+    }
+
 
     /**
      * 设置当前请求的用户会话
@@ -118,27 +151,6 @@ public class AuthService {
     }
 
 
-    public String loginByPassword(String username, String password) throws BizException {
-        // 根据用户名查询用户
-        UserPo user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new BizException("用户名或密码错误");
-        }
-        // 使用用户名作为盐，对密码进行加密：password + username
-        String salted = password + username;
-        String hashedPassword = hashSHA256(salted);
-        if (!hashedPassword.equals(user.getPassword())) {
-            throw new BizException("用户名或密码错误");
-        }
-        
-        // 更新登录次数和最后登录时间
-        user.setLoginCount(user.getLoginCount() + 1);
-        user.setLastLoginTime(new Date());
-        userRepository.save(user);
-        
-        // 登录成功，创建或返回 token
-        return createUserSession(user.getId()).getToken();
-    }
 
     public Long verifyToken(String token) {
         UserSessionPo userSession = userSessionRepository.findByToken(token);

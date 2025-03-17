@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +42,7 @@ public class ModelUserRoleService {
      * @param queryDto 查询参数
      * @return 角色列表
      */
-    public List<ModelUserRoleVo> findRoles(ModelUserRoleQueryDto queryDto) {
+    public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto queryDto) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<ModelUserRolePo> query = cb.createQuery(ModelUserRolePo.class);
         Root<ModelUserRolePo> root = query.from(ModelUserRolePo.class);
@@ -75,7 +76,8 @@ public class ModelUserRoleService {
      * @param id 角色ID
      * @return 角色信息
      */
-    public ModelUserRoleVo findById(Long id) {
+    public ModelUserRoleVo getById(Long id) {
+
         if (id == null) {
             return null;
         }
@@ -170,6 +172,47 @@ public class ModelUserRoleService {
             return true;
         } catch (Exception e) {
             throw new BizException("删除角色失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 为用户创建默认角色（如果用户没有任何角色）
+     * @param userId 用户ID
+     * @return 创建的角色ID，如果用户已有角色则返回null
+     * @throws BizException 创建角色失败时抛出异常
+     */
+    @Transactional
+    public void createDefaultUserRole(Long userId) throws BizException {
+
+        if (userId == null) {
+            throw new BizException("用户ID不能为空");
+        }
+        
+        // 查询用户是否已有角色
+        ModelUserRolePo query = new ModelUserRolePo();
+        query.setUserId(userId);
+        Example<ModelUserRolePo> example = Example.of(query);
+        List<ModelUserRolePo> userRoles = rep.findAll(example);
+        
+        // 如果用户已有角色，则不创建新角色
+        if (!userRoles.isEmpty()) {
+            return;
+        }
+        
+        // 创建默认角色
+        ModelUserRolePo defaultRole = new ModelUserRolePo();
+        defaultRole.setName("");
+        defaultRole.setDescription("");
+        defaultRole.setUserId(userId);
+        defaultRole.setAvatarPath(null);
+        defaultRole.setSortOrder(0);
+        defaultRole.setIsDefault(1); // 设置为默认角色
+        
+        try {
+            // 保存角色
+            ModelUserRolePo savedRole = rep.save(defaultRole);
+        } catch (Exception e) {
+            throw new BizException("创建默认角色失败: " + e.getMessage(), e);
         }
     }
 } 
