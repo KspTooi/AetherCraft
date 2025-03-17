@@ -279,9 +279,6 @@ public class ModelRpService {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
-
-
-
         //获取会话信息
         ModelRpThreadPo query = new ModelRpThreadPo();
         query.setId(dto.getThreadId());
@@ -303,10 +300,7 @@ public class ModelRpService {
         }
 
         //获取用户扮演的角色信息
-        ModelUserRolePo userRole = thread.getUserRole();
-        //if (userRole == null) {
-        //    throw new BizException("用户角色信息不存在");
-        //}
+        ModelUserRolePo userPlayRole = thread.getUserRole();
 
         //获取模型扮演的角色信息
         ModelRolePo modelRole = thread.getModelRole();
@@ -324,8 +318,8 @@ public class ModelRpService {
         rolePrompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
         rolePrompt.setParameter("modelScenario",modelRole.getScenario());
 
-        if(userRole != null){
-            ctxPrompt.setParameter("user", userRole.getName());
+        if(userPlayRole != null){
+            ctxPrompt.setParameter("user", userPlayRole.getName());
         }
 
         String finalPrompt = ctxPrompt.execute() + rolePrompt.execute();
@@ -425,10 +419,10 @@ public class ModelRpService {
             vo.setRoleId(null);
             vo.setRoleName("user");
             vo.setRoleAvatarPath(null);
-            if(userRole != null){
-                vo.setRoleId(userRole.getId());
-                vo.setRoleName(userRole.getName());
-                vo.setRoleAvatarPath(userRole.getAvatarPath());
+            if(userPlayRole != null){
+                vo.setRoleId(userPlayRole.getId());
+                vo.setRoleName(userPlayRole.getName());
+                vo.setRoleAvatarPath(userPlayRole.getAvatarPath());
             }
 
             return vo;

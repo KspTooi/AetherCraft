@@ -140,6 +140,21 @@ public class ModelUserRoleService {
         // 保存角色
         rolePo = rep.save(rolePo);
         
+        // 检查用户是否有默认角色
+        ModelUserRolePo query = new ModelUserRolePo();
+        query.setUserId(rolePo.getUserId());
+        query.setIsDefault(1);
+        if (!rep.findOne(Example.of(query)).isPresent()) {
+            // 查询该用户的第一个角色
+            query.setIsDefault(null);
+            List<ModelUserRolePo> userRoles = rep.findAll(Example.of(query));
+            if (!userRoles.isEmpty()) {
+                ModelUserRolePo firstRole = userRoles.get(0);
+                firstRole.setIsDefault(1);
+                rep.save(firstRole);
+            }
+        }
+        
         // 返回保存后的角色ID
         return rolePo.getId();
     }
@@ -210,7 +225,7 @@ public class ModelUserRoleService {
         
         try {
             // 保存角色
-            ModelUserRolePo savedRole = rep.save(defaultRole);
+            rep.save(defaultRole);
         } catch (Exception e) {
             throw new BizException("创建默认角色失败: " + e.getMessage(), e);
         }
