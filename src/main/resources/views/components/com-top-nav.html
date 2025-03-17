@@ -1,7 +1,7 @@
 <nav class="navbar my-vista-taskbar navbar-expand-md" xmlns:sec="http://www.w3.org/1999/xhtml">
   <div class="container-fluid">
     <!-- 使用 div 代替 a.navbar-brand 且让其高度铺满整个任务栏 -->
-    <div class="navbar-brand">
+    <div class="navbar-brand" th:text="${topBarBrand}">
       OxygenLauncher
     </div>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 

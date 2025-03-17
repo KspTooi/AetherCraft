@@ -104,6 +104,26 @@
             transform: scale(1.02);
         }
 
+        /* 注册引导链接 */
+        .register-guide {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #e0f0ff;
+        }
+
+        .register-guide a {
+            color: #3596ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .register-guide a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
         /* 响应式调整 */
         @media (max-width: 350px) {
             .login-box {
@@ -116,7 +136,7 @@
 
 <body class="page">
     <div class="login-box">
-        <h2 class="login-box__header">Oxygen Launcher</h2>
+        <h2 class="login-box__header" th:text="${loginBrand}">Oxygen Launcher</h2>
         <form action="/login" method="post">
             <div class="input-group">
                 <label class="input-group__label" for="username">账户:</label>
@@ -129,6 +149,9 @@
             <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
             </div>
             <button class="btn" type="submit">继续</button>
+            <div class="register-guide">
+                还没有账号？<a href="/register">立即注册</a>
+            </div>
         </form>
     </div>
 

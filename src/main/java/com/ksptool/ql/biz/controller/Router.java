@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +24,9 @@ public class Router {
     @Autowired
     private UserConfigService userConfigService;
 
+    @Autowired
+    private GlobalConfigService globalConfigService;
+
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
         //当前登录用户无效则进入登录页
@@ -34,13 +39,15 @@ public class Router {
     }
 
     @GetMapping("/login")
-    public String login(HttpServletRequest hsr) {
-        //已登录则进入应用中心
-        if(authService.verifyUser(hsr) != null){
-            return "redirect:/appCenter";
+    public ModelAndView login(HttpServletRequest hsr) {
+        if (authService.verifyUser(hsr) != null) {
+            return new ModelAndView("redirect:/appCenter");
         }
 
-        return "login";
+        String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
+        ModelAndView mav = new ModelAndView("login");
+        mav.addObject("loginBrand", StringUtils.isBlank(loginBrand) ? "" : loginBrand);
+        return mav;
     }
 
     @GetMapping("/appCenter")
