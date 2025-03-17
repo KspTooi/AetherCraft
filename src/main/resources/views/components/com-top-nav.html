@@ -121,6 +121,15 @@
     .my-vista-taskbar .nav-item:hover {
       transform: scale(1.05);
     }
+    
+    /* 活动导航项的父元素样式 */
+    .my-vista-taskbar .nav-item.active-item {
+      transform: scale(1.02);
+      background: rgba(255,255,255,0.03);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1) inset;
+    }
+    
     .my-vista-taskbar .nav-link {
       color: #ffffff;
       font-size: 0.9rem;
@@ -128,12 +137,41 @@
       text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
       padding: 0.2rem 0.3rem;
       border-radius: 4px;
-      transition: background 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
+      transition: all 0.3s ease;
     }
     .my-vista-taskbar .nav-link:hover {
-      background-color: rgba(255,255,255,0.2);
+      background-color: rgba(255,255,255,0.1);
       text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+      transform: translateY(-1px);
+      box-shadow: 0 0 5px rgba(255,255,255,0.1);
     }
+    
+    /* 选中状态样式 */
+    .my-vista-taskbar .nav-link.active {
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 0 8px rgba(255,255,255,0.2);
+      color: #ffffff;
+      font-weight: 500;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+      position: relative;
+      transform: translateY(-1px);
+      animation: subtle-glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes subtle-glow {
+      from {
+        box-shadow: 0 0 8px rgba(255,255,255,0.2);
+      }
+      to {
+        box-shadow: 0 0 12px rgba(255,255,255,0.3);
+      }
+    }
+    
+    /* 移除底部装饰线 */
+    .my-vista-taskbar .nav-link.active::after {
+      display: none;
+    }
+    
     /* 响应式设计：移动端样式紧凑，同时隐藏默认的导航按钮 */
     @media (max-width: 576px) {
       .my-vista-taskbar .navbar-brand {
@@ -170,6 +208,38 @@
           bsCollapse.toggle();
         }
       });
+      
+      // 设置当前活动导航项
+      const currentPath = window.location.pathname;
+      console.log('当前路径:', currentPath);
+      
+      // 清除所有活动状态
+      $('.nav-link').removeClass('active');
+      
+      // 精确匹配当前路径
+      let activeNavItem = $('.nav-link[href="' + currentPath + '"]');
+      
+      // 如果没有精确匹配，尝试前缀匹配（适用于子页面）
+      if (activeNavItem.length === 0) {
+        $('.nav-link').each(function() {
+          const href = $(this).attr('href');
+          console.log('导航项路径:', href);
+          // 检查当前路径是否以导航项的href开头，且href不是根路径
+          if (href && href !== '/' && currentPath.startsWith(href)) {
+            if (!activeNavItem.length || href.length > activeNavItem.attr('href').length) {
+              activeNavItem = $(this);
+            }
+          }
+        });
+      }
+      
+      // 添加活动状态
+      if (activeNavItem.length) {
+        console.log('选中导航项:', activeNavItem.attr('href'));
+        activeNavItem.addClass('active');
+        // 添加父元素的活动状态
+        activeNavItem.closest('.nav-item').addClass('active-item');
+      }
     });
   </script>
 </nav>
