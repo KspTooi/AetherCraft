@@ -5,6 +5,7 @@ package com.ksptool.ql.commons.enums;
  */
 public enum GlobalConfigEnum {
 
+    APPLICATION_VERSION("application.version","1.0A","应用程序版本"),
 
     ALLOW_USER_REGISTER("allow.user.register","false","允许用户注册账号 true-允许 -false禁止"),
 

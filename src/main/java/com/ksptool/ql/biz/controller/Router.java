@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.biz.service.panel.PanelInstallWizardService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.web.Result;
@@ -28,8 +30,12 @@ public class Router {
     @Autowired
     private GlobalConfigService globalConfigService;
 
+    @Autowired
+    private PanelInstallWizardService installWizardService;
+
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
+
         //当前登录用户无效则进入登录页
         if(authService.verifyUser(hsr) == null){
             return "redirect:/login";
@@ -41,6 +47,12 @@ public class Router {
 
     @GetMapping("/login")
     public ModelAndView login(HttpServletRequest hsr) {
+
+        //如果启用向导模式 跳转到向导
+        if(installWizardService.hasInstallWizardMode()){
+            return new ModelAndView("redirect:/install-wizard/");
+        }
+
         if (authService.verifyUser(hsr) != null) {
             return new ModelAndView("redirect:/appCenter");
         }
@@ -168,7 +180,7 @@ public class Router {
     @RequestMapping("/version")
     @ResponseBody
     public Result<String> getVersion(){
-        return Result.success("1.1V-M8");
+        return Result.success(AetherLauncher.getVersion());
     }
 
 
