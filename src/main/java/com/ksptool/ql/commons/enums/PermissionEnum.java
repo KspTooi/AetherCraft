@@ -46,6 +46,7 @@ public enum PermissionEnum {
     PANEL_MODEL_VIEW("panel:model:view", "管理台:查看AI配置"),
     PANEL_MODEL_EDIT("panel:model:edit", "管理台:编辑AI配置"),
     PANEL_MODEL_EDIT_GLOBAL_PROXY("panel:model:edit:global:proxy", "管理台:编辑AI全局代理配置"),
+    PANEL_MODEL_EDIT_USER_PROXY("panel:model:edit:user:proxy", "管理台:编辑AI用户代理配置"),
 
     // 维护工具权限
     PANEL_MAINTAIN_VIEW("panel:maintain:view", "管理台:访问维护工具"),
