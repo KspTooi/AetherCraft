@@ -4,7 +4,13 @@ package com.ksptool.ql.commons.enums;
  * 系统全局配置枚举
  */
 public enum GlobalConfigEnum {
-    
+
+
+    ALLOW_USER_REGISTER("allow.user.register","false","允许用户注册账号 true-允许 -false禁止"),
+
+    PAGE_LOGIN_BRAND("page.login.brand","Aether Craft","登录页展示的品牌名"),
+    PAGE_TOP_BAR_BRAND("page.top.bar.brand","Aether Craft","导航栏展示的品牌名"),
+
 
     USER_FILE_STORAGE_PATH("user.file.storage.path", "/userdata/res", "用户文件的存储位置(相对路径)"),
     MODEL_CHAT_GEN_THREAD_TITLE("model.chat.gen.thread.title", "true", "是否自动生成会话标题，true-生成，false-不生成"),
