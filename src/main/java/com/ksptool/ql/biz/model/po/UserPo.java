@@ -45,11 +45,11 @@ public class UserPo {
 
     @Column(name = "login_count", nullable = false)
     @Comment("登录次数")
-    private Integer loginCount = 0;
+    private Integer loginCount;
 
     @Column(name = "status", nullable = false)
     @Comment("用户状态 0:正常 1:被封禁")
-    private Integer status = 0;
+    private Integer status;
 
     @Column(name = "encrypted_dek", length = 512)
     @Comment("用户数据加密密钥(!已加密)")
