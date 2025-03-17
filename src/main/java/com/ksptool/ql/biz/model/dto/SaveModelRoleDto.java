@@ -26,7 +26,7 @@ public class SaveModelRoleDto {
     /**
      * 角色描述
      */
-    @Size(max = 1000, message = "角色描述最多1000个字符")
+    @Size(max = 50000, message = "角色描述最多50000个字符")
     private String description;
     
     /**
@@ -38,19 +38,19 @@ public class SaveModelRoleDto {
     /**
      * 角色设定摘要
      */
-    @Size(max = 500, message = "角色设定摘要最多500个字符")
+    @Size(max = 50000, message = "角色设定摘要最多50000个字符")
     private String roleSummary;
     
     /**
      * 情景
      */
-    @Size(max = 1000, message = "情景最多1000个字符")
+    @Size(max = 50000, message = "情景最多50000个字符")
     private String scenario;
     
     /**
      * 首次对话内容
      */
-    @Size(max = 1000, message = "首次对话内容最多1000个字符")
+    @Size(max = 50000, message = "首次对话内容最多50000个字符")
     private String firstMessage;
     
     /**

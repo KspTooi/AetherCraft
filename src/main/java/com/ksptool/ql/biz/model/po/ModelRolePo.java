@@ -32,19 +32,19 @@ public class ModelRolePo {
     @Comment("头像路径")
     private String avatarPath;
 
-    @Column(length = 1000)
+    @Column(length = 50000)
     @Comment("角色描述")
     private String description;
 
-    @Column(name = "role_summary", length = 500)
+    @Column(name = "role_summary", length = 50000)
     @Comment("角色设定摘要")
     private String roleSummary;
 
-    @Column(name = "scenario", length = 1000)
+    @Column(name = "scenario", length = 50000)
     @Comment("情景")
     private String scenario;
 
-    @Column(name = "first_message", length = 1000)
+    @Column(name = "first_message", length = 50000)
     @Comment("首次对话内容")
     private String firstMessage;
 
