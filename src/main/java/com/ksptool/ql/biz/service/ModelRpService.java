@@ -537,10 +537,8 @@ public class ModelRpService {
                 if (segment.getType() != 1) {
                     break;
                 }
-                
-                if (StringUtils.isNotBlank(segment.getContent())) {
-                    combinedContent.append(segment.getContent());
-                }
+
+                combinedContent.append(segment.getContent());
                 segment.setStatus(1);
                 segmentsToMark.add(segment);
             }
@@ -552,7 +550,7 @@ public class ModelRpService {
             vo.setThreadId(threadId);
             vo.setHistoryId(null);
             vo.setSequence(firstSegment.getSequence());
-            vo.setContent(combinedContent.toString());
+            vo.setContent(combinedContent.toString().toString());
             vo.setType(1);
             vo.setRole(1);
             return vo;
