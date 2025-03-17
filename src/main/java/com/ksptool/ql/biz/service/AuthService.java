@@ -86,6 +86,14 @@ public class AuthService {
         return session.getPermissions().contains(permission);
     }
 
+    /**
+     * 清除所有已登录用户的会话状态
+     */
+    public void clearUserSession() {
+        // 删除所有用户会话记录
+        userSessionRepository.deleteAll();
+    }
+
     public UserPo verifyUser(HttpServletRequest hsr){
 
         String token = WebUtils.getCookieValue(hsr, "token");
