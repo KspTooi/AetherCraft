@@ -38,17 +38,32 @@
             color: var(--bs-gray-300);
             padding: 0.75rem 1rem;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            margin: 0 0.5rem 0.25rem;
         }
 
         .menu-item:hover {
             color: var(--bs-white);
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
         }
 
         .menu-item.active {
             color: var(--bs-white);
-            background: var(--bs-primary);
+            background: #4a5568;
+            font-weight: 500;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+            position: relative;
+        }
+        
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #90cdf4;
         }
 
         .menu-item i {
@@ -165,7 +180,7 @@
                         <a href="/panel/profile/view" class="menu-item d-flex align-items-center rounded">
                             <i class="bi bi-person-circle"></i>
                             <span>个人资料</span>
-                        </a> 
+                        </a>
                         <a href="/panel/user/list" class="menu-item d-flex align-items-center rounded"  sec:authorize="panel:user:view">
                             <i class="bi bi-people"></i>
                             <span>用户管理</span>
@@ -247,29 +262,69 @@
         <div th:replace="~{components/panel-mvc-toasts}"></div>
         <div th:replace="~{components/panel-toasts}"></div>
         
-    </div>
-
-    <script th:fragment="control-panel-script">
-        $(document).ready(function() {
-            // 初始化工具提示
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
-
-            // 设置当前活动菜单项
-            const currentPath = window.location.pathname;
-            $('.menu-item').each(function() {
-                if ($(this).attr('href') === currentPath) {
-                    $(this).addClass('active');
+        <!-- 内联脚本，确保在每个页面都执行 -->
+        <script th:inline="javascript">
+            // 等待DOM加载完成
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('控制面板脚本执行');
+                
+                // 设置当前活动菜单项
+                const currentPath = window.location.pathname;
+                console.log('当前路径:', currentPath);
+                
+                // 清除所有活动状态
+                document.querySelectorAll('.menu-item').forEach(function(item) {
+                    item.classList.remove('active');
+                });
+                
+                // 精确匹配当前路径
+                let activeMenuItem = null;
+                document.querySelectorAll('.menu-item').forEach(function(item) {
+                    const href = item.getAttribute('href');
+                    console.log('菜单项路径:', href);
+                    if (href === currentPath) {
+                        activeMenuItem = item;
+                    }
+                });
+                
+                // 如果没有精确匹配，尝试前缀匹配（适用于子页面）
+                if (!activeMenuItem) {
+                    document.querySelectorAll('.menu-item').forEach(function(item) {
+                        const href = item.getAttribute('href');
+                        // 检查当前路径是否以菜单项的href开头，且href不是根路径
+                        if (href && href !== '/' && currentPath.startsWith(href)) {
+                            if (!activeMenuItem || href.length > activeMenuItem.getAttribute('href').length) {
+                                activeMenuItem = item;
+                            }
+                        }
+                    });
+                }
+                
+                // 添加活动状态
+                if (activeMenuItem) {
+                    console.log('选中菜单项:', activeMenuItem.getAttribute('href'));
+                    activeMenuItem.classList.add('active');
+                }
+                
+                // 添加菜单项点击效果
+                document.querySelectorAll('.menu-item').forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        // 添加点击反馈效果
+                        this.style.transform = 'scale(0.97)';
+                        setTimeout(() => {
+                            this.style.transform = '';
+                        }, 150);
+                    });
+                });
+                
+                // 响应式侧边栏切换
+                if (window.innerWidth <= 576) {
+                    document.querySelector('.sidebar').classList.add('collapsed');
                 }
             });
+        </script>
+    </div>
 
-            // 响应式侧边栏切换
-            if (window.innerWidth <= 576) {
-                $('.sidebar').addClass('collapsed');
-            }
-        });
-    </script>
+    <!-- 移除未使用的脚本片段 -->
 </body>
 </html> 
