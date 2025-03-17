@@ -11,6 +11,8 @@ public enum GlobalConfigEnum {
 
     ALLOW_INSTALL_WIZARD("allow.install.wizard","false","第一次进入时显示安装向导 true-允许执行安装向导 false-不执行安装向导"),
 
+    ALLOW_INSTALL_WIZARD_UPGRADED("allow.install.wizard.upgraded","true","应用程序版本落后时是否允许执行升级向导 true-允许 false-拒绝"),
+
     PAGE_LOGIN_BRAND("page.login.brand","Aether Craft","登录页展示的品牌名"),
     PAGE_TOP_BAR_BRAND("page.top.bar.brand","Aether Craft","导航栏展示的品牌名"),
     PAGE_PANEL_BRAND("page.panel.brand","Aether Craft Admin","管理台展示的品牌名"),

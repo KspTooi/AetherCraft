@@ -78,7 +78,10 @@ public class AetherLauncher {
             // 检查是否存在更新
             String storeVersion = globalConfigService.get(GlobalConfigEnum.APPLICATION_VERSION.getKey(),"1.0A");
 
-            if(!storeVersion.equals(applicationVersion)){
+            //检查是否在版本落后时允许执行升级向导
+            boolean allowWizardWhenUpgraded = globalConfigService.getBoolean(GlobalConfigEnum.ALLOW_INSTALL_WIZARD_UPGRADED.getKey(), true);
+
+            if(!storeVersion.equals(applicationVersion) && allowWizardWhenUpgraded){
                 log.info("应用程序版本已落后 当前:{} 最新:{},自动运行升级向导。", storeVersion, applicationVersion);
                 globalConfigService.setValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey(),null);
                 allowInstallWizard = "true";
