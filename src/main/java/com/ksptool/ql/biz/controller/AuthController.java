@@ -13,7 +13,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -73,6 +75,28 @@ public class AuthController {
         } catch (Exception e) {
             // 如果发生异常（比如用户已经注销），也重定向到登录页
             return "redirect:/login";
+        }
+    }
+
+    @PostMapping("/userRegister")
+    public ModelAndView userRegister(@Valid RegisterDto dto, BindingResult bindingResult, RedirectAttributes ra) {
+        ModelAndView mav = new ModelAndView();
+        
+        if (bindingResult.hasErrors()) {
+            mav.setViewName("redirect:/register");
+            ra.addFlashAttribute("vo", Result.error(bindingResult.getAllErrors().get(0).getDefaultMessage()));
+            return mav;
+        }
+
+        try {
+            var user = userService.register(dto.getUsername(), dto.getPassword());
+            mav.setViewName("redirect:/login");
+            ra.addFlashAttribute("vo", Result.success(String.format("注册成功，请登录: %s", user.getUsername())));
+            return mav;
+        } catch (BizException e) {
+            mav.setViewName("redirect:/register");
+            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+            return mav;
         }
     }
 }

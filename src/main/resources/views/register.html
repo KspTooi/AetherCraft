@@ -6,138 +6,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickLauncher 注册</title>
 
+    <!-- 先加载Bootstrap样式 -->
+    <div th:replace="~{components/com-styles}"></div>
+
     <style>
         /* 通用页面样式 */
-        .page {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: url('/img/bg1.jpg') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f2f2f2;
+        body.page {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: url('/img/bg1.jpg') no-repeat center center fixed !important;
+            background-size: cover !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 100vh !important;
+            background-color: #f2f2f2 !important;
         }
 
         /* 注册框使用蓝色基调的毛玻璃效果与扁平化设计 */
-        .register-box {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 25px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            width: 320px;
-            text-align: left;
+        .login-box {
+            background: rgba(255, 255, 255, 0.15) !important;
+            padding: 25px 20px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            width: 320px !important;
+            text-align: left !important;
         }
 
         /* 注册框标题：添加渐变文本特效 */
-        .register-box__header {
-            margin: 0 0 20px 0;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-align: center;
-            background-image: linear-gradient(to right, #3c3c3c, #3c82ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+        .login-box__header {
+            margin: 0 0 20px 0 !important;
+            font-size: 32px !important;
+            font-weight: 700 !important;
+            letter-spacing: 1px !important;
+            text-align: center !important;
+            background-image: linear-gradient(to right, #3c3c3c, #3c82ff) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            color: transparent !important;
         }
 
         /* 表单组 */
-        .input-group {
-            margin-bottom: 15px;
+        form .input-group {
+            margin-bottom: 15px !important;
         }
 
-        .input-group__label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #e0f0ff;
-            padding-left: 2px;
+        form .input-group__label {
+            display: block !important;
+            margin-bottom: 5px !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            color: #e0f0ff !important;
+            padding-left: 2px !important;
         }
 
-        .input-group__input {
-            width: calc(100% - 20px);
-            margin: 0 10px;
-            padding: 10px;
-            border: 1px solid rgba(0, 123, 255, 0.5);
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #333;
-            transition: border-color 0.3s ease;
+        form .input-group__input {
+            width: calc(100% - 20px) !important;
+            margin: 0 10px !important;
+            padding: 10px !important;
+            border: 1px solid rgba(0, 123, 255, 0.5) !important;
+            border-radius: 5px !important;
+            box-sizing: border-box !important;
+            font-size: 16px !important;
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #333 !important;
+            transition: border-color 0.3s ease !important;
         }
 
-        .input-group__input:focus {
-            outline: none;
-            border-color: #007BFF;
+        form .input-group__input:focus {
+            outline: none !important;
+            border-color: #007BFF !important;
+            box-shadow: none !important;
         }
 
-        .input-group__input::placeholder {
-            color: #666;
+        form .input-group__input::placeholder {
+            color: #666 !important;
         }
 
         /* 按钮组 */
-        .btn-group {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding: 0 10px;
+        form .btn-group {
+            display: flex !important;
+            justify-content: space-between !important;
+            margin-top: 20px !important;
+            gap: 15px !important;
+            padding: 0 10px !important;
         }
 
-        .btn {
-            background-color: #3596ff;
-            color: #fff;
-            padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            flex: 1;
-            margin: 0 5px;
+        /* 按钮 */
+        form .btn {
+            background-color: #3596ff !important;
+            color: #fff !important;
+            padding: 10px 15px !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            letter-spacing: 0.5px !important;
+            transition: background-color 0.3s ease, transform 0.2s ease !important;
+            flex: 1 !important;
+            text-align: center !important;
         }
 
-        .btn:hover {
-            background-color: #0056b3;
-            transform: scale(1.02);
+        form .btn:hover {
+            background-color: #0056b3 !important;
+            transform: scale(1.02) !important;
         }
 
-        .btn--secondary {
-            background-color: #6c757d;
+        form .btn-secondary {
+            background-color: #6c757d !important;
         }
 
-        .btn--secondary:hover {
-            background-color: #545b62;
+        form .btn-secondary:hover {
+            background-color: #545b62 !important;
         }
 
         /* 响应式调整 */
         @media (max-width: 350px) {
-            .register-box {
-                width: 90%;
+            .login-box {
+                width: 90% !important;
             }
         }
     </style>
 </head>
 
 <body class="page">
-    <div class="register-box">
-        <h2 class="register-box__header">用户注册</h2>
-        <form action="/register" method="post">
+    <div class="login-box">
+        <h2 class="login-box__header" th:text="${loginBrand}">用户注册</h2>
+        <form action="/userRegister" method="post">
             <div class="input-group">
                 <label class="input-group__label" for="username">用户名:</label>
                 <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入用户名" required>
-            </div>
-            <div class="input-group">
-                <label class="input-group__label" for="email">邮箱:</label>
-                <input class="input-group__input" type="email" id="email" name="email" placeholder="请输入邮箱" required>
             </div>
             <div class="input-group">
                 <label class="input-group__label" for="password">密码:</label>
@@ -145,18 +147,33 @@
             </div>
             <div class="input-group">
                 <label class="input-group__label" for="confirmPassword">确认密码:</label>
-                <input class="input-group__input" type="password" id="confirmPassword" name="confirmPassword" placeholder="请再次输入密码" required>
+                <input class="input-group__input" type="password" id="confirmPassword" placeholder="请再次输入密码" required>
             </div>
             <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
             </div>
             <div class="btn-group">
-                <button class="btn btn--secondary" type="button" onclick="window.location.href='/login'">返回登录</button>
-                <button class="btn" type="submit">注册</button>
+                <button class="btn btn-secondary" type="button" onclick="window.location.href='/login'" style="flex: 0.8 !important;">返回登录</button>
+                <button class="btn" type="submit" style="flex: 1.2 !important; font-weight: 600 !important;">注册</button>
             </div>
         </form>
     </div>
+
+    <div th:replace="~{components/com-scripts}"></div>
+    <div th:replace="~{components/mvc-toasts}"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            
+            form.addEventListener('submit', function(event) {
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    event.preventDefault();
+                    alert('两次输入的密码不一致，请重新输入');
+                }
+            });
+        });
+    </script>
 </body>
-
-<div th:replace="components/com-scripts"></div>
-
 </html> 

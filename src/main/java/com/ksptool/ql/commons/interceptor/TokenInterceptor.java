@@ -17,6 +17,8 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     private final List<String> whitelist = Arrays.asList(
             "/login",
+            "/userRegister",
+            "/register",
             "/css/**",
             "/js/**",
             "/h2-console/**",

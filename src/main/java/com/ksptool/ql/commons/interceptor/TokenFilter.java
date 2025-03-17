@@ -33,7 +33,8 @@ public class TokenFilter implements Filter {
             "/res/**",
             "/h2-console/**",
             "/error",
-            "/register"
+            "/register",
+            "/userRegister"
     );
 
     @Override

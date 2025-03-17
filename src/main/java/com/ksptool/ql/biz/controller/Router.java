@@ -50,6 +50,18 @@ public class Router {
         return mav;
     }
 
+    @GetMapping("/register")
+    public ModelAndView register(HttpServletRequest hsr) {
+        if (authService.verifyUser(hsr) != null) {
+            return new ModelAndView("redirect:/appCenter");
+        }
+
+        String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
+        ModelAndView mav = new ModelAndView("register");
+        mav.addObject("loginBrand", StringUtils.isBlank(loginBrand) ? "" : loginBrand);
+        return mav;
+    }
+
     @GetMapping("/appCenter")
     public String appCenter() {
         return "forward:/ssr/appCenter";

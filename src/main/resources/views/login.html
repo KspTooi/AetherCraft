@@ -6,128 +6,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickLauncher Login</title>
 
+    <!-- 先加载Bootstrap样式 -->
+    <div th:replace="~{components/com-styles}"></div>
+
     <style>
         /* 通用页面样式 */
-        .page {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: url('/img/bg1.jpg') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f2f2f2;
+        body.page {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: url('/img/bg1.jpg') no-repeat center center fixed !important;
+            background-size: cover !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 100vh !important;
+            background-color: #f2f2f2 !important;
         }
 
         /* 登录框使用蓝色基调的毛玻璃效果与扁平化设计 */
         .login-box {
-            background: rgba(255, 255, 255, 0.15); /* 蓝色调背景 */
-            padding: 25px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            width: 320px;
-            text-align: left;
+            background: rgba(255, 255, 255, 0.15) !important; /* 蓝色调背景 */
+            padding: 30px 30px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            width: 380px !important;
+            text-align: left !important;
         }
 
         /* 登录框标题：添加渐变文本特效 */
         .login-box__header {
-            margin: 0 0 20px 0;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-align: center;
-            background-image: linear-gradient(to right, #3c3c3c, #3c82ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            margin: 0 0 20px 0 !important;
+            font-size: 32px !important;
+            font-weight: 700 !important;
+            letter-spacing: 1px !important;
+            text-align: center !important;
+            background-image: linear-gradient(to right, #3c3c3c, #3c82ff) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            color: transparent !important;
         }
 
         /* 表单组 */
-        .input-group {
-            margin-bottom: 15px;
+        form .input-group {
+            margin-bottom: 15px !important;
         }
 
-        .input-group__label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #e0f0ff;
-            padding-left: 2px;
+        form .input-group__label {
+            display: block !important;
+            margin-bottom: 5px !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            color: #e0f0ff !important;
+            padding-left: 2px !important;
         }
 
-        .input-group__input {
-            width: calc(100% - 20px);
-            /* 占满整行，左右预留 10px 间隔 */
-            margin: 0 10px;
-            padding: 10px;
-            border: 1px solid rgba(0, 123, 255, 0.5);
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #333;
-            transition: border-color 0.3s ease;
+        form .input-group__input {
+            width: calc(100% - 20px) !important;
+            margin: 0 10px !important;
+            padding: 10px !important;
+            border: 1px solid rgba(0, 123, 255, 0.5) !important;
+            border-radius: 5px !important;
+            box-sizing: border-box !important;
+            font-size: 16px !important;
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #333 !important;
+            transition: border-color 0.3s ease !important;
         }
 
-        .input-group__input:focus {
-            outline: none;
-            border-color: #007BFF;
+        form .input-group__input:focus {
+            outline: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            background-image: linear-gradient(white, white),
+                linear-gradient(45deg, #3596ff 25%, #007BFF 25%, #007BFF 50%, #3596ff 50%, #3596ff 75%, #007BFF 75%) !important;
+            background-origin: border-box !important;
+            background-clip: padding-box, border-box !important;
+            background-size: calc(100% - 4px) calc(100% - 4px), 20px 20px !important;
+            background-position: center center, 0 0 !important;
+            border: solid 2px transparent !important;
+            animation: border-dance 2s linear infinite !important;
         }
 
-        .input-group__input::placeholder {
-            color: #666;
+        @keyframes border-dance {
+            0% {
+                background-position: center center, 0 0;
+            }
+            100% {
+                background-position: center center, 20px 20px;
+            }
+        }
+
+        form .input-group__input::placeholder {
+            color: #666 !important;
         }
 
         /* 按钮 */
-        .btn {
-            background-color: #3596ff;
-            color: #fff;
-            padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            display: block;
-            margin: 20px auto 0 auto;
+        form .btn {
+            background: linear-gradient(135deg, #3596ff, #0062e3, #2b7cd1) !important;
+            background-size: 200% auto !important;
+            color: #fff !important;
+            padding: 12px 15px !important;
+            border: none !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.4s ease !important;
+            display: block !important;
+            margin: 25px auto 0 auto !important;
+            width: calc(100% - 20px) !important;
+            box-shadow: 0 4px 15px rgba(53, 150, 255, 0.4) !important;
+            text-transform: uppercase !important;
         }
 
-        .btn:hover {
-            background-color: #0056b3;
-            transform: scale(1.02);
+        form .btn:hover {
+            background-position: right center !important;
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 6px 18px rgba(53, 150, 255, 0.6) !important;
         }
 
         /* 注册引导链接 */
-        .register-guide {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #e0f0ff;
+        form .register-guide {
+            text-align: center !important;
+            margin-top: 15px !important;
+            font-size: 14px !important;
+            color: #e0f0ff !important;
         }
 
-        .register-guide a {
-            color: #3596ff;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
+        form .register-guide a {
+            color: #3596ff !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            transition: color 0.3s ease !important;
         }
 
-        .register-guide a:hover {
-            color: #0056b3;
-            text-decoration: underline;
+        form .register-guide a:hover {
+            color: #0056b3 !important;
+            text-decoration: underline !important;
         }
 
         /* 响应式调整 */
         @media (max-width: 350px) {
             .login-box {
-                width: 90%;
+                width: 90% !important;
             }
         }
     </style>
@@ -140,11 +166,11 @@
         <form action="/login" method="post">
             <div class="input-group">
                 <label class="input-group__label" for="username">账户:</label>
-                <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入账户" required>
+                <input class="input-group__input" type="text" id="username" name="username" placeholder="请输入账户" required autocomplete="off">
             </div>
             <div class="input-group">
                 <label class="input-group__label" for="password">密码:</label>
-                <input class="input-group__input" type="password" id="password" name="password" placeholder="请输入密码" required>
+                <input class="input-group__input" type="password" id="password" name="password" placeholder="请输入密码" required autocomplete="off">
             </div>
             <div th:if="${error}" style="color: #ff4444; margin: 10px 0; text-align: center; font-size: 14px;" th:text="${error}">
             </div>
@@ -155,8 +181,8 @@
         </form>
     </div>
 
+    <div th:replace="~{components/com-scripts}"></div>
+    <div th:replace="~{components/mvc-toasts}"></div>
+
 </body>
-
-<div th:replace="components/com-scripts"></div>
-
 </html>
