@@ -1,7 +1,7 @@
 <nav class="navbar my-vista-taskbar navbar-expand-md" xmlns:sec="http://www.w3.org/1999/xhtml">
   <div class="container-fluid">
     <!-- 使用 div 代替 a.navbar-brand 且让其高度铺满整个任务栏 -->
-    <div class="navbar-brand" th:text="${topBarBrand}">
+    <div class="navbar-brand brand-gradient" th:text="${topBarBrand}">
       OxygenLauncher
     </div>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
@@ -67,12 +67,38 @@
       padding: 0.2rem 0.5rem;
       transition: background 0.3s ease;
     }
+    
+    /* 品牌名称渐变效果 */
+    .brand-gradient {
+      background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 10%, #fad0c4 20%, #a18cd1 30%, #fbc2eb 40%, #8fd3f4 50%, #84fab0 60%, #8fd3f4 70%, #fbc2eb 80%, #a18cd1 90%, #ff9a9e 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      font-weight: 600;
+      text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+      animation: gradient-shift 8s linear infinite;
+      letter-spacing: 0.5px;
+    }
+    
+    .brand-gradient:hover {
+      animation-duration: 3s;
+      text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.4);
+    }
+    
+    @keyframes gradient-shift {
+      0% {
+        background-position: 0% center;
+      }
+      100% {
+        background-position: 200% center;
+      }
+    }
+    
     /* 导航品牌采用 div 填满整个任务栏高度，并居中显示 */
     .my-vista-taskbar .navbar-brand {
-      color: #ffffff;
       font-size: 1.2rem;
       font-weight: bold;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -81,6 +107,7 @@
     }
     .my-vista-taskbar .navbar-brand:hover {
       transform: scale(1.05);
+      text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.4);
     }
     .my-vista-taskbar .nav-left, 
     .my-vista-taskbar .nav-right {
@@ -98,13 +125,14 @@
       color: #ffffff;
       font-size: 0.9rem;
       text-decoration: none;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
       padding: 0.2rem 0.3rem;
       border-radius: 4px;
-      transition: background 0.3s ease, transform 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
     }
     .my-vista-taskbar .nav-link:hover {
       background-color: rgba(255,255,255,0.2);
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
     }
     /* 响应式设计：移动端样式紧凑，同时隐藏默认的导航按钮 */
     @media (max-width: 576px) {
