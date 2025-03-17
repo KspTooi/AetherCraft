@@ -230,13 +230,6 @@ public class ModelUserRoleService {
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(userId);
         query.setIsDefault(1);
-        
-        // 使用Example查询单个结果
-        Example<ModelUserRolePo> example = Example.of(query);
-        try {
-            return rep.findOne(example).orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
+        return rep.findOne(Example.of(query)).orElse(null);
     }
 } 

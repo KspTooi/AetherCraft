@@ -89,6 +89,8 @@ public class ModelRpService {
     @PersistenceContext
     private EntityManager entityManager;
     private ModelUserRoleRepository modelUserRoleRepository;
+    @Autowired
+    private ModelUserRoleService modelUserRoleService;
 
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
@@ -164,17 +166,18 @@ public class ModelRpService {
         // 如果没有激活的Thread，创建新Thread
         if (thread == null) {
 
-            //查询用户所扮演的角色
-            ModelUserRolePo qUserRole = new ModelUserRolePo();
-            qUserRole.setUserId(AuthService.getCurrentUserId());
-            qUserRole.setIsDefault(1);
-            ModelUserRolePo userRole = modelUserRoleRepository.findOne(Example.of(qUserRole)).orElseThrow(() -> new BizException("未找到用户所扮演的角色!"));
+            //查询用户当前所扮演的角色
+            ModelUserRolePo userPlayRole = modelUserRoleService.getUserPlayRole(AuthService.getCurrentUserId());
+
+            if(userPlayRole == null){
+                throw new BizException("未找到用户所扮演的角色!");
+            }
 
             thread = new ModelRpThreadPo();
             thread.setUserId(AuthService.getCurrentUserId());
             thread.setModelCode(dto.getModelCode());
             thread.setModelRole(modelRole);
-            thread.setUserRole(userRole);
+            thread.setUserRole(userPlayRole);
             thread.setTitle("与" + modelRole.getName() + "的对话");
             thread.setActive(1);
             thread = threadRepository.save(thread);
