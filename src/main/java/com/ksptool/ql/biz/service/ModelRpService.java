@@ -81,14 +81,19 @@ public class ModelRpService {
     
     @Autowired
     private PanelApiKeyService panelApiKeyService;
+
     @Autowired
     private GlobalConfigService globalConfigService;
+
     @Autowired
     private ModelGrokService modelGrokService;
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
     private ModelUserRoleRepository modelUserRoleRepository;
+
     @Autowired
     private ModelUserRoleService modelUserRoleService;
 
@@ -130,7 +135,7 @@ public class ModelRpService {
         example.setId(dto.getModelRoleId());
         example.setUserId(AuthService.getCurrentUserId());
 
-        ModelRolePo modelRole = modelRoleRepository.findOne(Example.of(example))
+        ModelRolePo modelPlayRole = modelRoleRepository.findOne(Example.of(example))
             .orElseThrow(() -> new BizException("模型角色不存在或无权访问"));
 
         //处理存档激活逻辑
@@ -139,13 +144,13 @@ public class ModelRpService {
             //查询指定ID的存档
             var query = new ModelRpThreadPo();
             query.setUserId(AuthService.getCurrentUserId());
-            query.setModelRole(modelRole);
+            query.setModelRole(modelPlayRole);
             query.setId(dto.getThreadId());
 
             ModelRpThreadPo thread = threadRepository.findOne(Example.of(query)).orElseThrow(() -> new BizException("ThreadId无效!"));
 
             //取消全部Thread的激活状态
-            threadRepository.setAllThreadActive(AuthService.getCurrentUserId(),modelRole.getId(),0);
+            threadRepository.setAllThreadActive(AuthService.getCurrentUserId(),modelPlayRole.getId(),0);
             entityManager.clear();
 
             //激活指定存档
@@ -176,19 +181,19 @@ public class ModelRpService {
             thread = new ModelRpThreadPo();
             thread.setUserId(AuthService.getCurrentUserId());
             thread.setModelCode(dto.getModelCode());
-            thread.setModelRole(modelRole);
+            thread.setModelRole(modelPlayRole);
             thread.setUserRole(userPlayRole);
-            thread.setTitle("与" + modelRole.getName() + "的对话");
+            thread.setTitle(userPlayRole.getName() + "与" + modelPlayRole.getName() + "的对话");
             thread.setActive(1);
             thread = threadRepository.save(thread);
             
             // 创建首条消息(如果有)
-            if (StringUtils.isNotBlank(modelRole.getFirstMessage())) {
+            if (StringUtils.isNotBlank(modelPlayRole.getFirstMessage())) {
                 ModelRpHistoryPo history = new ModelRpHistoryPo();
                 history.setThread(thread);
                 history.setType(1); // AI消息
-                history.setRawContent(modelRole.getFirstMessage());
-                history.setRpContent(modelRole.getFirstMessage()); // 这里可能需要通过RpHandler处理
+                history.setRawContent(modelPlayRole.getFirstMessage());
+                history.setRpContent(modelPlayRole.getFirstMessage()); // 这里可能需要通过RpHandler处理
                 history.setSequence(1);
                 historyRepository.save(history);
             }
@@ -217,16 +222,21 @@ public class ModelRpService {
             if (history.getType() == 0) { // 用户消息
                 message.setName("user");
                 message.setAvatarPath("");
-                if(userRole != null){
-                    message.setName(thread.getUserRole().getName());
-                    message.setAvatarPath(thread.getUserRole().getAvatarPath());
-                }
+
+                //如果用户扮演的角色被删除
+                try{
+                    if(userRole != null){
+                        message.setName(thread.getUserRole().getName());
+                        message.setAvatarPath(thread.getUserRole().getAvatarPath());
+                    }
+                }catch (Exception e){}
+
             }
 
             // AI消息
             if(history.getType() == 1){
-                message.setName(modelRole.getName());
-                message.setAvatarPath(modelRole.getAvatarPath());
+                message.setName(modelPlayRole.getName());
+                message.setAvatarPath(modelPlayRole.getAvatarPath());
             }
             
             messages.add(message);
@@ -301,6 +311,11 @@ public class ModelRpService {
 
         //获取用户扮演的角色信息
         ModelUserRolePo userPlayRole = thread.getUserRole();
+
+        //用户扮演的角色有可能被删除
+        if(userPlayRole != null){
+            userPlayRole = modelUserRoleRepository.findById(userPlayRole.getId()).orElse(null);
+        }
 
         //获取模型扮演的角色信息
         ModelRolePo modelRole = thread.getModelRole();
@@ -422,7 +437,7 @@ public class ModelRpService {
             if(userPlayRole != null){
                 vo.setRoleId(userPlayRole.getId());
                 vo.setRoleName(userPlayRole.getName());
-                vo.setRoleAvatarPath(userPlayRole.getAvatarPath());
+                vo.setRoleAvatarPath("/res/"+userPlayRole.getAvatarPath());
             }
 
             return vo;
@@ -745,7 +760,7 @@ public class ModelRpService {
         }
 
         // 获取最后一条历史记录
-        ModelRpHistoryPo lastHistory = histories.get(histories.size() - 1);
+        ModelRpHistoryPo lastHistory = histories.getLast();
         String messageToRegenerate;
 
         // 如果最后一条是AI的回复，则删除它
@@ -779,7 +794,13 @@ public class ModelRpService {
 
         // 获取角色信息
         ModelRolePo modelRole = thread.getModelRole();
-        ModelUserRolePo userRole = thread.getUserRole();
+        ModelUserRolePo userPlayRole = thread.getUserRole();
+
+        //用户扮演的角色有可能被删除
+        if(userPlayRole != null){
+            userPlayRole = modelUserRoleRepository.findById(userPlayRole.getId()).orElse(null);
+        }
+
         if (modelRole == null) {
             throw new BizException("模型角色信息不存在");
         }
@@ -787,7 +808,7 @@ public class ModelRpService {
         // 准备提示词
         PreparedPrompt ctxPrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey()));
         ctxPrompt.setParameter("model", modelRole.getName());
-        ctxPrompt.setParameter("user", userRole != null ? userRole.getName() : "user");
+        ctxPrompt.setParameter("user", userPlayRole != null ? userPlayRole.getName() : "user");
 
         PreparedPrompt rolePrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey()));
         rolePrompt.setParameter("userDesc", "");
@@ -873,10 +894,10 @@ public class ModelRpService {
             vo.setRoleId(null);
             vo.setRoleName("user");
             vo.setRoleAvatarPath(null);
-            if(userRole != null){
-                vo.setRoleId(userRole.getId());
-                vo.setRoleName(userRole.getName());
-                vo.setRoleAvatarPath(userRole.getAvatarPath());
+            if(userPlayRole != null){
+                vo.setRoleId(userPlayRole.getId());
+                vo.setRoleName(userPlayRole.getName());
+                vo.setRoleAvatarPath(userPlayRole.getAvatarPath());
             }
 
             return vo;

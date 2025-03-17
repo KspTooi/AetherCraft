@@ -144,12 +144,12 @@ public class ModelUserRoleService {
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(rolePo.getUserId());
         query.setIsDefault(1);
-        if (!rep.findOne(Example.of(query)).isPresent()) {
+        if (rep.findOne(Example.of(query)).isEmpty()) {
             // 查询该用户的第一个角色
             query.setIsDefault(null);
             List<ModelUserRolePo> userRoles = rep.findAll(Example.of(query));
             if (!userRoles.isEmpty()) {
-                ModelUserRolePo firstRole = userRoles.get(0);
+                ModelUserRolePo firstRole = userRoles.getFirst();
                 firstRole.setIsDefault(1);
                 rep.save(firstRole);
             }
@@ -237,6 +237,7 @@ public class ModelUserRoleService {
      * @return 用户当前扮演的角色，如果未找到则返回null
      */
     public ModelUserRolePo getUserPlayRole(Long userId) {
+
         if (userId == null) {
             return null;
         }
