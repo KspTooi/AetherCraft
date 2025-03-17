@@ -130,6 +130,12 @@ public class AuthService {
         if (!hashedPassword.equals(user.getPassword())) {
             throw new BizException("用户名或密码错误");
         }
+        
+        // 更新登录次数和最后登录时间
+        user.setLoginCount(user.getLoginCount() + 1);
+        user.setLastLoginTime(new Date());
+        userRepository.save(user);
+        
         // 登录成功，创建或返回 token
         return createUserSession(user.getId()).getToken();
     }

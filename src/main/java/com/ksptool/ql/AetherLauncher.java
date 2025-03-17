@@ -81,10 +81,21 @@ public class AetherLauncher {
             //检查是否在版本落后时允许执行升级向导
             boolean allowWizardWhenUpgraded = globalConfigService.getBoolean(GlobalConfigEnum.ALLOW_INSTALL_WIZARD_UPGRADED.getKey(), true);
 
-            if(!storeVersion.equals(applicationVersion) && allowWizardWhenUpgraded){
-                log.info("应用程序版本已落后 当前:{} 最新:{},自动运行升级向导。", storeVersion, applicationVersion);
-                globalConfigService.setValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey(),null);
-                allowInstallWizard = "true";
+            if(!storeVersion.equals(applicationVersion)){
+
+                //允许在版本落后时触发向导进行数据升级
+                if(allowWizardWhenUpgraded){
+                    log.info("应用程序版本已落后 当前:{} 最新:{},自动运行升级向导。", storeVersion, applicationVersion);
+                    globalConfigService.setValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey(),null);
+                    allowInstallWizard = "true";
+                }
+
+                //不允许版本落后时触发向导升级
+                if(!allowWizardWhenUpgraded){
+                    log.info("应用程序版本已落后 当前:{} 最新:{},升级向导当前被禁用,请注意数据同步。", storeVersion, applicationVersion);
+                    globalConfigService.setValue(GlobalConfigEnum.APPLICATION_VERSION.getKey(), getVersion());
+                }
+
             }
 
             // 如果配置不存在，则添加默认值true

@@ -25,5 +25,5 @@ session:
   expires: 86400
 
 application:
-  version: 1.2B # 应用版本号
+  version: 1.2C # 应用版本号
 

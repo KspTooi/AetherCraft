@@ -43,6 +43,18 @@ public class UserPo {
     @Comment("修改时间")
     private Date updateTime;
 
+    @Column(name = "login_count", nullable = false)
+    @Comment("登录次数")
+    private Integer loginCount = 0;
+
+    @Column(name = "status", nullable = false)
+    @Comment("用户状态 0:正常 1:被封禁")
+    private Integer status = 0;
+
+    @Column(name = "last_login_time")
+    @Comment("最后登录时间")
+    private Date lastLoginTime;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_group",
@@ -58,6 +70,12 @@ public class UserPo {
     public void prePersist() {
         createTime = new Date();
         updateTime = new Date();
+        if (loginCount == null) {
+            loginCount = 0;
+        }
+        if (status == null) {
+            status = 0;
+        }
     }
 
     @PreUpdate
