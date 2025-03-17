@@ -81,11 +81,11 @@ public class AetherLauncher {
             if(!storeVersion.equals(applicationVersion)){
                 log.info("应用程序版本已落后 当前:{} 最新:{},自动运行升级向导。", storeVersion, applicationVersion);
                 globalConfigService.setValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey(),null);
-                globalConfigService.setValue(GlobalConfigEnum.APPLICATION_VERSION.getKey(),applicationVersion);
+                allowInstallWizard = "false";
             }
 
             // 如果配置不存在，则添加默认值true
-            if (StringUtils.isBlank(allowInstallWizard)) {
+            if (StringUtils.isBlank(allowInstallWizard) || !allowInstallWizard.equals("true")) {
                 globalConfigService.setValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey(), "true");
                 System.out.println("初始化配置: " + GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey() + " = true");
                 
