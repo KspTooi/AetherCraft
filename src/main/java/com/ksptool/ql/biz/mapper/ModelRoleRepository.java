@@ -31,14 +31,6 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
         Pageable pageable
     );
 
-    /**
-     * 根据ID查询模型角色（包含对话示例）
-     * 
-     * @param id 角色ID
-     * @return 角色对象
-     */
-    @Query("SELECT r FROM ModelRolePo r LEFT JOIN FETCH r.chatTemplates WHERE r.id = :id")
-    ModelRolePo findByIdWithTemplates(@Param("id") Long id);
     
     /**
      * 检查角色名称是否已存在（新增时使用）

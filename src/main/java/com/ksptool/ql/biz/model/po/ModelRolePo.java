@@ -52,10 +52,6 @@ public class ModelRolePo {
     @Comment("角色标签，多个标签用逗号分隔")
     private String tags;
 
-    @OneToMany(mappedBy = "modelRole", cascade = CascadeType.ALL)
-    @Comment("对话示例列表")
-    private List<ModelChatTemplatePo> chatTemplates;
-
     @Column(nullable = false)
     @Comment("排序号")
     private Integer sortOrder;
