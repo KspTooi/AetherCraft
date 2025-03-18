@@ -25,7 +25,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2E # 应用版本号
+  version: 1.2F # 应用版本号
 
 #用户消息、模型用户角色、模型角色、世界等隐私数据所使用的KEK
 encrypt:
