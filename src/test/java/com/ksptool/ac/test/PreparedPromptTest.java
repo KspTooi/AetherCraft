@@ -14,6 +14,107 @@ import java.util.Map;
 public class PreparedPromptTest {
 
     @Test
+    @DisplayName("嵌套条件块")
+    public void testExtremeConditions() {
+
+        var t1 = "#{?start}故事开始了...#{?start}";  // 使用 #{?start} 关闭
+        var t2 = "在一个#{place}里#{?nestedOuter}，住着#{?nestedInner}一个#{creature}，它的名字叫#{name}#{?nestedInner}#{?nestedOuter}。"; // 使用 #{?nestedInner} 和 #{?nestedOuter} 关闭
+        var t3 = "#{?empty}#{?empty}"; // 空条件块，使用 #{?empty} 关闭
+        var t4 = "它喜欢#{?food}吃#{food}#{?food}#{?treasure}和#{treasure}#{?treasure}。"; // 使用 #{?food} 和 #{?treasure} 关闭
+        var t5 = "#{undefined}"; //undefined 仅在t5中被引用
+        var t6 = "#{?sameName}sameName变量的值是：#{sameName}#{?sameName}";//条件变量和普通变量重名, 使用 #{?sameName} 关闭
+        var t7 = "#{?end}故事结束了。#{?end}";// 使用 #{?end} 关闭
+        var t8 = "";//没有内容的文本块
+        PreparedPrompt prompt = PreparedPrompt.prepare(t1)
+                .union(t2)
+                .union(t3)
+                .union(t4)
+                .union(t5)
+                .union(t6)
+                .union(t7)
+                .union(t8);
+
+        // 设置部分参数，故意遗漏一些
+        prompt.setParameter("place", "森林");
+        prompt.setParameter("nestedOuter", "true"); // 激活外层条件
+        // 不设置 nestedInner，内部的 creature 和 name 不会被渲染
+        prompt.setParameter("food", "苹果");
+        // 不设置 treasure
+        prompt.setParameter("undefined","未定义变量");
+        prompt.setParameter("sameName","相同的名字");
+        prompt.setParameter("start","true");
+        prompt.setParameter("end","true");
+
+        //Assertions.assertThrows(IllegalStateException.class, prompt::execute);
+
+        //如果设置了所有参数，则正常执行。
+        prompt.setParameter("nestedInner", "true");
+        prompt.setParameter("creature", "小精灵");
+        prompt.setParameter("name", "闪闪");
+        prompt.setParameter("treasure","宝石");
+        var executed = prompt.execute().trim();
+        System.out.println(executed);
+        Assertions.assertEquals("故事开始了...在一个森林里，住着一个小精灵，它的名字叫闪闪。它喜欢吃苹果和宝石。未定义变量sameName变量的值是：相同的名字故事结束了。",executed);
+    }
+
+    @Test
+    @DisplayName("测试非空表达式 - 组合多个模板")
+    public void testNonBlankExpressMultiBlockAndMultiTemplate(){
+
+        var t1 = "很久很久以前，在一个遥远的#{country}国度里，住着一位年轻的公主，名叫#{princessName}。";
+        var t2 = "她拥有一只神奇的宠物#{?pet}，是一只会说话的#{pet}#{?pet}。";
+        var t3 = "公主每天都会和她的宠物一起在#{place}玩耍，他们过着无忧无虑的生活。";
+        var t4 = "直到有一天，一个邪恶的巫师出现，打破了这份平静，他想要夺走公主的#{treasure}。";
+
+        PreparedPrompt prompt = PreparedPrompt.prepare(t1).union(t2).union(t3).union(t4);
+
+        prompt.setParameter("country","天鹅");
+        prompt.setParameter("princessName","爱丽丝");
+        //prompt.setParameter("pet","猫咪");
+        prompt.setParameter("place","后花园");
+        prompt.setParameter("treasure","魔法项链");
+
+        var executed = prompt.execute().trim();
+
+        System.out.println(executed);
+        Assertions.assertEquals("很久很久以前，在一个遥远的天鹅国度里，住着一位年轻的公主，名叫爱丽丝。她拥有一只神奇的宠物。公主每天都会和她的宠物一起在后花园玩耍，他们过着无忧无虑的生活。直到有一天，一个邪恶的巫师出现，打破了这份平静，他想要夺走公主的魔法项链。", executed);
+    }
+
+
+    @Test
+    @DisplayName("测试非空表达式 - 多个表达式块")
+    public void testNonBlankExpressMultiBlock(){
+
+        var template = """ 
+                你好#{user},今天是#{date}#{?game},你现在正在玩:#{game}。#{?game}#{?game}这是一款优秀的游戏,祝你玩得开心#{user}#{?game}
+                """.trim();
+
+        PreparedPrompt prompt = PreparedPrompt.prepare(template);
+
+        prompt.setParameter("user","张三");
+        prompt.setParameter("date","3月9日");
+        prompt.setParameter("game","GTA5");
+
+        System.out.println(prompt.execute());
+        Assertions.assertEquals("你好张三,今天是3月9日,你现在正在玩:GTA5。这是一款优秀的游戏,祝你玩得开心张三", prompt.execute());
+    }
+
+
+    @Test
+    @DisplayName("测试非空表达式 - 非字符串")
+    public void testNonBlankExpress(){
+
+        PreparedPrompt prompt = PreparedPrompt.prepare("你好#{user},今天是#{date}#{?game},你现在正在玩:#{game}#{?game}");
+
+        prompt.setParameter("user","张三");
+        prompt.setParameter("date","3月9日");
+        prompt.setParameter("game","GTA5");
+
+        System.out.println(prompt.execute());
+        Assertions.assertEquals("你好张三,今天是3月9日,你现在正在玩:GTA5", prompt.execute());
+    }
+
+    @Test
     @DisplayName("测试非空表达式 - 空字符串")
     public void testBlankExpress(){
 
