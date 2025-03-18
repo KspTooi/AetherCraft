@@ -28,7 +28,7 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
      */
     @Query("""
             SELECT m FROM ModelApiKeyConfigPo m 
-            WHERE m.apiKey = :apiKeyId
+            WHERE m.apiKeyId = :apiKeyId
             """)
     List<ModelApiKeyConfigPo> findByApiKeyId(@Param("apiKeyId") Long apiKeyId);
     
@@ -38,7 +38,7 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
     @Query("""
             SELECT m FROM ModelApiKeyConfigPo m 
             WHERE m.modelCode = :modelCode 
-            AND m.apiKey = :apiKeyId
+            AND m.apiKeyId = :apiKeyId
             """)
     ModelApiKeyConfigPo findByModelCodeAndApiKeyId(
             @Param("modelCode") String modelCode, 
@@ -48,6 +48,6 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
      * 删除指定API密钥的所有模型配置
      */
     @Modifying
-    @Query("DELETE FROM ModelApiKeyConfigPo m WHERE m.apiKey = :apiKeyId")
+    @Query("DELETE FROM ModelApiKeyConfigPo m WHERE m.apiKeyId = :apiKeyId")
     void deleteByApiKey(@Param("apiKeyId") Long apiKeyId);
 } 

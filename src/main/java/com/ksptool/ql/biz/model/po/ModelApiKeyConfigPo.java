@@ -28,8 +28,8 @@ public class ModelApiKeyConfigPo {
     private String modelCode;
 
     @Column(name = "api_key_id", nullable = false)
-    @Comment("关联的API密钥")
-    private Long apiKey;
+    @Comment("关联的API密钥ID")
+    private Long apiKeyId;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
