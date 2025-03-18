@@ -15,8 +15,8 @@ public class ListApiKeyVo {
     // 密钥名称
     private String keyName;
     
-    // 密钥类型
-    private String keyType;
+    // 密钥系列
+    private String keySeries;
     
     // 是否共享：0-不共享，1-共享
     private Integer isShared;

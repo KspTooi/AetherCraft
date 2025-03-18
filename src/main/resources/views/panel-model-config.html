@@ -42,7 +42,7 @@
                                             <option value="">请选择API Key</option>
                                             <option th:each="key : ${data.apiKeys}" 
                                                     th:value="${key.apiKeyId}"
-                                                    th:text="${key.ownerUsername != null and key.ownerUsername != '' ? key.keyName + ' (' + key.keyType + ') 授权自' + key.ownerUsername : key.keyName + ' (' + key.keyType + ')'}"
+                                                    th:text="${key.ownerUsername != null and key.ownerUsername != '' ? key.keyName + ' (' + key.keySeries + ') 授权自' + key.ownerUsername : key.keyName + ' (' + key.keySeries + ')'}"
                                                     th:selected="${key.apiKeyId == data.currentApiKeyId}">
                                             </option>
                                         </select>

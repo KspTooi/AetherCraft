@@ -19,9 +19,9 @@ public class SaveApiKeyVo {
     private String keyName;
     
     /**
-     * 密钥类型
+     * 密钥系列
      */
-    private String keyType;
+    private String keySeries;
     
     /**
      * 密钥值
@@ -47,4 +47,14 @@ public class SaveApiKeyVo {
      * 最后使用时间（只读）
      */
     private String lastUsedTime;
+
+    /**
+     * 创建时间
+     */
+    private String createTime;
+
+    /**
+     * 修改时间
+     */
+    private String updateTime;
 } 

@@ -19,9 +19,9 @@ public class AvailableApiKeyVo {
     private String keyName;
     
     /**
-     * 密钥类型
+     * 密钥系列
      */
-    private String keyType;
+    private String keySeries;
     
     /**
      * 所属用户名

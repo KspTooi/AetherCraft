@@ -29,9 +29,9 @@ public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
     @Comment("密钥名称")
     private String keyName;
 
-    @Column(name = "key_type", nullable = false, length = 30)
-    @Comment("密钥类型，如OpenAI、Azure等")
-    private String keyType;
+    @Column(name = "key_series", nullable = false, length = 30)
+    @Comment("密钥系列，如OpenAI、Azure等")
+    private String keySeries;
 
     @Column(name = "key_value", nullable = false, length = 500)
     @Comment("密钥值（加密存储）")

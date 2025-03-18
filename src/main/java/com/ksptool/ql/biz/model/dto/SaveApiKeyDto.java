@@ -24,10 +24,10 @@ public class SaveApiKeyDto {
     private String keyName;
     
     /**
-     * 密钥类型
+     * 密钥系列，如OpenAI、Azure等
      */
-    @NotBlank(message = "密钥类型不能为空")
-    private String keyType;
+    @NotBlank(message = "密钥系列不能为空")
+    private String keySeries;
     
     /**
      * 密钥值

@@ -27,7 +27,7 @@
                                 <input type="text" class="form-control" name="keyName" th:value="${param.keyName}" placeholder="密钥名称">
                             </div>
                             <div class="col-md-4">
-                                <input type="text" class="form-control" name="keyType" th:value="${param.keyType}" placeholder="密钥类型">
+                                <input type="text" class="form-control" name="keySeries" th:value="${param.keySeries}" placeholder="密钥系列">
                             </div>
                             <div class="col-md-4">
                                 <button type="submit" class="btn btn-primary me-2">
@@ -48,7 +48,7 @@
                                     <tr>
                                         <th style="width: 80px;">#</th>
                                         <th>密钥名称</th>
-                                        <th>密钥类型</th>
+                                        <th>密钥系列</th>
                                         <th>共享状态</th>
                                         <th>使用次数</th>
                                         <th>最后使用时间</th>
@@ -65,11 +65,11 @@
                                         <td th:text="${key.keyName}">个人OpenAI密钥</td>
                                         <td class="text-center">
                                             <span class="badge" th:classappend="${
-                                                key.keyType == 'OpenAI' ? 'bg-primary' :
-                                                key.keyType == 'Azure' ? 'bg-info' :
-                                                key.keyType == 'Gemini' ? 'bg-warning text-dark' :
-                                                key.keyType == 'Claude' ? 'bg-secondary' : 'bg-primary'
-                                            }" th:text="${key.keyType}">OpenAI</span>
+                                                key.keySeries == 'OpenAI' ? 'bg-primary' :
+                                                key.keySeries == 'Azure' ? 'bg-info' :
+                                                key.keySeries == 'Gemini' ? 'bg-warning text-dark' :
+                                                key.keySeries == 'Claude' ? 'bg-secondary' : 'bg-primary'
+                                            }" th:text="${key.keySeries}">OpenAI</span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge" th:classappend="${key.isShared == 1 ? 'bg-primary' : 'bg-secondary'}" 
@@ -109,7 +109,7 @@
                                         page=${data.currentPage - 1},
                                         pageSize=${data.pageSize},
                                         keyName=${param.keyName},
-                                        keyType=${param.keyType}
+                                        keySeries=${param.keySeries}
                                     )}" tabindex="-1">上一页</a>
                                 </li>
                                 <li class="page-item" 
@@ -119,7 +119,7 @@
                                         page=${pageNumber},
                                         pageSize=${data.pageSize},
                                         keyName=${param.keyName},
-                                        keyType=${param.keyType}
+                                        keySeries=${param.keySeries}
                                     )}" th:text="${pageNumber}">1</a>
                                 </li>
                                 <li class="page-item" th:classappend="${!data.hasNext ? 'disabled' : ''}">
@@ -127,7 +127,7 @@
                                         page=${data.currentPage + 1},
                                         pageSize=${data.pageSize},
                                         keyName=${param.keyName},
-                                        keyType=${param.keyType}
+                                        keySeries=${param.keySeries}
                                     )}">下一页</a>
                                 </li>
                             </ul>

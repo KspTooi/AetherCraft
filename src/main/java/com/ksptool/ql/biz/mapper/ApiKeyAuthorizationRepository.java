@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
+import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -100,4 +101,24 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
     ApiKeyAuthorizationPo findByApiKeyIdAndAuthorizedUserId(
             @Param("apiKeyId") Long apiKeyId,
             @Param("authorizedUserId") Long authorizedUserId);
+
+    /**
+     * 根据被授权用户ID、状态和密钥系列查询API密钥
+     * @param userId 被授权用户ID
+     * @param status 授权状态(1:有效 0:无效)
+     * @param series 密钥系列（可选）
+     * @return 符合条件的API密钥列表
+     */
+    @Query("""
+            SELECT k FROM ApiKeyPo k 
+            JOIN ApiKeyAuthorizationPo a ON a.apiKey.id = k.id
+            WHERE a.authorizedUserId = :userId 
+            AND a.status = :status
+            AND k.status = 1
+            AND (:series IS NULL OR UPPER(k.keySeries) = UPPER(:series))
+            """)
+    List<ApiKeyPo> getApiKeyFromAuthorized(
+            @Param("userId") Long userId,
+            @Param("status") Integer status,
+            @Param("series") String series);
 } 

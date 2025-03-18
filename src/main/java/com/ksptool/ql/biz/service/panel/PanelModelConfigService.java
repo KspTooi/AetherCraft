@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
@@ -7,6 +8,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
+import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.AvailableApiKeyVo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
 import com.ksptool.ql.biz.service.AuthService;
@@ -16,6 +18,8 @@ import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
@@ -26,6 +30,9 @@ import com.ksptool.ql.biz.service.ModelGeminiService;
 import com.ksptool.ql.biz.service.ModelGrokService;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import okhttp3.OkHttpClient;
+
+import static com.ksptool.entities.Entities.as;
+import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class PanelModelConfigService {
@@ -57,39 +64,59 @@ public class PanelModelConfigService {
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
+
     /**
-     * 获取当前用户可用的API密钥列表
+     * 获取当前用户特定模型系列可用的API密钥列表
+     * @param series 模型系列，如 Gemini、Grok 等
+     * @return 匹配系列的 API 密钥列表
      */
-    public List<AvailableApiKeyVo> getAvailableApiKey() {
+    public List<AvailableApiKeyVo> getAvailableApiKey(String series) {
         // 获取当前用户ID
         Long userId = AuthService.getCurrentUserId();
         
         List<AvailableApiKeyVo> result = new ArrayList<>();
         
-        // 查询用户自己的API密钥
-        List<ApiKeyPo> ownedKeys = apiKeyRepository.findByUserId(userId);
+        // 创建查询对象
+        ApiKeyPo probe = new ApiKeyPo();
+        UserPo userPo = new UserPo();
+        userPo.setId(userId);
+        probe.setUser(userPo);
+        probe.setStatus(1);
+        
+        // 如果指定了系列，设置系列条件
+        if (StringUtils.isNotBlank(series)) {
+            probe.setKeySeries(series);
+        }
+        
+        // 创建匹配器，忽略系列大小写
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreNullValues()
+                .withMatcher("keySeries", ExampleMatcher.GenericPropertyMatchers.ignoreCase());
+        
+        // 创建Example并执行查询
+        Example<ApiKeyPo> example = Example.of(probe, matcher);
+        List<ApiKeyPo> ownedKeys = apiKeyRepository.findAll(example);
+
+
         if (!ownedKeys.isEmpty()) {
             for (ApiKeyPo key : ownedKeys) {
-                if (key.getStatus() != 1) {
-                    continue;
-                }
                 AvailableApiKeyVo vo = new AvailableApiKeyVo();
                 vo.setApiKeyId(key.getId());
                 vo.setKeyName(key.getKeyName());
-                vo.setKeyType(key.getKeyType());
+                vo.setKeySeries(key.getKeySeries());
                 vo.setOwnerUsername("");
                 result.add(vo);
             }
         }
         
-        // 查询被授权的API密钥
-        List<ApiKeyAuthorizationPo> authorizedKeys = apiKeyAuthorizationRepository.findByAuthorizedUserIdAndStatus(userId, 1);
-        if (!authorizedKeys.isEmpty()) {
-            for (ApiKeyAuthorizationPo auth : authorizedKeys) {
-                ApiKeyPo key = auth.getApiKey();
-                if (key.getStatus() != 1) {
-                    continue;
-                }
+        // 查询被授权的API密钥 - 使用新的JPQL查询
+        List<ApiKeyPo> authorizedKeys = apiKeyAuthorizationRepository.getApiKeyFromAuthorized(userId, 1, series);
+        
+        if (authorizedKeys != null && !authorizedKeys.isEmpty()) {
+            for (ApiKeyPo key : authorizedKeys) {
+                // 此处不需要再次检查status和series，因为JPQL查询已经过滤了
+                
+                ApiKeyAuthorizationPo auth = apiKeyAuthorizationRepository.findByApiKeyIdAndAuthorizedUserId(key.getId(), userId);
                 
                 // 检查使用限制
                 if (auth.getUsageLimit() != null && auth.getUsageCount() >= auth.getUsageLimit()) {
@@ -104,7 +131,7 @@ public class PanelModelConfigService {
                 AvailableApiKeyVo vo = new AvailableApiKeyVo();
                 vo.setApiKeyId(key.getId());
                 vo.setKeyName(key.getKeyName());
-                vo.setKeyType(key.getKeyType());
+                vo.setKeySeries(key.getKeySeries());
                 vo.setOwnerUsername(key.getUser().getUsername());
                 result.add(vo);
             }
@@ -165,8 +192,8 @@ public class PanelModelConfigService {
         String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
         config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800);
         
-        // 获取可用的API密钥列表
-        config.setApiKeys(getAvailableApiKey());
+        // 获取可用的API密钥列表 - 只返回对应系列的密钥
+        config.setApiKeys(getAvailableApiKey(modelEnum.getSeries()));
         
         // 获取当前使用的API密钥ID
         ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelEnum.getCode(),userId);
