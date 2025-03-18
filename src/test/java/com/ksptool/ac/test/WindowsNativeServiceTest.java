@@ -1,4 +1,4 @@
-package com.ksptool.oxygen.test;
+package com.ksptool.ac.test;
 
 import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.dto.ServiceQueryDto;

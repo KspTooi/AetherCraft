@@ -1,6 +1,9 @@
-package com.ksptool.ql.biz.mapper;
+package com.ksptool.ac.test;
 
 import com.ksptool.ql.AetherLauncher;
+import com.ksptool.ql.biz.mapper.GroupRepository;
+import com.ksptool.ql.biz.mapper.UserRepository;
+import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;

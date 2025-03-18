@@ -1,5 +1,6 @@
-package com.ksptool.ql.commons.utils;
+package com.ksptool.ac.test;
 
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Assertions;

@@ -1,4 +1,4 @@
-package com.ksptool.test.api;
+package com.ksptool.ac.test;
 
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
