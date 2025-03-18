@@ -308,6 +308,15 @@
                                             </div>
                                         </div>
                                         
+                                        <!-- 对话示例管理按钮 -->
+                                        <div class="mb-4" th:if="${!data.isNew && data.id != null}">
+                                            <div class="d-flex justify-content-end">
+                                                <a th:href="@{/panel/model/role/chatExample/edit(modelRoleId=${data.id})}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-chat-left-text me-1"></i>对话示例管理
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
                                         <!-- 角色设定 -->
                                         <div class="mb-4">
                                             <h6 class="border-bottom pb-2 mb-3">角色设定</h6>

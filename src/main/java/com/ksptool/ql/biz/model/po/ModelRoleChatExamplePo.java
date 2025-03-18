@@ -23,13 +23,9 @@ public class ModelRoleChatExamplePo {
     @Comment("关联的角色ID")
     private Long modelRoleId;
 
-    @Column(name = "user_message", nullable = false, length = 1000)
-    @Comment("用户消息内容")
-    private String userMessage;
-
-    @Column(name = "model_message", nullable = false, length = 2000)
-    @Comment("模型回复内容")
-    private String modelMessage;
+    @Column(name = "content", nullable = false, length = 3000)
+    @Comment("对话内容")
+    private String content;
 
     @Column(nullable = false)
     @Comment("排序号")
