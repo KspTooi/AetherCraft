@@ -46,7 +46,6 @@ import java.util.function.Consumer;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
-import com.ksptool.ql.biz.service.AuthService;
 
 @Slf4j
 @Service
@@ -323,22 +322,23 @@ public class ModelRpService {
             throw new BizException("模型角色信息不存在");
         }
 
-        PreparedPrompt ctxPrompt  = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey()));
-        ctxPrompt.setParameter("model",modelRole.getName());
-        ctxPrompt.setParameter("user","user");
+        var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+        var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
-        PreparedPrompt rolePrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey()));
-        rolePrompt.setParameter("userDesc","");
-        rolePrompt.setParameter("modelDescription",modelRole.getDescription());
-        rolePrompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
-        rolePrompt.setParameter("modelScenario",modelRole.getScenario());
+        PreparedPrompt prompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
+        prompt.setParameter("model",modelRole.getName());
+        prompt.setParameter("user","user");
+        prompt.setParameter("userDesc","");
+        prompt.setParameter("modelDescription",modelRole.getDescription());
+        prompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
+        prompt.setParameter("modelScenario",modelRole.getScenario());
 
         if(userPlayRole != null){
-            ctxPrompt.setParameter("user", userPlayRole.getName());
+            prompt.setParameter("user", userPlayRole.getName());
+            prompt.setParameter("userDesc", userPlayRole.getDescription());
         }
 
-        String finalPrompt = ctxPrompt.execute() + rolePrompt.execute();
-
+        String finalPrompt = prompt.executeNested();
 
         // 保存用户消息历史
         ModelRpHistoryPo userHistory = new ModelRpHistoryPo();
@@ -806,17 +806,23 @@ public class ModelRpService {
         }
 
         // 准备提示词
-        PreparedPrompt ctxPrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey()));
-        ctxPrompt.setParameter("model", modelRole.getName());
-        ctxPrompt.setParameter("user", userPlayRole != null ? userPlayRole.getName() : "user");
+        var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+        var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
-        PreparedPrompt rolePrompt = PreparedPrompt.prepare(globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey()));
-        rolePrompt.setParameter("userDesc", "");
-        rolePrompt.setParameter("modelDescription", modelRole.getDescription());
-        rolePrompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
-        rolePrompt.setParameter("modelScenario", modelRole.getScenario());
+        PreparedPrompt prompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
+        prompt.setParameter("model",modelRole.getName());
+        prompt.setParameter("user","user");
+        prompt.setParameter("userDesc","");
+        prompt.setParameter("modelDescription",modelRole.getDescription());
+        prompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
+        prompt.setParameter("modelScenario",modelRole.getScenario());
 
-        String finalPrompt = ctxPrompt.execute() + rolePrompt.execute();
+        if(userPlayRole != null){
+            prompt.setParameter("user", userPlayRole.getName());
+            prompt.setParameter("userDesc", userPlayRole.getDescription());
+        }
+
+        String finalPrompt = prompt.executeNested();
 
         try {
             // 清理之前的片段（如果有）
