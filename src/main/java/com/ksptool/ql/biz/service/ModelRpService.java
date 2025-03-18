@@ -188,10 +188,16 @@ public class ModelRpService {
             
             // 创建首条消息(如果有)
             if (StringUtils.isNotBlank(modelPlayRole.getFirstMessage())) {
+
+                //准备Prompt
+                var prompt = PreparedPrompt.prepare(modelPlayRole.getFirstMessage());
+                prompt.setParameter("model",modelPlayRole.getName());
+                prompt.setParameter("user",userPlayRole.getName());
+
                 ModelRpHistoryPo history = new ModelRpHistoryPo();
                 history.setThread(thread);
                 history.setType(1); // AI消息
-                history.setRawContent(modelPlayRole.getFirstMessage());
+                history.setRawContent(prompt.execute());
                 history.setRpContent(modelPlayRole.getFirstMessage()); // 这里可能需要通过RpHandler处理
                 history.setSequence(1);
                 historyRepository.save(history);
