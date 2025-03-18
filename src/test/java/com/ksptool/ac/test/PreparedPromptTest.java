@@ -405,4 +405,127 @@ public class PreparedPromptTest {
 
         System.out.println(name);
     }
+
+    @Test
+    @DisplayName("测试静态execute方法复用已有参数")
+    public void testStaticExecuteWithExistingPrompt() {
+        // 创建原始PreparedPrompt并设置参数
+        PreparedPrompt originalPrompt = PreparedPrompt.prepare("这是原始模板#{param1}");
+        originalPrompt.setParameter("param1", "参数1");
+        originalPrompt.setParameter("param2", "参数2");
+        originalPrompt.setParameter("param3", "参数3");
+        
+        // 使用静态execute方法和新模板
+        String newTemplate = "新模板使用已有参数：#{param1}, #{param2}, #{param3}";
+        String result = PreparedPrompt.execute(newTemplate, originalPrompt);
+        
+        System.out.println(result);
+        Assertions.assertEquals("新模板使用已有参数：参数1, 参数2, 参数3", result);
+        
+        // 测试原始PreparedPrompt不受影响
+        Assertions.assertEquals("这是原始模板参数1", originalPrompt.execute());
+    }
+
+    @Test
+    @DisplayName("测试静态execute方法支持条件表达式")
+    public void testStaticExecuteWithConditions() {
+        // 创建原始PreparedPrompt并设置参数
+        PreparedPrompt originalPrompt = PreparedPrompt.prepare("原始模板");
+        originalPrompt.setParameter("name", "小明");
+        originalPrompt.setParameter("age", "18");
+        // 故意不设置hobby参数
+        
+        // 使用静态execute方法和带条件表达式的新模板
+        String newTemplate = "姓名: #{name}, 年龄: #{age} #{?hobby}爱好: #{hobby}#{?hobby}";
+        String result = PreparedPrompt.execute(newTemplate, originalPrompt);
+        
+        System.out.println(result);
+        // 由于hobby参数未设置，条件块不应该渲染
+        Assertions.assertEquals("姓名: 小明, 年龄: 18 ", result);
+        
+        // 设置hobby参数后再次测试
+        originalPrompt.setParameter("hobby", "编程");
+        result = PreparedPrompt.execute(newTemplate, originalPrompt);
+        
+        System.out.println(result);
+        // 此时hobby参数已设置，条件块应该渲染
+        Assertions.assertEquals("姓名: 小明, 年龄: 18 爱好: 编程", result);
+    }
+
+    @Test
+    @DisplayName("测试嵌套参数解析")
+    public void testExecuteNested() {
+        // 创建PreparedPrompt并设置嵌套参数
+        PreparedPrompt prompt = PreparedPrompt.prepare("用户信息：#{userInfo}");
+        
+        // 参数值中包含模板表达式
+        prompt.setParameter("username", "张三");
+        prompt.setParameter("age", "25");
+        prompt.setParameter("userInfo", "姓名：#{username}，年龄：#{age}岁");
+        
+        // 使用普通execute方法
+        String normalResult = prompt.execute();
+        System.out.println("普通执行结果: " + normalResult);
+        // 普通执行只会替换userInfo，不会解析userInfo中的模板
+        Assertions.assertEquals("用户信息：姓名：#{username}，年龄：#{age}岁", normalResult);
+        
+        // 使用嵌套参数解析
+        String nestedResult = prompt.executeNested();
+        System.out.println("嵌套执行结果: " + nestedResult);
+        // 嵌套执行会先解析参数值中的模板，然后再解析主模板
+        Assertions.assertEquals("用户信息：姓名：张三，年龄：25岁", nestedResult);
+    }
+    
+    @Test
+    @DisplayName("测试多层嵌套参数解析")
+    public void testMultiLevelNestedParameters() {
+        // 创建一个包含多层嵌套的PreparedPrompt
+        PreparedPrompt prompt = PreparedPrompt.prepare("最终结果：#{level1}");
+        
+        prompt.setParameter("name", "王五");
+        prompt.setParameter("level3", "值：#{name}");
+        prompt.setParameter("level2", "内层：#{level3}");
+        prompt.setParameter("level1", "外层：#{level2}");
+        
+        // 使用嵌套参数解析
+        String result = prompt.executeNested();
+        System.out.println("多层嵌套结果: " + result);
+        // 解析应该从内到外，逐层处理
+        Assertions.assertEquals("最终结果：外层：内层：值：王五", result);
+    }
+
+    @Test
+    @DisplayName("测试嵌套参数解析与条件表达式结合")
+    public void testNestedParametersWithConditions() {
+        // 创建PreparedPrompt并设置嵌套参数和条件表达式
+        PreparedPrompt prompt = PreparedPrompt.prepare("用户档案：#{profile}");
+        
+        // 设置基本信息
+        prompt.setParameter("name", "李四");
+        prompt.setParameter("age", "30");
+        
+        // 设置有条件表达式的嵌套参数
+        prompt.setParameter("profile", 
+            "姓名：#{name}，年龄：#{age}岁" +
+            "#{?hobby}，爱好：#{hobby}#{?hobby}" +
+            "#{?job}，职业：#{job}#{?job}"
+        );
+        
+        // 不设置hobby和job参数，测试条件表达式
+        String result1 = prompt.executeNested();
+        System.out.println("无条件参数结果: " + result1);
+        Assertions.assertEquals("用户档案：姓名：李四，年龄：30岁", result1);
+        
+        // 设置hobby参数，测试条件表达式
+        prompt.setParameter("hobby", "阅读");
+        String result2 = prompt.executeNested();
+        System.out.println("设置hobby结果: " + result2);
+        Assertions.assertEquals("用户档案：姓名：李四，年龄：30岁，爱好：阅读", result2);
+        
+        // 设置job参数，测试条件表达式
+        prompt.setParameter("job", "工程师");
+        String result3 = prompt.executeNested();
+        System.out.println("设置hobby和job结果: " + result3);
+        Assertions.assertEquals("用户档案：姓名：李四，年龄：30岁，爱好：阅读，职业：工程师", result3);
+    }
 } 

@@ -3,7 +3,6 @@ package com.ksptool.ql.commons.utils;
 import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -311,7 +310,89 @@ public class PreparedPrompt {
     public String execute() {
         return execute(true);
     }
+
+    /**
+     * 先解析参数值中的模板占位符，然后再解析主模板
+     * 这允许参数值本身包含模板表达式，实现嵌套解析
+     * @param strictMode 严格模式，如果为true则在有未设置的参数时抛出异常
+     * @return 替换后的prompt
+     * @throws IllegalStateException 如果strictMode为true且存在未设置的参数
+     */
+    public String executeNested(boolean strictMode) {
+        // 多次递归处理参数值，以支持多层嵌套
+        Map<String, String> processedParams = new HashMap<>(this.parameters);
+        boolean hasChanges;
+        
+        // 递归处理，直到所有嵌套参数都被解析完成
+        do {
+            hasChanges = false;
+            
+            // 创建一个临时的PreparedPrompt用于解析当前层级的参数
+            PreparedPrompt paramProcessor = new PreparedPrompt("");
+            paramProcessor.parameters.putAll(processedParams);
+            paramProcessor.enableXssFilter = this.enableXssFilter;
+            
+            // 处理每个参数值，将其视为模板进行解析
+            for (Map.Entry<String, String> entry : processedParams.entrySet()) {
+                String paramName = entry.getKey();
+                String paramValue = entry.getValue();
+                
+                if (paramValue != null && paramValue.contains("#{")) {
+                    // 将参数值作为模板进行解析
+                    String processedValue = PreparedPrompt.execute(paramValue, paramProcessor);
+                    
+                    // 如果解析后的值与原值不同，标记有变化
+                    if (!processedValue.equals(paramValue)) {
+                        processedParams.put(paramName, processedValue);
+                        hasChanges = true;
+                    }
+                }
+            }
+        } while (hasChanges); // 如果有变化，继续处理
+        
+        // 创建一个新的PreparedPrompt实例，使用原模板和处理后的参数
+        PreparedPrompt finalProcessor = new PreparedPrompt(this.template);
+        finalProcessor.parameters.putAll(processedParams);
+        finalProcessor.enableXssFilter = this.enableXssFilter;
+        
+        // 执行最终的模板替换
+        return finalProcessor.execute(strictMode);
+    }
     
+    /**
+     * 先解析参数值中的模板占位符，然后再解析主模板（默认严格模式）
+     * @return 替换后的prompt
+     * @throws IllegalStateException 如果存在未设置的参数
+     */
+    public String executeNested() {
+        return executeNested(true);
+    }
+
+    /**
+     * 使用新模板和已有的PreparedPrompt实例中的参数执行替换
+     * @param template 新的模板
+     * @param preparedPrompt 已有的PreparedPrompt实例，提供参数值
+     * @return 替换后的结果
+     */
+    public static String execute(String template, PreparedPrompt preparedPrompt) {
+        if (template == null) {
+            throw new IllegalArgumentException("模板不能为null");
+        }
+        if (preparedPrompt == null) {
+            throw new IllegalArgumentException("PreparedPrompt实例不能为null");
+        }
+        
+        // 创建一个新的PreparedPrompt实例，使用提供的模板
+        PreparedPrompt newPrompt = new PreparedPrompt(template);
+        
+        // 复制参数
+        newPrompt.parameters.putAll(preparedPrompt.parameters);
+        newPrompt.enableXssFilter = preparedPrompt.enableXssFilter;
+        
+        // 执行并返回结果
+        return newPrompt.execute(false); // 使用非严格模式，因为新模板可能含有原PreparedPrompt中没有的参数
+    }
+
     /**
      * 静态工厂方法，创建PreparedPrompt实例
      * @param template prompt模板
