@@ -14,6 +14,35 @@ import java.util.Map;
 public class PreparedPromptTest {
 
     @Test
+    @DisplayName("测试非空表达式 - 空字符串")
+    public void testBlankExpress(){
+
+        PreparedPrompt prompt = PreparedPrompt.prepare("你好#{user},今天是#{date}#{?game}你现在正在玩:#{game}#{?game}");
+
+        prompt.setParameter("user","张三");
+        prompt.setParameter("date","3月9日");
+
+        System.out.println(prompt.execute());
+        Assertions.assertEquals("你好张三,今天是3月9日", prompt.execute());
+    }
+
+
+    @Test
+    @DisplayName("测试多个模板组合")
+    public void testUnionTemplate(){
+
+        PreparedPrompt prompt = PreparedPrompt.prepare("你好#{user}")
+                .union(",","今天是#{date}");
+
+        prompt.setParameter("user","张三");
+        prompt.setParameter("date","3月9日");
+
+        System.out.println(prompt.execute());
+        Assertions.assertEquals("你好张三,今天是3月9日", prompt.execute());
+    }
+
+
+    @Test
     @DisplayName("测试基本替换功能")
     public void testBasicReplacement() {
         String template = "你好，#{name}！今天是#{date}。";

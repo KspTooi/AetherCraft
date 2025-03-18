@@ -33,6 +33,36 @@ public class PreparedPrompt {
         }
         this.template = template;
     }
+
+    /**
+     * 合并另一个模板，使用指定的分隔符
+     * @param separatorStr 分隔符
+     * @param template 要合并的模板
+     * @return 合并后的新PreparedPrompt实例
+     */
+    public PreparedPrompt union(String separatorStr, String template) {
+        if (template == null) {
+            throw new IllegalArgumentException("要合并的模板不能为null");
+        }
+        
+        // 创建新的PreparedPrompt实例，传入合并后的模板
+        PreparedPrompt newPrompt = new PreparedPrompt(this.template + separatorStr + template);
+        
+        // 复制原有参数
+        newPrompt.parameters.putAll(this.parameters);
+        newPrompt.enableXssFilter = this.enableXssFilter;
+        
+        return newPrompt;
+    }
+
+    /**
+     * 合并另一个模板，无分隔符
+     * @param template 要合并的模板
+     * @return 合并后的新PreparedPrompt实例
+     */
+    public PreparedPrompt union(String template) {
+        return union("", template);
+    }
     
     /**
      * 设置参数值
