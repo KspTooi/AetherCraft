@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
@@ -25,6 +26,9 @@ public class PanelModelRoleService {
 
     @Autowired
     private ModelRoleRepository modelRoleRepository;
+    
+    @Autowired
+    private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
 
     /**
      * 获取模型角色列表视图
@@ -152,6 +156,9 @@ public class PanelModelRoleService {
             if (!rolePo.getUserId().equals(currentUserId)) {
                 throw new BizException("无权删除该角色");
             }
+            
+            // 先删除角色相关的对话示例
+            modelRoleChatExampleRepository.removeByModelRoleId(id);
             
             // 删除角色
             modelRoleRepository.deleteById(id);

@@ -29,7 +29,7 @@ public class PanelModelRoleChatExampleService {
      * @return 对话示例列表
      */
     public List<EditModelRoleChatExampleVo> getExamplesByRoleId(Long modelRoleId) {
-        List<ModelRoleChatExamplePo> examples = repository.findByModelRoleIdOrderBySortOrder(modelRoleId);
+        List<ModelRoleChatExamplePo> examples = repository.getByModelRoleId(modelRoleId);
         
         List<EditModelRoleChatExampleVo> result = new ArrayList<>();
         for (ModelRoleChatExamplePo po : examples) {

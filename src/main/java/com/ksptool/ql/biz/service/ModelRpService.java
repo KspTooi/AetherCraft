@@ -8,11 +8,7 @@ import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
-import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
-import com.ksptool.ql.biz.model.po.ModelRpSegmentPo;
-import com.ksptool.ql.biz.model.po.ModelRpThreadPo;
-import com.ksptool.ql.biz.model.po.ModelUserRolePo;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatHistoryVo;
 import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
@@ -95,6 +91,8 @@ public class ModelRpService {
 
     @Autowired
     private ModelUserRoleService modelUserRoleService;
+    @Autowired
+    private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
 
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
@@ -323,8 +321,8 @@ public class ModelRpService {
         }
 
         //获取模型扮演的角色信息
-        ModelRolePo modelRole = thread.getModelRole();
-        if (modelRole == null) {
+        ModelRolePo modelPlayRole = thread.getModelRole();
+        if (modelPlayRole == null) {
             throw new BizException("模型角色信息不存在");
         }
 
@@ -332,18 +330,33 @@ public class ModelRpService {
         var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
         PreparedPrompt prompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
-        prompt.setParameter("model",modelRole.getName());
+        prompt.setParameter("model",modelPlayRole.getName());
         prompt.setParameter("user","user");
         prompt.setParameter("userDesc","");
-        prompt.setParameter("modelDescription",modelRole.getDescription());
-        prompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
-        prompt.setParameter("modelScenario",modelRole.getScenario());
+        prompt.setParameter("modelDescription",modelPlayRole.getDescription());
+        prompt.setParameter("modelRoleSummary", modelPlayRole.getRoleSummary());
+        prompt.setParameter("modelScenario",modelPlayRole.getScenario());
 
         if(userPlayRole != null){
             prompt.setParameter("user", userPlayRole.getName());
             prompt.setParameter("userDesc", userPlayRole.getDescription());
         }
 
+        //查询该模型角色是否还有示例对话
+        List<ModelRoleChatExamplePo> exampleChatPos = modelRoleChatExampleRepository.getByModelRoleId(modelPlayRole.getId());
+
+        if(!exampleChatPos.isEmpty()){
+
+            String unionStart = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_START.getKey(), "#示例对话#\n\n");
+            String unionEnd = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_END.getKey(), "\n\n");
+
+            //解析示例对话
+            for(var item : exampleChatPos){
+                if(StringUtils.isNotBlank(item.getContent())){
+                    prompt = prompt.union(unionStart).union(item.getContent()).union(unionEnd);
+                }
+            }
+        }
         String finalPrompt = prompt.executeNested();
 
         // 保存用户消息历史
@@ -799,7 +812,7 @@ public class ModelRpService {
         }
 
         // 获取角色信息
-        ModelRolePo modelRole = thread.getModelRole();
+        ModelRolePo modelPlayRole = thread.getModelRole();
         ModelUserRolePo userPlayRole = thread.getUserRole();
 
         //用户扮演的角色有可能被删除
@@ -807,7 +820,7 @@ public class ModelRpService {
             userPlayRole = modelUserRoleRepository.findById(userPlayRole.getId()).orElse(null);
         }
 
-        if (modelRole == null) {
+        if (modelPlayRole == null) {
             throw new BizException("模型角色信息不存在");
         }
 
@@ -816,16 +829,32 @@ public class ModelRpService {
         var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
         PreparedPrompt prompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
-        prompt.setParameter("model",modelRole.getName());
+        prompt.setParameter("model",modelPlayRole.getName());
         prompt.setParameter("user","user");
         prompt.setParameter("userDesc","");
-        prompt.setParameter("modelDescription",modelRole.getDescription());
-        prompt.setParameter("modelRoleSummary", modelRole.getRoleSummary());
-        prompt.setParameter("modelScenario",modelRole.getScenario());
+        prompt.setParameter("modelDescription",modelPlayRole.getDescription());
+        prompt.setParameter("modelRoleSummary", modelPlayRole.getRoleSummary());
+        prompt.setParameter("modelScenario",modelPlayRole.getScenario());
 
         if(userPlayRole != null){
             prompt.setParameter("user", userPlayRole.getName());
             prompt.setParameter("userDesc", userPlayRole.getDescription());
+        }
+
+        //查询该模型角色是否还有示例对话
+        List<ModelRoleChatExamplePo> exampleChatPos = modelRoleChatExampleRepository.getByModelRoleId(modelPlayRole.getId());
+
+        if(!exampleChatPos.isEmpty()){
+
+            String unionStart = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_START.getKey(), "#示例对话#\n\n");
+            String unionEnd = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_END.getKey(), "\n\n");
+
+            //解析示例对话
+            for(var item : exampleChatPos){
+                if(StringUtils.isNotBlank(item.getContent())){
+                    prompt = prompt.union(unionStart).union(item.getContent()).union(unionEnd);
+                }
+            }
         }
 
         String finalPrompt = prompt.executeNested();
