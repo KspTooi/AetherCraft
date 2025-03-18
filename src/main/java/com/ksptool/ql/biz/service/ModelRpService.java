@@ -349,14 +349,21 @@ public class ModelRpService {
 
             String unionStart = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_START.getKey(), "#示例对话#\n\n");
             String unionEnd = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_END.getKey(), "\n\n");
+            String unionFinish = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_FINISH.getKey(), "#示例对话结束#");
+            var count = 0;
 
             //解析示例对话
             for(var item : exampleChatPos){
                 if(StringUtils.isNotBlank(item.getContent())){
                     prompt = prompt.union(unionStart).union(item.getContent()).union(unionEnd);
+                    count++;
                 }
             }
+            if(count > 0){
+                prompt = prompt.union(unionFinish);
+            }
         }
+
         String finalPrompt = prompt.executeNested();
 
         // 保存用户消息历史
@@ -848,12 +855,18 @@ public class ModelRpService {
 
             String unionStart = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_START.getKey(), "#示例对话#\n\n");
             String unionEnd = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_END.getKey(), "\n\n");
+            String unionFinish = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_EXAMPLE_CHAT_FINISH.getKey(), "#示例对话结束#");
+            var count = 0;
 
             //解析示例对话
             for(var item : exampleChatPos){
                 if(StringUtils.isNotBlank(item.getContent())){
                     prompt = prompt.union(unionStart).union(item.getContent()).union(unionEnd);
+                    count++;
                 }
+            }
+            if(count > 0){
+                prompt = prompt.union(unionFinish);
             }
         }
 

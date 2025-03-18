@@ -35,9 +35,10 @@ public enum GlobalConfigEnum {
             #{modelScenario}
             """, "RP-角色设定提示词"),
 
-    MODEL_RP_PROMPT_EXAMPLE_CHAT_START("model.rp.prompt.example.chat.start","#示例对话#\n\n","RP-角色示例对话-开始 提示词"),
-    MODEL_RP_PROMPT_EXAMPLE_CHAT_END("model.rp.prompt.example.chat.end","\n\n","RP-角色示例对话-结束 提示词"),
+    MODEL_RP_PROMPT_EXAMPLE_CHAT_START("model.rp.prompt.example.chat.start","#示例对话#\n\n","RP-角色示例对话片段-开始 提示词"),
+    MODEL_RP_PROMPT_EXAMPLE_CHAT_END("model.rp.prompt.example.chat.end","\n\n","RP-角色示例对话片段-结束 提示词"),
 
+    MODEL_RP_PROMPT_EXAMPLE_CHAT_FINISH("model.rp.prompt.example.chat.finish","#示例对话结束#","RP-角色示例对话-结束 提示词"),
 
     ;
 
