@@ -84,69 +84,81 @@ public class ModelUserRoleService {
     
     /**
      * 保存角色
-     * @param roleDto 角色信息
+     * @param dto 角色信息
      * @return 保存后的角色ID
      * @throws BizException 业务异常
      */
-    @Transactional
-    public Long saveModelUserRole(SaveModelUserRoleDto roleDto) throws BizException {
-        // 新增角色时检查名称是否已存在
-        if (roleDto.getId() == null) {
-            ModelUserRolePo existingRole = rep.findByName(roleDto.getName());
-            if (existingRole != null) {
-                throw new BizException("角色名称 '" + roleDto.getName() + "' 已存在，请使用其他名称");
+    @Transactional(rollbackFor = BizException.class)
+    public Long saveModelUserRole(SaveModelUserRoleDto dto) throws BizException {
+
+        var createMode = dto.getId() == null;
+        Long currentUserId = AuthService.getCurrentUserId();
+
+        ModelUserRolePo modelUserRolePo = null;
+
+        if(createMode){
+            //新增角色时检查名称是否已存在
+            var query = new ModelUserRolePo();
+            query.setUserId(AuthService.getCurrentUserId());
+            query.setName(dto.getName());
+
+            if(rep.count(Example.of(query)) > 0){
+                throw new BizException("角色名称:"+dto.getName()+"被占用");
             }
+
+            modelUserRolePo = new ModelUserRolePo();
+            assign(dto, modelUserRolePo);
         }
-        
-        // 更新角色时检查名称是否与其他角色重复
-        if (roleDto.getId() != null) {
-            ModelUserRolePo existingRole = rep.findByNameAndIdNot(roleDto.getName(), roleDto.getId());
-            if (existingRole != null) {
-                throw new BizException("角色名称 '" + roleDto.getName() + "' 已存在，请使用其他名称");
+
+        if(!createMode){
+            //获取现有角色
+            var query = new ModelUserRolePo();
+            query.setId(dto.getId());
+            query.setUserId(currentUserId);
+            modelUserRolePo = rep.findOne(Example.of(query)).orElseThrow(() -> new BizException("角色不存在"));
+            
+            //更新角色时检查名称是否与其他角色重复
+            if(!StringUtils.equals(modelUserRolePo.getName(), dto.getName())) {
+                if(rep.countByUserIdAndNameAndIdNot(currentUserId, dto.getName(), dto.getId()) > 0) {
+                    throw new BizException("角色名称:" + dto.getName() + "被占用");
+                }
             }
+            
+            assign(dto,modelUserRolePo);
         }
-        
-        ModelUserRolePo rolePo = new ModelUserRolePo();
-        
-        // 如果是更新操作，获取现有角色
-        if (roleDto.getId() != null) {
-            Optional<ModelUserRolePo> optionalRole = rep.findById(roleDto.getId());
-            if (optionalRole.isPresent()) {
-                rolePo = optionalRole.get();
-            }
-        }
-        
-        // 设置属性
-        assign(roleDto, rolePo);
-        rolePo.setUserId(AuthService.getCurrentUserId());
-        
-        // 是否需要设置为默认角色
-        if(roleDto.getIsDefault() == 1){
+
+        //用户将当前更新的角色设为了默认
+        if(dto.getIsDefault() == 1){
             rep.updateAllToNonDefault();
             // 清除实体管理器缓存，确保后续操作使用最新的数据库状态
             entityManager.clear();
         }
 
-        // 保存角色
-        rolePo = rep.save(rolePo);
-        
-        // 检查用户是否有默认角色
-        ModelUserRolePo query = new ModelUserRolePo();
-        query.setUserId(rolePo.getUserId());
+        rep.save(modelUserRolePo);
+
+        //检查用户现在是否有默认角色
+        var query = new ModelUserRolePo();
+        query.setUserId(currentUserId);
         query.setIsDefault(1);
-        if (rep.findOne(Example.of(query)).isEmpty()) {
-            // 查询该用户的第一个角色
-            query.setIsDefault(null);
-            List<ModelUserRolePo> userRoles = rep.findAll(Example.of(query));
-            if (!userRoles.isEmpty()) {
-                ModelUserRolePo firstRole = userRoles.getFirst();
-                firstRole.setIsDefault(1);
-                rep.save(firstRole);
+
+        if(rep.count(Example.of(query)) < 1){
+            //查询该用户的第一个角色 将其设为默认
+            query = new ModelUserRolePo();
+            query.setUserId(currentUserId);
+
+            List<ModelUserRolePo> pos = rep.findAll(Example.of(query));
+
+            if(pos.isEmpty()){
+                throw new BizException("用户没有任何角色!");
             }
+
+            ModelUserRolePo first = pos.getFirst();
+            first.setIsDefault(1);
+            rep.save(first);
         }
-        
+
         // 返回保存后的角色ID
-        return rolePo.getId();
+        return modelUserRolePo.getId();
     }
     
     /**

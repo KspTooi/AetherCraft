@@ -35,4 +35,20 @@ public interface ModelUserRoleRepository extends JpaRepository<ModelUserRolePo, 
      */
     @Query("SELECT r FROM ModelUserRolePo r WHERE r.name = :name AND r.id != :id")
     ModelUserRolePo findByNameAndIdNot(@Param("name") String name, @Param("id") Long id);
+    
+    /**
+     * 检查指定用户下是否存在同名角色（排除指定ID）
+     * @param userId 用户ID
+     * @param name 角色名称
+     * @param id 排除的角色ID
+     * @return 角色数量
+     */
+    @Query("""
+            SELECT COUNT(r) 
+            FROM ModelUserRolePo r 
+            WHERE r.userId = :userId 
+            AND r.name = :name 
+            AND r.id != :id
+            """)
+    long countByUserIdAndNameAndIdNot(@Param("userId") Long userId, @Param("name") String name, @Param("id") Long id);
 } 
