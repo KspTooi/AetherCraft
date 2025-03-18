@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelUserRoleDto;
 import com.ksptool.ql.biz.model.po.ModelUserRolePo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.web.SimpleExample;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
 /**
@@ -39,36 +41,24 @@ public class ModelUserRoleService {
 
     /**
      * 查询用户角色列表
-     * @param queryDto 查询参数
+     * @param dto 查询参数
      * @return 角色列表
      */
-    public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto queryDto) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<ModelUserRolePo> query = cb.createQuery(ModelUserRolePo.class);
-        Root<ModelUserRolePo> root = query.from(ModelUserRolePo.class);
-        
-        List<Predicate> predicates = new ArrayList<>();
-        
-        // 根据角色名称模糊查询
-        if (StringUtils.isNotBlank(queryDto.getName())) {
-            predicates.add(cb.like(root.get("name"), "%" + queryDto.getName() + "%"));
+    public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto dto) {
+
+        ModelUserRolePo query = new ModelUserRolePo();
+        query.setUserId(AuthService.getCurrentUserId());
+
+        if(StringUtils.isNotBlank(dto.getName())){
+            query.setName(dto.getName());
         }
-        
-        query.where(predicates.toArray(new Predicate[0]));
-        query.orderBy(cb.asc(root.get("sortOrder")), cb.asc(root.get("id")));
-        
-        TypedQuery<ModelUserRolePo> typedQuery = entityManager.createQuery(query);
-        List<ModelUserRolePo> roles = typedQuery.getResultList();
-        
-        // 转换为Vo
-        List<ModelUserRoleVo> roleVos = new ArrayList<>();
-        for (ModelUserRolePo role : roles) {
-            ModelUserRoleVo vo = new ModelUserRoleVo();
-            assign(role, vo);
-            roleVos.add(vo);
-        }
-        
-        return roleVos;
+
+        SimpleExample<ModelUserRolePo> example = SimpleExample.of(query)
+                .like("name")
+                .orderByDesc("updateTime");
+
+        List<ModelUserRolePo> pos = rep.findAll(example.get(), example.getSort());
+        return as(pos,ModelUserRoleVo.class);
     }
     
     /**
