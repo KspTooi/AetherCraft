@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthDto;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyAuthVo;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -63,15 +64,19 @@ public class PanelApiKeyController {
     @GetMapping("/create")
     public ModelAndView getCreateView(@ModelAttribute("data") SaveApiKeyDto flash) {
         ModelAndView mv = new ModelAndView("panel-api-key-operator");
+        SaveApiKeyVo vo;
         
         // 如果有表单验证错误或业务异常，使用flashData
         if (flash != null && flash.getKeyName() != null) {
-            mv.addObject("data", as(flash,SaveApiKeyVo.class));
-            return mv;
+            vo = as(flash, SaveApiKeyVo.class);
+        } else {
+            // 第一次进入，初始化默认创建字段
+            vo = new SaveApiKeyVo();
         }
         
-        // 第一次进入，初始化默认创建字段
-        mv.addObject("data", new SaveApiKeyVo());
+        // 设置系列列表到VO
+        vo.setKeySeriesList(AIModelEnum.getSeriesList());
+        mv.addObject("data", vo);
         mv.addObject("title", "创建API密钥");
         return mv;
     }
@@ -81,10 +86,10 @@ public class PanelApiKeyController {
      */
     @GetMapping("/edit")
     public ModelAndView getEditView(@RequestParam("id") Long id, RedirectAttributes ra) {
-
         ModelAndView mav = new ModelAndView("panel-api-key-operator");
 
         try {
+            // 获取编辑视图VO
             mav.addObject("data", panelApiKeyService.getEditView(id));
             mav.addObject("title", "编辑API密钥");
         } catch (BizException e) {

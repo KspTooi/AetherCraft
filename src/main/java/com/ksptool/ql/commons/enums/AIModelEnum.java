@@ -1,6 +1,9 @@
 package com.ksptool.ql.commons.enums;
 
 import lombok.Getter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * AI模型枚举
@@ -103,5 +106,16 @@ public enum AIModelEnum {
 
     public String getSeries() {
         return series;
+    }
+
+    /**
+     * 获取所有不重复的模型系列列表
+     * @return 模型系列列表
+     */
+    public static List<String> getSeriesList() {
+        return Arrays.stream(values())
+                .map(AIModelEnum::getSeries)
+                .distinct()
+                .collect(Collectors.toList());
     }
 } 

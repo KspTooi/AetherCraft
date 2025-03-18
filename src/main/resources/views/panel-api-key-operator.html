@@ -36,9 +36,16 @@
                                 <!-- 密钥系列 -->
                                 <div class="col-md-6">
                                     <label for="keySeries" class="form-label">密钥系列 <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="keySeries" name="keySeries" 
-                                           th:value="${data?.keySeries}" required>
-                                    <div class="invalid-feedback">请输入密钥系列</div>
+                                    <select class="form-select" id="keySeries" name="keySeries" required>
+                                        <option value="" disabled selected>-- 选择密钥系列 --</option>
+                                        <option th:each="series : ${data.keySeriesList}" 
+                                                th:value="${series}" 
+                                                th:text="${series}"
+                                                th:selected="${series == data.keySeries}">
+                                            Gemini
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">请选择密钥系列</div>
                                 </div>
                                 
                                 <!-- 密钥值 -->

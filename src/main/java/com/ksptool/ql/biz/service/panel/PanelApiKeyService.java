@@ -18,6 +18,7 @@ import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyVo;
 import com.ksptool.ql.biz.model.vo.SaveApiKeyAuthVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
@@ -75,6 +76,9 @@ public class PanelApiKeyService {
         // 转换为视图对象
         SaveApiKeyVo vo = new SaveApiKeyVo();
         assign(po, vo);
+        
+        // 设置系列列表到VO
+        vo.setKeySeriesList(AIModelEnum.getSeriesList());
         return vo;
     }
 

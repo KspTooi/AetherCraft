@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
+import java.util.Date;
+import java.util.List;
 
 /**
  * API密钥保存/编辑视图数据
@@ -46,7 +48,7 @@ public class SaveApiKeyVo {
     /**
      * 最后使用时间（只读）
      */
-    private String lastUsedTime;
+    private Date lastUsedTime;
 
     /**
      * 创建时间
@@ -57,4 +59,7 @@ public class SaveApiKeyVo {
      * 修改时间
      */
     private String updateTime;
+
+    // 系列列表，用于前端选择
+    private List<String> keySeriesList;
 } 
