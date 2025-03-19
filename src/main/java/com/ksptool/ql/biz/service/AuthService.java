@@ -9,18 +9,15 @@ import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.SHA256;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 import java.util.List;
@@ -58,7 +55,7 @@ public class AuthService {
         }
         // 使用用户名作为盐，对密码进行加密：password + username
         String salted = password + username;
-        String hashedPassword = hashSHA256(salted);
+        String hashedPassword = SHA256.hex(salted);
         if (!hashedPassword.equals(user.getPassword())) {
             throw new BizException("用户名或密码错误");
         }
@@ -267,22 +264,5 @@ public class AuthService {
     }
 
 
-    private String hashSHA256(String input) throws BizException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new BizException("密码加密失败", e);
-        }
-    }
 
 }
