@@ -125,6 +125,7 @@ public class PanelModelRoleService {
             return modelRoleRepository.save(insert);
         }
 
+        //编辑角色
         ModelRolePo update = modelRoleRepository.findById(dto.getId()).orElseThrow(() -> new BizException("角色不存在!"));
         assign(dto,update);
 

@@ -135,7 +135,7 @@ public class ModelRpService {
     /**
      * 恢复或创建RP对话
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public RecoverRpChatVo recoverRpChat(RecoverRpChatDto dto) throws BizException{
 
         AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModelCode());
@@ -227,7 +227,7 @@ public class ModelRpService {
         return vo;
     }
 
-    
+
     /**
      * 发送RP对话消息
      * @param dto 批量完成RP对话的请求参数

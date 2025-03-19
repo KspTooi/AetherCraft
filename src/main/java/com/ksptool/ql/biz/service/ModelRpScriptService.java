@@ -14,6 +14,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,7 +46,7 @@ public class ModelRpScriptService {
      * @param modelPlayRolePt 模型扮演的角色
      * @throws BizException 如果创建过程中出现错误
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createNewThread(ModelUserRolePo userPlayRolePt, ModelRolePo modelPlayRolePt,String modeCode) throws BizException {
 
         //取消该用户该角色下所有存档的激活状态
@@ -82,6 +83,8 @@ public class ModelRpScriptService {
             contentSecurityService.process(history,true);
             historyRepository.save(history);
         }
+
+        entityManager.clear();
     }
 
     /**

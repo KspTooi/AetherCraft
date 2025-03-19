@@ -6,7 +6,7 @@
 
     <groupId>com.ksptooi</groupId>
     <artifactId>AetherCraft</artifactId>
-    <version>1.2G</version>
+    <version>1.2H</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
