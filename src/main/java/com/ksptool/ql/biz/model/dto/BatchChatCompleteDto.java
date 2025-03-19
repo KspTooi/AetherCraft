@@ -7,8 +7,11 @@ import lombok.Data;
 @Data
 public class BatchChatCompleteDto {
 
+    /**
+     * 会话ID，-1表示创建新会话
+     */
     @NotNull
-    private Long thread;
+    private Long threadId;
 
     private String model;
 

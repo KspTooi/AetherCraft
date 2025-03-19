@@ -6,8 +6,14 @@ import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
+import com.ksptool.ql.biz.model.dto.RecoverChatDto;
+import com.ksptool.ql.biz.model.dto.EditThreadDto;
+import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
+import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
+import com.ksptool.ql.biz.model.vo.RecoverChatVo;
+import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -20,48 +26,75 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import com.ksptool.ql.commons.enums.AIModelEnum;
 
 import com.ksptool.ql.biz.service.UserConfigService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+
 @Slf4j
 @RestController
-@RequestMapping("/model")
+@RequestMapping("/model/chat")
 public class ModelChatController {
     
-
     @Autowired
     private ModelChatService modelChatService;
 
     @Autowired
     private UserConfigService userConfigService;
 
+    /**
+     * 获取聊天视图
+     * @return 返回聊天页面视图
+     */
+    @GetMapping("/view")
+    public ModelAndView getChatView() {
+        ModelAndView modelAndView = new ModelAndView("model-chat");
+        
+        // 获取所有可用的AI模型列表
+        List<AIModelEnum> models = new ArrayList<>(Arrays.asList(AIModelEnum.values()));
+        
+        // 获取默认模型（枚举中的第一个）
+        String defaultModel = AIModelEnum.values()[0].getCode();
+        
+        modelAndView.addObject("models", models);
+        modelAndView.addObject("defaultModel", defaultModel);
+        return modelAndView;
+    }
 
-
-
-
-
-
-
-
-
-
+    /**
+     * 恢复会话
+     * @param dto 恢复会话请求参数
+     * @return 会话信息和历史消息
+     */
+    @PostMapping("/recoverChat")
+    public Result<RecoverChatVo> recoverChat(@Valid @RequestBody RecoverChatDto dto) {
+        try {
+            return Result.success(modelChatService.recoverChat(dto));
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
 
     /**
      * 批量聊天接口 - 长轮询方式
      * @param dto 批量聊天请求参数
      * @return 聊天片段
      */
-    @RequirePermissionRest("model:chat:message")
-    @PostMapping("/chat/complete/batch")
+    @PostMapping("/completeBatch")
     public Result<ChatSegmentVo> chatCompleteBatch(@Valid @RequestBody BatchChatCompleteDto dto) {
         try {
             // 参数校验：只有queryKind=0时才需要model和message
             if (dto.getQueryKind() == 0) {
-                if (dto.getModel() == null || dto.getModel().trim().isEmpty()) {
+
+                if (StringUtils.isBlank(dto.getModel())) {
                     return Result.error("发送消息时，模型代码不能为空");
                 }
-                if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
+                if (StringUtils.isBlank(dto.getMessage())) {
                     return Result.error("发送消息时，消息内容不能为空");
                 }
                 
@@ -89,65 +122,59 @@ public class ModelChatController {
 
     /**
      * 编辑会话标题
-     * @param threadId 会话ID
-     * @param newTitle 新标题
-     * @return 重定向到聊天视图
+     * @param dto 编辑会话请求参数
+     * @return 编辑结果
      */
-    @RequirePermission("model:chat:edit:thread")
-    @GetMapping("/chat/view/editThreadTitle")
-    public ModelAndView editThreadTitle(
-            @RequestParam(name = "threadId") Long threadId,
-            @RequestParam(name = "newTitle") String newTitle,
-            RedirectAttributes ra) {
+    @PostMapping("/editThread")
+    public Result<String> editThread(@Valid @RequestBody EditThreadDto dto) {
         try {
-            // 编辑会话标题
-            Long updatedThreadId = modelChatService.editThreadTitle(threadId, newTitle);
-            // 重定向到聊天视图
-            return new ModelAndView("redirect:/model/chat/view?threadId=" + updatedThreadId);
+            modelChatService.editThreadTitle(dto.getThreadId(), dto.getTitle());
+            return Result.success("会话标题修改成功");
         } catch (BizException e) {
-            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
-            return new ModelAndView("redirect:/model/chat/view");
+            return Result.error(e);
         }
     }
 
     /**
      * 删除会话
-     * @param threadId 会话ID
-     * @return 重定向到聊天视图
+     * @param dto 删除会话请求参数
+     * @return 删除结果
      */
-    @RequirePermission("model:chat:remove:thread")
-    @GetMapping("/chat/view/removeThread/{threadId}")
-    public ModelAndView removeThread(@PathVariable(name = "threadId") Long threadId) {
-        ModelAndView mav = new ModelAndView("redirect:/model/chat/view");
+    @PostMapping("/removeThread")
+    public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
-            modelChatService.removeThread(threadId);
-            mav.addObject("vo", Result.success("会话删除成功", null));
+            modelChatService.removeThread(dto.getThreadId());
+            return Result.success("会话删除成功");
         } catch (BizException e) {
-            mav.addObject("vo", Result.error(e.getMessage()));
+            return Result.error(e);
         }
-        return mav;
     }
 
     /**
      * 删除指定的历史消息
-     * @param threadId 会话ID
-     * @param historyId 历史消息ID
-     * @return 重定向到聊天视图
+     * @param dto 删除历史消息请求参数
+     * @return 删除结果
      */
-    @RequirePermission("model:chat:remove:history")
-    @GetMapping("/chat/view/removeHistory")
-    public ModelAndView removeHistory(
-            @RequestParam(name = "threadId") Long threadId,
-            @RequestParam(name = "historyId") Long historyId,
-            RedirectAttributes ra) {
-        ModelAndView mav = new ModelAndView("redirect:/model/chat/view?threadId=" + threadId);
+    @PostMapping("/removeHistory")
+    public Result<String> removeHistory(@Valid @RequestBody RemoveHistoryDto dto) {
         try {
-            modelChatService.removeHistory(threadId, historyId);
-            ra.addFlashAttribute("vo", Result.success("历史消息已删除", null));
+            modelChatService.removeHistory(dto.getThreadId(), dto.getHistoryId());
+            return Result.success("历史消息已删除");
         } catch (BizException e) {
-            ra.addFlashAttribute("vo", Result.error(e.getMessage()));
+            return Result.error(e);
         }
-        return mav;
     }
 
+    /**
+     * 获取当前用户的会话列表
+     * @return 会话列表
+     */
+    @GetMapping("/getThreadList")
+    public Result<List<ThreadListItemVo>> getThreadList() {
+        try {
+            return Result.success(modelChatService.getThreadList());
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
 } 

@@ -5,7 +5,10 @@ import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
+import com.ksptool.ql.biz.model.dto.RecoverChatDto;
 import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
+import com.ksptool.ql.biz.model.vo.RecoverChatVo;
+import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
@@ -42,6 +45,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
+import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
+
+import java.util.Comparator;
 
 @Slf4j
 @Service
@@ -181,6 +187,7 @@ public class ModelChatService {
         threadRepository.delete(thread);
     }
 
+
     /**
      * 发送批量聊天消息
      * @param dto 批量聊天请求参数
@@ -188,10 +195,11 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public ChatSegmentVo chatCompleteSendBatch(BatchChatCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+
+        Long threadId = dto.getThreadId();
 
         // 检查该会话是否正在处理中
-        if (threadToContextIdMap.containsKey(threadId)) {
+        if (!threadId.equals(-1L) && threadToContextIdMap.containsKey(threadId)) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -206,12 +214,13 @@ public class ModelChatService {
             Long userId = AuthService.getCurrentUserId();
 
             String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+
             if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
             }
 
             // 获取或创建会话
-            ModelChatThreadPo thread = createOrRetrieveThread(dto.getThread(), userId, modelEnum.getCode());
+            ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
             // 保存用户消息
             ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
@@ -229,17 +238,8 @@ public class ModelChatService {
             startSegment.setType(0); // 开始类型
             segmentRepository.save(startSegment);
 
-            // 获取配置
-            String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-            
-            // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyConfig = userConfigService.get("model.proxy.config", userId);
-            
-            // 如果用户未配置代理，则使用全局代理配置
-            if (StringUtils.isBlank(proxyConfig)) {
-                proxyConfig = globalConfigService.get("model.proxy.config");
-            }
-
+            // 获取代理配置
+            String proxyConfig = getProxyConfig(userId);
 
             // 创建HTTP客户端
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
@@ -271,11 +271,15 @@ public class ModelChatService {
 
         } catch (Exception e) {
             // 发生异常时清理会话状态
-            threadToContextIdMap.remove(threadId);
+            if (!threadId.equals(-1L)) {
+                threadToContextIdMap.remove(threadId);
+            }
 
             // 清理所有片段
             try {
-                segmentRepository.deleteByThreadId(threadId);
+                if (!threadId.equals(-1L)) {
+                    segmentRepository.deleteByThreadId(threadId);
+                }
             } catch (Exception ex) {
                 log.error("清理聊天片段失败", ex);
             }
@@ -292,19 +296,20 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public ChatSegmentVo chatCompleteQueryBatch(BatchChatCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+        Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
         
         // 最大等待次数和等待时间
-        final int MAX_WAIT_TIMES = 10;
+        final int MAX_WAIT_TIMES = 3;
         final long WAIT_INTERVAL_MS = 300;
         
-        // 尝试获取未读片段，最多等待10次
+        // 尝试获取所有未读片段，最多等待3次
         List<ModelChatSegmentPo> unreadSegments = null;
         int waitTimes = 0;
         
         while (waitTimes < MAX_WAIT_TIMES) {
-            unreadSegments = segmentRepository.findNextUnreadByThreadId(threadId);
+            // 一次性查询所有未读片段，按sequence排序
+            unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId);
             
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
@@ -313,7 +318,6 @@ public class ModelChatService {
             
             // 如果没有未读片段，且会话不在处理中，直接返回null
             if (!threadToContextIdMap.containsKey(threadId)) {
-                // 没有未读片段
                 return null;
             }
             
@@ -329,39 +333,89 @@ public class ModelChatService {
         }
         
         // 如果等待超时仍未获取到片段
-        if (unreadSegments.isEmpty()) {
-            throw new BizException("等待片段超时，请稍后再试");
+        if (unreadSegments == null || unreadSegments.isEmpty()) {
+            return null;
         }
-        
-        // 获取第一个未读片段
-        ModelChatSegmentPo segment = unreadSegments.get(0);
         
         // 检查权限
-        if (!segment.getUserId().equals(userId)) {
+        if (!unreadSegments.get(0).getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
+
+        // 优先处理错误片段(type=10)和开始片段(type=0)
+        for (ModelChatSegmentPo segment : unreadSegments) {
+            // 开始片段，只标记该片段为已读并返回
+            if (segment.getType() == 0) {
+                segment.setStatus(1);
+                segmentRepository.save(segment);
+                ChatSegmentVo vo = new ChatSegmentVo();
+                vo.setThreadId(threadId);
+                vo.setHistoryId(segment.getHistoryId());
+                vo.setSequence(segment.getSequence());
+                vo.setContent(segment.getContent());
+                vo.setType(segment.getType());
+                vo.setRole(1); // AI助手角色
+                return vo;
+            }
+
+            // 错误片段，标记所有片段为已读并返回错误信息
+            if (segment.getType() == 10) {
+                for (ModelChatSegmentPo seg : unreadSegments) {
+                    seg.setStatus(1);
+                }
+                segmentRepository.saveAll(unreadSegments);
+                ChatSegmentVo vo = new ChatSegmentVo();
+                vo.setThreadId(threadId);
+                vo.setSequence(segment.getSequence());
+                vo.setContent(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+                vo.setType(segment.getType());
+                vo.setRole(1); // AI助手角色
+                return vo;
+            }
+        }
+
+        // 获取第一个片段
+        ModelChatSegmentPo firstSegment = unreadSegments.get(0);
         
-        // 检查是否为错误片段
-        if (segment.getType() == 10) {
-            // 标记为已读
-            segment.setStatus(1);
-            segmentRepository.save(segment);
-            throw new BizException(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+        // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
+        if (firstSegment.getType() == 1) {
+            StringBuilder combinedContent = new StringBuilder();
+            List<ModelChatSegmentPo> segmentsToMark = new ArrayList<>();
+            
+            // 遍历所有片段，合并type=1的片段，直到遇到非type=1的片段
+            for (ModelChatSegmentPo segment : unreadSegments) {
+                if (segment.getType() != 1) {
+                    break;
+                }
+                
+                combinedContent.append(segment.getContent());
+                segment.setStatus(1); // 标记为已读
+                segmentsToMark.add(segment);
+            }
+            
+            segmentRepository.saveAll(segmentsToMark);
+            
+            // 返回合并后的数据片段
+            ChatSegmentVo vo = new ChatSegmentVo();
+            vo.setThreadId(threadId);
+            vo.setHistoryId(null);
+            vo.setSequence(firstSegment.getSequence());
+            vo.setContent(combinedContent.toString());
+            vo.setType(1); // 数据类型
+            vo.setRole(1); // AI助手角色
+            return vo;
         }
         
-        // 标记为已读
-        segment.setStatus(1); // 已读状态
-        segmentRepository.save(segment);
+        // 如果第一个片段是type=2结束片段
+        firstSegment.setStatus(1); // 标记为已读
+        segmentRepository.save(firstSegment);
         
-        // 转换为VO
         ChatSegmentVo vo = new ChatSegmentVo();
         vo.setThreadId(threadId);
-        vo.setHistoryId(segment.getHistoryId()); // 设置历史记录ID
-        vo.setSequence(segment.getSequence());
-        vo.setContent(segment.getContent());
-        vo.setType(segment.getType());
-        
-        // 直接设置角色为AI助手，因为chatCompleteQueryBatch不会获取到用户消息
+        vo.setHistoryId(firstSegment.getHistoryId());
+        vo.setSequence(firstSegment.getSequence());
+        vo.setContent(firstSegment.getContent());
+        vo.setType(firstSegment.getType());
         vo.setRole(1); // AI助手角色
         return vo;
     }
@@ -372,7 +426,7 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public void chatCompleteTerminateBatch(BatchChatCompleteDto dto) throws BizException {
-        Long threadId = dto.getThread();
+        Long threadId = dto.getThreadId();
         Long userId = AuthService.getCurrentUserId();
 
         // 检查会话是否存在
@@ -513,17 +567,9 @@ public class ModelChatService {
             // 创建请求DTO
             ModelChatParam modelChatParam = createModelChatDto(model, userId);
             modelChatParam.setMessage(prompt);
-            
-            // 设置API URL和API Key
-            String baseKey = "ai.model.cfg." + model + ".";
-            
-            // 获取代理配置 - 首先检查用户级别的代理配置
-            String proxyUrl = userConfigService.get("model.proxy.config", userId);
-            
-            // 如果用户未配置代理，则使用全局代理配置
-            if (StringUtils.isBlank(proxyUrl)) {
-                proxyUrl = globalConfigService.get("model.proxy.config");
-            }
+                  
+            // 获取代理配置
+            String proxyUrl = getProxyConfig(userId);
             
             String apiKey = panelApiKeyService.getApiKey(model, userId);
             
@@ -593,10 +639,91 @@ public class ModelChatService {
         
         log.info("已删除会话 {} 的历史消息 {}", threadId, historyId);
     }
+    /**
+     * 恢复会话
+     * @param dto 包含threadId参数
+     * @return 返回会话信息和历史消息
+     * @throws BizException 业务异常
+     */
+    public RecoverChatVo recoverChat(RecoverChatDto dto) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 获取会话ID
+        Long threadId = dto.getThreadId();
+        
+        // 获取会话
+        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        if (thread == null) {
+            throw new BizException("会话不存在");
+        }
+        
+        // 检查权限
+        if (!thread.getUserId().equals(userId)) {
+            throw new BizException("无权访问该会话");
+        }
+        
+        // 获取会话历史记录
+        List<ModelChatHistoryPo> histories = thread.getHistories();
+        
+        // 创建响应VO
+        RecoverChatVo vo = new RecoverChatVo();
+        vo.setThreadId(thread.getId());
+        vo.setModelCode(thread.getModelCode());
+        
+        // 转换历史记录
+        List<RecoverChatHistoryVo> messageVos = new ArrayList<>();
+        if (histories != null && !histories.isEmpty()) {
+            for (ModelChatHistoryPo history : histories) {
+                RecoverChatHistoryVo messageVo = new RecoverChatHistoryVo();
+                
+                // 手动映射特定字段
+                messageVo.setId(history.getId());
+                messageVo.setContent(history.getContent());
+                messageVo.setCreateTime(history.getCreateTime());
+                
+                // 将role映射到type (0-用户消息，1-AI消息)
+                messageVo.setRole(history.getRole());
+                
+                // 根据角色设置名称和头像
+                if (history.getRole() == 0) {
+                    // 用户消息
+                    messageVo.setName("User");
+                    messageVo.setAvatarPath("");
+                }
+                
+                if (history.getRole() == 1) {
+                    // AI消息 - 设置为模型系列名称
+                    AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
+                    String aiName = modelEnum != null ? modelEnum.getSeries() : "AI助手";
+                    messageVo.setName(aiName);
+                    messageVo.setAvatarPath("");
+                }
+                
+                messageVos.add(messageVo);
+            }
+        }
+        
+        vo.setMessages(messageVos);
+        
+        return vo;
+    }
 
+    /**
+     * 获取用户空间或全局的代理配置
+     * @param uid 用户ID
+     * @return 代理url
+     */
+    public String getProxyConfig(Long uid){
+        // 获取代理配置 - 首先检查用户级别的代理配置
+        String proxyConfig = userConfigService.get("model.proxy.config", uid);
 
-
-
+        // 如果用户未配置代理，则使用全局代理配置
+        if (StringUtils.isBlank(proxyConfig)) {
+            proxyConfig = globalConfigService.get("model.proxy.config");
+        }
+        return proxyConfig;
+    }
 
     /**
      * 创建处理模型消息回调的Consumer
@@ -697,5 +824,31 @@ public class ModelChatService {
                 log.error("处理聊天片段失败", e);
             }
         };
+    }
+
+    /**
+     * 获取当前用户的会话列表
+     * @return 会话列表
+     * @throws BizException 业务异常
+     */
+    public List<ThreadListItemVo> getThreadList() throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 查询该用户的所有会话，按更新时间排序
+        List<ModelChatThreadPo> threads = threadRepository.findByUserIdOrderByUpdateTimeDesc(userId);
+        
+        // 转换为VO
+        List<ThreadListItemVo> voList = new ArrayList<>();
+        
+        for (ModelChatThreadPo thread : threads) {
+            ThreadListItemVo vo = new ThreadListItemVo();
+            vo.setId(thread.getId());
+            vo.setTitle(thread.getTitle());
+            vo.setModelCode(thread.getModelCode());
+            voList.add(vo);
+        }
+        
+        return voList;
     }
 }

@@ -84,4 +84,12 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      */
     @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = 0 ORDER BY s.sequence ASC")
     List<ModelChatSegmentPo> findNextUnreadByThreadId(@Param("threadId") Long threadId);
+    
+    /**
+     * 获取指定会话中所有未读取的片段，按序号排序
+     * @param threadId 会话ID
+     * @return 所有未读取的片段
+     */
+    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = 0 ORDER BY s.sequence ASC")
+    List<ModelChatSegmentPo> findAllUnreadByThreadIdOrderBySequence(@Param("threadId") Long threadId);
 } 
