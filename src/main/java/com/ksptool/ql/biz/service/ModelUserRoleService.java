@@ -35,7 +35,7 @@ public class ModelUserRoleService {
     private ModelUserRoleRepository rep;
 
     @Autowired
-    private ContentSecurityService contentSecurityService;
+    private ContentSecurityService css;
 
     /**
      * 查询用户角色列表
@@ -43,7 +43,6 @@ public class ModelUserRoleService {
      * @return 角色列表
      */
     public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto dto) throws BizException {
-
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(AuthService.getCurrentUserId());
 
@@ -56,8 +55,15 @@ public class ModelUserRoleService {
                 .orderByDesc("updateTime");
 
         List<ModelUserRolePo> pos = rep.findAll(example.get(), example.getSort());
-        contentSecurityService.processList(pos,false);
-        return as(pos,ModelUserRoleVo.class);
+        List<ModelUserRoleVo> vos = as(pos, ModelUserRoleVo.class);
+        
+        // 解密VO中的加密字段
+        for(ModelUserRoleVo vo : vos) {
+            vo.setDescription(css.decryptForCurUser(vo.getDescription()));
+            vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+        }
+        
+        return vos;
     }
     
     /**
@@ -66,7 +72,6 @@ public class ModelUserRoleService {
      * @return 角色信息
      */
     public ModelUserRoleVo getById(Long id) throws BizException {
-
         if (id == null) {
             return null;
         }
@@ -74,9 +79,12 @@ public class ModelUserRoleService {
         Optional<ModelUserRolePo> optionalRole = rep.findById(id);
         if (optionalRole.isPresent()) {
             ModelUserRolePo po = optionalRole.get();
-            contentSecurityService.process(po,false);
             ModelUserRoleVo vo = new ModelUserRoleVo();
             assign(po, vo);
+            
+            // 解密VO中的加密字段
+            vo.setDescription(css.decryptForCurUser(vo.getDescription()));
+            vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
             return vo;
         }
         
@@ -136,7 +144,7 @@ public class ModelUserRoleService {
         }
 
         //保存前加密角色为密文
-        contentSecurityService.process(modelUserRolePo,true);
+        css.encryptEntity(modelUserRolePo);
         rep.save(modelUserRolePo);
 
         //检查用户现在是否有默认角色
@@ -229,32 +237,11 @@ public class ModelUserRoleService {
         defaultRole.setIsDefault(1); // 设置为默认角色
         
         try {
-            contentSecurityService.process(defaultRole,true);
+            css.encryptEntity(defaultRole);
             // 保存角色
             rep.save(defaultRole);
         } catch (Exception e) {
             throw new BizException("创建默认角色失败: " + e.getMessage(), e);
         }
-    }
-
-    /**
-     * 获取用户当前扮演的角色
-     * @param userId 用户ID
-     * @return 用户当前扮演的角色，如果未找到则返回null
-     */
-    public ModelUserRolePo getUserPlayRole(Long userId) throws BizException {
-
-        if (userId == null) {
-            return null;
-        }
-
-        // 创建查询条件
-        ModelUserRolePo query = new ModelUserRolePo();
-        query.setUserId(userId);
-        query.setIsDefault(1);
-
-        ModelUserRolePo po = rep.findOne(Example.of(query)).orElse(null);
-        contentSecurityService.process(po,false);
-        return po;
     }
 } 

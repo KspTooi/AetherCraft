@@ -21,11 +21,11 @@ public class ModelRpHistoryPo {
     @JoinColumn(name = "thread_id", nullable = false,foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private ModelRpThreadPo thread;
 
-    @Comment("消息内容-原始消息(展示给用户看的消息,不含系统Prompt等)")
+    @Comment("(加密)消息内容-原始消息(展示给用户看的消息,不含系统Prompt等)")
     @Column(columnDefinition = "TEXT", nullable = false)
     private String rawContent;
 
-    @Comment("消息内容-经RpHandler处理后的消息(携带完整Prompt)")
+    @Comment("(加密)消息内容-经RpHandler处理后的消息(携带完整Prompt)")
     @Column(columnDefinition = "TEXT", nullable = false)
     private String rpContent;
 

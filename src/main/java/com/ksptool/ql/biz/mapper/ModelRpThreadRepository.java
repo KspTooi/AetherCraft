@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * RP对话存档数据访问接口
  */
@@ -61,4 +63,18 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
         @Param("userId") Long userId,
         @Param("modelRole") ModelRolePo modelRole,
         @Param("threadId") Long threadId);
+
+    @Query("""
+            SELECT t FROM ModelRpThreadPo t
+            LEFT JOIN FETCH t.modelRole mr
+            LEFT JOIN FETCH t.userRole ur
+            LEFT JOIN FETCH t.histories h
+            WHERE t.id = :threadId
+            AND t.userId = :userId
+            ORDER BY h.sequence ASC
+            """)
+    ModelRpThreadPo getThreadWithRoleAndHistoriesById(
+            @Param("threadId") Long threadId,
+            @Param("userId") Long userId
+    );
 } 

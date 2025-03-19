@@ -25,7 +25,7 @@ public class PanelModelRoleChatExampleService {
     private ModelRoleChatExampleRepository repository;
 
     @Autowired
-    private ContentSecurityService contentSecurityService;
+    private ContentSecurityService css;
 
     /**
      * 获取指定角色的所有对话示例
@@ -36,13 +36,12 @@ public class PanelModelRoleChatExampleService {
     public List<EditModelRoleChatExampleVo> getExamplesByRoleId(Long modelRoleId) throws BizException {
         List<ModelRoleChatExamplePo> examples = repository.getByModelRoleId(modelRoleId);
         
-        // 解密内容
-        contentSecurityService.processList(examples, false);
-        
         List<EditModelRoleChatExampleVo> result = new ArrayList<>();
         for (ModelRoleChatExamplePo po : examples) {
             EditModelRoleChatExampleVo vo = new EditModelRoleChatExampleVo();
             assign(po, vo);
+            // 解密VO中的加密字段
+            vo.setContent(css.decryptForCurUser(vo.getContent()));
             result.add(vo);
         }
         return result;
@@ -83,7 +82,7 @@ public class PanelModelRoleChatExampleService {
                     existingPo.setSortOrder(chatDto.getSortOrder());
                     existingPo.setUpdateTime(new Date());
                     // 加密内容
-                    contentSecurityService.process(existingPo, true);
+                    css.encryptEntity(existingPo);
                     repository.save(existingPo);
                 }
                 continue;
@@ -95,7 +94,7 @@ public class PanelModelRoleChatExampleService {
             newPo.setContent(chatDto.getContent());
             newPo.setSortOrder(chatDto.getSortOrder());
             // 加密内容
-            contentSecurityService.process(newPo, true);
+            css.encryptEntity(newPo);
             repository.save(newPo);
         }
     }

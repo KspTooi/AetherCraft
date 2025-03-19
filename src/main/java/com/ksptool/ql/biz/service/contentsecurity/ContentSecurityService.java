@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 内容安全服务
@@ -25,6 +27,13 @@ public class ContentSecurityService {
 
     @Value("${encrypt.kek}")
     private String globalKek;
+
+    /**
+     * 用户DEK缓存
+     * key: userId
+     * value: 加密后的DEK
+     */
+    private final Map<Long, String> userDekCache = new ConcurrentHashMap<>();
 
     private String encrypt(String content, String key) throws BizException {
         return ChaCha20Poly1305Cipher.encrypt(content, key);
@@ -41,92 +50,69 @@ public class ContentSecurityService {
         }
     }
 
-    public void process(ModelRpSegmentPo po, boolean encrypt) throws BizException{
+    public void encryptEntity(ModelRpSegmentPo po) throws BizException{
         if(po == null) {
             return;
         }
         String dek = getPlainUserDek(po.getUserId());
-        if(encrypt) {
-            po.setContent(encrypt(po.getContent(), dek));
-            return;
-        }
-        po.setContent(decrypt(po.getContent(), dek));
+        po.setContent(encrypt(po.getContent(), dek));
     }
 
-    public void process(ModelRpHistoryPo po, boolean encrypt) throws BizException{
+    public void encryptEntity(ModelRpHistoryPo po) throws BizException{
         if(po == null) {
             return;
         }
-        String dek = getPlainUserDek(po.getThread().getUserId());
-        if(encrypt) {
-            po.setRawContent(encrypt(po.getRawContent(), dek));
-            po.setRpContent(encrypt(po.getRpContent(), dek));
-            return;
+
+        Long uid = null;
+
+        if(po.getThread()!=null){
+            uid = po.getThread().getUserId();
         }
-        po.setRawContent(decrypt(po.getRawContent(), dek));
-        po.setRpContent(decrypt(po.getRpContent(), dek));
+        if(uid == null){
+            uid = AuthService.getCurrentUserId();
+        }
+        String dek = getPlainUserDek(uid);
+        po.setRawContent(encrypt(po.getRawContent(), dek));
+        po.setRpContent(encrypt(po.getRpContent(), dek));
     }
 
-    public void process(ModelRpThreadPo po, boolean encrypt) throws BizException{
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(po.getUserId());
-        if(encrypt) {
-            po.setTitle(encrypt(po.getTitle(), dek));
-            po.setDescription(encrypt(po.getDescription(), dek));
-            return;
-        }
-        po.setTitle(decrypt(po.getTitle(), dek));
-        po.setDescription(decrypt(po.getDescription(), dek));
-    }
-
-    public void process(ModelUserRolePo po, boolean encrypt) throws BizException{
+    public void encryptEntity(ModelRpThreadPo po) throws BizException{
         if(po == null) {
             return;
         }
         String dek = getPlainUserDek(po.getUserId());
-        if(encrypt) {
-            po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-            po.setDescription(encrypt(po.getDescription(), dek));
-            return;
-        }
-        po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-        po.setDescription(decrypt(po.getDescription(), dek));
+        po.setTitle(encrypt(po.getTitle(), dek));
+        po.setDescription(encrypt(po.getDescription(), dek));
     }
 
-    public void process(ModelRolePo po, boolean encrypt) throws BizException{
+    public void encryptEntity(ModelUserRolePo po) throws BizException{
         if(po == null) {
             return;
         }
         String dek = getPlainUserDek(po.getUserId());
-        if(encrypt) {
-            po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-            po.setDescription(encrypt(po.getDescription(), dek));
-            po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
-            po.setScenario(encrypt(po.getScenario(), dek));
-            po.setFirstMessage(encrypt(po.getFirstMessage(), dek));
-            po.setTags(encrypt(po.getTags(), dek));
-            return;
-        }
-        po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-        po.setDescription(decrypt(po.getDescription(), dek));
-        po.setRoleSummary(decrypt(po.getRoleSummary(), dek));
-        po.setScenario(decrypt(po.getScenario(), dek));
-        po.setFirstMessage(decrypt(po.getFirstMessage(), dek));
-        po.setTags(decrypt(po.getTags(), dek));
+        po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+        po.setDescription(encrypt(po.getDescription(), dek));
     }
 
-    public void process(ModelRoleChatExamplePo po, boolean encrypt) throws BizException{
+    public void encryptEntity(ModelRolePo po) throws BizException{
+        if(po == null) {
+            return;
+        }
+        String dek = getPlainUserDek(po.getUserId());
+        po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+        po.setDescription(encrypt(po.getDescription(), dek));
+        po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
+        po.setScenario(encrypt(po.getScenario(), dek));
+        po.setFirstMessage(encrypt(po.getFirstMessage(), dek));
+        po.setTags(encrypt(po.getTags(), dek));
+    }
+
+    public void encryptEntity(ModelRoleChatExamplePo po) throws BizException{
         if(po == null) {
             return;
         }
         String dek = getPlainUserDek(AuthService.getCurrentUserId());
-        if(encrypt) {
-            po.setContent(encrypt(po.getContent(), dek));
-            return;
-        }
-        po.setContent(decrypt(po.getContent(), dek));
+        po.setContent(encrypt(po.getContent(), dek));
     }
 
     public void processList(List<?> poList, boolean encrypt) throws BizException {
@@ -208,7 +194,7 @@ public class ContentSecurityService {
             if(historyList.isEmpty()) {
                 return;
             }
-            String dek = getPlainUserDek(historyList.getFirst().getThread().getUserId());
+            String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
                 for(ModelRpHistoryPo po : historyList) {
@@ -221,6 +207,27 @@ public class ContentSecurityService {
             for(ModelRpHistoryPo po : historyList) {
                 po.setRawContent(decrypt(po.getRawContent(), dek));
                 po.setRpContent(decrypt(po.getRpContent(), dek));
+            }
+            return;
+        }
+
+        if(firstElement instanceof ModelRpSegmentPo) {
+            @SuppressWarnings("unchecked")
+            List<ModelRpSegmentPo> segmentList = (List<ModelRpSegmentPo>) poList;
+            if(segmentList.isEmpty()) {
+                return;
+            }
+            String dek = getPlainUserDek(AuthService.getCurrentUserId());
+            
+            if(encrypt) {
+                for(ModelRpSegmentPo po : segmentList) {
+                    po.setContent(encrypt(po.getContent(), dek));
+                }
+                return;
+            }
+            
+            for(ModelRpSegmentPo po : segmentList) {
+                po.setContent(decrypt(po.getContent(), dek));
             }
         }
     }
@@ -246,22 +253,48 @@ public class ContentSecurityService {
         }
     }
 
+    public String decryptForCurUser(String content,String dekPt) {
+        if(content == null) {
+            return null;
+        }
+        if(StringUtils.isBlank(content)) {
+            return "";
+        }
+        try {
+            return decrypt(content, dekPt);
+        } catch (Exception e) {
+            log.error("解密内容失败: {}", e.getMessage());
+            return content;
+        }
+    }
+
     public String getPlainUserDek(Long uid) throws BizException {
 
         if (StringUtils.isBlank(globalKek)) {
             throw new BizException("获取用户Dek时出现错误,全局主密钥Kek无效!");
         }
 
+        // 从缓存中获取加密的DEK
+        String dekCt = userDekCache.get(uid);
+
+        if(dekCt != null) {
+            return decrypt(dekCt, globalKek);
+        }
+
         UserPo userPo = userRepository.findById(uid).orElseThrow(() -> new BizException("获取用户Dek时出现错误,用户不存在!"));
 
         if(StringUtils.isBlank(userPo.getEncryptedDek())){
             var dekPt = ChaCha20Poly1305Cipher.generateKeyFromString(userPo.getUsername());
-            userPo.setEncryptedDek(ChaCha20Poly1305Cipher.encrypt(dekPt,globalKek));
+            dekCt = ChaCha20Poly1305Cipher.encrypt(dekPt,globalKek);
+            userPo.setEncryptedDek(dekCt);
             log.info("为用户: {} 创建新的DEK", userPo.getUsername());
             userRepository.save(userPo);
+        } else {
+            dekCt = userPo.getEncryptedDek();
         }
 
-        var dekCt = userPo.getEncryptedDek();
+        // 将加密的DEK存入缓存
+        userDekCache.put(uid, dekCt);
         return decrypt(dekCt,globalKek);
     }
 

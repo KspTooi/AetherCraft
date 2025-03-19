@@ -31,7 +31,7 @@ public class ModelRpCastService {
      * @param userId 用户ID
      * @return 用户当前扮演的角色，如果未找到则返回null
      */
-    public ModelUserRolePo getUserPlayRole(Long userId) throws BizException {
+    public ModelUserRolePo getUserPlayRole(Long userId) {
 
         if (userId == null) {
             return null;
@@ -41,10 +41,7 @@ public class ModelRpCastService {
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(userId);
         query.setIsDefault(1);
-
-        ModelUserRolePo po = modelUserRoleRepository.findOne(Example.of(query)).orElse(null);
-        contentSecurityService.process(po,false);
-        return po;
+        return modelUserRoleRepository.findOne(Example.of(query)).orElse(null);
     }
 
     /**
@@ -53,9 +50,8 @@ public class ModelRpCastService {
      * 
      * @param mRoleId 角色ID
      * @return 角色实体，如果未找到则返回null
-     * @throws BizException 业务异常
      */
-    public ModelRolePo getModelPlayRole(Long mRoleId) throws BizException {
+    public ModelRolePo getModelPlayRole(Long mRoleId) {
         if (mRoleId == null) {
             return null;
         }
@@ -66,11 +62,7 @@ public class ModelRpCastService {
         query.setUserId(AuthService.getCurrentUserId());
 
         // 使用Example查询
-        ModelRolePo po = modelRoleRepository.findOne(Example.of(query)).orElse(null);
-        
-        // 解密角色内容
-        contentSecurityService.process(po, false);
-        return po;
+        return modelRoleRepository.findOne(Example.of(query)).orElse(null);
     }
 
 

@@ -18,8 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 import static com.ksptool.entities.Entities.assign;
 
 /**
@@ -34,7 +32,7 @@ public class PanelModelRoleService {
     @Autowired
     private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
     @Autowired
-    private ContentSecurityService contentSecurityService;
+    private ContentSecurityService css;
 
     /**
      * 获取模型角色列表视图
@@ -51,7 +49,6 @@ public class PanelModelRoleService {
         vo.setId(dto.getId());
         vo.setKeyword(dto.getKeyword());
 
-
         ModelRolePo query = new ModelRolePo();
         query.setName(dto.getKeyword());
         query.setUserId(AuthService.getCurrentUserId());
@@ -64,12 +61,15 @@ public class PanelModelRoleService {
         Page<ModelRolePo> pagePos = modelRoleRepository.findAll(simpleExample.get(),  dto.pageRequest().withSort(
                 simpleExample.getSort()
         ));
-
-        // 返回数据前先执行解密
-        contentSecurityService.processList(pagePos.getContent(),false);
-
+        
         // 创建分页视图
         PageableView<ListModelRoleItemVo> pageableView = new PageableView<>(pagePos,ListModelRoleItemVo.class);
+        
+        // 解密列表中的加密字段
+        for(ListModelRoleItemVo item : pageableView.getRows()) {
+            item.setDescription(css.decryptForCurUser(item.getDescription()));
+            item.setAvatarPath(css.decryptForCurUser(item.getAvatarPath()));
+        }
 
         // 设置分页信息
         vo.setRoleList(pageableView);
@@ -78,11 +78,15 @@ public class PanelModelRoleService {
         if (dto.getId() != null) {
             ModelRolePo rolePo = modelRoleRepository.findById(dto.getId()).orElse(null);
             if (rolePo != null) {
-
-                // 返回数据前先执行解密
-                contentSecurityService.process(rolePo,false);
                 // 将角色详情映射到VO
                 assign(rolePo, vo);
+                // 解密选中角色的加密字段
+                vo.setDescription(css.decryptForCurUser(vo.getDescription()));
+                vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+                vo.setRoleSummary(css.decryptForCurUser(vo.getRoleSummary()));
+                vo.setScenario(css.decryptForCurUser(vo.getScenario()));
+                vo.setFirstMessage(css.decryptForCurUser(vo.getFirstMessage()));
+                vo.setTags(css.decryptForCurUser(vo.getTags()));
             }
         }
         
@@ -121,7 +125,7 @@ public class PanelModelRoleService {
             assign(dto, insert);
             insert.setUserId(currentUserId);
 
-            contentSecurityService.process(insert,true);
+            css.encryptEntity(insert);
             return modelRoleRepository.save(insert);
         }
 
@@ -139,7 +143,7 @@ public class PanelModelRoleService {
             throw new BizException("角色名称已存在");
         }
 
-        contentSecurityService.process(update,true);
+        css.encryptEntity(update);
         modelRoleRepository.save(update);
         return update;
     }
