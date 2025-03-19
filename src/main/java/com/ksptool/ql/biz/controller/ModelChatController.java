@@ -53,7 +53,7 @@ public class ModelChatController {
      */
     @GetMapping("/view")
     public ModelAndView getChatView() {
-        ModelAndView modelAndView = new ModelAndView("model-chat");
+        ModelAndView modelAndView = new ModelAndView("model-chat-new");
         
         // 获取所有可用的AI模型列表
         List<AIModelEnum> models = new ArrayList<>(Arrays.asList(AIModelEnum.values()));
@@ -169,7 +169,7 @@ public class ModelChatController {
      * 获取当前用户的会话列表
      * @return 会话列表
      */
-    @GetMapping("/getThreadList")
+    @PostMapping("/getThreadList")
     public Result<List<ThreadListItemVo>> getThreadList() {
         try {
             return Result.success(modelChatService.getThreadList());
