@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -38,17 +39,13 @@ public class ModelRpController {
         ModelAndView modelAndView = new ModelAndView("model-rp");
         
         // 从枚举中获取所有可用的模型列表
-        List<AIModelEnum> models = new ArrayList<>();
-        for (AIModelEnum model : AIModelEnum.values()) {
-            models.add(model);
-        }
+        List<AIModelEnum> models = new ArrayList<>(Arrays.asList(AIModelEnum.values()));
         
         // 获取默认模型（枚举中的第一个）
         String defaultModel = AIModelEnum.values()[0].getCode();
         
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
-        
         return modelAndView;
     }
 
