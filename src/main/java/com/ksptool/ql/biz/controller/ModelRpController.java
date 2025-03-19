@@ -92,14 +92,6 @@ public class ModelRpController {
         return Result.success(modelRpService.getModelRoleThreadList(dto));
     }
 
-    /**
-     * 取消激活RP对话
-     */
-    @PostMapping("/deActiveThread")
-    public Result<String> deActiveThread(@RequestBody @Valid DeActiveThreadDto dto) throws BizException {
-        modelRpService.deActiveThread(dto);
-        return Result.success("存档已取消激活");
-    }
 
     /**
      * 删除指定的会话及相关历史记录

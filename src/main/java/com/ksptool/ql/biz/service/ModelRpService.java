@@ -227,30 +227,7 @@ public class ModelRpService {
         return vo;
     }
 
-    /**
-     * 取消激活RP对话
-     */
-    @Transactional
-    public void deActiveThread(DeActiveThreadDto dto) throws BizException {
-        // 1. 查询用户拥有的存档
-        ModelRpThreadPo thread = threadRepository.findById(dto.getThreadId())
-            .orElseThrow(() -> new BizException("存档不存在"));
-
-        // 2. 验证权限
-        if (!thread.getUserId().equals(AuthService.getCurrentUserId())) {
-            throw new BizException("无权操作此存档");
-        }
-
-        // 3. 检查是否已经是非激活状态
-        if (thread.getActive() == 0) {
-            throw new BizException("存档已经是非激活状态");
-        }
-
-        // 4. 设置为非激活状态
-        thread.setActive(0);
-        threadRepository.save(thread);
-    }
-
+    
     /**
      * 发送RP对话消息
      * @param dto 批量完成RP对话的请求参数
