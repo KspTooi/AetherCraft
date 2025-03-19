@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleItemVo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
@@ -16,6 +17,9 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
 import static com.ksptool.entities.Entities.assign;
 
 /**
@@ -29,6 +33,8 @@ public class PanelModelRoleService {
     
     @Autowired
     private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
+    @Autowired
+    private ContentSecurityService contentSecurityService;
 
     /**
      * 获取模型角色列表视图
@@ -37,7 +43,7 @@ public class PanelModelRoleService {
      * @return 模型角色列表视图
      */
     @Transactional(readOnly = true)
-    public ListModelRoleVo getListView(ListModelRoleDto dto) {
+    public ListModelRoleVo getListView(ListModelRoleDto dto) throws BizException {
         // 创建视图对象
         ListModelRoleVo vo = new ListModelRoleVo();
         
@@ -58,7 +64,9 @@ public class PanelModelRoleService {
         Page<ModelRolePo> pagePos = modelRoleRepository.findAll(simpleExample.get(),  dto.pageRequest().withSort(
                 simpleExample.getSort()
         ));
-        
+
+        // 返回数据前先执行解密
+        contentSecurityService.processList(pagePos.getContent(),false);
 
         // 创建分页视图
         PageableView<ListModelRoleItemVo> pageableView = new PageableView<>(pagePos,ListModelRoleItemVo.class);
@@ -70,6 +78,9 @@ public class PanelModelRoleService {
         if (dto.getId() != null) {
             ModelRolePo rolePo = modelRoleRepository.findById(dto.getId()).orElse(null);
             if (rolePo != null) {
+
+                // 返回数据前先执行解密
+                contentSecurityService.process(rolePo,false);
                 // 将角色详情映射到VO
                 assign(rolePo, vo);
             }
@@ -110,6 +121,7 @@ public class PanelModelRoleService {
             assign(dto, insert);
             insert.setUserId(currentUserId);
 
+            contentSecurityService.process(insert,true);
             return modelRoleRepository.save(insert);
         }
 
@@ -126,6 +138,7 @@ public class PanelModelRoleService {
             throw new BizException("角色名称已存在");
         }
 
+        contentSecurityService.process(update,true);
         modelRoleRepository.save(update);
         return update;
     }

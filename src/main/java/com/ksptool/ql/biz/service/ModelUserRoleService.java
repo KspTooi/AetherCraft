@@ -10,18 +10,12 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.SimpleExample;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,7 +56,7 @@ public class ModelUserRoleService {
                 .orderByDesc("updateTime");
 
         List<ModelUserRolePo> pos = rep.findAll(example.get(), example.getSort());
-        contentSecurityService.process(pos,false);
+        contentSecurityService.processList(pos,false);
         return as(pos,ModelUserRoleVo.class);
     }
     
@@ -184,7 +178,7 @@ public class ModelUserRoleService {
         
         // 检查是否为默认角色
         Optional<ModelUserRolePo> optionalRole = rep.findById(id);
-        if (!optionalRole.isPresent()) {
+        if (optionalRole.isEmpty()) {
             throw new BizException("角色不存在");
         }
         
@@ -227,7 +221,7 @@ public class ModelUserRoleService {
         
         // 创建默认角色
         ModelUserRolePo defaultRole = new ModelUserRolePo();
-        defaultRole.setName("");
+        defaultRole.setName("用户");
         defaultRole.setDescription("");
         defaultRole.setUserId(userId);
         defaultRole.setAvatarPath(null);
@@ -235,6 +229,7 @@ public class ModelUserRoleService {
         defaultRole.setIsDefault(1); // 设置为默认角色
         
         try {
+            contentSecurityService.process(defaultRole,true);
             // 保存角色
             rep.save(defaultRole);
         } catch (Exception e) {
@@ -247,7 +242,7 @@ public class ModelUserRoleService {
      * @param userId 用户ID
      * @return 用户当前扮演的角色，如果未找到则返回null
      */
-    public ModelUserRolePo getUserPlayRole(Long userId) {
+    public ModelUserRolePo getUserPlayRole(Long userId) throws BizException {
 
         if (userId == null) {
             return null;
@@ -257,6 +252,9 @@ public class ModelUserRoleService {
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(userId);
         query.setIsDefault(1);
-        return rep.findOne(Example.of(query)).orElse(null);
+
+        ModelUserRolePo po = rep.findOne(Example.of(query)).orElse(null);
+        contentSecurityService.process(po,false);
+        return po;
     }
 } 

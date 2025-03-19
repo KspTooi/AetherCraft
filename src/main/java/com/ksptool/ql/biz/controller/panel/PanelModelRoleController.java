@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -40,16 +41,13 @@ public class PanelModelRoleController {
     @Autowired
     private UserFileService userFileService;
 
-    @Autowired
-    private UserConfigService userConfigService;
-
     /**
      * 获取模型角色列表视图
      * @param dto 查询参数
      * @return 模型角色列表视图
      */
     @GetMapping("/list")
-    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData, Model model, HttpServletRequest request) {
+    public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData) throws BizException {
 
         // 调用服务获取视图数据
         ListModelRoleVo vo = panelModelRoleService.getListView(dto);
