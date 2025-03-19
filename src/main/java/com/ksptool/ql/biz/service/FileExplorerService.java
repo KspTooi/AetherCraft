@@ -6,7 +6,6 @@ import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,6 +17,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 供AGENT使用的文件浏览器
+ */
 @Service
 public class FileExplorerService {
     @Autowired

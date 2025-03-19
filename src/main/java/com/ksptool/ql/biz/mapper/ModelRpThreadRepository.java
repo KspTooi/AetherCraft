@@ -18,12 +18,14 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
      * 查询模型角色的激活存档
      */
     @Query("""
-           SELECT t FROM ModelRpThreadPo t 
-           LEFT JOIN FETCH t.histories h 
-           WHERE t.modelRole.id = :modelRoleId AND t.active = 1 
+           SELECT t FROM ModelRpThreadPo t
+           LEFT JOIN FETCH t.histories h
+           LEFT JOIN FETCH t.userRole
+           LEFT JOIN FETCH t.modelRole
+           WHERE t.modelRole.id = :modelRoleId AND t.active = 1
            ORDER BY h.sequence ASC
            """)
-    ModelRpThreadPo findActiveThreadByModelRoleId(@Param("modelRoleId") Long modelRoleId);
+    ModelRpThreadPo getActiveThreadWithRoleAndHistories(@Param("modelRoleId") Long modelRoleId);
 
     /**
      * 批量设置用户的所有对话存档状态

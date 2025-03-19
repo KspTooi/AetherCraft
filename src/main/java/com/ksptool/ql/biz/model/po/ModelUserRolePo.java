@@ -31,11 +31,11 @@ public class ModelUserRolePo {
     private String avatarPath;
 
     @Column(nullable = false, length = 50)
-    @Comment("角色名称")
+    @Comment("(明文)角色名称")
     private String name;
 
-    @Column(length = 1000)
-    @Comment("角色描述")
+    @Column(length = 10000)
+    @Comment("(加密)角色描述")
     private String description;
 
     @Column(nullable = false)

@@ -25,11 +25,11 @@ public class ModelRpThreadPo {
     @Column(nullable = false)
     private Long userId;
     
-    @Comment("存档名称")
+    @Comment("(加密)存档名称")
     @Column(length = 100)
     private String title;
 
-    @Comment("存档描述")
+    @Comment("(加密)存档描述")
     @Column(length = 500)
     private String description;
     

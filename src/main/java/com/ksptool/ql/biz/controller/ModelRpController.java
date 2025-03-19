@@ -53,7 +53,7 @@ public class ModelRpController {
     }
 
     @PostMapping("/getRoleList")
-    public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto queryDto) {
+    public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto queryDto) throws BizException {
         return Result.success(modelRpService.getModelRoleList(queryDto));
     }
 

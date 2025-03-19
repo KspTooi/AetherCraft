@@ -199,6 +199,50 @@ public class ContentSecurityService {
             for(ModelRoleChatExamplePo po : exampleList) {
                 po.setContent(decrypt(po.getContent(), dek));
             }
+            return;
+        }
+
+        if(firstElement instanceof ModelRpHistoryPo) {
+            @SuppressWarnings("unchecked")
+            List<ModelRpHistoryPo> historyList = (List<ModelRpHistoryPo>) poList;
+            if(historyList.isEmpty()) {
+                return;
+            }
+            String dek = getPlainUserDek(historyList.getFirst().getThread().getUserId());
+            
+            if(encrypt) {
+                for(ModelRpHistoryPo po : historyList) {
+                    po.setRawContent(encrypt(po.getRawContent(), dek));
+                    po.setRpContent(encrypt(po.getRpContent(), dek));
+                }
+                return;
+            }
+            
+            for(ModelRpHistoryPo po : historyList) {
+                po.setRawContent(decrypt(po.getRawContent(), dek));
+                po.setRpContent(decrypt(po.getRpContent(), dek));
+            }
+        }
+    }
+
+    public String decryptForCurUser(String content) {
+        if(content == null) {
+            return null;
+        }
+        if(StringUtils.isBlank(content)) {
+            return "";
+        }
+        try {
+            Long curUserId = AuthService.getCurrentUserId();
+            if(curUserId == null) {
+                log.warn("解密失败: 当前用户ID为空");
+                return content;
+            }
+            String dek = getPlainUserDek(curUserId);
+            return decrypt(content, dek);
+        } catch (Exception e) {
+            log.error("解密内容失败: {}", e.getMessage());
+            return content;
         }
     }
 
