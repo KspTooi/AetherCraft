@@ -67,6 +67,25 @@ public class ModelChatController {
     }
 
     /**
+     * 获取Agent聊天视图
+     * @return 返回Agent聊天页面视图
+     */
+    @GetMapping("/agent/view")
+    public ModelAndView getAgentChatView() {
+        ModelAndView modelAndView = new ModelAndView("model-chat-agent-dev");
+        
+        // 获取所有可用的AI模型列表
+        List<AIModelEnum> models = new ArrayList<>(Arrays.asList(AIModelEnum.values()));
+        
+        // 获取默认模型（枚举中的第一个）
+        String defaultModel = AIModelEnum.values()[0].getCode();
+        
+        modelAndView.addObject("models", models);
+        modelAndView.addObject("defaultModel", defaultModel);
+        return modelAndView;
+    }
+
+    /**
      * 恢复会话
      * @param dto 恢复会话请求参数
      * @return 会话信息和历史消息

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI助手(AGENT)</title>
+    
+    <!-- 引入公共库 -->
+    <script th:src="@{/commons/vue3.global.prod.js}"></script>
+    <script th:src="@{/commons/axios.min.js}"></script>
+    <script th:src="@{/commons/marked.min.js}"></script>
+</head>
+
+<style>
+    /* 覆盖 frame-theme 的样式 */
+    .glass-container {
+        top: 45px !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    .dev-container {
+        color: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .dev-icon {
+        font-size: 84px;
+        margin-bottom: 30px;
+        color: rgba(79, 172, 254, 0.8);
+        animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% {
+            opacity: 0.6;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        100% {
+            opacity: 0.6;
+            transform: scale(1);
+        }
+    }
+    
+    .dev-title {
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 16px;
+        background: linear-gradient(90deg, #4facfe 0%, #00f2c3 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .dev-description {
+        font-size: 18px;
+        max-width: 600px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 40px;
+    }
+    
+    .dev-timeline {
+        display: flex;
+        align-items: center;
+        margin-bottom: 60px;
+    }
+    
+    .timeline-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 20px;
+    }
+    
+    .timeline-dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+        position: relative;
+    }
+    
+    .timeline-dot.active {
+        background: #4facfe;
+        box-shadow: 0 0 20px rgba(79, 172, 254, 0.7);
+    }
+    
+    .timeline-dot.pending {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .timeline-line {
+        height: 3px;
+        width: 100px;
+        background: linear-gradient(to right, #4facfe, rgba(255, 255, 255, 0.2));
+    }
+    
+    .timeline-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .timeline-text.active {
+        color: #4facfe;
+        font-weight: bold;
+    }
+</style>
+
+<body>
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="dev-container">
+            <div id="app">
+                <div class="dev-icon">
+                    <i class="bi bi-gear-wide-connected"></i>
+                </div>
+                <h1 class="dev-title">聊天(AGENT)功能开发中</h1>
+                <p class="dev-description">我们正在开发一个强大的AI代理功能，它将能够帮助您完成更复杂的任务。该功能目前处于开发阶段，请耐心等待。</p>
+                
+                <div class="dev-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-text active">规划阶段</div>
+                    </div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-text active">开发中</div>
+                    </div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot pending"></div>
+                        <div class="timeline-text">测试阶段</div>
+                    </div>
+                    <div class="timeline-line"></div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot pending"></div>
+                        <div class="timeline-text">发布</div>
+                    </div>
+                </div>
+                
+                <div class="dev-features">
+                    <h2 style="margin-bottom: 20px; font-size: 24px; color: rgba(255, 255, 255, 0.9);">即将推出的功能</h2>
+                    <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                        <li style="background: rgba(255, 255, 255, 0.1); padding: 15px 20px; border-radius: 10px; width: 220px;">
+                            <i class="bi bi-robot" style="font-size: 24px; margin-bottom: 10px; color: #4facfe;"></i>
+                            <div style="font-weight: bold; margin-bottom: 6px;">智能代理</div>
+                            <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">AI代理可以理解并执行复杂的多步骤任务</div>
+                        </li>
+                        <li style="background: rgba(255, 255, 255, 0.1); padding: 15px 20px; border-radius: 10px; width: 220px;">
+                            <i class="bi bi-tools" style="font-size: 24px; margin-bottom: 10px; color: #4facfe;"></i>
+                            <div style="font-weight: bold; margin-bottom: 6px;">工具集成</div>
+                            <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">与多种工具和API集成，扩展AI的能力</div>
+                        </li>
+                        <li style="background: rgba(255, 255, 255, 0.1); padding: 15px 20px; border-radius: 10px; width: 220px;">
+                            <i class="bi bi-braces" style="font-size: 24px; margin-bottom: 10px; color: #4facfe;"></i>
+                            <div style="font-weight: bold; margin-bottom: 6px;">代码执行</div>
+                            <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">能够执行并解释代码，帮助编程任务</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</body>
+</html> 

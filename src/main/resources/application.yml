@@ -25,7 +25,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2J # 应用版本号
+  version: 1.2J-25 # 应用版本号
 
 # 加密配置
 encrypt:

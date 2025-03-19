@@ -18,6 +18,9 @@
         <div class="nav-item" sec:authorize="model:chat:view">
           <a class="nav-link" th:href="@{/model/rp/view}">聊天(RP)</a>
         </div>
+        <div class="nav-item" sec:authorize="model:chat:view">
+          <a class="nav-link" th:href="@{/model/chat/agent/view}">聊天(AGENT)</a>
+        </div>
         <div class="nav-item" sec:authorize="app:view">
           <a class="nav-link" th:href="@{/appCenter}">应用中心</a>
         </div>
