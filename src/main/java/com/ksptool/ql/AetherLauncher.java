@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.commons.H2Server;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
+import com.ksptool.ql.commons.utils.ChaCha20Poly1305Cipher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,9 +34,28 @@ public class AetherLauncher {
     // 从配置文件中读取应用版本号
     private static String applicationVersion;
 
+    @Value("${encrypt.kek}")
+    private String globalKek;
+
     @Value("${application.version}")
     public void setApplicationVersion(String version) {
         applicationVersion = version;
+    }
+
+    /**
+     * 验证KEK是否有效
+     */
+    private void validateKek() {
+        if(StringUtils.isBlank(globalKek)) {
+            throw new RuntimeException("全局主密钥KEK未配置!");
+        }
+
+        try {
+            // 尝试使用KEK加密一段测试文本
+            ChaCha20Poly1305Cipher.encrypt("KEK_VALIDATION_TEST", globalKek);
+        } catch (Exception e) {
+            throw new RuntimeException("全局主密钥KEK无效: " + e.getMessage());
+        }
     }
 
     /**
@@ -71,6 +91,9 @@ public class AetherLauncher {
     @Bean
     public ApplicationRunner configInitializer(GlobalConfigService globalConfigService, AuthService authService) {
         return args -> {
+            // 验证KEK
+            validateKek();
+            log.info("全局主密钥KEK验证通过");
 
             // 检查是否存在allow.install.wizard配置
             String allowInstallWizard = globalConfigService.getValue(GlobalConfigEnum.ALLOW_INSTALL_WIZARD.getKey());

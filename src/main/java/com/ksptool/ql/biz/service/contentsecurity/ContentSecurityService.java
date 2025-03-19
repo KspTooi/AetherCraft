@@ -75,12 +75,10 @@ public class ContentSecurityService {
         String dek = getPlainUserDek(po.getUserId());
         if(encrypt) {
             po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-            po.setName(encrypt(po.getName(), dek));
             po.setDescription(encrypt(po.getDescription(), dek));
             return;
         }
         po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-        po.setName(decrypt(po.getName(), dek));
         po.setDescription(decrypt(po.getDescription(), dek));
     }
 
@@ -115,7 +113,6 @@ public class ContentSecurityService {
         if(encrypt) {
             for(ModelUserRolePo po : poList) {
                 po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-                po.setName(encrypt(po.getName(), dek));
                 po.setDescription(encrypt(po.getDescription(), dek));
             }
             return;
@@ -123,7 +120,6 @@ public class ContentSecurityService {
         
         for(ModelUserRolePo po : poList) {
             po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-            po.setName(decrypt(po.getName(), dek));
             po.setDescription(decrypt(po.getDescription(), dek));
         }
     }
@@ -140,6 +136,7 @@ public class ContentSecurityService {
             var dekPt = ChaCha20Poly1305Cipher.generateKeyFromString(userPo.getUsername());
             userPo.setEncryptedDek(ChaCha20Poly1305Cipher.encrypt(dekPt,globalKek));
             log.info("为用户: {} 创建新的DEK", userPo.getUsername());
+            userRepository.save(userPo);
         }
 
         var dekCt = userPo.getEncryptedDek();

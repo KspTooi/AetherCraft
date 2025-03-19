@@ -6,6 +6,8 @@ import com.ksptool.ql.biz.model.vo.ListModelUserRoleVo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
 import com.ksptool.ql.biz.service.ModelUserRoleService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ public class PanelModelUserRoleController {
     
     @Autowired
     private UserFileService userFileService;
+    @Autowired
+    private ContentSecurityService contentSecurityService;
 
     /**
      * 获取用户角色列表视图
@@ -38,7 +42,7 @@ public class PanelModelUserRoleController {
      * @return ModelAndView
      */
     @GetMapping("/list")
-    public ModelAndView getListView(ModelUserRoleQueryDto queryDto, org.springframework.ui.Model model) {
+    public ModelAndView getListView(ModelUserRoleQueryDto queryDto, org.springframework.ui.Model model) throws BizException {
         ModelAndView modelAndView = new ModelAndView("panel-model-user-role");
         
         // 创建响应数据对象
@@ -76,8 +80,9 @@ public class PanelModelUserRoleController {
         
         // 如果指定了选中角色ID
         if (queryDto.getSelectedId() != null) {
+
             selectedRole = modelUserRoleService.getById(queryDto.getSelectedId());
-            
+
             // 检查是否有表单数据需要回显
             SaveModelUserRoleDto formData = (SaveModelUserRoleDto) model.asMap().get("formData");
             if (formData != null && formData.getId() != null && formData.getId().equals(queryDto.getSelectedId())) {

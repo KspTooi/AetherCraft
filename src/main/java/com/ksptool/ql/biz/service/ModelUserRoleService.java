@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.ModelUserRoleQueryDto;
 import com.ksptool.ql.biz.model.dto.SaveModelUserRoleDto;
 import com.ksptool.ql.biz.model.po.ModelUserRolePo;
 import com.ksptool.ql.biz.model.vo.ModelUserRoleVo;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.SimpleExample;
 import jakarta.persistence.EntityManager;
@@ -39,12 +40,15 @@ public class ModelUserRoleService {
     @Autowired
     private ModelUserRoleRepository rep;
 
+    @Autowired
+    private ContentSecurityService contentSecurityService;
+
     /**
      * 查询用户角色列表
      * @param dto 查询参数
      * @return 角色列表
      */
-    public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto dto) {
+    public List<ModelUserRoleVo> getModelUserRoleList(ModelUserRoleQueryDto dto) throws BizException {
 
         ModelUserRolePo query = new ModelUserRolePo();
         query.setUserId(AuthService.getCurrentUserId());
@@ -58,6 +62,7 @@ public class ModelUserRoleService {
                 .orderByDesc("updateTime");
 
         List<ModelUserRolePo> pos = rep.findAll(example.get(), example.getSort());
+        contentSecurityService.process(pos,false);
         return as(pos,ModelUserRoleVo.class);
     }
     
@@ -66,7 +71,7 @@ public class ModelUserRoleService {
      * @param id 角色ID
      * @return 角色信息
      */
-    public ModelUserRoleVo getById(Long id) {
+    public ModelUserRoleVo getById(Long id) throws BizException {
 
         if (id == null) {
             return null;
@@ -74,8 +79,10 @@ public class ModelUserRoleService {
         
         Optional<ModelUserRolePo> optionalRole = rep.findById(id);
         if (optionalRole.isPresent()) {
+            ModelUserRolePo po = optionalRole.get();
+            contentSecurityService.process(po,false);
             ModelUserRoleVo vo = new ModelUserRoleVo();
-            assign(optionalRole.get(), vo);
+            assign(po, vo);
             return vo;
         }
         
@@ -134,6 +141,8 @@ public class ModelUserRoleService {
             entityManager.clear();
         }
 
+        //保存前加密角色为密文
+        contentSecurityService.process(modelUserRolePo,true);
         rep.save(modelUserRolePo);
 
         //检查用户现在是否有默认角色

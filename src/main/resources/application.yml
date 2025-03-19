@@ -29,4 +29,4 @@ application:
 
 #用户消息、模型用户角色、模型角色、世界等隐私数据所使用的KEK
 encrypt:
-  kek: ${AETHER_ENCRYPT_KEK:This is not a valid KEK}
+  kek: ${AETHER_ENCRYPT_KEK:F6ztHzAFoYsldv+MepbyBp9hH/G8oG+08JmjLPh1Z5U=}
