@@ -40,7 +40,10 @@ public class ContentSecurityService {
         }
     }
 
-    public void process(ModelRpSegmentPo po,boolean encrypt) throws BizException{
+    public void process(ModelRpSegmentPo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
         String dek = getPlainUserDek(po.getUserId());
         if(encrypt) {
             po.setContent(encrypt(po.getContent(), dek));
@@ -50,6 +53,9 @@ public class ContentSecurityService {
     }
 
     public void process(ModelRpHistoryPo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
         String dek = getPlainUserDek(po.getThread().getUserId());
         if(encrypt) {
             po.setRawContent(encrypt(po.getRawContent(), dek));
@@ -61,6 +67,9 @@ public class ContentSecurityService {
     }
 
     public void process(ModelRpThreadPo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
         String dek = getPlainUserDek(po.getUserId());
         if(encrypt) {
             po.setTitle(encrypt(po.getTitle(), dek));
@@ -72,6 +81,9 @@ public class ContentSecurityService {
     }
 
     public void process(ModelUserRolePo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
         String dek = getPlainUserDek(po.getUserId());
         if(encrypt) {
             po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
@@ -83,9 +95,11 @@ public class ContentSecurityService {
     }
 
     public void process(ModelRolePo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
         String dek = getPlainUserDek(po.getUserId());
         if(encrypt) {
-            po.setName(encrypt(po.getName(), dek));
             po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
             po.setDescription(encrypt(po.getDescription(), dek));
             po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
@@ -94,7 +108,6 @@ public class ContentSecurityService {
             po.setTags(encrypt(po.getTags(), dek));
             return;
         }
-        po.setName(decrypt(po.getName(), dek));
         po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
         po.setDescription(decrypt(po.getDescription(), dek));
         po.setRoleSummary(decrypt(po.getRoleSummary(), dek));
@@ -103,24 +116,58 @@ public class ContentSecurityService {
         po.setTags(decrypt(po.getTags(), dek));
     }
 
-    public void process(List<ModelUserRolePo> poList, boolean encrypt) throws BizException {
+    public void processList(List<?> poList, boolean encrypt) throws BizException {
         if(poList == null || poList.isEmpty()) {
             return;
         }
-        // 获取第一个元素的userId，假设列表中所有元素都属于同一用户
-        String dek = getPlainUserDek(poList.getFirst().getUserId());
+
+        Object firstElement = poList.getFirst();
         
-        if(encrypt) {
-            for(ModelUserRolePo po : poList) {
-                po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-                po.setDescription(encrypt(po.getDescription(), dek));
+        if(firstElement instanceof ModelUserRolePo) {
+            @SuppressWarnings("unchecked")
+            List<ModelUserRolePo> userRoleList = (List<ModelUserRolePo>) poList;
+            String dek = getPlainUserDek(userRoleList.getFirst().getUserId());
+            
+            if(encrypt) {
+                for(ModelUserRolePo po : userRoleList) {
+                    po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+                    po.setDescription(encrypt(po.getDescription(), dek));
+                }
+                return;
+            }
+            
+            for(ModelUserRolePo po : userRoleList) {
+                po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
+                po.setDescription(decrypt(po.getDescription(), dek));
             }
             return;
         }
-        
-        for(ModelUserRolePo po : poList) {
-            po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-            po.setDescription(decrypt(po.getDescription(), dek));
+
+        if(firstElement instanceof ModelRolePo) {
+            @SuppressWarnings("unchecked")
+            List<ModelRolePo> roleList = (List<ModelRolePo>) poList;
+            String dek = getPlainUserDek(roleList.getFirst().getUserId());
+            
+            if(encrypt) {
+                for(ModelRolePo po : roleList) {
+                    po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+                    po.setDescription(encrypt(po.getDescription(), dek));
+                    po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
+                    po.setScenario(encrypt(po.getScenario(), dek));
+                    po.setFirstMessage(encrypt(po.getFirstMessage(), dek));
+                    po.setTags(encrypt(po.getTags(), dek));
+                }
+                return;
+            }
+            
+            for(ModelRolePo po : roleList) {
+                po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
+                po.setDescription(decrypt(po.getDescription(), dek));
+                po.setRoleSummary(decrypt(po.getRoleSummary(), dek));
+                po.setScenario(decrypt(po.getScenario(), dek));
+                po.setFirstMessage(decrypt(po.getFirstMessage(), dek));
+                po.setTags(decrypt(po.getTags(), dek));
+            }
         }
     }
 
