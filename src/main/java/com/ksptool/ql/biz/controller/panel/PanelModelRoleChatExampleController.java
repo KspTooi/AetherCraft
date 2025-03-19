@@ -4,6 +4,7 @@ package com.ksptool.ql.biz.controller.panel;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleDto;
 import com.ksptool.ql.biz.model.vo.EditModelRoleChatExampleVo;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleChatExampleService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,7 +30,7 @@ public class PanelModelRoleChatExampleController {
      * @return 包含对话示例数据的ModelAndView
      */
     @GetMapping("/edit")
-    public ModelAndView getEditView(@RequestParam("modelRoleId") Long modelRoleId){
+    public ModelAndView getEditView(@RequestParam("modelRoleId") Long modelRoleId) throws BizException {
         ModelAndView mav = new ModelAndView("panel-model-role-chat-example-edit");
         List<EditModelRoleChatExampleVo> examples = service.getExamplesByRoleId(modelRoleId);
         mav.addObject("data", examples);

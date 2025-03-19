@@ -24,7 +24,7 @@ public class ModelRoleChatExamplePo {
     private Long modelRoleId;
 
     @Column(name = "content", nullable = false, length = 3000)
-    @Comment("对话内容")
+    @Comment("(加密)对话内容")
     private String content;
 
     @Column(nullable = false)

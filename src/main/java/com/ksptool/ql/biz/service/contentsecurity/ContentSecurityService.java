@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.ChaCha20Poly1305Cipher;
+import com.ksptool.ql.biz.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,6 +117,18 @@ public class ContentSecurityService {
         po.setTags(decrypt(po.getTags(), dek));
     }
 
+    public void process(ModelRoleChatExamplePo po, boolean encrypt) throws BizException{
+        if(po == null) {
+            return;
+        }
+        String dek = getPlainUserDek(AuthService.getCurrentUserId());
+        if(encrypt) {
+            po.setContent(encrypt(po.getContent(), dek));
+            return;
+        }
+        po.setContent(decrypt(po.getContent(), dek));
+    }
+
     public void processList(List<?> poList, boolean encrypt) throws BizException {
         if(poList == null || poList.isEmpty()) {
             return;
@@ -167,6 +180,24 @@ public class ContentSecurityService {
                 po.setScenario(decrypt(po.getScenario(), dek));
                 po.setFirstMessage(decrypt(po.getFirstMessage(), dek));
                 po.setTags(decrypt(po.getTags(), dek));
+            }
+            return;
+        }
+
+        if(firstElement instanceof ModelRoleChatExamplePo) {
+            @SuppressWarnings("unchecked")
+            List<ModelRoleChatExamplePo> exampleList = (List<ModelRoleChatExamplePo>) poList;
+            String dek = getPlainUserDek(AuthService.getCurrentUserId());
+            
+            if(encrypt) {
+                for(ModelRoleChatExamplePo po : exampleList) {
+                    po.setContent(encrypt(po.getContent(), dek));
+                }
+                return;
+            }
+            
+            for(ModelRoleChatExamplePo po : exampleList) {
+                po.setContent(decrypt(po.getContent(), dek));
             }
         }
     }

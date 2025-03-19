@@ -5,6 +5,8 @@ import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleDto;
 import com.ksptool.ql.biz.model.po.ModelRoleChatExamplePo;
 import com.ksptool.ql.biz.model.vo.EditModelRoleChatExampleVo;
 import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.exception.BizException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -22,14 +24,20 @@ public class PanelModelRoleChatExampleService {
     @Autowired
     private ModelRoleChatExampleRepository repository;
 
+    @Autowired
+    private ContentSecurityService contentSecurityService;
 
     /**
      * 获取指定角色的所有对话示例
      * @param modelRoleId 角色ID
      * @return 对话示例列表
+     * @throws BizException 业务异常
      */
-    public List<EditModelRoleChatExampleVo> getExamplesByRoleId(Long modelRoleId) {
+    public List<EditModelRoleChatExampleVo> getExamplesByRoleId(Long modelRoleId) throws BizException {
         List<ModelRoleChatExamplePo> examples = repository.getByModelRoleId(modelRoleId);
+        
+        // 解密内容
+        contentSecurityService.processList(examples, false);
         
         List<EditModelRoleChatExampleVo> result = new ArrayList<>();
         for (ModelRoleChatExamplePo po : examples) {
@@ -43,9 +51,10 @@ public class PanelModelRoleChatExampleService {
     /**
      * 保存对话示例（包括新增、修改和删除）
      * @param dto 保存请求对象
+     * @throws BizException 业务异常
      */
     @Transactional
-    public void save(SaveModelRoleChatExampleDto dto) {
+    public void save(SaveModelRoleChatExampleDto dto) throws BizException {
         // 获取当前角色下的所有对话示例
         ModelRoleChatExamplePo probe = new ModelRoleChatExamplePo();
         probe.setModelRoleId(dto.getModelRoleId());
@@ -73,6 +82,8 @@ public class PanelModelRoleChatExampleService {
                     existingPo.setContent(chatDto.getContent());
                     existingPo.setSortOrder(chatDto.getSortOrder());
                     existingPo.setUpdateTime(new Date());
+                    // 加密内容
+                    contentSecurityService.process(existingPo, true);
                     repository.save(existingPo);
                 }
                 continue;
@@ -83,6 +94,8 @@ public class PanelModelRoleChatExampleService {
             newPo.setModelRoleId(dto.getModelRoleId());
             newPo.setContent(chatDto.getContent());
             newPo.setSortOrder(chatDto.getSortOrder());
+            // 加密内容
+            contentSecurityService.process(newPo, true);
             repository.save(newPo);
         }
     }
