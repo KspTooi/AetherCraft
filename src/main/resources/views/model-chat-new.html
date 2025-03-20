@@ -9,7 +9,6 @@
     <script th:src="@{/commons/vue3.global.prod.js}"></script>
     <script th:src="@{/commons/axios.min.js}"></script>
     <script th:src="@{/commons/marked.min.js}"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 
 <style>
@@ -1235,6 +1234,7 @@
                     }
                     
                     axios.post('/model/chat/removeHistory', {
+                        threadId: this.currentThreadId,
                         historyId: messageId
                     })
                     .then(response => {
