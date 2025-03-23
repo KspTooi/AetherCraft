@@ -41,6 +41,11 @@ public interface AppInstanceRepository extends JpaRepository<AppInstancePo, Long
      * @param userId 用户ID
      * @return 运行中的实例数量
      */
-    @Query("SELECT COUNT(ai) FROM AppInstancePo ai WHERE ai.userId = :userId AND ai.status = 0")
+    @Query("""
+            SELECT COUNT(ai) 
+            FROM AppInstancePo ai 
+            WHERE ai.userId = :userId 
+            AND ai.status = 0
+            """)
     long countRunningInstances(@Param("userId") Long userId);
 } 
