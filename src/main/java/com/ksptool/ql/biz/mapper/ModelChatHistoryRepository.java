@@ -50,6 +50,6 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.sequence > :sequence")
+    @Query("DELETE FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.sequence >= :sequence")
     void removeHistoryAfter(@Param("threadId") Long threadId, @Param("sequence") Integer sequence);
 } 
