@@ -53,6 +53,7 @@ import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 public class ModelChatService {
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
     // 默认模型参数
     private static final double DEFAULT_TEMPERATURE = 0.7;
@@ -86,8 +87,10 @@ public class ModelChatService {
     private ModelGeminiService modelGeminiService;
 
     @Autowired
-    private PanelApiKeyService panelApiKeyService;
+    private ModelGrokService modelGrokService;
 
+    @Autowired
+    private PanelApiKeyService panelApiKeyService;
 
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
         if (threadId == null || threadId == -1) {
@@ -268,8 +271,14 @@ public class ModelChatService {
             // 创建请求DTO
             ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), userId);
             modelChatParam.setMessage(dto.getMessage());
-            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
+
+            // 根据模型类型设置不同的URL
+            if (dto.getModel().contains("grok")) {
+                modelChatParam.setUrl(GROK_BASE_URL);
+            } else {
+                modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
+            }
 
             //将新模型选项保存到Thread
             thread.setModelCode(modelEnum.getCode());
@@ -279,13 +288,23 @@ public class ModelChatService {
             List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
             modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
-            // 异步调用ModelGeminiService发送流式请求
-            modelGeminiService.sendMessageStream(
-                    client,
-                    modelChatParam,
-                    // 使用封装后的回调函数
-                    onModelMessageRcv(thread, userId)
-            );
+            // 根据模型类型选择不同的服务发送请求
+            if (dto.getModel().contains("grok")) {
+                // 使用GROK服务
+                modelGrokService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelMessageRcv(thread, userId)
+                );
+            }
+            if(dto.getModel().contains("gemini")){
+                // 使用Gemini服务
+                modelGeminiService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelMessageRcv(thread, userId)
+                );
+            }
 
             // 返回用户消息作为第一次响应
             ChatSegmentVo vo = new ChatSegmentVo();
@@ -621,11 +640,26 @@ public class ModelChatService {
                 throw new BizException("未配置API Key");
             }
             
-            modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+            // 根据模型类型设置不同的URL
+            if (model.contains("grok")) {
+                modelChatParam.setUrl(GROK_BASE_URL);
+            } else {
+                modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+            }
+            
             modelChatParam.setApiKey(apiKey);
             
-            // 发送请求
-            String title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            // 根据模型类型选择不同的服务发送请求
+            String title= "";
+
+            if (model.contains("grok")) {
+                // 使用GROK服务
+                title = modelGrokService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            }
+            if(model.contains("gemini")){
+                // 使用Gemini服务
+                title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            }
             
             // 处理标题（去除引号和多余空格，限制长度）
             title = title.replaceAll("^\"|\"$", "").trim();
