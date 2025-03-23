@@ -35,7 +35,7 @@ public class CustomizeController {
     
     @GetMapping("/view")
     public ModelAndView customizeView() {
-        return new ModelAndView("customize");
+        return new ModelAndView("user-customize/customize");
     }
 
     @PostMapping("/resetWallpaper")

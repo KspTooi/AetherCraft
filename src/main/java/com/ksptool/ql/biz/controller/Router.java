@@ -54,7 +54,7 @@ public class Router {
         }
 
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/appCenter");
+            return new ModelAndView("redirect:/model/chat/view");
         }
 
         String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
@@ -70,7 +70,7 @@ public class Router {
     public ModelAndView register(HttpServletRequest hsr, RedirectAttributes ra) {
 
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/appCenter");
+            return new ModelAndView("redirect:/model/chat/view");
         }
         String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
 
@@ -127,7 +127,7 @@ public class Router {
                 userConfigService.setValue("path.referer.dashboard", path, AuthService.getCurrentUserId());
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                userConfigService.setValue("path.referer.dashboard", "/ssr/appCenter", AuthService.getCurrentUserId());
+                userConfigService.setValue("path.referer.dashboard", "/model/chat/view", AuthService.getCurrentUserId());
             }
         }
         
@@ -136,7 +136,7 @@ public class Router {
 
     @GetMapping("/leaveDashboard")
     public String leaveDashboard() {
-        String referer = userConfigService.get("path.referer.dashboard", "/ssr/appCenter");
+        String referer = userConfigService.get("path.referer.dashboard", "/model/chat/view");
         return "redirect:" + referer;
     }
     

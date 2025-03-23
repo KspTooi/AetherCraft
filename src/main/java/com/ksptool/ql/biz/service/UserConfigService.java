@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -31,6 +32,7 @@ public class UserConfigService {
         return config.getConfigValue();
     }
 
+    @Transactional
     public void remove(String key){
         rep.removeByConfigKeyAndUserId(key,AuthService.getCurrentUserId());
     }
