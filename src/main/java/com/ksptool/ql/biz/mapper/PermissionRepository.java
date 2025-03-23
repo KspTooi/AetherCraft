@@ -22,6 +22,9 @@ public interface PermissionRepository extends JpaRepository<PermissionPo, Long> 
      * 获取最大排序号
      * @return 最大排序号，如果没有记录则返回0
      */
-    @Query("SELECT COALESCE(MAX(p.sortOrder), 0) FROM PermissionPo p")
+    @Query("""
+            SELECT COALESCE(MAX(p.sortOrder), 0) 
+            FROM PermissionPo p
+            """)
     Integer findMaxSortOrder();
 } 
