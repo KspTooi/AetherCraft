@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
+import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
@@ -16,6 +17,7 @@ import com.ksptool.ql.commons.utils.PreparedPrompt;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -44,21 +46,18 @@ import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
 import java.util.Date;
 import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
 
+import com.ksptool.ql.biz.model.dto.EditHistoryDto;
+
 @Slf4j
 @Service
 public class ModelChatService {
-    
-    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-    // SSE相关常量
-    private static final String SSE_PARAM = "?alt=sse";
-    
     // 默认模型参数
     private static final double DEFAULT_TEMPERATURE = 0.7;
     private static final double DEFAULT_TOP_P = 1.0;
     private static final int DEFAULT_TOP_K = 40;
-
 
     // 线程安全的容器，记录聊天状态 <threadId, contextId>
     private final ConcurrentHashMap<Long, String> threadToContextIdMap = new ConcurrentHashMap<>();
@@ -88,8 +87,6 @@ public class ModelChatService {
 
     @Autowired
     private PanelApiKeyService panelApiKeyService;
-
-
 
 
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
@@ -217,8 +214,37 @@ public class ModelChatService {
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
+            // 处理重新生成逻辑
+            Long userHistoryId = null;
+
             // 保存用户消息
-            ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
+            if(dto.getQueryKind() == 0){
+                ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
+                userHistoryId = userHistory.getId();
+            }
+
+            if (dto.getQueryKind() == 3 && dto.getRegenerateRootHistoryId() != null) {
+                // 获取指定的根消息记录
+                ModelChatHistoryPo rootHistory = historyRepository.findById(dto.getRegenerateRootHistoryId())
+                    .orElseThrow(() -> new BizException("指定的根消息记录不存在"));
+                
+                // 检查权限和关联
+                if (!rootHistory.getUserId().equals(userId) || !rootHistory.getThread().getId().equals(threadId)) {
+                    throw new BizException("无权访问该消息或消息不属于该会话");
+                }
+                
+                // 检查消息类型，只能是用户消息
+                if (rootHistory.getRole() != 0) {
+                    throw new BizException("只能以用户消息作为重新生成的起点");
+                }
+                
+                // 删除根消息之后的所有消息
+                historyRepository.removeHistoryAfter(threadId, rootHistory.getSequence());
+                
+                // 使用根消息的ID作为当前用户消息ID
+                userHistoryId = rootHistory.getId();
+                thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
+            }
 
             // 清理之前的片段（如果有）
             segmentRepository.deleteByThreadId(thread.getId());
@@ -244,7 +270,14 @@ public class ModelChatService {
             modelChatParam.setMessage(dto.getMessage());
             modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
-            modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
+
+            //将新模型选项保存到Thread
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
+
+            //获取全部消息历史
+            List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
+            modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
             // 异步调用ModelGeminiService发送流式请求
             modelGeminiService.sendMessageStream(
@@ -257,7 +290,7 @@ public class ModelChatService {
             // 返回用户消息作为第一次响应
             ChatSegmentVo vo = new ChatSegmentVo();
             vo.setThreadId(thread.getId());
-            vo.setHistoryId(userHistory.getId());
+            vo.setHistoryId(userHistoryId);
             vo.setRole(0); // 用户角色
             vo.setSequence(startSegment.getSequence());
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
@@ -605,6 +638,54 @@ public class ModelChatService {
         }
     }
 
+    /**
+     * 重新生成AI最后一条回复
+     * @param dto 批量聊天请求参数
+     * @return 聊天片段VO
+     * @throws BizException 业务异常
+     */
+    public ChatSegmentVo chatCompleteRegenerateBatch(BatchChatCompleteDto dto) throws BizException {
+        // 检查该会话是否正在处理中
+        if (threadToContextIdMap.containsKey(dto.getThreadId())) {
+            throw new BizException("该会话正在处理中，请等待AI响应完成");
+        }
+
+        // 获取并验证模型配置
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+
+        // 使用Example查询当前用户的会话
+        ModelChatThreadPo threadQuery = new ModelChatThreadPo();
+        threadQuery.setId(dto.getThreadId());
+        threadQuery.setUserId(userId);
+        
+        Example<ModelChatThreadPo> example = Example.of(threadQuery);
+
+        if(threadRepository.count(example) < 1){
+            throw new BizException("会话不存在或不可用!");
+        }
+
+        // 查找最后一条用户消息
+        ModelChatHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
+        if (lastUserMessage == null) {
+            throw new BizException("未找到任何用户消息");
+        }
+
+        // 使用找到的最后一条用户消息作为重新生成的起点
+        BatchChatCompleteDto batchSendDto = new BatchChatCompleteDto();
+        batchSendDto.setThreadId(dto.getThreadId());
+        batchSendDto.setModel(dto.getModel());
+        batchSendDto.setMessage(lastUserMessage.getContent());
+        batchSendDto.setQueryKind(3); // 重新生成AI最后一条回复
+        batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
+
+        return chatCompleteSendBatch(batchSendDto);
+    }
 
     /**
      * 删除指定的历史消息
@@ -791,10 +872,7 @@ public class ModelChatService {
                     endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
                     segmentRepository.save(endSegment);
 
-                    // 更新会话使用的模型
                     if (modelEnum != null) {
-                        thread.setModelCode(modelEnum.getCode());
-                        threadRepository.save(thread);
 
                         // 尝试生成会话标题
                         try {
@@ -883,5 +961,30 @@ public class ModelChatService {
         
         // 返回新创建的会话ID
         return CreateEmptyThreadVo.of(thread.getId());
+    }
+
+    /**
+     * 编辑聊天历史记录
+     * @param dto 编辑聊天历史记录的请求参数
+     * @throws BizException 业务异常
+     */
+    public void editHistory(EditHistoryDto dto) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 创建Example查询对象
+        ModelChatHistoryPo historyCriteria = new ModelChatHistoryPo();
+        historyCriteria.setId(dto.getHistoryId());
+        historyCriteria.setUserId(userId);
+        
+        Example<ModelChatHistoryPo> example = Example.of(historyCriteria);
+        
+        // 查询符合条件的记录
+        ModelChatHistoryPo history = historyRepository.findOne(example)
+            .orElseThrow(() -> new BizException("历史记录不存在或无权编辑"));
+            
+        // 更新消息内容
+        history.setContent(dto.getContent());
+        historyRepository.save(history);
     }
 }

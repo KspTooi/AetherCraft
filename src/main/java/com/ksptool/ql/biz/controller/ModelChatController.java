@@ -12,6 +12,7 @@ import com.ksptool.ql.biz.model.dto.EditThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
 import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
+import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -126,6 +127,11 @@ public class ModelChatController {
                 modelChatService.chatCompleteTerminateBatch(dto);
                 return Result.success("AI响应已终止", null);
             }
+
+            //处理重新生成
+            if(dto.getQueryKind() == 3) {
+                return Result.success(modelChatService.chatCompleteRegenerateBatch(dto));
+            }
             
             // 默认情况
             return Result.error("无效的查询类型");
@@ -174,6 +180,21 @@ public class ModelChatController {
         try {
             modelChatService.removeHistory(dto.getThreadId(), dto.getHistoryId());
             return Result.success("历史消息已删除");
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
+
+    /**
+     * 编辑历史消息
+     * @param dto 编辑历史消息请求参数
+     * @return 编辑结果
+     */
+    @PostMapping("/editHistory")
+    public Result<String> editHistory(@Valid @RequestBody EditHistoryDto dto) {
+        try {
+            modelChatService.editHistory(dto);
+            return Result.success("历史消息已编辑");
         } catch (BizException e) {
             return Result.error(e);
         }

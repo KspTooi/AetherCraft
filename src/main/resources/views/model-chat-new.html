@@ -123,7 +123,7 @@
     .model-select select:hover {
         background: rgba(255, 255, 255, 0.15);
     }
-    
+
     .model-select select:focus {
         outline: none;
         border-color: rgba(255, 255, 255, 0.3);
@@ -813,7 +813,7 @@
                                 </div>
                                 <div class="message-actions">
                                     <template v-if="!message.isEditing">
-                                        <button v-if="index === messages.length - 1" 
+                                        <button v-if="message.role === 'assistant' && index === messages.length - 1" 
                                                 class="message-regenerate-btn" 
                                                 @click="regenerateAIResponse(message)"
                                                 title="重新生成">
@@ -1052,11 +1052,35 @@
                                     }, 3000);
                                     
                                     break;
+                                } else if (segment.type === 10) {
+                                    // 错误片段
+                                    assistantMessage.content = segment.content || "AI响应出错";
+                                    assistantMessage.hasReceivedData = true;
+                                    assistantMessage.isTyping = false;
+                                    
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
+                                    this.scrollToBottom();
+                                    this.isLoading = false;
+                                    
+                                    // 显示错误提示
+                                    showToast("danger", "生成失败: " + assistantMessage.content);
+                                    break;
                                 }
                             }
                         } catch (error) {
                             console.error('获取AI响应错误:', error);
+                            assistantMessage.content = "获取AI响应出错，请重试";
+                            assistantMessage.hasReceivedData = true;
+                            assistantMessage.isTyping = false;
+                            
+                            // 触发视图更新
+                            this.messages = [...this.messages];
+                            this.scrollToBottom();
                             this.isLoading = false;
+                            
+                            // 显示错误提示
+                            showToast("danger", "网络错误，请检查连接");
                             break;
                         }
                         
@@ -1306,6 +1330,7 @@
                     }
                     
                     axios.post('/model/chat/removeHistory', {
+                        threadId: this.currentThreadId,
                         historyId: messageId
                     })
                     .then(response => {
@@ -1377,11 +1402,34 @@
                         });
                         
                         if (response.data.code === 0) {
-                            // 更新消息内容为"正在重新生成..."
-                            message.content = '正在重新生成...';
+                            // 将当前消息设置为正在重新生成状态
+                            const assistantMessage = {
+                                id: message.id,
+                                role: 'assistant',
+                                content: '正在重新生成...',
+                                name: message.name || 'AI助手',
+                                avatarPath: message.avatarPath,
+                                createTime: new Date().toISOString(),
+                                isTyping: true,
+                                hasReceivedData: false
+                            };
                             
-                            // 开始轮询获取新的响应
-                            await this.pollAIResponse();
+                            // 替换原消息
+                            const msgIndex = this.messages.findIndex(m => m.id === message.id);
+                            if (msgIndex !== -1) {
+                                this.messages[msgIndex] = assistantMessage;
+                                // 确保Vue能够检测到变化
+                                this.messages = [...this.messages];
+                            } else {
+                                // 如果找不到原消息，则添加到消息列表末尾
+                                this.messages.push(assistantMessage);
+                            }
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
+                            // 开始轮询获取AI响应
+                            await this.pollAIResponse(assistantMessage);
                         } else {
                             // 重新生成失败，显示错误信息
                             showToast("danger", response.data.message || '重新生成失败');
