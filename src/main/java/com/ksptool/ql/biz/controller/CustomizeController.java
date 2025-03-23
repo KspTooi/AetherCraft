@@ -16,7 +16,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,7 +34,7 @@ public class CustomizeController {
     
     @GetMapping("/view")
     public ModelAndView customizeView() {
-        return new ModelAndView("user-customize/customize");
+        return new ModelAndView("user-customize/user-customize.html");
     }
 
     @PostMapping("/resetWallpaper")
