@@ -19,7 +19,12 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param threadId 会话ID
      * @return 片段列表
      */
-    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId ORDER BY s.sequence ASC")
+    @Query("""
+            SELECT s 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            ORDER BY s.sequence ASC
+            """)
     List<ModelChatSegmentPo> findByThreadIdOrderBySequenceAsc(@Param("threadId") Long threadId);
     
     /**
@@ -28,7 +33,13 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param status 状态
      * @return 片段列表
      */
-    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = :status ORDER BY s.sequence ASC")
+    @Query("""
+            SELECT s 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = :status 
+            ORDER BY s.sequence ASC
+            """)
     List<ModelChatSegmentPo> findByThreadIdAndStatusOrderBySequenceAsc(@Param("threadId") Long threadId, @Param("status") Integer status);
     
     /**
@@ -37,7 +48,13 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param userId 用户ID
      * @return 片段列表
      */
-    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.userId = :userId ORDER BY s.sequence ASC")
+    @Query("""
+            SELECT s 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.userId = :userId 
+            ORDER BY s.sequence ASC
+            """)
     List<ModelChatSegmentPo> findByThreadIdAndUserIdOrderBySequenceAsc(@Param("threadId") Long threadId, @Param("userId") Long userId);
     
     /**
@@ -48,7 +65,11 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      */
     @Modifying
     @Transactional
-    @Query("UPDATE ModelChatSegmentPo s SET s.status = :status WHERE s.thread.id = :threadId")
+    @Query("""
+            UPDATE ModelChatSegmentPo s 
+            SET s.status = :status 
+            WHERE s.thread.id = :threadId
+            """)
     int updateStatusByThreadId(@Param("threadId") Long threadId, @Param("status") Integer status);
     
     /**
@@ -56,7 +77,11 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param threadId 会话ID
      * @return 最大序号
      */
-    @Query("SELECT COALESCE(MAX(s.sequence), 0) FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId")
+    @Query("""
+            SELECT COALESCE(MAX(s.sequence), 0) 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId
+            """)
     int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -66,7 +91,10 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId")
+    @Query("""
+            DELETE FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId
+            """)
     int deleteByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -74,7 +102,12 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param threadId 会话ID
      * @return 未读取的片段数量
      */
-    @Query("SELECT COUNT(s) FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = 0")
+    @Query("""
+            SELECT COUNT(s) 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = 0
+            """)
     int countUnreadByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -82,7 +115,13 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param threadId 会话ID
      * @return 下一个未读取的片段
      */
-    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = 0 ORDER BY s.sequence ASC")
+    @Query("""
+            SELECT s 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = 0 
+            ORDER BY s.sequence ASC
+            """)
     List<ModelChatSegmentPo> findNextUnreadByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -90,6 +129,12 @@ public interface ModelChatSegmentRepository extends JpaRepository<ModelChatSegme
      * @param threadId 会话ID
      * @return 所有未读取的片段
      */
-    @Query("SELECT s FROM ModelChatSegmentPo s WHERE s.thread.id = :threadId AND s.status = 0 ORDER BY s.sequence ASC")
+    @Query("""
+            SELECT s 
+            FROM ModelChatSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = 0 
+            ORDER BY s.sequence ASC
+            """)
     List<ModelChatSegmentPo> findAllUnreadByThreadIdOrderBySequence(@Param("threadId") Long threadId);
 } 
