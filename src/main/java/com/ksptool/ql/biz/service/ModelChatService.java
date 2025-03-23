@@ -1042,6 +1042,7 @@ public class ModelChatService {
             
         // 更新消息内容
         history.setContent(dto.getContent());
+        css.encryptEntity(history);
         historyRepository.save(history);
     }
 }
