@@ -22,9 +22,13 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      * @param pageable 分页参数
      * @return 分页结果
      */
-    @Query("SELECT r FROM ModelRolePo r WHERE r.userId = :userId " +
-           "AND (:keyword IS NULL OR :keyword = '' OR r.name LIKE %:keyword%) " +
-           "ORDER BY r.sortOrder ASC, r.updateTime DESC")
+    @Query("""
+            SELECT r 
+            FROM ModelRolePo r 
+            WHERE r.userId = :userId 
+            AND (:keyword IS NULL OR :keyword = '' OR r.name LIKE %:keyword%) 
+            ORDER BY r.sortOrder ASC, r.updateTime DESC
+            """)
     Page<ModelRolePo> getModelRoleList(
         @Param("userId") Long userId,
         @Param("keyword") String keyword,
@@ -38,7 +42,11 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      * @param name 角色名称
      * @return 是否存在
      */
-    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name")
+    @Query("""
+            SELECT COUNT(r) > 0 
+            FROM ModelRolePo r 
+            WHERE r.name = :name
+            """)
     boolean existsByName(@Param("name") String name);
     
     /**
@@ -48,6 +56,12 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      * @param id 当前角色ID
      * @return 是否存在
      */
-    @Query("SELECT COUNT(r) > 0 FROM ModelRolePo r WHERE r.name = :name AND r.userId = :userId AND r.id != :id")
+    @Query("""
+            SELECT COUNT(r) > 0 
+            FROM ModelRolePo r 
+            WHERE r.name = :name 
+            AND r.userId = :userId 
+            AND r.id != :id
+            """)
     boolean existsByNameAndIdNot(@Param("userId") Long userId,@Param("name") String name, @Param("id") Long id);
 } 

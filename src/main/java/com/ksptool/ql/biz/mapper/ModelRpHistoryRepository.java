@@ -21,7 +21,11 @@ public interface ModelRpHistoryRepository extends JpaRepository<ModelRpHistoryPo
      * @param threadId 会话ID
      * @return 最大序号
      */
-    @Query("SELECT COALESCE(MAX(h.sequence), 0) FROM ModelRpHistoryPo h WHERE h.thread.id = :threadId")
+    @Query("""
+            SELECT COALESCE(MAX(h.sequence), 0) 
+            FROM ModelRpHistoryPo h 
+            WHERE h.thread.id = :threadId
+            """)
     int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
 
     /**
@@ -36,7 +40,13 @@ public interface ModelRpHistoryRepository extends JpaRepository<ModelRpHistoryPo
      * @param threadId 会话ID
      * @return 最后一条历史记录
      */
-    @Query("SELECT h FROM ModelRpHistoryPo h WHERE h.thread.id = :threadId ORDER BY h.sequence DESC LIMIT 1")
+    @Query("""
+            SELECT h 
+            FROM ModelRpHistoryPo h 
+            WHERE h.thread.id = :threadId 
+            ORDER BY h.sequence DESC 
+            LIMIT 1
+            """)
     ModelRpHistoryPo findFirstByThreadIdOrderBySequenceDesc(@Param("threadId") Long threadId);
     
     /**
@@ -45,7 +55,10 @@ public interface ModelRpHistoryRepository extends JpaRepository<ModelRpHistoryPo
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM ModelRpHistoryPo h WHERE h.thread.id = :threadId")
+    @Query("""
+            DELETE FROM ModelRpHistoryPo h 
+            WHERE h.thread.id = :threadId
+            """)
     void deleteByThreadId(@Param("threadId") Long threadId);
 
     /**
