@@ -926,7 +926,9 @@
                     // 添加用户消息到列表
                     this.messages.push({
                         role: 'user',
-                        content: userMessage
+                        content: userMessage,
+                        name: '用户',
+                        createTime: new Date().toISOString()
                     });
 
                     this.isLoading = true;
@@ -941,8 +943,24 @@
                         });
                         
                         if (response.data.code === 0) {
+                            // 创建AI助手的空消息（等待响应）
+                            const assistantMessage = {
+                                role: 'assistant',
+                                content: '正在输入...',
+                                name: 'AI助手',
+                                createTime: new Date().toISOString(),
+                                isTyping: true,
+                                hasReceivedData: false
+                            };
+                            
+                            // 添加到消息列表
+                            this.messages.push(assistantMessage);
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
                             // 开始轮询获取AI响应
-                            await this.pollAIResponse();
+                            await this.pollAIResponse(assistantMessage);
                         } else {
                             showToast("danger", response.data.message || "发送消息失败");
                             this.isLoading = false;
@@ -953,13 +971,7 @@
                         this.isLoading = false;
                     }
                 },
-                async pollAIResponse() {
-                    let assistantMessage = {
-                        role: 'assistant',
-                        content: '正在思考...'
-                    };
-                    this.messages.push(assistantMessage);
-                    
+                async pollAIResponse(assistantMessage) {
                     while (this.isLoading) {
                         try {
                             const response = await axios.post('/model/chat/completeBatch', {
@@ -977,13 +989,36 @@
                                 
                                 if (segment.type === 1) {
                                     // 数据片段
-                                    assistantMessage.content = segment.content;
+                                    // 如果是第一个数据片段，清除"正在输入..."文本
+                                    if (!assistantMessage.hasReceivedData) {
+                                        assistantMessage.content = '';
+                                        assistantMessage.hasReceivedData = true;
+                                        assistantMessage.isTyping = false;
+                                    }
+                                    assistantMessage.content += segment.content;
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
                                     this.scrollToBottom();
                                 } else if (segment.type === 2) {
                                     // 结束片段
-                                    if (segment.content) {
-                                        assistantMessage.content = segment.content;
+                                    // 如果是第一个数据片段，清除"正在输入..."文本
+                                    if (!assistantMessage.hasReceivedData) {
+                                        assistantMessage.content = '';
+                                        assistantMessage.hasReceivedData = true;
+                                        assistantMessage.isTyping = false;
                                     }
+                                    
+                                    if (segment.content) {
+                                        assistantMessage.content += segment.content;
+                                    }
+                                    
+                                    // 更新historyId
+                                    if (segment.historyId) {
+                                        assistantMessage.id = segment.historyId;
+                                    }
+                                    
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
                                     this.scrollToBottom();
                                     this.isLoading = false;
                                     break;
