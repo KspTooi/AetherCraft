@@ -1402,7 +1402,10 @@
                         });
                         
                         if (response.data.code === 0) {
-                            // 将当前消息设置为正在重新生成状态
+                            // 找到当前AI消息的索引
+                            const currentMsgIndex = this.messages.findIndex(m => m.id === message.id);
+                            
+                            // 创建新的助手消息对象
                             const assistantMessage = {
                                 id: message.id,
                                 role: 'assistant',
@@ -1414,10 +1417,9 @@
                                 hasReceivedData: false
                             };
                             
-                            // 替换原消息
-                            const msgIndex = this.messages.findIndex(m => m.id === message.id);
-                            if (msgIndex !== -1) {
-                                this.messages[msgIndex] = assistantMessage;
+                            // 仅替换当前AI消息，保留其他所有消息
+                            if (currentMsgIndex !== -1) {
+                                this.messages.splice(currentMsgIndex, 1, assistantMessage);
                                 // 确保Vue能够检测到变化
                                 this.messages = [...this.messages];
                             } else {

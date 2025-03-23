@@ -32,7 +32,7 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      * @param role 消息类型/角色 (0-用户消息, 1-AI消息)
      * @return 最后一条消息
      */
-    @Query("SELECT h FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.role = :role ORDER BY h.sequence DESC")
+    @Query("SELECT h FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.role = :role ORDER BY h.sequence DESC LIMIT 1")
     ModelChatHistoryPo getLastMessage(@Param("threadId") Long threadId, @Param("role") Integer role);
     
     /**
