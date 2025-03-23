@@ -1,15 +1,11 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
-import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
-import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
-import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
-import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.commons.exception.BizException;
@@ -17,8 +13,6 @@ import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
@@ -26,12 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.ArrayList;
-import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
-import com.ksptool.ql.biz.model.vo.ModelChatViewThreadVo;
-import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
 
 import static com.ksptool.entities.Entities.as;
-import static com.ksptool.entities.Entities.assign;
 
 import java.util.function.Consumer;
 
@@ -47,10 +37,8 @@ import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
 
-import java.util.Comparator;
-
 import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
-import com.ksptool.ql.biz.service.AuthService;
+
 import java.util.Date;
 import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
 
@@ -473,12 +461,12 @@ public class ModelChatService {
 
     /**
      * 编辑会话标题
+     *
      * @param threadId 会话ID
      * @param newTitle 新标题
-     * @return 更新后的会话ID
      * @throws BizException 业务异常
      */
-    public Long editThreadTitle(Long threadId, String newTitle) throws BizException {
+    public void editThreadTitle(Long threadId, String newTitle) throws BizException {
         if (threadId == null) {
             throw new BizException("会话ID不能为空");
         }
@@ -509,10 +497,8 @@ public class ModelChatService {
         // 更新会话标题
         thread.setTitle(newTitle);
         // 标记为手动编辑的标题
-        thread.setTitleGenerated(2);
+        thread.setTitleGenerated(1);
         threadRepository.save(thread);
-        
-        return thread.getId();
     }
 
     /**
