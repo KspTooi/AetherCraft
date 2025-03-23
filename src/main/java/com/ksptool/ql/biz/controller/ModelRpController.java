@@ -13,6 +13,8 @@ import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
 import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
 import com.ksptool.ql.biz.service.ModelRpService;
+import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -33,6 +35,8 @@ public class ModelRpController {
 
     @Autowired
     private ModelRpService modelRpService;
+    @Autowired
+    private UserConfigService userConfigService;
 
     @GetMapping("/view")
     public ModelAndView getModelRpView() {
@@ -46,6 +50,15 @@ public class ModelRpController {
         
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
+
+        String lastThread = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
+        String lastRole = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+
+        if(StringUtils.isNotBlank(lastThread)){
+            modelAndView.addObject("lastThread", lastThread);
+            modelAndView.addObject("lastRole", lastRole);
+        }
+
         return modelAndView;
     }
 
@@ -100,6 +113,7 @@ public class ModelRpController {
     @PostMapping("/removeThread")
     public Result<String> removeThread(@RequestBody @Valid RemoveThreadDto dto) throws BizException {
         modelRpService.removeThread(dto);
+        userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
         return Result.success("会话已删除");
     }
 
@@ -109,7 +123,6 @@ public class ModelRpController {
      */
     @PostMapping("/rpCompleteBatch")
     public Result<RpSegmentVo> rpCompleteBatch(@RequestBody @Valid BatchRpCompleteDto dto) throws BizException {
-
 
         // 发送消息
         if (dto.getQueryKind() == 0) {

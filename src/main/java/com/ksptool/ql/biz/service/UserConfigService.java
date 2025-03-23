@@ -3,9 +3,7 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.po.ConfigPo;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
-import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import org.springframework.stereotype.Service;
 
@@ -15,14 +13,14 @@ import org.apache.commons.lang3.StringUtils;
 @Service
 public class UserConfigService {
 
-    private final ConfigRepository configRepository;
+    private final ConfigRepository rep;
 
     public UserConfigService(ConfigRepository configRepository) {
-        this.configRepository = configRepository;
+        this.rep = configRepository;
     }
 
     public String getValue(String key, Long userId) {
-        ConfigPo config = configRepository.findByUserIdAndConfigKey(userId, key);
+        ConfigPo config = rep.findByUserIdAndConfigKey(userId, key);
 
         if(config == null){
             return null;
@@ -31,8 +29,12 @@ public class UserConfigService {
         return config.getConfigValue();
     }
 
+    public void remove(String key){
+        rep.removeByConfigKeyAndUserId(key,AuthService.getCurrentUserId());
+    }
+
     public void setValue(String key, String value, Long userId) {
-        ConfigPo config = configRepository.findByUserIdAndConfigKey(userId, key);
+        ConfigPo config = rep.findByUserIdAndConfigKey(userId, key);
         if (config == null) {
             config = new ConfigPo();
             config.setConfigKey(key);
@@ -41,7 +43,7 @@ public class UserConfigService {
         }
         config.setConfigValue(value);
         config.setUpdateTime(new Date());
-        configRepository.save(config);
+        rep.save(config);
     }
 
     public String getValue(String key) {
@@ -50,6 +52,10 @@ public class UserConfigService {
 
     public void setValue(String key, String value) {
         setValue(key, value, AuthService.getCurrentUserId());
+    }
+
+    public void setValue(String key, Long value) {
+        setValue(key, value+"", AuthService.getCurrentUserId());
     }
 
     /**
@@ -197,16 +203,16 @@ public class UserConfigService {
 
     public void readUserModelParam(ModelChatParam param){
 
-        PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TEMPERATURE.key())
+        PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TEMPERATURE.key())
                 .setParameter("modelCode", param.getModelCode());
 
-        PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TOP_P.key())
+        PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_P.key())
                 .setParameter("modelCode", param.getModelCode());
 
-        PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TOP_K.key())
+        PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_K.key())
                 .setParameter("modelCode", param.getModelCode());
 
-        PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.MODEL_MAX_OUTPUT_TOKENS.key())
+        PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_MAX_OUTPUT_TOKENS.key())
                 .setParameter("modelCode", param.getModelCode());
 
         // 获取配置参数

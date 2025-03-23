@@ -11,6 +11,7 @@ import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
@@ -790,7 +791,7 @@ public class ModelChatService {
             throw new BizException("无权访问该会话");
         }
 
-        userConfigService.setValue("","");
+        userConfigService.setValue(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(), thread.getId());
 
         // 获取会话历史记录
         List<ModelChatHistoryPo> histories = thread.getHistories();

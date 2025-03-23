@@ -42,7 +42,7 @@ public class CustomizeController {
     public Result<?> resetWallpaper() {
         try {
             // 通过设置为 null 来移除壁纸配置项
-            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, null);
+            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, (String) null);
             return Result.success("已恢复默认壁纸");
         } catch (Exception e) {
             return Result.error("恢复默认壁纸失败：" + e.getMessage());

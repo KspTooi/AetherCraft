@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
@@ -42,6 +43,8 @@ public class ModelChatController {
     
     @Autowired
     private ModelChatService modelChatService;
+    @Autowired
+    private UserConfigService userConfigService;
 
     /**
      * 获取聊天视图
@@ -59,6 +62,13 @@ public class ModelChatController {
         
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
+
+        String lastThread = userConfigService.get(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+
+        if(StringUtils.isNotBlank(lastThread)){
+            modelAndView.addObject("lastThread", lastThread);
+        }
+
         return modelAndView;
     }
 
@@ -164,6 +174,7 @@ public class ModelChatController {
     public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
             modelChatService.removeThread(dto.getThreadId());
+            userConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
             return Result.success("会话删除成功");
         } catch (BizException e) {
             return Result.error(e);

@@ -35,4 +35,6 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
                                        @Param("description") String description,
                                        @Param("userId") Long userId,
                                        Pageable pageable);
-} 
+
+    void removeByConfigKeyAndUserId(String configKey, Long userId);
+}

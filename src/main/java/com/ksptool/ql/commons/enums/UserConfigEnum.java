@@ -6,10 +6,14 @@ package com.ksptool.ql.commons.enums;
 public enum UserConfigEnum {
 
 
-    MODEL_TEMPERATURE("ai.model.cfg.#{modelCode}.temperature", "0.7", "模型温度参数，控制输出的随机性，范围0-1"),
-    MODEL_TOP_P("ai.model.cfg.#{modelCode}.topP", "1.0", "模型topP参数，控制输出的多样性，范围0-1"),
-    MODEL_TOP_K("ai.model.cfg.#{modelCode}.topK", "40", "模型topK参数，控制输出的词汇范围"),
-    MODEL_MAX_OUTPUT_TOKENS("ai.model.cfg.#{modelCode}.maxOutputTokens", "800", "模型最大输出token数")
+    AI_MODEL_TEMPERATURE("ai.model.cfg.#{modelCode}.temperature", "0.7", "模型温度参数，控制输出的随机性，范围0-1"),
+    AI_MODEL_TOP_P("ai.model.cfg.#{modelCode}.topP", "1.0", "模型topP参数，控制输出的多样性，范围0-1"),
+    AI_MODEL_TOP_K("ai.model.cfg.#{modelCode}.topK", "40", "模型topK参数，控制输出的词汇范围"),
+    AI_MODEL_MAX_OUTPUT_TOKENS("ai.model.cfg.#{modelCode}.maxOutputTokens", "800", "模型最大输出token数"),
+    
+    MODEL_CHAT_CURRENT_THREAD("model.chat.current.thread", null, "用户最后一次选中的CHAT_THREAD"),
+    MODEL_RP_CURRENT_THREAD("model.rp.current.thread", null, "用户最后一次选中的RP_THREAD"),
+    MODEL_RP_CURRENT_ROLE("model.rp.current.role", null, "用户最后一次选中的RP_ROLE")
 
     ;
 

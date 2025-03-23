@@ -15,6 +15,7 @@ import com.ksptool.ql.biz.model.vo.RpSegmentVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.web.PageableView;
@@ -123,7 +124,7 @@ public class ModelRpService {
     /**
      * 恢复或创建RP对话
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public RecoverRpChatVo recoverRpChat(RecoverRpChatDto dto) throws BizException{
 
         AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModelCode());
@@ -212,6 +213,8 @@ public class ModelRpService {
             historyVos.add(hisVo);
         }
 
+        userConfigService.setValue(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(), threadCt.getId());
+        userConfigService.setValue(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(), threadCt.getModelRole().getId());
         return vo;
     }
 

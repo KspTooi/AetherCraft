@@ -1135,7 +1135,7 @@
                         <div v-for="role in roles" 
                              :key="role.id"
                              @click="loadRoleThread(role.id, false, false)"
-                             :class="['role-item', { active: role.id === currentRoleId }]"
+                             :class="['role-item', { active: String(role.id) === String(currentRoleId) }]"
                              :data-role-id="role.id">
                             <div class="avatar" :class="{ 'no-image': !role.avatar, 'avatar-loading': loadingRoleId === role.id }">
                                 <img v-if="role.avatar" :src="role.avatar" :alt="role.name">
@@ -1593,7 +1593,7 @@
                             
                             // 如果是加载指定会话，显示成功消息
                             if (threadId) {
-                                showToast("success", "已加载会话");
+                                //showToast("success", "已加载会话");
                             }
                         } else {
                             showToast("danger", response.data.message || "加载对话失败");
@@ -2220,14 +2220,24 @@
                     window.location.href = `/panel/model/role/list?id=${roleId}`;
                 }
             },
-            mounted() {
+            async mounted() {
                 // 初始化时调整输入框高度
                 this.$nextTick(() => {
                     this.adjustTextareaHeight();
                 });
 
                 // 加载角色列表
-                this.loadRoleList();
+                await this.loadRoleList();
+
+                // 检查是否有上次使用的角色和会话
+                const lastRoleId = '[[${lastRole}]]';
+                const lastThreadId = '[[${lastThread}]]';
+
+                console.log(lastRoleId, lastThreadId);
+                
+                if (lastRoleId && lastRoleId) {
+                    await this.loadRoleThread(lastRoleId, true, false, lastThreadId);
+                }
 
                 // 监听窗口大小变化
                 window.addEventListener('resize', () => {
