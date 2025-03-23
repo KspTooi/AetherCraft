@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -255,6 +256,33 @@ public class ModelRpService {
             throw new BizException("模型角色信息不存在");
         }
 
+        Long userHistoryId = null;
+
+        if(dto.getQueryKind() == 0){
+            //创建加密的用户的历史消息
+            ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
+            userHistoryId = userHistoryCt.getId();
+        }
+
+        // 处理重新生成逻辑
+        if (dto.getQueryKind() ==3 && dto.getRegenerateRootHistoryId()!=null) {
+            // 获取指定的根消息记录
+            var rootHistoryQuery = new ModelRpHistoryPo();
+            rootHistoryQuery.setId(dto.getRegenerateRootHistoryId());
+            rootHistoryQuery.setThread(threadCt);
+            rootHistoryQuery.setType(0); //用户消息
+
+            ModelRpHistoryPo rootHistory = historyRepository.findOne(Example.of(rootHistoryQuery))
+                .orElseThrow(() -> new BizException("指定的根消息记录不存在"));
+            
+            // 删除根消息之后的所有消息
+            historyRepository.removeHistoryAfter(dto.getThreadId(), rootHistory.getSequence());
+            
+            // 使用根消息的内容作为当前要发送的消息
+            dto.setMessage(css.decryptForCurUser(rootHistory.getRawContent()));
+            userHistoryId = rootHistory.getId();
+        }
+
         //创建主Prompt
         PreparedPrompt prompt = scriptService.createSystemPrompt(userPlayRoleCt, modelPlayRoleCt);
 
@@ -263,8 +291,6 @@ public class ModelRpService {
 
         String finalPrompt = prompt.executeNested();
 
-        //创建加密的用户的历史消息
-        ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
 
         // 清理之前的消息片段(如果有)
         segmentRepository.deleteByThreadId(threadCt.getId());
@@ -319,7 +345,7 @@ public class ModelRpService {
             // 返回用户消息作为第一次响应
             RpSegmentVo vo = new RpSegmentVo();
             vo.setThreadId(threadCt.getId());
-            vo.setHistoryId(userHistoryCt.getId());
+            vo.setHistoryId(userHistoryId);
             vo.setRole(0); // 用户角色
             vo.setSequence(0);
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
@@ -365,7 +391,6 @@ public class ModelRpService {
      */
     @Transactional(rollbackFor = Exception.class)
     public RpSegmentVo rpCompleteRegenerateBatch(BatchRpCompleteDto dto) throws BizException {
-
         // 检查该会话是否正在处理中
         if (rpThreadToContextIdMap.containsKey(dto.getThreadId())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
@@ -384,38 +409,19 @@ public class ModelRpService {
             throw new BizException("会话不存在或不可用");
         }
 
-        // 获取所有历史记录
-        List<ModelRpHistoryPo> historiesCt = historyRepository.findByThreadIdOrderBySequence(threadCt.getId());
-        if (historiesCt.isEmpty()) {
-            throw new BizException("会话历史记录为空");
+        // 查找最后一条用户消息
+        ModelRpHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
+        if (lastUserMessage == null) {
+            throw new BizException("未找到任何用户消息");
         }
 
-        // 获取最后一条历史记录
-        ModelRpHistoryPo lastHistoryCt = historiesCt.getLast();
-
-        // 如果最后一条是AI的回复，则删除它
-        if (lastHistoryCt.getType() == 1) {
-            historiesCt.removeLast();
-            historyRepository.delete(lastHistoryCt);
-
-            if (historiesCt.isEmpty()) {
-                throw new BizException("未找到任何历史消息");
-            }
-
-            lastHistoryCt = historiesCt.getLast();
-            if (lastHistoryCt.getType() != 0) {
-                throw new BizException("未找到用户消息");
-            }
-        }
-
-        // 使用最后一条用户消息作为当前要发送的消息
-        var messageToRegenerate = css.decryptForCurUser(lastHistoryCt.getRawContent());
-
+        // 使用找到的最后一条用户消息作为重新生成的起点
         var batchSendDto = new BatchRpCompleteDto();
         batchSendDto.setThreadId(dto.getThreadId());
         batchSendDto.setModel(dto.getModel());
-        batchSendDto.setMessage(messageToRegenerate);
-        batchSendDto.setQueryKind(0);
+        batchSendDto.setQueryKind(3); //重新生成AI最后一条回复
+        batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
+        
         return rpCompleteSendBatch(batchSendDto);
     }
     
