@@ -11,15 +11,30 @@ import java.util.List;
 @Repository
 public interface ModelChatThreadRepository extends JpaRepository<ModelChatThreadPo, Long>, JpaSpecificationExecutor<ModelChatThreadPo> {
     
-    @Query("SELECT COUNT(t) FROM ModelChatThreadPo t WHERE t.userId = :userId")
+    @Query("""
+            SELECT COUNT(t) 
+            FROM ModelChatThreadPo t 
+            WHERE t.userId = :userId
+            """)
     long countByUserId(@Param("userId") Long userId);
     
-    @Query("SELECT t FROM ModelChatThreadPo t LEFT JOIN FETCH t.histories h WHERE t.id = :threadId ORDER BY h.sequence ASC")
+    @Query("""
+            SELECT t 
+            FROM ModelChatThreadPo t 
+            LEFT JOIN FETCH t.histories h 
+            WHERE t.id = :threadId 
+            ORDER BY h.sequence ASC
+            """)
     ModelChatThreadPo findByIdWithHistories(@Param("threadId") Long threadId);
     
     /**
      * 查询用户的所有会话，按更新时间倒序排序
      */
-    @Query("SELECT t FROM ModelChatThreadPo t WHERE t.userId = :userId ORDER BY t.updateTime DESC")
+    @Query("""
+            SELECT t 
+            FROM ModelChatThreadPo t 
+            WHERE t.userId = :userId 
+            ORDER BY t.updateTime DESC
+            """)
     List<ModelChatThreadPo> findByUserIdOrderByUpdateTimeDesc(@Param("userId") Long userId);
 } 
