@@ -1200,6 +1200,13 @@
                             // 更新当前会话ID
                             this.currentThreadId = threadId;
                             
+                            // 如果返回了modelCode，更新选中的模型
+                            if (data.modelCode) {
+                                this.$nextTick(() => {
+                                    this.selectedModel = data.modelCode;
+                                });
+                            }
+                            
                             // 更新消息列表
                             this.messages = data.messages.map(msg => ({
                                 id: msg.id,

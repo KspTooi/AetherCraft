@@ -1547,7 +1547,10 @@
                             
                             // 更新选中的模型
                             if (data.modelCode) {
-                                this.selectedModel = data.modelCode;
+                                // 确保使用Vue的响应式更新方式
+                                this.$nextTick(() => {
+                                    this.selectedModel = data.modelCode;
+                                });
                             }
                             
                             // 设置用户角色信息
