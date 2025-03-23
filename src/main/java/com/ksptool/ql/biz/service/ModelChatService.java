@@ -578,7 +578,7 @@ public class ModelChatService {
      * @param threadId 会话ID
      * @param model 模型代码
      */
-    public void generateThreadTitle(Long threadId, String model) {
+    public void generateThreadTitle(Long threadId, String model,Long uid) {
         try {
             // 检查是否需要生成标题
             boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
@@ -631,9 +631,11 @@ public class ModelChatService {
             String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
                     GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
 
+            String dekPt = css.getPlainUserDek(uid);
+
             PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
-            prompt.setParameter("userContent", css.decryptForCurUser(firstUserMessage.getContent()));
-            prompt.setParameter("modelContent", css.decryptForCurUser(firstAIResponse.getContent()));
+            prompt.setParameter("userContent", css.decryptForCurUser(firstUserMessage.getContent(),dekPt));
+            prompt.setParameter("modelContent", css.decryptForCurUser(firstAIResponse.getContent(),dekPt));
 
             // 获取当前用户ID
             Long userId = thread.getUserId();
@@ -930,7 +932,7 @@ public class ModelChatService {
 
                         // 尝试生成会话标题
                         try {
-                            generateThreadTitle(thread.getId(), modelEnum.getCode());
+                            generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
                         } catch (Exception e) {
                             log.error("生成会话标题失败", e);
                             // 生成标题失败不影响主流程
