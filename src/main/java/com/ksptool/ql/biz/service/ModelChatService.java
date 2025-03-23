@@ -295,6 +295,8 @@ public class ModelChatService {
             vo.setSequence(startSegment.getSequence());
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
             vo.setType(0); // 起始类型，而不是数据类型
+            vo.setName("User");
+            vo.setAvatarPath(null);
             return vo;
 
         } catch (Exception e) {
@@ -403,8 +405,11 @@ public class ModelChatService {
         }
 
         // 获取第一个片段
-        ModelChatSegmentPo firstSegment = unreadSegments.get(0);
-        
+        ModelChatSegmentPo firstSegment = unreadSegments.getFirst();
+        ModelChatThreadPo thread = firstSegment.getThread();
+        AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
+        String modelName = modelEnum != null ? modelEnum.getSeries() : "AI助手";
+
         // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
         if (firstSegment.getType() == 1) {
             StringBuilder combinedContent = new StringBuilder();
@@ -431,6 +436,8 @@ public class ModelChatService {
             vo.setContent(combinedContent.toString());
             vo.setType(1); // 数据类型
             vo.setRole(1); // AI助手角色
+            vo.setName(modelName);
+            vo.setAvatarPath(null);
             return vo;
         }
         

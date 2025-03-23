@@ -942,13 +942,15 @@
                     await this.$nextTick();
                     this.adjustTextareaHeight();
 
-                    // 添加用户消息到列表
-                    this.messages.push({
+                    // 添加用户消息到列表（暂时使用默认名称，稍后会更新）
+                    const tempUserMessage = {
                         role: 'user',
                         content: userMessage,
                         name: '用户',
                         createTime: new Date().toISOString()
-                    });
+                    };
+                    
+                    this.messages.push(tempUserMessage);
 
                     this.isLoading = true;
                     
@@ -962,6 +964,23 @@
                         });
                         
                         if (response.data.code === 0) {
+                            // 如果后端返回了用户信息，更新临时用户消息
+                            const segment = response.data.data;
+                            if (segment && segment.historyId) {
+                                tempUserMessage.id = segment.historyId;
+                            }
+                            
+                            // 如果后端返回了名称和头像，则更新
+                            if (segment && segment.name) {
+                                tempUserMessage.name = segment.name;
+                            }
+                            if (segment && segment.avatarPath) {
+                                tempUserMessage.avatarPath = segment.avatarPath;
+                            }
+                            
+                            // 触发视图更新以反映用户消息的更新
+                            this.messages = [...this.messages];
+                            
                             // 创建AI助手的空消息（等待响应）
                             const assistantMessage = {
                                 role: 'assistant',
@@ -1015,6 +1034,15 @@
                                         assistantMessage.isTyping = false;
                                     }
                                     assistantMessage.content += segment.content;
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
+                                    }
+                                    
                                     // 触发视图更新
                                     this.messages = [...this.messages];
                                     this.scrollToBottom();
@@ -1034,6 +1062,14 @@
                                     // 更新historyId
                                     if (segment.historyId) {
                                         assistantMessage.id = segment.historyId;
+                                    }
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
                                     }
                                     
                                     // 触发视图更新
@@ -1057,6 +1093,14 @@
                                     assistantMessage.content = segment.content || "AI响应出错";
                                     assistantMessage.hasReceivedData = true;
                                     assistantMessage.isTyping = false;
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
+                                    }
                                     
                                     // 触发视图更新
                                     this.messages = [...this.messages];

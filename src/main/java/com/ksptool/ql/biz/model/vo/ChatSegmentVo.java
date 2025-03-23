@@ -42,4 +42,7 @@ public class ChatSegmentVo {
      * null - 无数据
      */
     private Integer type;
+
+    private String name;
+    private String AvatarPath;
 } 
