@@ -48,6 +48,9 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
      * 删除指定API密钥的所有模型配置
      */
     @Modifying
-    @Query("DELETE FROM ModelApiKeyConfigPo m WHERE m.apiKeyId = :apiKeyId")
+    @Query("""
+            DELETE FROM ModelApiKeyConfigPo m 
+            WHERE m.apiKeyId = :apiKeyId
+            """)
     void deleteByApiKey(@Param("apiKeyId") Long apiKeyId);
 } 
