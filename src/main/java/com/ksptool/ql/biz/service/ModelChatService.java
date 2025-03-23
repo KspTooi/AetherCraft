@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
@@ -65,9 +66,7 @@ public class ModelChatService {
     
     // 终止列表，存储已经被终止的contextId
     private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
-    
-    private final Gson gson = new Gson();
-    
+
     @Autowired
     private UserConfigService userConfigService;
     
@@ -92,7 +91,11 @@ public class ModelChatService {
     @Autowired
     private PanelApiKeyService panelApiKeyService;
 
+    @Autowired
+    private ContentSecurityService css;
+
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
+
         if (threadId == null || threadId == -1) {
             // 创建新的会话
             long count = threadRepository.countByUserId(userId);
@@ -101,6 +104,7 @@ public class ModelChatService {
             thread.setUserId(userId);
             thread.setTitle("新对话" + (count + 1));
             thread.setModelCode(modelCode);
+            css.encryptEntity(thread);
             return threadRepository.save(thread);
         }
         
@@ -113,7 +117,7 @@ public class ModelChatService {
         return thread;
     }
     
-    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) {
+    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) throws BizException {
         ModelChatHistoryPo history = new ModelChatHistoryPo();
         history.setThread(thread);
         history.setUserId(thread.getUserId());
@@ -123,6 +127,7 @@ public class ModelChatService {
         // 获取当前最大序号并加1
         int nextSequence = historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
         history.setSequence(nextSequence);
+        css.encryptEntity(history);
         return historyRepository.save(history);
     }
 
@@ -288,6 +293,11 @@ public class ModelChatService {
             List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
             modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
+            //解密记录内容
+            for(var item : modelChatParam.getHistories()){
+                item.setContent(css.decryptForCurUser(item.getContent()));
+            }
+
             // 根据模型类型选择不同的服务发送请求
             if (dto.getModel().contains("grok")) {
                 // 使用GROK服务
@@ -440,7 +450,7 @@ public class ModelChatService {
                     break;
                 }
                 
-                combinedContent.append(segment.getContent());
+                combinedContent.append(css.decryptForCurUser(segment.getContent()));
                 segment.setStatus(1); // 标记为已读
                 segmentsToMark.add(segment);
             }
@@ -559,6 +569,7 @@ public class ModelChatService {
         thread.setTitle(newTitle);
         // 标记为手动编辑的标题
         thread.setTitleGenerated(1);
+        css.encryptEntity(thread);
         threadRepository.save(thread);
     }
 
@@ -621,8 +632,8 @@ public class ModelChatService {
                     GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
 
             PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
-            prompt.setParameter("userContent", firstUserMessage.getContent());
-            prompt.setParameter("modelContent", firstAIResponse.getContent());
+            prompt.setParameter("userContent", css.decryptForCurUser(firstUserMessage.getContent()));
+            prompt.setParameter("modelContent", css.decryptForCurUser(firstAIResponse.getContent()));
 
             // 获取当前用户ID
             Long userId = thread.getUserId();
@@ -670,6 +681,7 @@ public class ModelChatService {
             // 更新会话标题
             thread.setTitle(title);
             thread.setTitleGenerated(1); // 标记为已生成标题
+            css.encryptEntity(thread);
             threadRepository.save(thread);
             
             log.info("已为会话 {} 生成标题: {}", threadId, title);
@@ -721,10 +733,9 @@ public class ModelChatService {
         BatchChatCompleteDto batchSendDto = new BatchChatCompleteDto();
         batchSendDto.setThreadId(dto.getThreadId());
         batchSendDto.setModel(dto.getModel());
-        batchSendDto.setMessage(lastUserMessage.getContent());
+        batchSendDto.setMessage(css.decryptForCurUser(lastUserMessage.getContent()));
         batchSendDto.setQueryKind(3); // 重新生成AI最后一条回复
         batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
-
         return chatCompleteSendBatch(batchSendDto);
     }
 
@@ -805,7 +816,7 @@ public class ModelChatService {
                 
                 // 手动映射特定字段
                 messageVo.setId(history.getId());
-                messageVo.setContent(history.getContent());
+                messageVo.setContent(css.decryptForCurUser(history.getContent()));
                 messageVo.setCreateTime(history.getCreateTime());
                 
                 // 将role映射到type (0-用户消息，1-AI消息)
@@ -894,6 +905,7 @@ public class ModelChatService {
                     dataSegment.setContent(context.getContent());
                     dataSegment.setStatus(0); // 未读状态
                     dataSegment.setType(1); // 数据类型
+                    css.encryptEntity(dataSegment);
                     segmentRepository.save(dataSegment);
                     return;
                 }
@@ -911,6 +923,7 @@ public class ModelChatService {
                     endSegment.setStatus(0); // 未读状态
                     endSegment.setType(2); // 结束类型
                     endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
+                    css.encryptEntity(endSegment);
                     segmentRepository.save(endSegment);
 
                     if (modelEnum != null) {
@@ -967,7 +980,7 @@ public class ModelChatService {
         for (ModelChatThreadPo thread : threads) {
             ThreadListItemVo vo = new ThreadListItemVo();
             vo.setId(thread.getId());
-            vo.setTitle(thread.getTitle());
+            vo.setTitle(css.decryptForCurUser(thread.getTitle()));
             vo.setModelCode(thread.getModelCode());
             voList.add(vo);
         }
@@ -998,6 +1011,7 @@ public class ModelChatService {
         thread.setUserId(userId);
         thread.setCreateTime(new Date());
         thread.setUpdateTime(new Date());
+        css.encryptEntity(thread);
         threadRepository.save(thread);
         
         // 返回新创建的会话ID

@@ -36,7 +36,7 @@ public class ModelChatSegmentPo {
     @Column(nullable = false)
     private Integer sequence;
     
-    @Comment("片段内容")
+    @Comment("(加密)片段内容")
     @Column(columnDefinition = "TEXT")
     private String content;
     
