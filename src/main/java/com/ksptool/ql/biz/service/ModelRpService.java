@@ -325,6 +325,8 @@ public class ModelRpService {
         threadCt.setModelCode(modelEnum.getCode());
         threadRepository.save(threadCt);
 
+        userConfigService.readUserModelParam(param);
+
         try {
 
             if(dto.getModel().contains("grok")){

@@ -1,7 +1,10 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ConfigRepository;
+import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.po.ConfigPo;
+import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -188,4 +191,24 @@ public class UserConfigService {
         }
         return Boolean.parseBoolean(value);
     }
+
+
+    public void readUserModelParam(ModelChatParam param){
+
+        // 构建基础配置键
+        String baseKey = "ai.model.cfg." + param.getModelCode() + ".";
+        
+        // 获取配置参数
+        double temperature = getDouble(baseKey + "temperature", 0.7);
+        double topP = getDouble(baseKey + "topP", 1.0);
+        int topK = getInt(baseKey + "topK", 40);
+        int maxOutputTokens = getInt(baseKey + "maxOutputTokens", 800);
+        
+        // 设置参数到ModelChatParam对象
+        param.setTemperature(temperature);
+        param.setTopP(topP);
+        param.setTopK(topK);
+        param.setMaxOutputTokens(maxOutputTokens);
+    }
+
 } 

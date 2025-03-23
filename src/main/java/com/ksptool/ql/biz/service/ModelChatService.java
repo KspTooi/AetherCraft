@@ -144,24 +144,12 @@ public class ModelChatService {
         if (modelEnum == null) {
             throw new BizException("无效的模型代码");
         }
-        
-        // 构建基础配置键
-        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-        
-        // 获取配置参数
-        double temperature = userConfigService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
-        double topP = userConfigService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
-        int topK = userConfigService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
-        int maxOutputTokens = userConfigService.getInt(baseKey + "maxOutputTokens", 800, userId);
-        
+
         // 创建并填充DTO
-        ModelChatParam dto = new ModelChatParam();
-        dto.setModelCode(modelEnum.getCode());
-        dto.setTemperature(temperature);
-        dto.setTopP(topP);
-        dto.setTopK(topK);
-        dto.setMaxOutputTokens(maxOutputTokens);
-        return dto;
+        ModelChatParam param = new ModelChatParam();
+        param.setModelCode(modelEnum.getCode());
+        userConfigService.readUserModelParam(param);
+        return param;
     }
 
     /**
@@ -801,7 +789,9 @@ public class ModelChatService {
         if (!thread.getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
-        
+
+        userConfigService.setValue("","");
+
         // 获取会话历史记录
         List<ModelChatHistoryPo> histories = thread.getHistories();
         
