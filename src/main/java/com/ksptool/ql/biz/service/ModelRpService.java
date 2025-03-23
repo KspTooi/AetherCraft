@@ -421,7 +421,6 @@ public class ModelRpService {
         batchSendDto.setModel(dto.getModel());
         batchSendDto.setQueryKind(3); //重新生成AI最后一条回复
         batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
-        
         return rpCompleteSendBatch(batchSendDto);
     }
     

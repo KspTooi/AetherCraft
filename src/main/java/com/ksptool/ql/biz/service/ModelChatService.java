@@ -49,6 +49,11 @@ import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
 
 import java.util.Comparator;
 
+import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
+import com.ksptool.ql.biz.service.AuthService;
+import java.util.Date;
+import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
+
 @Slf4j
 @Service
 public class ModelChatService {
@@ -850,5 +855,34 @@ public class ModelChatService {
         }
         
         return voList;
+    }
+
+    /**
+     * 创建空会话
+     * @param dto 创建空会话请求参数
+     * @return 新创建的会话ID
+     * @throws BizException 业务异常
+     */
+    public CreateEmptyThreadVo createEmptyThread(CreateEmptyThreadDto dto) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 获取当前用户已有的会话数量
+        long threadCount = threadRepository.countByUserId(userId);
+        
+        // 生成新会话标题
+        String title = String.format("新会话#%d", threadCount + 1);
+        
+        // 创建新会话
+        ModelChatThreadPo thread = new ModelChatThreadPo();
+        thread.setTitle(title);
+        thread.setModelCode(dto.getModel());
+        thread.setUserId(userId);
+        thread.setCreateTime(new Date());
+        thread.setUpdateTime(new Date());
+        threadRepository.save(thread);
+        
+        // 返回新创建的会话ID
+        return CreateEmptyThreadVo.of(thread.getId());
     }
 }

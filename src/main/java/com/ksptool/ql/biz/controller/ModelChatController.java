@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -10,10 +11,7 @@ import com.ksptool.ql.biz.model.dto.RecoverChatDto;
 import com.ksptool.ql.biz.model.dto.EditThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
-import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
-import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
-import com.ksptool.ql.biz.model.vo.RecoverChatVo;
-import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
+import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -192,6 +190,20 @@ public class ModelChatController {
     public Result<List<ThreadListItemVo>> getThreadList() {
         try {
             return Result.success(modelChatService.getThreadList());
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
+
+    /**
+     * 创建空会话
+     * @param dto 创建空会话请求参数
+     * @return 新创建的会话ID
+     */
+    @PostMapping("/createEmptyThread")
+    public Result<CreateEmptyThreadVo> createEmptyThread(@Valid @RequestBody CreateEmptyThreadDto dto) {
+        try {
+            return Result.success(modelChatService.createEmptyThread(dto));
         } catch (BizException e) {
             return Result.error(e);
         }
