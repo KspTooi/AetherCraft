@@ -886,10 +886,29 @@
                     currentThreadId: null,
                     isMobileMenuOpen: false,
                     threads: [],
-                    isEditing: false  // 添加编辑状态标记
+                    isEditing: false,
+                    refreshThreadListTimer: null
                 }
             },
             methods: {
+                // 添加节流函数
+                throttle(fn, delay) {
+                    let timer = null;
+                    return function(...args) {
+                        if(timer) {
+                            return;
+                        }
+                        timer = setTimeout(() => {
+                            fn.apply(this, args);
+                            timer = null;
+                        }, delay);
+                    }
+                },
+                
+                // 使用节流包装loadThreadList
+                throttledLoadThreadList: function() {
+                    return this.throttle(this.loadThreadList, 3000).bind(this);
+                },
                 handleKeyPress(event) {
                     if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault();
@@ -1021,6 +1040,17 @@
                                     this.messages = [...this.messages];
                                     this.scrollToBottom();
                                     this.isLoading = false;
+
+                                    // 清除之前的定时器
+                                    if(this.refreshThreadListTimer) {
+                                        clearTimeout(this.refreshThreadListTimer);
+                                    }
+                                    
+                                    // 3秒后刷新会话列表
+                                    this.refreshThreadListTimer = setTimeout(() => {
+                                        this.throttledLoadThreadList()();
+                                    }, 3000);
+                                    
                                     break;
                                 }
                             }
@@ -1135,6 +1165,11 @@
                         
                         if (response.data.code === 0) {
                             this.threads = response.data.data || [];
+                            
+                            // 如果当前没有选中的会话，且列表为空，重置状态
+                            if (!this.currentThreadId && this.threads.length === 0) {
+                                this.resetChatState();
+                            }
                         } else {
                             showToast("danger", response.data.message || "加载会话列表失败");
                         }
@@ -1176,14 +1211,13 @@
                         });
                         
                         if (response.data.code === 0) {
-                            // 从列表中移除会话
-                            this.threads = this.threads.filter(t => t.id !== threadId);
-                            
-                            // 如果删除的是当前会话，创建新会话
+                            // 如果删除的是当前会话，重置状态
                             if (threadId === this.currentThreadId) {
-                                await this.createNewThread();
+                                this.resetChatState();
                             }
                             
+                            // 刷新会话列表
+                            await this.loadThreadList();
                             showToast("success", "会话已删除");
                         } else {
                             showToast("danger", response.data.message || "删除会话失败");
@@ -1358,6 +1392,13 @@
                         showToast("danger", '重新生成失败: ' + (error.response?.data?.message || error.message));
                         this.isLoading = false;
                     }
+                },
+                // 重置聊天状态
+                resetChatState() {
+                    this.currentThreadId = null;
+                    this.messages = [];
+                    this.messageInput = '';
+                    this.isLoading = false;
                 }
             },
             mounted() {
@@ -1365,11 +1406,14 @@
                 
                 // 加载会话列表
                 this.loadThreadList().then(async () => {
-                    // 如果有会话，加载最近的会话
-                    if (this.threads.length > 0) {
-                        await this.loadThread(this.threads[0].id);
-                    }
+                    this.resetChatState();
                 });
+            },
+            beforeUnmount() {
+                // 组件销毁前清理定时器
+                if(this.refreshThreadListTimer) {
+                    clearTimeout(this.refreshThreadListTimer);
+                }
             }
         });
 

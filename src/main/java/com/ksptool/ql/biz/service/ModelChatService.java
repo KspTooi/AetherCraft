@@ -8,9 +8,11 @@ import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -326,12 +328,12 @@ public class ModelChatService {
         }
         
         // 如果等待超时仍未获取到片段
-        if (unreadSegments == null || unreadSegments.isEmpty()) {
+        if (unreadSegments.isEmpty()) {
             return null;
         }
         
         // 检查权限
-        if (!unreadSegments.get(0).getUserId().equals(userId)) {
+        if (!unreadSegments.getFirst().getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
 
@@ -505,9 +507,8 @@ public class ModelChatService {
      * 生成会话标题
      * @param threadId 会话ID
      * @param model 模型代码
-     * @throws BizException 业务异常
      */
-    public void generateThreadTitle(Long threadId, String model) throws BizException {
+    public void generateThreadTitle(Long threadId, String model) {
         try {
             // 检查是否需要生成标题
             boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
@@ -526,38 +527,50 @@ public class ModelChatService {
                 return; // 已生成过标题，直接返回
             }
             
-            // 获取第一条用户消息
+            // 获取第一条用户消息和对应的AI回复
             List<ModelChatHistoryPo> histories = thread.getHistories();
             if (histories == null || histories.isEmpty()) {
                 return; // 没有历史记录，无法生成标题
             }
             
-            // 查找第一条用户消息
+            // 查找第一条用户消息和对应的AI回复
             ModelChatHistoryPo firstUserMessage = null;
+            ModelChatHistoryPo firstAIResponse = null;
+            boolean foundUser = false;
+            
             for (ModelChatHistoryPo history : histories) {
-                if (history.getRole() == 0) { // 用户消息
+                if (!foundUser && history.getRole() == 0) { // 用户消息
                     firstUserMessage = history;
+                    foundUser = true;
+                    continue;
+                }
+                
+                if (foundUser && history.getRole() == 1) { // AI回复
+                    firstAIResponse = history;
                     break;
                 }
             }
             
-            if (firstUserMessage == null || StringUtils.isBlank(firstUserMessage.getContent())) {
-                return; // 没有找到用户消息或消息内容为空
+            if (firstUserMessage == null || firstAIResponse == null || 
+                StringUtils.isBlank(firstUserMessage.getContent()) || 
+                StringUtils.isBlank(firstAIResponse.getContent())) {
+                return; // 必须同时有用户消息和AI回复才生成标题
             }
-            
+
             // 从配置获取提示语模板
-            String promptTemplate = globalConfigService.get("model.chat.gen.thread.prompt", 
-                "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:#{content}");
-            
-            // 替换模板中的内容占位符
-            String prompt = promptTemplate.replace("#{content}", firstUserMessage.getContent());
-            
+            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
+                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
+
+            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
+            prompt.setParameter("userContent", firstUserMessage.getContent());
+            prompt.setParameter("modelContent", firstAIResponse.getContent());
+
             // 获取当前用户ID
             Long userId = thread.getUserId();
             
             // 创建请求DTO
             ModelChatParam modelChatParam = createModelChatDto(model, userId);
-            modelChatParam.setMessage(prompt);
+            modelChatParam.setMessage(prompt.execute());
                   
             // 获取代理配置
             String proxyUrl = getProxyConfig(userId);

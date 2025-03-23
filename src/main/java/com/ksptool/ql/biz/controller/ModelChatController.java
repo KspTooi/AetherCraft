@@ -42,9 +42,6 @@ public class ModelChatController {
     @Autowired
     private ModelChatService modelChatService;
 
-    @Autowired
-    private UserConfigService userConfigService;
-
     /**
      * 获取聊天视图
      * @return 返回聊天页面视图
