@@ -14,7 +14,11 @@ import java.util.List;
 @Repository
 public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHistoryPo, Long>, JpaSpecificationExecutor<ModelChatHistoryPo> {
     
-    @Query("SELECT COALESCE(MAX(h.sequence), 0) FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId")
+    @Query("""
+            SELECT COALESCE(MAX(h.sequence), 0) 
+            FROM ModelChatHistoryPo h 
+            WHERE h.thread.id = :threadId
+            """)
     int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -23,7 +27,10 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId")
+    @Query("""
+            DELETE FROM ModelChatHistoryPo h 
+            WHERE h.thread.id = :threadId
+            """)
     void deleteByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -32,7 +39,14 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      * @param role 消息类型/角色 (0-用户消息, 1-AI消息)
      * @return 最后一条消息
      */
-    @Query("SELECT h FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.role = :role ORDER BY h.sequence DESC LIMIT 1")
+    @Query("""
+            SELECT h 
+            FROM ModelChatHistoryPo h 
+            WHERE h.thread.id = :threadId 
+            AND h.role = :role 
+            ORDER BY h.sequence DESC 
+            LIMIT 1
+            """)
     ModelChatHistoryPo getLastMessage(@Param("threadId") Long threadId, @Param("role") Integer role);
     
     /**
@@ -40,7 +54,12 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      * @param threadId 会话ID
      * @return 排序后的历史记录列表
      */
-    @Query("SELECT h FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId ORDER BY h.sequence ASC")
+    @Query("""
+            SELECT h 
+            FROM ModelChatHistoryPo h 
+            WHERE h.thread.id = :threadId 
+            ORDER BY h.sequence ASC
+            """)
     List<ModelChatHistoryPo> getByThreadId(@Param("threadId") Long threadId);
     
     /**
@@ -50,6 +69,10 @@ public interface ModelChatHistoryRepository extends JpaRepository<ModelChatHisto
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM ModelChatHistoryPo h WHERE h.thread.id = :threadId AND h.sequence >= :sequence")
+    @Query("""
+            DELETE FROM ModelChatHistoryPo h 
+            WHERE h.thread.id = :threadId 
+            AND h.sequence >= :sequence
+            """)
     void removeHistoryAfter(@Param("threadId") Long threadId, @Param("sequence") Integer sequence);
 } 
