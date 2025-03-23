@@ -161,6 +161,7 @@
                     <include>**/**.ico</include>
                     <include>**/**.woff</include>
                     <include>**/**.woff2</include>
+                    <include>**/**.jpeg</include>
                 </includes>
             </resource>
         </resources>

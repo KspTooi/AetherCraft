@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherCraft - 智能AI交互平台</title>
+    <!-- 引入通用样式组件 -->
+    <div th:replace="~{components/com-styles}"></div>
+    <style>
+        body {
+            background: url('/img/Generated_Image_March.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(17, 24, 39, 0.7);
+            z-index: 0;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 25%, rgba(76, 29, 149, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .navbar {
+            padding: 1.5rem 2rem;
+            background-color: transparent;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #4facfe;
+        }
+        
+        .btn-try {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 0.6rem 1.5rem;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-try:hover {
+            background-color: rgba(139, 92, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 80px);
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+        }
+        
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .hero-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .hero-circle {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            filter: blur(80px);
+            opacity: 0.2;
+            z-index: 0;
+        }
+        
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 8s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        @keyframes gradientShift {
+            0% {background-position: 0% 50%}
+            50% {background-position: 100% 50%}
+            100% {background-position: 0% 50%}
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-action {
+            padding: 0.8rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%);
+            border: none;
+            color: white;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(139, 92, 246, 0.1);
+        }
+        
+        .feature-section {
+            padding: 6rem 2rem;
+            position: relative;
+            z-index: 2;
+            background-color: rgba(17, 24, 39, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            background: linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .feature-card {
+            background: rgba(17, 24, 39, 0.5);
+            border-radius: 16px;
+            padding: 2.5rem;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            background: rgba(31, 41, 55, 0.6);
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* 添加四角边框效果 */
+        .feature-card::before,
+        .feature-card::after,
+        .feature-card .corner-top-right,
+        .feature-card .corner-bottom-left {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        /* 左上角 */
+        .feature-card::before {
+            top: 15px;
+            left: 15px;
+            border-top-color: transparent;
+            border-left-color: transparent;
+        }
+        
+        /* 右下角 */
+        .feature-card::after {
+            bottom: 15px;
+            right: 15px;
+            border-bottom-color: transparent;
+            border-right-color: transparent;
+        }
+        
+        /* 右上角 */
+        .feature-card .corner-top-right {
+            top: 15px;
+            right: 15px;
+            border-top-color: transparent;
+            border-right-color: transparent;
+        }
+        
+        /* 左下角 */
+        .feature-card .corner-bottom-left {
+            bottom: 15px;
+            left: 15px;
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+        }
+        
+        /* 悬浮效果 */
+        .feature-card:hover::before,
+        .feature-card:hover::after,
+        .feature-card:hover .corner-top-right,
+        .feature-card:hover .corner-bottom-left {
+            width: 40px;
+            height: 40px;
+            opacity: 1;
+        }
+        
+        /* 左上角悬浮效果 */
+        .feature-card:hover::before {
+            border-top-color: #8b5cf6;
+            border-left-color: #8b5cf6;
+        }
+        
+        /* 右下角悬浮效果 */
+        .feature-card:hover::after {
+            border-bottom-color: #06b6d4;
+            border-right-color: #06b6d4;
+        }
+        
+        /* 右上角悬浮效果 */
+        .feature-card:hover .corner-top-right {
+            border-top-color: #8b5cf6;
+            border-right-color: #8b5cf6;
+        }
+        
+        /* 左下角悬浮效果 */
+        .feature-card:hover .corner-bottom-left {
+            border-bottom-color: #06b6d4;
+            border-left-color: #06b6d4;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        
+        .feature-title {
+            font-size: 1.75rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .feature-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+        
+        .security-section {
+            padding: 6rem 2rem;
+            position: relative;
+            z-index: 2;
+            background-color: rgba(17, 24, 39, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .security-card {
+            background: rgba(31, 41, 55, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .security-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #06b6d4;
+        }
+        
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 2;
+            background-color: rgba(17, 24, 39, 0.95);
+        }
+        
+        .footer-text {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        @media (max-width: 992px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-visual {
+                display: none;
+            }
+            
+            .hero-title {
+                font-size: 4rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">AetherCraft</a>
+            <div class="ms-auto">
+                <a href="/login" class="btn btn-try">登录</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 英雄区域 -->
+    <section class="hero-grid">
+        <div class="hero-content">
+            <h1 class="hero-title">创造无限可能</h1>
+            <p class="hero-subtitle">AetherCraft是一个融合先进AI技术的智能交互平台，通过丰富的对话和角色扮演体验，探索思想的边界，释放创造力的潜能。</p>
+            
+            <!-- 动作按钮 -->
+            <div class="action-buttons">
+                <a href="/login" class="btn btn-action btn-primary">立即体验</a>
+                <a href="/register" th:if="${allowRegister}" class="btn btn-action btn-secondary">创建账号</a>
+            </div>
+        </div>
+        
+        <div class="hero-visual">
+            <div class="hero-circle"></div>
+        </div>
+    </section>
+    
+    <!-- 功能部分 -->
+    <section class="feature-section">
+        <div class="container">
+            <h2 class="section-title">探索功能</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="corner-top-right"></div>
+                        <div class="corner-bottom-left"></div>
+                        <div class="feature-icon">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <h3 class="feature-title">智能对话</h3>
+                        <p class="feature-description">
+                            与AI助手进行深度交流，获取信息、解决问题、激发灵感，让思维碰撞产生无限可能。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="corner-top-right"></div>
+                        <div class="corner-bottom-left"></div>
+                        <div class="feature-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="feature-title">角色扮演</h3>
+                        <p class="feature-description">
+                            沉浸式的角色互动体验，打破现实边界，与不同人格的AI角色创造引人入胜的对话与故事。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="corner-top-right"></div>
+                        <div class="corner-bottom-left"></div>
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+                        <h3 class="feature-title">安全保障</h3>
+                        <p class="feature-description">
+                            专属加密技术确保数据隐私，支持私有化部署，为组织和个人提供安全可靠的AI交互环境。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 安全部分 -->
+    <section class="security-section">
+        <div class="container">
+            <h2 class="section-title">安全与技术</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h4>全方位数据加密</h4>
+                        <p>采用ChaCha20-Poly1305高强度加密算法，对聊天记录、角色设定、对话内容等所有用户数据实施加密存储，即使数据库被入侵，敏感信息也无法被解读。</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="bi bi-key-fill"></i>
+                        </div>
+                        <h4>专属密钥保护</h4>
+                        <p>每位用户拥有独立加密密钥(DEK)，通过KEK-DEK分层密钥架构确保数据隔离，管理员无法查看用户内容，提供强大的隐私保障与身份隔离。</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <h4>多模型支持</h4>
+                        <p>灵活对接OpenAI、Anthropic、百度文心一言、讯飞星火等主流大语言模型，同时支持私有部署的开源模型，满足不同场景下的AI交互需求。</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="bi bi-server"></i>
+                        </div>
+                        <h4>私有化部署</h4>
+                        <p>支持在企业内网或私有云环境中部署，数据存储和处理均在可控边界内进行，满足数据主权与合规要求，保障关键信息资产安全。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p class="footer-text mb-0">© 2024 AetherCraft - 智能AI交互平台</p>
+        </div>
+    </footer>
+    
+    <!-- 引入通用脚本组件 -->
+    <div th:replace="~{components/com-scripts}"></div>
+</body>
+</html> 

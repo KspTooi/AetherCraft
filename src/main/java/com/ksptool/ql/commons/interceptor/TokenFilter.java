@@ -35,7 +35,9 @@ public class TokenFilter implements Filter {
             "/error",
             "/register",
             "/userRegister",
-            "/install-wizard/**"
+            "/install-wizard/**",
+            "/welcome",
+            "/"
     );
 
     @Override

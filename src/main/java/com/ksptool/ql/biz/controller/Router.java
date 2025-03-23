@@ -35,14 +35,28 @@ public class Router {
 
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
-
-        //当前登录用户无效则进入登录页
-        if(authService.verifyUser(hsr) == null){
-            return "redirect:/login";
+        // 如果启用向导模式，跳转到向导
+        if(installWizardService.hasInstallWizardMode()){
+            return "redirect:/install-wizard/";
         }
 
-        //跳转到"应用中心"
-        return "redirect:/appCenter";
+        // 当前登录用户有效，跳转到应用中心
+        if(authService.verifyUser(hsr) != null){
+            return "redirect:/model/chat/view";
+        }
+        
+        // 未登录用户跳转到欢迎页
+        return "redirect:/welcome";
+    }
+
+    @GetMapping("/welcome")
+    public ModelAndView welcome() {
+        // 获取是否允许用户注册的配置
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+        
+        ModelAndView mav = new ModelAndView("welcome");
+        mav.addObject("allowRegister", StringUtils.isNotBlank(allowRegister) && "true".equals(allowRegister));
+        return mav;
     }
 
     @GetMapping("/login")
