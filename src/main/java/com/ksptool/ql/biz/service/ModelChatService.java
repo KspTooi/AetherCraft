@@ -149,7 +149,7 @@ public class ModelChatService {
         // 创建并填充DTO
         ModelChatParam param = new ModelChatParam();
         param.setModelCode(modelEnum.getCode());
-        userConfigService.readUserModelParam(param);
+        userConfigService.readUserModelParam(param,userId);
         return param;
     }
 

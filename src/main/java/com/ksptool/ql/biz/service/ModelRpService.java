@@ -327,7 +327,7 @@ public class ModelRpService {
         threadCt.setModelCode(modelEnum.getCode());
         threadRepository.save(threadCt);
 
-        userConfigService.readUserModelParam(param);
+        userConfigService.readUserModelParam(param,null);
 
         try {
 
