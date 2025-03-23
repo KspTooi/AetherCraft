@@ -27,24 +27,27 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
 
 
     @Query("""
-    SELECT g FROM GroupPo g
-    LEFT JOIN FETCH g.permissions
-    LEFT JOIN FETCH g.users
-    WHERE g.id = :id
-    """)
+            SELECT g FROM GroupPo g
+            LEFT JOIN FETCH g.permissions
+            LEFT JOIN FETCH g.users
+            WHERE g.id = :id
+            """)
     GroupPo getGroupWithUserAndPermission(@Param("id") Long id);
 
     /**
      * 获取最大排序号
      * @return 最大排序号，如果没有记录则返回0
      */
-    @Query("SELECT COALESCE(MAX(g.sortOrder), 0) FROM GroupPo g")
+    @Query("""
+            SELECT COALESCE(MAX(g.sortOrder), 0) 
+            FROM GroupPo g
+            """)
     Integer findMaxSortOrder();
 
     /**
      * 查询用户组列表，并统计权限数量
      */
-    @Query(""" 
+    @Query("""
             SELECT new com.ksptool.ql.biz.model.vo.ListPanelGroupVo(
                 g.id,
                 g.name,
@@ -60,7 +63,7 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
             WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
             AND (:#{#dto.code} IS NULL OR g.code LIKE %:#{#dto.code}%)
             AND (:#{#dto.description} IS NULL OR g.description LIKE %:#{#dto.description}%)
-    """)
+            """)
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
 }
