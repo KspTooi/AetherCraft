@@ -48,20 +48,17 @@
         to { opacity: 1; }
     }
     
-    /* 移除主要容器的圆角 */
+    /* 主要容器样式 */
     .customize-container {
         color: #fff;
         height: 100%;
         display: flex;
         flex-direction: column;
-        border-radius: 0 !important;
     }
 
-    /* 布局容器 */
     .customize-layout {
         display: flex;
         height: 100%;
-        border-radius: 0 !important;
     }
     
     /* 侧边栏区域 */
@@ -71,7 +68,6 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 0 !important;
     }
     
     .menu-items {
@@ -79,7 +75,6 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        padding-top: 4px;
     }
     
     .menu-item {
@@ -117,7 +112,6 @@
         flex-direction: column;
         background: transparent;
         overflow: hidden;
-        border-radius: 0 !important;
     }
     
     .header {
@@ -126,7 +120,6 @@
         align-items: center;
         gap: 8px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 0 !important;
     }
     
     .header-title {
@@ -135,7 +128,6 @@
         font-weight: 500;
     }
 
-    /* 设置内容包装器 */
     .settings-wrapper {
         flex: 1;
         display: flex;
@@ -147,24 +139,321 @@
         max-width: 100%;
         padding: 20px;
     }
-
-    /* 设置面板样式 */
-    .settings-panel {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        padding: 20px;
+    
+    /* 上传区域样式 */
+    .upload-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 40px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.05);
         margin-bottom: 20px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
     }
     
-    .panel-title {
-        font-size: 1.1rem;
-        margin-bottom: 16px;
-        color: #fff;
+    .upload-zone:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(79, 172, 254, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-zone.dragover {
+        background: rgba(79, 172, 254, 0.15) !important;
+        border-color: #4facfe !important;
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.2);
+    }
+    
+    .drop-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 8px;
+        transition: transform 0.3s ease;
+    }
+    
+    .upload-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 80%;
+        margin: 0 auto;
+    }
+    
+    .upload-subtext {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+        margin-top: 4px;
+    }
+
+    /* 壁纸操作按钮 */
+    .wallpaper-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .wallpaper-actions .btn {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         gap: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .wallpaper-actions .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .wallpaper-actions .btn-download {
+        background: linear-gradient(135deg, rgba(79, 172, 254, 0.4) 0%, rgba(0, 242, 254, 0.4) 100%);
+        border: 1px solid rgba(79, 172, 254, 0.3);
+    }
+    
+    .wallpaper-actions .btn-reset {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* 默认壁纸区域 */
+    .default-wallpapers {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .wallpaper-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .wallpaper-item {
+        cursor: pointer;
+        border-radius: 6px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+    }
+
+    .wallpaper-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .wallpaper-item img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .wallpaper-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0,0,0,0.7);
+        color: white;
+        padding: 5px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    /* 设置项样式 */
+    .setting-item {
+        margin-bottom: 20px;
+    }
+    
+    .setting-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .setting-control {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .setting-control.color-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+    
+    /* 颜色选择器样式 */
+    .color-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .color-picker {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+    }
+    
+    .color-picker::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    
+    .color-picker::-webkit-color-swatch {
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+    
+    /* 滑块样式 */
+    .opacity-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.2);
+        outline: none;
+    }
+    
+    .opacity-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #4facfe;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .opacity-value {
+        min-width: 48px;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: monospace;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+
+    /* 自定义模态框样式 */
+    .custom-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 9990;
+        display: none;
+    }
+    
+    .custom-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9991;
+    }
+    
+    .custom-modal-dialog {
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 800px;
+        margin: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+    
+    .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .custom-modal-title {
+        margin: 0;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .custom-close-button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    
+    .custom-close-button:hover {
+        color: #fff;
+    }
+    
+    .custom-modal-body {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-height: calc(90vh - 120px); /* 预留头部和底部的空间 */
+        overflow: hidden;
+    }
+    
+    .wallpaper-preview {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+    
+    .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     /* 移动端适配 */
@@ -234,492 +523,6 @@
         .sidebar-mask {
             display: none;
         }
-    }
-
-    /* 移除settings-panel相关样式，添加新的内容样式 */
-    
-    /* 设置项样式 */
-    .setting-item {
-        margin-bottom: 20px;
-    }
-    
-    .setting-label {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 0.9rem;
-        font-weight: 500;
-        margin-bottom: 8px;
-        display: block;
-    }
-    
-    .setting-control {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .setting-control.color-group {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 8px;
-    }
-    
-    .setting-group {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    /* 上传区域样式 */
-    .upload-zone {
-        border: 2px dashed rgba(255, 255, 255, 0.3);
-        border-radius: 16px;
-        padding: 40px 24px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(255, 255, 255, 0.05);
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .upload-zone:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(79, 172, 254, 0.6);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .upload-zone.dragover {
-        background: rgba(79, 172, 254, 0.15) !important;
-        border-color: #4facfe !important;
-        transform: scale(1.02);
-        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.2);
-    }
-    
-    .drop-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-    }
-    
-    .upload-icon {
-        font-size: 48px;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 8px;
-        transition: transform 0.3s ease;
-    }
-    
-    .upload-zone:hover .upload-icon {
-        transform: translateY(-5px);
-    }
-    
-    .upload-text {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
-        line-height: 1.5;
-        max-width: 80%;
-        margin: 0 auto;
-    }
-    
-    .upload-subtext {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.875rem;
-        margin-top: 4px;
-    }
-    
-    /* 添加上传区域的动画效果 */
-    @keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.4);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(79, 172, 254, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(79, 172, 254, 0);
-        }
-    }
-    
-    .upload-zone.dragover {
-        animation: pulse 1.5s infinite;
-    }
-    
-    /* 壁纸操作按钮 */
-    .wallpaper-actions {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-    
-    .wallpaper-actions .btn {
-        padding: 10px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .wallpaper-actions .btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .wallpaper-actions .btn:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .wallpaper-actions .btn i {
-        font-size: 1.1rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .wallpaper-actions .btn:hover i {
-        transform: scale(1.1);
-    }
-    
-    /* 下载按钮特殊样式 */
-    .wallpaper-actions .btn-download {
-        background: linear-gradient(135deg, rgba(79, 172, 254, 0.4) 0%, rgba(0, 242, 254, 0.4) 100%);
-        border: 1px solid rgba(79, 172, 254, 0.3);
-    }
-    
-    .wallpaper-actions .btn-download:hover {
-        background: linear-gradient(135deg, rgba(79, 172, 254, 0.5) 0%, rgba(0, 242, 254, 0.5) 100%);
-    }
-    
-    /* 重置按钮特殊样式 */
-    .wallpaper-actions .btn-reset {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .wallpaper-actions .btn-reset:hover {
-        background: rgba(255, 255, 255, 0.15);
-    }
-    
-    /* 颜色选择器样式 */
-    .color-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .color-picker {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: none;
-        cursor: pointer;
-    }
-    
-    .color-picker::-webkit-color-swatch-wrapper {
-        padding: 0;
-    }
-    
-    .color-picker::-webkit-color-swatch {
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-    }
-    
-    .color-value, .color-label {
-        font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.9);
-    }
-    
-    /* 滑块样式 */
-    .opacity-slider {
-        flex: 1;
-        -webkit-appearance: none;
-        height: 6px;
-        border-radius: 3px;
-        background: rgba(255, 255, 255, 0.2);
-        outline: none;
-    }
-    
-    .opacity-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #4facfe;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .opacity-value {
-        min-width: 48px;
-        color: rgba(255, 255, 255, 0.7);
-        font-family: monospace;
-        font-size: 0.9rem;
-        text-align: right;
-    }
-
-    /* 添加壁纸模态框样式 */
-    .wallpaper-modal .modal-content {
-        background: rgba(30, 30, 30, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        backdrop-filter: blur(10px);
-    }
-
-    .wallpaper-modal .modal-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 1rem;
-    }
-
-    .wallpaper-modal .modal-title {
-        color: #fff;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    .wallpaper-modal .modal-body {
-        padding: 0;
-        position: relative;
-        min-height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .wallpaper-preview {
-        width: 100%;
-        height: auto;
-        max-height: 70vh;
-        object-fit: contain;
-    }
-
-    .wallpaper-modal .modal-footer {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 1rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-    }
-
-    .btn-secondary {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .default-wallpapers {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-    }
-
-    .wallpaper-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
-        margin-top: 10px;
-    }
-
-    .wallpaper-item {
-        cursor: pointer;
-        border-radius: 6px;
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
-        position: relative;
-    }
-
-    .wallpaper-item:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .wallpaper-item img {
-        width: 100%;
-        height: 100px;
-        object-fit: cover;
-        display: block;
-    }
-
-    .wallpaper-name {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background-color: rgba(0,0,0,0.7);
-        color: white;
-        padding: 5px;
-        font-size: 12px;
-        text-align: center;
-    }
-    
-    /* 确保模态框显示在遮罩层之上 */
-    .modal {
-        z-index: 1999 !important;
-    }
-    
-    .modal-backdrop {
-        z-index: 1998 !important;
-    }
-    
-    .wallpaper-modal {
-        pointer-events: auto !important;
-    }
-    
-    .wallpaper-modal .modal-dialog {
-        pointer-events: auto !important;
-        z-index: 2000 !important;
-    }
-
-    /* 添加额外的模态框样式以确保正确显示 */
-    .modal-open .modal {
-        display: block;
-    }
-
-    .modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-content {
-        position: relative;
-        background-color: rgba(30, 30, 30, 0.95);
-        margin: auto;
-    }
-
-    /* 修复模态框遮罩层在模态框上方的问题 */
-    .modal-backdrop.fade.show {
-        z-index: 1040 !important;
-    }
-    
-    .modal.fade.show {
-        z-index: 1050 !important;
-    }
-    
-    .modal-dialog {
-        z-index: 1051 !important;
-    }
-    
-    /* 确保点击遮罩层不会阻止模态框点击 */
-    .modal {
-        pointer-events: none;
-    }
-    
-    .modal-dialog {
-        pointer-events: auto;
-    }
-    
-    /* 重写Bootstrap默认模态框样式 */
-    body.modal-open {
-        overflow: hidden;
-        padding-right: 0 !important;
-    }
-
-    /* 自定义模态框样式 */
-    .custom-modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        z-index: 9990;
-        display: none;
-    }
-    
-    .custom-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9991;
-    }
-    
-    .custom-modal-dialog {
-        background: rgba(30, 30, 30, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        width: 100%;
-        max-width: 800px;
-        margin: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-    
-    .custom-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .custom-modal-title {
-        margin: 0;
-        color: #fff;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-    
-    .custom-close-button {
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-    }
-    
-    .custom-close-button:hover {
-        color: #fff;
-    }
-    
-    .custom-modal-body {
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .custom-modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
 

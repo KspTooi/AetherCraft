@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.dto.SaveColorStyleDto;
 import com.ksptool.ql.biz.model.dto.WallpaperDto;
 import com.ksptool.ql.biz.model.po.UserFilePo;
 import com.ksptool.ql.biz.service.UserConfigService;
@@ -36,6 +37,17 @@ public class CustomizeController {
     public ModelAndView customizeView() {
         return new ModelAndView("user-customize/user-customize.html");
     }
+
+
+    @PostMapping("/saveColorTheme")
+    public Result<?> saveColorTheme(@RequestBody SaveColorStyleDto dto) {
+
+
+
+        return null;
+    }
+
+
 
     @PostMapping("/resetWallpaper")
     public Result<?> resetWallpaper() {

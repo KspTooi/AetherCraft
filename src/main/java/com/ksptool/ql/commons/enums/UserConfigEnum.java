@@ -13,8 +13,15 @@ public enum UserConfigEnum {
     
     MODEL_CHAT_CURRENT_THREAD("model.chat.current.thread", null, "用户最后一次选中的CHAT_THREAD"),
     MODEL_RP_CURRENT_THREAD("model.rp.current.thread", null, "用户最后一次选中的RP_THREAD"),
-    MODEL_RP_CURRENT_ROLE("model.rp.current.role", null, "用户最后一次选中的RP_ROLE")
+    MODEL_RP_CURRENT_ROLE("model.rp.current.role", null, "用户最后一次选中的RP_ROLE"),
 
+
+    CUSTOM_MAIN_COLOR("theme.custom.main.color", null, "主要区域颜色"),
+    CUSTOM_MAIN_FILTER("theme.custom.main.filter", null, "主要区域模糊"),
+    CUSTOM_TOP_NAV_COLOR("theme.custom.nav.color", null, "导航栏颜色"),
+    CUSTOM_TOP_NAV_FILTER("theme.custom.nav.filter", null, "导航栏模糊"),
+    CUSTOM_ACTIVE_STYLE("theme.custom.active.style", null, "激活主题配色"),
+    CUSTOM_BUTTON_STYLE("theme.custom.button.style", null, "按钮主题配色"),
     ;
 
     /**
