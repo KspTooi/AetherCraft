@@ -4,7 +4,9 @@ import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.po.ConfigPo;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -195,14 +197,23 @@ public class UserConfigService {
 
     public void readUserModelParam(ModelChatParam param){
 
-        // 构建基础配置键
-        String baseKey = "ai.model.cfg." + param.getModelCode() + ".";
-        
+        PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TEMPERATURE.key())
+                .setParameter("modelCode", param.getModelCode());
+
+        PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TOP_P.key())
+                .setParameter("modelCode", param.getModelCode());
+
+        PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.MODEL_TOP_K.key())
+                .setParameter("modelCode", param.getModelCode());
+
+        PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.MODEL_MAX_OUTPUT_TOKENS.key())
+                .setParameter("modelCode", param.getModelCode());
+
         // 获取配置参数
-        double temperature = getDouble(baseKey + "temperature", 0.7);
-        double topP = getDouble(baseKey + "topP", 1.0);
-        int topK = getInt(baseKey + "topK", 40);
-        int maxOutputTokens = getInt(baseKey + "maxOutputTokens", 800);
+        double temperature = getDouble(temperatureK.execute(), 0.7);
+        double topP = getDouble(topPK.execute(), 1.0);
+        int topK = getInt(topKK.execute(), 40);
+        int maxOutputTokens = getInt(maxOutputTokensK.execute(), 800);
         
         // 设置参数到ModelChatParam对象
         param.setTemperature(temperature);

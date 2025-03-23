@@ -291,7 +291,6 @@ public class ModelRpService {
 
         String finalPrompt = prompt.executeNested();
 
-
         // 清理之前的消息片段(如果有)
         segmentRepository.deleteByThreadId(threadCt.getId());
 
