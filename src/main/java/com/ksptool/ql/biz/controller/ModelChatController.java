@@ -173,8 +173,16 @@ public class ModelChatController {
     @PostMapping("/removeThread")
     public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
+
             modelChatService.removeThread(dto.getThreadId());
-            userConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+
+            //如移除的角色是用户最后选择的那一个Thread 需清空用户保存的配置
+            Long userLastSelect = userConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
+
+            if(userLastSelect.equals(dto.getThreadId())){
+                userConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+            }
+
             return Result.success("会话删除成功");
         } catch (BizException e) {
             return Result.error(e);
