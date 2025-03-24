@@ -28,7 +28,7 @@ public class ModelChatHistoryPo {
     @Column(nullable = false)
     private Integer role;
 
-    @Comment("消息内容")
+    @Comment("(加密)消息内容")
     @Column(columnDefinition = "TEXT")
     private String content;
 

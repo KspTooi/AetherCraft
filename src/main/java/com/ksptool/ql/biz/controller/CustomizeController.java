@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.dto.SaveColorStyleDto;
 import com.ksptool.ql.biz.model.dto.WallpaperDto;
 import com.ksptool.ql.biz.model.po.UserFilePo;
 import com.ksptool.ql.biz.service.UserConfigService;
@@ -16,7 +17,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,14 +35,25 @@ public class CustomizeController {
     
     @GetMapping("/view")
     public ModelAndView customizeView() {
-        return new ModelAndView("customize");
+        return new ModelAndView("user-customize/user-customize.html");
     }
+
+
+    @PostMapping("/saveColorTheme")
+    public Result<?> saveColorTheme(@RequestBody SaveColorStyleDto dto) {
+
+
+
+        return null;
+    }
+
+
 
     @PostMapping("/resetWallpaper")
     public Result<?> resetWallpaper() {
         try {
             // 通过设置为 null 来移除壁纸配置项
-            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, null);
+            userConfigService.setValue(USER_WALLPAPER_PATH_KEY, (String) null);
             return Result.success("已恢复默认壁纸");
         } catch (Exception e) {
             return Result.error("恢复默认壁纸失败：" + e.getMessage());

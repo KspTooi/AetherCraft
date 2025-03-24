@@ -1,37 +1,33 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
-import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
-import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
-import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
+import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
-import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.ArrayList;
-import com.ksptool.ql.biz.model.vo.ModelChatViewVo;
-import com.ksptool.ql.biz.model.vo.ModelChatViewThreadVo;
-import com.ksptool.ql.biz.model.vo.ModelChatViewMessageVo;
 
 import static com.ksptool.entities.Entities.as;
-import static com.ksptool.entities.Entities.assign;
 
 import java.util.function.Consumer;
 
@@ -47,32 +43,31 @@ import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
 
-import java.util.Comparator;
+import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
+
+import java.util.Date;
+import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
+
+import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 
 @Slf4j
 @Service
 public class ModelChatService {
-    
-    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
-    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
 
-    // SSE相关常量
-    private static final String SSE_PARAM = "?alt=sse";
-    
+    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
+
     // 默认模型参数
     private static final double DEFAULT_TEMPERATURE = 0.7;
     private static final double DEFAULT_TOP_P = 1.0;
     private static final int DEFAULT_TOP_K = 40;
-
 
     // 线程安全的容器，记录聊天状态 <threadId, contextId>
     private final ConcurrentHashMap<Long, String> threadToContextIdMap = new ConcurrentHashMap<>();
     
     // 终止列表，存储已经被终止的contextId
     private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
-    
-    private final Gson gson = new Gson();
-    
+
     @Autowired
     private UserConfigService userConfigService;
     
@@ -92,12 +87,16 @@ public class ModelChatService {
     private ModelGeminiService modelGeminiService;
 
     @Autowired
+    private ModelGrokService modelGrokService;
+
+    @Autowired
     private PanelApiKeyService panelApiKeyService;
 
-
-
+    @Autowired
+    private ContentSecurityService css;
 
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long userId, String modelCode) throws BizException {
+
         if (threadId == null || threadId == -1) {
             // 创建新的会话
             long count = threadRepository.countByUserId(userId);
@@ -106,6 +105,7 @@ public class ModelChatService {
             thread.setUserId(userId);
             thread.setTitle("新对话" + (count + 1));
             thread.setModelCode(modelCode);
+            css.encryptEntity(thread);
             return threadRepository.save(thread);
         }
         
@@ -118,7 +118,7 @@ public class ModelChatService {
         return thread;
     }
     
-    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) {
+    private ModelChatHistoryPo createHistory(ModelChatThreadPo thread, String content, Integer role) throws BizException {
         ModelChatHistoryPo history = new ModelChatHistoryPo();
         history.setThread(thread);
         history.setUserId(thread.getUserId());
@@ -128,6 +128,7 @@ public class ModelChatService {
         // 获取当前最大序号并加1
         int nextSequence = historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
         history.setSequence(nextSequence);
+        css.encryptEntity(history);
         return historyRepository.save(history);
     }
 
@@ -144,24 +145,12 @@ public class ModelChatService {
         if (modelEnum == null) {
             throw new BizException("无效的模型代码");
         }
-        
-        // 构建基础配置键
-        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
-        
-        // 获取配置参数
-        double temperature = userConfigService.getDouble(baseKey + "temperature", DEFAULT_TEMPERATURE, userId);
-        double topP = userConfigService.getDouble(baseKey + "topP", DEFAULT_TOP_P, userId);
-        int topK = userConfigService.getInt(baseKey + "topK", DEFAULT_TOP_K, userId);
-        int maxOutputTokens = userConfigService.getInt(baseKey + "maxOutputTokens", 800, userId);
-        
+
         // 创建并填充DTO
-        ModelChatParam dto = new ModelChatParam();
-        dto.setModelCode(modelEnum.getCode());
-        dto.setTemperature(temperature);
-        dto.setTopP(topP);
-        dto.setTopK(topK);
-        dto.setMaxOutputTokens(maxOutputTokens);
-        return dto;
+        ModelChatParam param = new ModelChatParam();
+        param.setModelCode(modelEnum.getCode());
+        userConfigService.readUserModelParam(param,userId);
+        return param;
     }
 
     /**
@@ -222,8 +211,37 @@ public class ModelChatService {
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
+            // 处理重新生成逻辑
+            Long userHistoryId = null;
+
             // 保存用户消息
-            ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
+            if(dto.getQueryKind() == 0){
+                ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
+                userHistoryId = userHistory.getId();
+            }
+
+            if (dto.getQueryKind() == 3 && dto.getRegenerateRootHistoryId() != null) {
+                // 获取指定的根消息记录
+                ModelChatHistoryPo rootHistory = historyRepository.findById(dto.getRegenerateRootHistoryId())
+                    .orElseThrow(() -> new BizException("指定的根消息记录不存在"));
+                
+                // 检查权限和关联
+                if (!rootHistory.getUserId().equals(userId) || !rootHistory.getThread().getId().equals(threadId)) {
+                    throw new BizException("无权访问该消息或消息不属于该会话");
+                }
+                
+                // 检查消息类型，只能是用户消息
+                if (rootHistory.getRole() != 0) {
+                    throw new BizException("只能以用户消息作为重新生成的起点");
+                }
+                
+                // 删除根消息之后的所有消息
+                historyRepository.removeHistoryAfter(threadId, rootHistory.getSequence());
+                
+                // 使用根消息的ID作为当前用户消息ID
+                userHistoryId = rootHistory.getId();
+                thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
+            }
 
             // 清理之前的片段（如果有）
             segmentRepository.deleteByThreadId(thread.getId());
@@ -247,26 +265,56 @@ public class ModelChatService {
             // 创建请求DTO
             ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), userId);
             modelChatParam.setMessage(dto.getMessage());
-            modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
             modelChatParam.setApiKey(apiKey);
-            modelChatParam.setHistories(as(thread.getHistories(), ModelChatParamHistory.class));
 
-            // 异步调用ModelGeminiService发送流式请求
-            modelGeminiService.sendMessageStream(
-                    client,
-                    modelChatParam,
-                    // 使用封装后的回调函数
-                    onModelMessageRcv(thread, userId)
-            );
+            // 根据模型类型设置不同的URL
+            if (dto.getModel().contains("grok")) {
+                modelChatParam.setUrl(GROK_BASE_URL);
+            } else {
+                modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":streamGenerateContent");
+            }
+
+            //将新模型选项保存到Thread
+            thread.setModelCode(modelEnum.getCode());
+            threadRepository.save(thread);
+
+            //获取全部消息历史
+            List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
+            modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
+
+            //解密记录内容
+            for(var item : modelChatParam.getHistories()){
+                item.setContent(css.decryptForCurUser(item.getContent()));
+            }
+
+            // 根据模型类型选择不同的服务发送请求
+            if (dto.getModel().contains("grok")) {
+                // 使用GROK服务
+                modelGrokService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelMessageRcv(thread, userId)
+                );
+            }
+            if(dto.getModel().contains("gemini")){
+                // 使用Gemini服务
+                modelGeminiService.sendMessageStream(
+                        client,
+                        modelChatParam,
+                        onModelMessageRcv(thread, userId)
+                );
+            }
 
             // 返回用户消息作为第一次响应
             ChatSegmentVo vo = new ChatSegmentVo();
             vo.setThreadId(thread.getId());
-            vo.setHistoryId(userHistory.getId());
+            vo.setHistoryId(userHistoryId);
             vo.setRole(0); // 用户角色
             vo.setSequence(startSegment.getSequence());
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
             vo.setType(0); // 起始类型，而不是数据类型
+            vo.setName("User");
+            vo.setAvatarPath(null);
             return vo;
 
         } catch (Exception e) {
@@ -333,12 +381,12 @@ public class ModelChatService {
         }
         
         // 如果等待超时仍未获取到片段
-        if (unreadSegments == null || unreadSegments.isEmpty()) {
+        if (unreadSegments.isEmpty()) {
             return null;
         }
         
         // 检查权限
-        if (!unreadSegments.get(0).getUserId().equals(userId)) {
+        if (!unreadSegments.getFirst().getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
 
@@ -375,8 +423,11 @@ public class ModelChatService {
         }
 
         // 获取第一个片段
-        ModelChatSegmentPo firstSegment = unreadSegments.get(0);
-        
+        ModelChatSegmentPo firstSegment = unreadSegments.getFirst();
+        ModelChatThreadPo thread = firstSegment.getThread();
+        AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
+        String modelName = modelEnum != null ? modelEnum.getSeries() : "AI助手";
+
         // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
         if (firstSegment.getType() == 1) {
             StringBuilder combinedContent = new StringBuilder();
@@ -388,7 +439,7 @@ public class ModelChatService {
                     break;
                 }
                 
-                combinedContent.append(segment.getContent());
+                combinedContent.append(css.decryptForCurUser(segment.getContent()));
                 segment.setStatus(1); // 标记为已读
                 segmentsToMark.add(segment);
             }
@@ -403,6 +454,8 @@ public class ModelChatService {
             vo.setContent(combinedContent.toString());
             vo.setType(1); // 数据类型
             vo.setRole(1); // AI助手角色
+            vo.setName(modelName);
+            vo.setAvatarPath(null);
             return vo;
         }
         
@@ -468,12 +521,12 @@ public class ModelChatService {
 
     /**
      * 编辑会话标题
+     *
      * @param threadId 会话ID
      * @param newTitle 新标题
-     * @return 更新后的会话ID
      * @throws BizException 业务异常
      */
-    public Long editThreadTitle(Long threadId, String newTitle) throws BizException {
+    public void editThreadTitle(Long threadId, String newTitle) throws BizException {
         if (threadId == null) {
             throw new BizException("会话ID不能为空");
         }
@@ -504,19 +557,17 @@ public class ModelChatService {
         // 更新会话标题
         thread.setTitle(newTitle);
         // 标记为手动编辑的标题
-        thread.setTitleGenerated(2);
+        thread.setTitleGenerated(1);
+        css.encryptEntity(thread);
         threadRepository.save(thread);
-        
-        return thread.getId();
     }
 
     /**
      * 生成会话标题
      * @param threadId 会话ID
      * @param model 模型代码
-     * @throws BizException 业务异常
      */
-    public void generateThreadTitle(Long threadId, String model) throws BizException {
+    public void generateThreadTitle(Long threadId, String model,Long uid) {
         try {
             // 检查是否需要生成标题
             boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
@@ -535,38 +586,52 @@ public class ModelChatService {
                 return; // 已生成过标题，直接返回
             }
             
-            // 获取第一条用户消息
+            // 获取第一条用户消息和对应的AI回复
             List<ModelChatHistoryPo> histories = thread.getHistories();
             if (histories == null || histories.isEmpty()) {
                 return; // 没有历史记录，无法生成标题
             }
             
-            // 查找第一条用户消息
+            // 查找第一条用户消息和对应的AI回复
             ModelChatHistoryPo firstUserMessage = null;
+            ModelChatHistoryPo firstAIResponse = null;
+            boolean foundUser = false;
+            
             for (ModelChatHistoryPo history : histories) {
-                if (history.getRole() == 0) { // 用户消息
+                if (!foundUser && history.getRole() == 0) { // 用户消息
                     firstUserMessage = history;
+                    foundUser = true;
+                    continue;
+                }
+                
+                if (foundUser && history.getRole() == 1) { // AI回复
+                    firstAIResponse = history;
                     break;
                 }
             }
             
-            if (firstUserMessage == null || StringUtils.isBlank(firstUserMessage.getContent())) {
-                return; // 没有找到用户消息或消息内容为空
+            if (firstUserMessage == null || firstAIResponse == null || 
+                StringUtils.isBlank(firstUserMessage.getContent()) || 
+                StringUtils.isBlank(firstAIResponse.getContent())) {
+                return; // 必须同时有用户消息和AI回复才生成标题
             }
-            
+
             // 从配置获取提示语模板
-            String promptTemplate = globalConfigService.get("model.chat.gen.thread.prompt", 
-                "总结内容并生成一个简短的标题(不超过10个字符),请直接回复标题,不要回复其他任何多余的话! 需总结的内容:#{content}");
-            
-            // 替换模板中的内容占位符
-            String prompt = promptTemplate.replace("#{content}", firstUserMessage.getContent());
-            
+            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
+                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
+
+            String dekPt = css.getPlainUserDek(uid);
+
+            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
+            prompt.setParameter("userContent", css.decryptForCurUser(firstUserMessage.getContent(),dekPt));
+            prompt.setParameter("modelContent", css.decryptForCurUser(firstAIResponse.getContent(),dekPt));
+
             // 获取当前用户ID
             Long userId = thread.getUserId();
             
             // 创建请求DTO
             ModelChatParam modelChatParam = createModelChatDto(model, userId);
-            modelChatParam.setMessage(prompt);
+            modelChatParam.setMessage(prompt.execute());
                   
             // 获取代理配置
             String proxyUrl = getProxyConfig(userId);
@@ -577,11 +642,26 @@ public class ModelChatService {
                 throw new BizException("未配置API Key");
             }
             
-            modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+            // 根据模型类型设置不同的URL
+            if (model.contains("grok")) {
+                modelChatParam.setUrl(GROK_BASE_URL);
+            } else {
+                modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+            }
+            
             modelChatParam.setApiKey(apiKey);
             
-            // 发送请求
-            String title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            // 根据模型类型选择不同的服务发送请求
+            String title= "";
+
+            if (model.contains("grok")) {
+                // 使用GROK服务
+                title = modelGrokService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            }
+            if(model.contains("gemini")){
+                // 使用Gemini服务
+                title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
+            }
             
             // 处理标题（去除引号和多余空格，限制长度）
             title = title.replaceAll("^\"|\"$", "").trim();
@@ -592,6 +672,7 @@ public class ModelChatService {
             // 更新会话标题
             thread.setTitle(title);
             thread.setTitleGenerated(1); // 标记为已生成标题
+            css.encryptEntity(thread);
             threadRepository.save(thread);
             
             log.info("已为会话 {} 生成标题: {}", threadId, title);
@@ -601,6 +682,53 @@ public class ModelChatService {
         }
     }
 
+    /**
+     * 重新生成AI最后一条回复
+     * @param dto 批量聊天请求参数
+     * @return 聊天片段VO
+     * @throws BizException 业务异常
+     */
+    public ChatSegmentVo chatCompleteRegenerateBatch(BatchChatCompleteDto dto) throws BizException {
+        // 检查该会话是否正在处理中
+        if (threadToContextIdMap.containsKey(dto.getThreadId())) {
+            throw new BizException("该会话正在处理中，请等待AI响应完成");
+        }
+
+        // 获取并验证模型配置
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+
+        // 使用Example查询当前用户的会话
+        ModelChatThreadPo threadQuery = new ModelChatThreadPo();
+        threadQuery.setId(dto.getThreadId());
+        threadQuery.setUserId(userId);
+        
+        Example<ModelChatThreadPo> example = Example.of(threadQuery);
+
+        if(threadRepository.count(example) < 1){
+            throw new BizException("会话不存在或不可用!");
+        }
+
+        // 查找最后一条用户消息
+        ModelChatHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
+        if (lastUserMessage == null) {
+            throw new BizException("未找到任何用户消息");
+        }
+
+        // 使用找到的最后一条用户消息作为重新生成的起点
+        BatchChatCompleteDto batchSendDto = new BatchChatCompleteDto();
+        batchSendDto.setThreadId(dto.getThreadId());
+        batchSendDto.setModel(dto.getModel());
+        batchSendDto.setMessage(css.decryptForCurUser(lastUserMessage.getContent()));
+        batchSendDto.setQueryKind(3); // 重新生成AI最后一条回复
+        batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
+        return chatCompleteSendBatch(batchSendDto);
+    }
 
     /**
      * 删除指定的历史消息
@@ -662,7 +790,9 @@ public class ModelChatService {
         if (!thread.getUserId().equals(userId)) {
             throw new BizException("无权访问该会话");
         }
-        
+
+        userConfigService.setValue(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(), thread.getId());
+
         // 获取会话历史记录
         List<ModelChatHistoryPo> histories = thread.getHistories();
         
@@ -679,7 +809,7 @@ public class ModelChatService {
                 
                 // 手动映射特定字段
                 messageVo.setId(history.getId());
-                messageVo.setContent(history.getContent());
+                messageVo.setContent(css.decryptForCurUser(history.getContent()));
                 messageVo.setCreateTime(history.getCreateTime());
                 
                 // 将role映射到type (0-用户消息，1-AI消息)
@@ -768,6 +898,7 @@ public class ModelChatService {
                     dataSegment.setContent(context.getContent());
                     dataSegment.setStatus(0); // 未读状态
                     dataSegment.setType(1); // 数据类型
+                    css.encryptEntity(dataSegment);
                     segmentRepository.save(dataSegment);
                     return;
                 }
@@ -785,16 +916,14 @@ public class ModelChatService {
                     endSegment.setStatus(0); // 未读状态
                     endSegment.setType(2); // 结束类型
                     endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
+                    css.encryptEntity(endSegment);
                     segmentRepository.save(endSegment);
 
-                    // 更新会话使用的模型
                     if (modelEnum != null) {
-                        thread.setModelCode(modelEnum.getCode());
-                        threadRepository.save(thread);
 
                         // 尝试生成会话标题
                         try {
-                            generateThreadTitle(thread.getId(), modelEnum.getCode());
+                            generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
                         } catch (Exception e) {
                             log.error("生成会话标题失败", e);
                             // 生成标题失败不影响主流程
@@ -844,11 +973,67 @@ public class ModelChatService {
         for (ModelChatThreadPo thread : threads) {
             ThreadListItemVo vo = new ThreadListItemVo();
             vo.setId(thread.getId());
-            vo.setTitle(thread.getTitle());
+            vo.setTitle(css.decryptForCurUser(thread.getTitle()));
             vo.setModelCode(thread.getModelCode());
             voList.add(vo);
         }
         
         return voList;
+    }
+
+    /**
+     * 创建空会话
+     * @param dto 创建空会话请求参数
+     * @return 新创建的会话ID
+     * @throws BizException 业务异常
+     */
+    public CreateEmptyThreadVo createEmptyThread(CreateEmptyThreadDto dto) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 获取当前用户已有的会话数量
+        long threadCount = threadRepository.countByUserId(userId);
+        
+        // 生成新会话标题
+        String title = String.format("新会话#%d", threadCount + 1);
+        
+        // 创建新会话
+        ModelChatThreadPo thread = new ModelChatThreadPo();
+        thread.setTitle(title);
+        thread.setModelCode(dto.getModel());
+        thread.setUserId(userId);
+        thread.setCreateTime(new Date());
+        thread.setUpdateTime(new Date());
+        css.encryptEntity(thread);
+        threadRepository.save(thread);
+        
+        // 返回新创建的会话ID
+        return CreateEmptyThreadVo.of(thread.getId());
+    }
+
+    /**
+     * 编辑聊天历史记录
+     * @param dto 编辑聊天历史记录的请求参数
+     * @throws BizException 业务异常
+     */
+    public void editHistory(EditHistoryDto dto) throws BizException {
+        // 获取当前用户ID
+        Long userId = AuthService.getCurrentUserId();
+        
+        // 创建Example查询对象
+        ModelChatHistoryPo historyCriteria = new ModelChatHistoryPo();
+        historyCriteria.setId(dto.getHistoryId());
+        historyCriteria.setUserId(userId);
+        
+        Example<ModelChatHistoryPo> example = Example.of(historyCriteria);
+        
+        // 查询符合条件的记录
+        ModelChatHistoryPo history = historyRepository.findOne(example)
+            .orElseThrow(() -> new BizException("历史记录不存在或无权编辑"));
+            
+        // 更新消息内容
+        history.setContent(dto.getContent());
+        css.encryptEntity(history);
+        historyRepository.save(history);
     }
 }

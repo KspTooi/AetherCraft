@@ -6,7 +6,7 @@
 
     <groupId>com.ksptooi</groupId>
     <artifactId>AetherCraft</artifactId>
-    <version>1.2J-25</version>
+    <version>1.2N-M3</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -161,6 +161,7 @@
                     <include>**/**.ico</include>
                     <include>**/**.woff</include>
                     <include>**/**.woff2</include>
+                    <include>**/**.jpeg</include>
                 </includes>
             </resource>
         </resources>

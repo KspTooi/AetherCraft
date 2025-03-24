@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.mapper;
 import com.ksptool.ql.biz.model.po.ModelRpSegmentPo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,22 +22,38 @@ public interface ModelRpSegmentRepository extends JpaRepository<ModelRpSegmentPo
      * @param threadId 会话ID
      * @return 最大序号
      */
-    @Query("SELECT COALESCE(MAX(s.sequence), 0) FROM ModelRpSegmentPo s WHERE s.thread.id = ?1")
-    int findMaxSequenceByThreadId(Long threadId);
+    @Query("""
+            SELECT COALESCE(MAX(s.sequence), 0) 
+            FROM ModelRpSegmentPo s 
+            WHERE s.thread.id = :threadId
+            """)
+    int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
 
     /**
      * 查找指定会话的下一个未读片段
      * @param threadId 会话ID
      * @return 未读片段列表
      */
-    @Query("SELECT s FROM ModelRpSegmentPo s WHERE s.thread.id = ?1 AND s.status = 0 ORDER BY s.sequence ASC")
-    List<ModelRpSegmentPo> findNextUnreadByThreadId(Long threadId);
+    @Query("""
+            SELECT s 
+            FROM ModelRpSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = 0 
+            ORDER BY s.sequence ASC
+            """)
+    List<ModelRpSegmentPo> findNextUnreadByThreadId(@Param("threadId") Long threadId);
     
     /**
      * 查找指定会话的所有未读片段，按序号排序
      * @param threadId 会话ID
      * @return 所有未读片段列表
      */
-    @Query("SELECT s FROM ModelRpSegmentPo s WHERE s.thread.id = ?1 AND s.status = 0 ORDER BY s.sequence ASC")
-    List<ModelRpSegmentPo> findAllUnreadByThreadIdOrderBySequence(Long threadId);
+    @Query("""
+            SELECT s 
+            FROM ModelRpSegmentPo s 
+            WHERE s.thread.id = :threadId 
+            AND s.status = 0 
+            ORDER BY s.sequence ASC
+            """)
+    List<ModelRpSegmentPo> findAllUnreadByThreadIdOrderBySequence(@Param("threadId") Long threadId);
 } 

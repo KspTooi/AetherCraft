@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个性化设置</title>
+    
+    <!-- 引入公共库 -->
+    <script th:src="@{/commons/vue3.global.prod.js}"></script>
+    <script th:src="@{/commons/axios.min.js}"></script>
+</head>
+
+<style>
+    /* 覆盖 frame-theme 的样式 */
+    .glass-container {
+        top: 45px !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* 覆盖可能的父容器样式 */
+    .glass-container > div {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+    
+    /* 确保内容区域没有padding和圆角 */
+    [th\:fragment="content"] {
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+    
+    /* 添加消息淡入动画效果 */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* 主要容器样式 */
+    .customize-container {
+        color: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customize-layout {
+        display: flex;
+        height: 100%;
+    }
+    
+    /* 侧边栏区域 */
+    .sidebar {
+        width: 240px;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .menu-items {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .menu-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .menu-item.active {
+        background: rgba(79, 172, 254, 0.2);
+        border-left-color: #4facfe;
+    }
+    
+    .menu-item i {
+        font-size: 1.2rem;
+    }
+    
+    .menu-item-title {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* 主要内容区域 */
+    .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+        overflow: hidden;
+    }
+    
+    .header {
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .header-title {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .settings-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        position: relative;
+        overflow-y: auto;
+        width: 100%;
+        max-width: 100%;
+        padding: 20px;
+    }
+    
+    /* 上传区域样式 */
+    .upload-zone {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 40px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .upload-zone:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(79, 172, 254, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-zone.dragover {
+        background: rgba(79, 172, 254, 0.15) !important;
+        border-color: #4facfe !important;
+        transform: scale(1.02);
+        box-shadow: 0 8px 24px rgba(79, 172, 254, 0.2);
+    }
+    
+    .drop-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 8px;
+        transition: transform 0.3s ease;
+    }
+    
+    .upload-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 80%;
+        margin: 0 auto;
+    }
+    
+    .upload-subtext {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.875rem;
+        margin-top: 4px;
+    }
+
+    /* 壁纸操作按钮 */
+    .wallpaper-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .wallpaper-actions .btn {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .wallpaper-actions .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .wallpaper-actions .btn-download {
+        background: linear-gradient(135deg, rgba(79, 172, 254, 0.4) 0%, rgba(0, 242, 254, 0.4) 100%);
+        border: 1px solid rgba(79, 172, 254, 0.3);
+    }
+    
+    .wallpaper-actions .btn-reset {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* 默认壁纸区域 */
+    .default-wallpapers {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .wallpaper-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .wallpaper-item {
+        cursor: pointer;
+        border-radius: 6px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+    }
+
+    .wallpaper-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .wallpaper-item img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .wallpaper-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0,0,0,0.7);
+        color: white;
+        padding: 5px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    /* 设置项样式 */
+    .setting-item {
+        margin-bottom: 20px;
+    }
+    
+    .setting-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .setting-control {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .setting-control.color-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+    
+    /* 颜色选择器样式 */
+    .color-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .color-picker {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+    }
+    
+    .color-picker::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    
+    .color-picker::-webkit-color-swatch {
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+    
+    /* 滑块样式 */
+    .opacity-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.2);
+        outline: none;
+    }
+    
+    .opacity-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #4facfe;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .opacity-value {
+        min-width: 48px;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: monospace;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+
+    /* 自定义模态框样式 */
+    .custom-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 9990;
+        display: none;
+    }
+    
+    .custom-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9991;
+    }
+    
+    .custom-modal-dialog {
+        background: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 800px;
+        margin: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+    
+    .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .custom-modal-title {
+        margin: 0;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .custom-close-button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    
+    .custom-close-button:hover {
+        color: #fff;
+    }
+    
+    .custom-modal-body {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-height: calc(90vh - 120px); /* 预留头部和底部的空间 */
+        overflow: hidden;
+    }
+    
+    .wallpaper-preview {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+    
+    .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+        .sidebar {
+            position: absolute;
+            left: -240px;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .sidebar.show {
+            transform: translateX(240px);
+        }
+        
+        .mobile-menu-btn {
+            display: block;
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            z-index: 101;
+            background: rgba(79, 172, 254, 0.3);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .mobile-menu-btn.hide {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-20px);
+        }
+        
+        .sidebar-mask {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+        
+        .sidebar-mask.show {
+            display: block;
+        }
+    }
+
+    /* 隐藏桌面端菜单按钮 */
+    @media (min-width: 769px) {
+        .mobile-menu-btn {
+            display: none;
+        }
+        
+        .sidebar-mask {
+            display: none;
+        }
+    }
+</style>
+
+<body>
+    <!-- 使用框架主题组件 -->
+    <div th:replace="~{components/com-frame-theme :: frame-theme(~{::content})}">
+        <!-- 主要内容 -->
+        <div th:fragment="content" class="customize-container">
+            <div id="app" class="customize-layout">
+                <!-- 移动端菜单按钮 -->
+                <button class="mobile-menu-btn" @click="toggleMobileMenu">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <!-- 遮罩层 -->
+                <div class="sidebar-mask" :class="{ show: isMobileMenuOpen }" @click="toggleMobileMenu"></div>
+                
+                <!-- 左侧菜单栏 -->
+                <div class="sidebar" :class="{ show: isMobileMenuOpen }">
+                    <div class="menu-items">
+                        <div class="menu-item" 
+                             v-for="item in menuItems" 
+                             :key="item.id"
+                             :class="{ active: currentSection === item.id }"
+                             @click="selectSection(item.id)">
+                            <i :class="item.icon"></i>
+                            <div class="menu-item-title">{{ item.name }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主内容区域 -->
+                <div class="main-content">
+                    <div class="header">
+                        <span class="header-title">{{ getCurrentSectionTitle }}</span>
+                    </div>
+                    
+                    <div class="settings-wrapper">
+                        <!-- 壁纸设置内容 -->
+                        <div v-if="currentSection === 'wallpaper'">
+                            <div class="upload-zone" @click="triggerFileInput" @drop.prevent="handleFileDrop" 
+                                 @dragover.prevent @dragenter.prevent="highlightDropZone" @dragleave.prevent="unhighlightDropZone"
+                                 :class="{ 'dragover': isDropHighlighted }">
+                                <input type="file" ref="fileInput" @change="handleFileSelect" style="display: none" accept="image/*">
+                                <div class="drop-content">
+                                    <i class="bi bi-cloud-upload upload-icon"></i>
+                                    <div>
+                                        <p class="upload-text">点击或拖放图片到此处上传壁纸</p>
+                                        <p class="upload-subtext">支持 JPG、PNG 格式，最大 5MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wallpaper-actions">
+                                <button class="btn btn-download" @click="downloadWallpaper">
+                                    <i class="bi bi-download"></i>
+                                    <span>下载当前壁纸</span>
+                                </button>
+                                <button class="btn btn-reset" @click="resetWallpaper">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    <span>重置为默认壁纸</span>
+                                </button>
+                            </div>
+                            
+                            <!-- 添加默认壁纸选择区域 -->
+                            <div class="default-wallpapers" v-if="defaultWallpapers.length > 0">
+                                <h4>默认壁纸</h4>
+                                <div class="wallpaper-grid">
+                                    <div class="wallpaper-item" v-for="(wallpaper, index) in defaultWallpapers" :key="index" 
+                                         @click="selectDefaultWallpaper(wallpaper)">
+                                        <img :src="wallpaper.path" :alt="wallpaper.name">
+                                        <div class="wallpaper-name">{{wallpaper.name}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 颜色设置内容 -->
+                        <div v-if="currentSection === 'color'">
+                            <div class="setting-item">
+                                <label class="setting-label">主题色调</label>
+                                <div class="setting-control">
+                                    <div class="color-item">
+                                        <input type="color" class="color-picker" value="#4facfe">
+                                        <span class="color-value">#4facfe</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">界面颜色</label>
+                                <div class="setting-control color-group">
+                                    <div class="color-item">
+                                        <input type="color" class="color-picker" value="#000000">
+                                        <span class="color-label">菜单栏背景</span>
+                                    </div>
+                                    <div class="color-item">
+                                        <input type="color" class="color-picker" value="#000000">
+                                        <span class="color-label">主要区域背景</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 透明度设置内容 -->
+                        <div v-if="currentSection === 'opacity'">
+                            <div class="setting-group">
+                                <div class="setting-item">
+                                    <label class="setting-label">菜单栏透明度</label>
+                                    <div class="setting-control">
+                                        <input type="range" min="0" max="100" value="75" class="opacity-slider">
+                                        <span class="opacity-value">75%</span>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label class="setting-label">主要区域透明度</label>
+                                    <div class="setting-control">
+                                        <input type="range" min="0" max="100" value="85" class="opacity-slider">
+                                        <span class="opacity-value">85%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 自定义壁纸预览模态框 -->
+                <div class="custom-modal-backdrop" id="customModalBackdrop"></div>
+                <div class="custom-modal" id="customWallpaperModal">
+                    <div class="custom-modal-dialog">
+                        <div class="custom-modal-header">
+                            <h5 class="custom-modal-title">预览壁纸</h5>
+                            <button type="button" class="custom-close-button" @click="hideWallpaperModal">&times;</button>
+                        </div>
+                        <div class="custom-modal-body">
+                            <img ref="modalPreviewImage" class="wallpaper-preview" :src="previewImageSrc" alt="壁纸预览">
+                        </div>
+                        <div class="custom-modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="hideWallpaperModal">取消</button>
+                            <button type="button" class="btn btn-primary" @click="applyWallpaper" :disabled="isApplying">
+                                {{ isApplying ? '应用中...' : '应用壁纸' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    currentSection: 'wallpaper',
+                    isMobileMenuOpen: false,
+                    menuItems: [
+                        {
+                            id: 'wallpaper',
+                            name: '壁纸设定',
+                            icon: 'bi bi-image'
+                        },
+                        {
+                            id: 'color',
+                            name: '颜色设定',
+                            icon: 'bi bi-palette'
+                        },
+                        {
+                            id: 'opacity',
+                            name: '透明度设置',
+                            icon: 'bi bi-layers'
+                        }
+                    ],
+                    // 壁纸相关数据
+                    isDropHighlighted: false,
+                    selectedFile: null,
+                    previewImageSrc: '',
+                    isUploading: false,
+                    isApplying: false,
+                    defaultWallpapers: [],
+                }
+            },
+            computed: {
+                getCurrentSectionTitle() {
+                    const section = this.menuItems.find(item => item.id === this.currentSection);
+                    return section ? section.name : '';
+                }
+            },
+            methods: {
+                selectSection(sectionId) {
+                    this.currentSection = sectionId;
+                    if (window.innerWidth <= 768) {
+                        this.isMobileMenuOpen = false;
+                    }
+                },
+                toggleMobileMenu() {
+                    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+                },
+                
+                // 壁纸相关方法
+                triggerFileInput() {
+                    this.$refs.fileInput.click();
+                },
+                handleFileDrop(event) {
+                    this.unhighlightDropZone();
+                    const files = event.dataTransfer.files;
+                    this.handleFiles(files);
+                },
+                handleFileSelect(event) {
+                    const files = event.target.files;
+                    this.handleFiles(files);
+                },
+                handleFiles(files) {
+                    if (!files || files.length === 0) return;
+                    
+                    const file = files[0];
+                    // 检查文件类型
+                    if (!file.type.match('image.*')) {
+                        this.showNotification('请选择图片文件', 'error');
+                        return;
+                    }
+                    
+                    // 检查文件大小 (5MB限制)
+                    if (file.size > 5 * 1024 * 1024) {
+                        this.showNotification('图片大小不能超过5MB', 'error');
+                        return;
+                    }
+                    
+                    this.selectedFile = file;
+                    
+                    // 创建预览
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.previewImageSrc = e.target.result;
+                        this.showWallpaperModal();
+                    };
+                    reader.readAsDataURL(file);
+                },
+                showWallpaperModal() {
+                    const backdrop = document.getElementById('customModalBackdrop');
+                    const modal = document.getElementById('customWallpaperModal');
+                    
+                    // 直接显示元素，无动画
+                    backdrop.style.display = 'block';
+                    modal.style.display = 'flex';
+                    
+                    // 阻止滚动
+                    document.body.style.overflow = 'hidden';
+                },
+                hideWallpaperModal() {
+                    const backdrop = document.getElementById('customModalBackdrop');
+                    const modal = document.getElementById('customWallpaperModal');
+                    
+                    // 直接隐藏元素，无动画
+                    backdrop.style.display = 'none';
+                    modal.style.display = 'none';
+                    
+                    // 如果有文件输入，清空它
+                    if (this.$refs.fileInput) {
+                        this.$refs.fileInput.value = '';
+                    }
+                    
+                    // 清空预览图
+                    this.previewImageSrc = '';
+                    this.isApplying = false;
+                    
+                    // 恢复滚动
+                    document.body.style.overflow = '';
+                },
+                applyWallpaper() {
+                    if (!this.previewImageSrc) {
+                        this.showNotification('请先选择图片', 'error');
+                        return;
+                    }
+                    
+                    this.isApplying = true;
+                    
+                    // 判断是否是系统默认壁纸
+                    if (this.previewImageSrc.startsWith('/img/')) {
+                        // 默认壁纸的路径格式是 /img/wallpaperX.jpeg
+                        const wallpaperKey = this.previewImageSrc.split('/').pop();
+                        
+                        this.requestWithNotification({
+                            url: '/customize/setDefaultWallpaper',
+                            method: 'post',
+                            data: { wallpaperKey },
+                            successMsg: '默认壁纸设置成功',
+                            errorMsg: '壁纸设置失败',
+                            successCallback: () => {
+                                this.hideWallpaperModal();
+                                setTimeout(() => location.reload(), 1000);
+                            }
+                        });
+                    } else {
+                        // 自定义上传的壁纸
+                        const requestData = {
+                            imageData: this.previewImageSrc
+                        };
+                        
+                        this.requestWithNotification({
+                            url: '/customize/setWallpaper',
+                            method: 'post',
+                            data: requestData,
+                            successMsg: '壁纸设置成功',
+                            errorMsg: '壁纸设置失败',
+                            successCallback: () => {
+                                this.hideWallpaperModal();
+                                setTimeout(() => location.reload(), 1000);
+                            }
+                        });
+                    }
+                },
+                async downloadWallpaper() {
+                    try {
+                        // 先检查是否是默认壁纸
+                        const response = await axios.get('/customize/wallpaper?check=true');
+                        if (response.headers.Location === '/img/bg1.jpg') {
+                            this.showNotification('当前使用的是默认壁纸，无需下载', 'warning');
+                            return;
+                        }
+                        
+                        // 下载壁纸
+                        const link = document.createElement('a');
+                        link.href = '/customize/wallpaper';
+                        link.download = 'wallpaper.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } catch (error) {
+                        this.showNotification('获取壁纸信息失败', 'danger');
+                    }
+                },
+                resetWallpaper() {
+                    if (!confirm('确定要恢复默认壁纸吗？')) return;
+                    
+                    this.requestWithNotification({
+                        url: '/customize/resetWallpaper',
+                        method: 'post',
+                        successMsg: '已恢复默认壁纸',
+                        errorMsg: '操作失败',
+                        successCallback: () => setTimeout(() => location.reload(), 1000)
+                    });
+                },
+                async requestWithNotification({ url, method = 'post', data = {}, successMsg, errorMsg, successCallback }) {
+                    try {
+                        const response = await axios({
+                            url,
+                            method,
+                            data
+                        });
+                        
+                        if (response.data.code === 0) {
+                            this.showNotification(successMsg, 'success');
+                            if (successCallback) successCallback();
+                        } else {
+                            this.showNotification(`${errorMsg}：${response.data.message}`, 'danger');
+                        }
+                    } catch (error) {
+                        this.showNotification(`${errorMsg}：${error.message || '服务器错误'}`, 'danger');
+                        console.error('Error:', error);
+                    } finally {
+                        this.isApplying = false;
+                    }
+                },
+                showNotification(message, type) {
+                    if (typeof showToast === 'function') {
+                        showToast(type, message);
+                        return;
+                    }
+                    
+                    if (type === 'error' || type === 'danger') {
+                        alert('错误: ' + message);
+                    } else {
+                        alert(message);
+                    }
+                },
+                async loadDefaultWallpapers() {
+                    try {
+                        const response = await axios.get('/customize/wallpaper/defaults');
+                        
+                        if (response.data && response.data.code === 0) {
+                            this.defaultWallpapers = response.data.data || [];
+                        } else {
+                            const errorMsg = response.data ? response.data.message : '未知错误';
+                            this.showNotification('获取默认壁纸失败: ' + errorMsg, 'error');
+                        }
+                    } catch (error) {
+                        const errorMsg = error.response?.data?.message || error.message || '服务器错误';
+                        this.showNotification('获取默认壁纸失败: ' + errorMsg, 'error');
+                    }
+                },
+                selectDefaultWallpaper(wallpaper) {
+                    this.previewImageSrc = wallpaper.path;
+                    this.showWallpaperModal();
+                },
+                highlightDropZone() {
+                    this.isDropHighlighted = true;
+                },
+                unhighlightDropZone() {
+                    this.isDropHighlighted = false;
+                }
+            },
+            mounted() {
+                // 监听窗口大小变化
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth > 768) {
+                        this.isMobileMenuOpen = false;
+                    }
+                });
+                
+                // 初始化自定义模态框的键盘事件监听
+                this.$nextTick(() => {
+                    // 处理ESC键关闭模态框
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            const modal = document.getElementById('customWallpaperModal');
+                            if (modal && modal.style.display === 'flex') {
+                                this.hideWallpaperModal();
+                            }
+                        }
+                    });
+                    
+                    // 点击模态框背景关闭
+                    document.getElementById('customModalBackdrop').addEventListener('click', () => {
+                        this.hideWallpaperModal();
+                    });
+                    
+                    // 点击模态框外部区域关闭
+                    document.getElementById('customWallpaperModal').addEventListener('click', (e) => {
+                        // 只有当点击的是模态框自身（而非其子元素）时才关闭
+                        if (e.target === e.currentTarget) {
+                            this.hideWallpaperModal();
+                        }
+                    });
+                });
+                
+                // 加载默认壁纸
+                this.loadDefaultWallpapers();
+            }
+        });
+
+        // 挂载Vue应用
+        app.mount('#app');
+    </script>
+</body>
+</html> 

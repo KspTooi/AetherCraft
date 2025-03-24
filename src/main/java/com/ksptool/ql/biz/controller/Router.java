@@ -35,14 +35,28 @@ public class Router {
 
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
-
-        //当前登录用户无效则进入登录页
-        if(authService.verifyUser(hsr) == null){
-            return "redirect:/login";
+        // 如果启用向导模式，跳转到向导
+        if(installWizardService.hasInstallWizardMode()){
+            return "redirect:/install-wizard/";
         }
 
-        //跳转到"应用中心"
-        return "redirect:/appCenter";
+        // 当前登录用户有效，跳转到应用中心
+        if(authService.verifyUser(hsr) != null){
+            return "redirect:/model/chat/view";
+        }
+        
+        // 未登录用户跳转到欢迎页
+        return "redirect:/welcome";
+    }
+
+    @GetMapping("/welcome")
+    public ModelAndView welcome() {
+        // 获取是否允许用户注册的配置
+        String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
+        
+        ModelAndView mav = new ModelAndView("welcome");
+        mav.addObject("allowRegister", StringUtils.isNotBlank(allowRegister) && "true".equals(allowRegister));
+        return mav;
     }
 
     @GetMapping("/login")
@@ -54,7 +68,7 @@ public class Router {
         }
 
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/appCenter");
+            return new ModelAndView("redirect:/model/chat/view");
         }
 
         String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
@@ -70,7 +84,7 @@ public class Router {
     public ModelAndView register(HttpServletRequest hsr, RedirectAttributes ra) {
 
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/appCenter");
+            return new ModelAndView("redirect:/model/chat/view");
         }
         String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
 
@@ -127,7 +141,7 @@ public class Router {
                 userConfigService.setValue("path.referer.dashboard", path, AuthService.getCurrentUserId());
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                userConfigService.setValue("path.referer.dashboard", "/ssr/appCenter", AuthService.getCurrentUserId());
+                userConfigService.setValue("path.referer.dashboard", "/model/chat/view", AuthService.getCurrentUserId());
             }
         }
         
@@ -136,7 +150,7 @@ public class Router {
 
     @GetMapping("/leaveDashboard")
     public String leaveDashboard() {
-        String referer = userConfigService.get("path.referer.dashboard", "/ssr/appCenter");
+        String referer = userConfigService.get("path.referer.dashboard", "/model/chat/view");
         return "redirect:" + referer;
     }
     

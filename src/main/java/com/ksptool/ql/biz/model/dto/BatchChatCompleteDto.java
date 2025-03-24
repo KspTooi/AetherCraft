@@ -18,6 +18,9 @@ public class BatchChatCompleteDto {
     private String message;
 
     @NotNull
-    private Integer queryKind; //0:发送消息 1:查询响应流 2:终止AI响应
+    private Integer queryKind; //0:发送消息 1:查询响应流 2:终止AI响应 3:重新生成AI最后一条回复
+
+    //最后一条消息的消息记录 从这条记录处开始生成(只能是用户消息) 将会清除之后的所有对话
+    private Long regenerateRootHistoryId;
 
 } 

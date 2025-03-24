@@ -174,7 +174,7 @@ public class PanelModelConfigService {
         userConfigService.setValue(baseKey + "maxOutputTokens", String.valueOf(dto.getMaxOutputTokens()));
 
         // 保存用户代理配置
-        userConfigService.setValue("model.proxy.config", null);
+        userConfigService.setValue("model.proxy.config", (String) null);
 
         if(StringUtils.isNotBlank(dto.getUserProxyConfig())){
             userConfigService.setValue("model.proxy.config", dto.getUserProxyConfig());

@@ -17,7 +17,10 @@ public interface ModelUserRoleRepository extends JpaRepository<ModelUserRolePo, 
      * 将所有角色设置为非默认
      */
     @Modifying
-    @Query("UPDATE ModelUserRolePo r SET r.isDefault = 0")
+    @Query("""
+            UPDATE ModelUserRolePo r 
+            SET r.isDefault = 0
+            """)
     void updateAllToNonDefault();
     
     /**
@@ -33,7 +36,12 @@ public interface ModelUserRoleRepository extends JpaRepository<ModelUserRolePo, 
      * @param id 排除的角色ID
      * @return 角色对象
      */
-    @Query("SELECT r FROM ModelUserRolePo r WHERE r.name = :name AND r.id != :id")
+    @Query("""
+            SELECT r 
+            FROM ModelUserRolePo r 
+            WHERE r.name = :name 
+            AND r.id != :id
+            """)
     ModelUserRolePo findByNameAndIdNot(@Param("name") String name, @Param("id") Long id);
     
     /**

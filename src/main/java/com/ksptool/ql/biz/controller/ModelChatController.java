@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
@@ -10,10 +12,8 @@ import com.ksptool.ql.biz.model.dto.RecoverChatDto;
 import com.ksptool.ql.biz.model.dto.EditThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
-import com.ksptool.ql.biz.model.vo.ChatCompleteVo;
-import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
-import com.ksptool.ql.biz.model.vo.RecoverChatVo;
-import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
+import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
+import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SseResult;
@@ -43,7 +43,6 @@ public class ModelChatController {
     
     @Autowired
     private ModelChatService modelChatService;
-
     @Autowired
     private UserConfigService userConfigService;
 
@@ -63,6 +62,13 @@ public class ModelChatController {
         
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
+
+        String lastThread = userConfigService.get(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+
+        if(StringUtils.isNotBlank(lastThread)){
+            modelAndView.addObject("lastThread", lastThread);
+        }
+
         return modelAndView;
     }
 
@@ -131,6 +137,11 @@ public class ModelChatController {
                 modelChatService.chatCompleteTerminateBatch(dto);
                 return Result.success("AI响应已终止", null);
             }
+
+            //处理重新生成
+            if(dto.getQueryKind() == 3) {
+                return Result.success(modelChatService.chatCompleteRegenerateBatch(dto));
+            }
             
             // 默认情况
             return Result.error("无效的查询类型");
@@ -162,7 +173,16 @@ public class ModelChatController {
     @PostMapping("/removeThread")
     public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
+
             modelChatService.removeThread(dto.getThreadId());
+
+            //如移除的角色是用户最后选择的那一个Thread 需清空用户保存的配置
+            Long userLastSelect = userConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
+
+            if(userLastSelect.equals(dto.getThreadId())){
+                userConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+            }
+
             return Result.success("会话删除成功");
         } catch (BizException e) {
             return Result.error(e);
@@ -185,6 +205,21 @@ public class ModelChatController {
     }
 
     /**
+     * 编辑历史消息
+     * @param dto 编辑历史消息请求参数
+     * @return 编辑结果
+     */
+    @PostMapping("/editHistory")
+    public Result<String> editHistory(@Valid @RequestBody EditHistoryDto dto) {
+        try {
+            modelChatService.editHistory(dto);
+            return Result.success("历史消息已编辑");
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
+
+    /**
      * 获取当前用户的会话列表
      * @return 会话列表
      */
@@ -192,6 +227,20 @@ public class ModelChatController {
     public Result<List<ThreadListItemVo>> getThreadList() {
         try {
             return Result.success(modelChatService.getThreadList());
+        } catch (BizException e) {
+            return Result.error(e);
+        }
+    }
+
+    /**
+     * 创建空会话
+     * @param dto 创建空会话请求参数
+     * @return 新创建的会话ID
+     */
+    @PostMapping("/createEmptyThread")
+    public Result<CreateEmptyThreadVo> createEmptyThread(@Valid @RequestBody CreateEmptyThreadDto dto) {
+        try {
+            return Result.success(modelChatService.createEmptyThread(dto));
         } catch (BizException e) {
             return Result.error(e);
         }

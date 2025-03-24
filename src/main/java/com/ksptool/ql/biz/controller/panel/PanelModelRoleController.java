@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
+import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +41,8 @@ public class PanelModelRoleController {
     
     @Autowired
     private UserFileService userFileService;
+    @Autowired
+    private UserConfigService userConfigService;
 
     /**
      * 获取模型角色列表视图
@@ -119,6 +122,15 @@ public class PanelModelRoleController {
             // 删除角色
             panelModelRoleService.removeModelRole(id);
             redirectAttributes.addFlashAttribute("vo", Result.success("角色删除成功", null));
+
+            //如移除的角色是用户最后选择的那一个角色 需清空用户保存的配置
+            Long userLastSelect = userConfigService.getLong(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(),-1L);
+
+            if(userLastSelect.equals(id)){
+                userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+                userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
+            }
+
         } catch (Exception e) {
             // 设置业务异常消息
             redirectAttributes.addFlashAttribute("vo", Result.error(e.getMessage()));

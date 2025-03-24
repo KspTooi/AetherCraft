@@ -21,30 +21,30 @@
         <div class="nav-item" sec:authorize="model:chat:view">
           <a class="nav-link" th:href="@{/model/chat/agent/view}">聊天(AGENT)</a>
         </div>
-        <div class="nav-item" sec:authorize="app:view">
+<!--        <div class="nav-item" sec:authorize="app:view">
           <a class="nav-link" th:href="@{/appCenter}">应用中心</a>
-        </div>
-        <div class="nav-item" sec:authorize="task:mgr:view">
+        </div>-->
+<!--        <div class="nav-item" sec:authorize="task:mgr:view">
           <a class="nav-link" th:href="@{/taskManager}">任务管理器</a>
-        </div>
-        <div class="nav-item" sec:authorize="explorer:view">
+        </div>-->
+<!--        <div class="nav-item" sec:authorize="explorer:view">
           <a class="nav-link" th:href="@{/ssr/fileExplorer}">资源管理器</a>
-        </div>
-        <div class="nav-item" sec:authorize="service:view">
+        </div>-->
+<!--        <div class="nav-item" sec:authorize="service:view">
           <a class="nav-link" th:href="@{/ssr/serviceCenter}">服务</a>
-        </div>
-        <div class="nav-item">
+        </div>-->
+<!--        <div class="nav-item">
           <a class="nav-link" th:href="@{/ssr/demo}">组件展示</a>
-        </div>
+        </div>-->
 <!--         <div class="nav-item">
           <a class="nav-link" th:href="@{/settings}">功能</a>
         </div> -->
         <div class="nav-item" sec:authorize="customize:view">
           <a class="nav-link" th:href="@{/customize/view}">个性化</a>
         </div>
-        <div class="nav-item" sec:authorize="customize:view">
+<!--        <div class="nav-item" sec:authorize="customize:view">
           <a class="nav-link" th:href="@{/ssr/demo}">桌面</a>
-        </div>
+        </div>-->
       </div>
       <div class="nav-right d-flex align-items-center ms-auto">
         <div class="nav-item" sec:authorize="panel:access">

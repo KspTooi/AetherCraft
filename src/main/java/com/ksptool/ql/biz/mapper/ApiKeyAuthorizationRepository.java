@@ -42,10 +42,13 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
      * @param excludeId 排除的授权ID（用于编辑时检查）
      * @return 是否存在
      */
-    @Query("SELECT COUNT(a) > 0 FROM ApiKeyAuthorizationPo a " +
-           "WHERE a.apiKey.id = :apiKeyId " +
-           "AND a.authorizedUserId = :authorizedUserId " +
-           "AND (:excludeId IS NULL OR a.id != :excludeId)")
+    @Query("""
+            SELECT COUNT(a) > 0 
+            FROM ApiKeyAuthorizationPo a 
+            WHERE a.apiKey.id = :apiKeyId 
+            AND a.authorizedUserId = :authorizedUserId 
+            AND (:excludeId IS NULL OR a.id != :excludeId)
+            """)
     boolean existsByApiKeyIdAndAuthorizedUserId(
         @Param("apiKeyId") Long apiKeyId,
         @Param("authorizedUserId") Long authorizedUserId,
@@ -68,7 +71,10 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
      * 删除指定API密钥的所有授权记录
      */
     @Modifying
-    @Query("DELETE FROM ApiKeyAuthorizationPo a WHERE a.apiKey.id = :apiKeyId")
+    @Query("""
+            DELETE FROM ApiKeyAuthorizationPo a 
+            WHERE a.apiKey.id = :apiKeyId
+            """)
     void deleteByApiKeyId(@Param("apiKeyId") Long apiKeyId);
 
     /**

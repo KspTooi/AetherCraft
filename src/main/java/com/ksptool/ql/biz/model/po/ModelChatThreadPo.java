@@ -21,7 +21,7 @@ public class ModelChatThreadPo {
     @Column(nullable = false)
     private Long userId;
     
-    @Comment("会话标题")
+    @Comment("(加密)会话标题")
     @Column(length = 100)
     private String title;
     

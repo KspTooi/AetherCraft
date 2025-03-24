@@ -76,6 +76,44 @@ public class ContentSecurityService {
         po.setRpContent(encrypt(po.getRpContent(), dek));
     }
 
+    public void encryptEntity(ModelChatHistoryPo po) throws BizException {
+        if(po == null) {
+            return;
+        }
+        Long uid = null;
+        if(po.getThread() != null) {
+            uid = po.getThread().getUserId();
+        }
+        if(uid == null) {
+            uid = po.getUserId();
+        }
+        String dek = getPlainUserDek(uid);
+        po.setContent(encrypt(po.getContent(), dek));
+    }
+
+    public void encryptEntity(ModelChatSegmentPo po) throws BizException {
+        if(po == null) {
+            return;
+        }
+        Long uid = null;
+        if(po.getThread() != null) {
+            uid = po.getThread().getUserId();
+        }
+        if(uid == null) {
+            uid = po.getUserId();
+        }
+        String dek = getPlainUserDek(uid);
+        po.setContent(encrypt(po.getContent(), dek));
+    }
+
+    public void encryptEntity(ModelChatThreadPo po) throws BizException {
+        if(po == null) {
+            return;
+        }
+        String dek = getPlainUserDek(po.getUserId());
+        po.setTitle(encrypt(po.getTitle(), dek));
+    }
+
     public void encryptEntity(ModelRpThreadPo po) throws BizException{
         if(po == null) {
             return;

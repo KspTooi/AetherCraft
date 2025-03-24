@@ -123,7 +123,7 @@
     .model-select select:hover {
         background: rgba(255, 255, 255, 0.15);
     }
-    
+
     .model-select select:focus {
         outline: none;
         border-color: rgba(255, 255, 255, 0.3);
@@ -743,7 +743,7 @@
                         <div v-for="thread in threads" 
                              :key="thread.id"
                              @click="loadThread(thread.id)"
-                             :class="['thread-item', { active: thread.id === currentThreadId }]">
+                             :class="['thread-item', { active: String(thread.id) === String(currentThreadId) }]">
                             <div class="thread-content">
                                 <div class="thread-title">{{ thread.title }}</div>
                                 <div class="thread-time">{{ formatTime(thread.updateTime) }}</div>
@@ -813,7 +813,7 @@
                                 </div>
                                 <div class="message-actions">
                                     <template v-if="!message.isEditing">
-                                        <button v-if="index === messages.length - 1" 
+                                        <button v-if="message.role === 'assistant' && index === messages.length - 1" 
                                                 class="message-regenerate-btn" 
                                                 @click="regenerateAIResponse(message)"
                                                 title="重新生成">
@@ -886,10 +886,29 @@
                     currentThreadId: null,
                     isMobileMenuOpen: false,
                     threads: [],
-                    isEditing: false  // 添加编辑状态标记
+                    isEditing: false,
+                    refreshThreadListTimer: null
                 }
             },
             methods: {
+                // 添加节流函数
+                throttle(fn, delay) {
+                    let timer = null;
+                    return function(...args) {
+                        if(timer) {
+                            return;
+                        }
+                        timer = setTimeout(() => {
+                            fn.apply(this, args);
+                            timer = null;
+                        }, delay);
+                    }
+                },
+                
+                // 使用节流包装loadThreadList
+                throttledLoadThreadList: function() {
+                    return this.throttle(this.loadThreadList, 3000).bind(this);
+                },
                 handleKeyPress(event) {
                     if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault();
@@ -923,11 +942,15 @@
                     await this.$nextTick();
                     this.adjustTextareaHeight();
 
-                    // 添加用户消息到列表
-                    this.messages.push({
+                    // 添加用户消息到列表（暂时使用默认名称，稍后会更新）
+                    const tempUserMessage = {
                         role: 'user',
-                        content: userMessage
-                    });
+                        content: userMessage,
+                        name: '用户',
+                        createTime: new Date().toISOString()
+                    };
+                    
+                    this.messages.push(tempUserMessage);
 
                     this.isLoading = true;
                     
@@ -941,8 +964,41 @@
                         });
                         
                         if (response.data.code === 0) {
+                            // 如果后端返回了用户信息，更新临时用户消息
+                            const segment = response.data.data;
+                            if (segment && segment.historyId) {
+                                tempUserMessage.id = segment.historyId;
+                            }
+                            
+                            // 如果后端返回了名称和头像，则更新
+                            if (segment && segment.name) {
+                                tempUserMessage.name = segment.name;
+                            }
+                            if (segment && segment.avatarPath) {
+                                tempUserMessage.avatarPath = segment.avatarPath;
+                            }
+                            
+                            // 触发视图更新以反映用户消息的更新
+                            this.messages = [...this.messages];
+                            
+                            // 创建AI助手的空消息（等待响应）
+                            const assistantMessage = {
+                                role: 'assistant',
+                                content: '正在输入...',
+                                name: 'AI助手',
+                                createTime: new Date().toISOString(),
+                                isTyping: true,
+                                hasReceivedData: false
+                            };
+                            
+                            // 添加到消息列表
+                            this.messages.push(assistantMessage);
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
                             // 开始轮询获取AI响应
-                            await this.pollAIResponse();
+                            await this.pollAIResponse(assistantMessage);
                         } else {
                             showToast("danger", response.data.message || "发送消息失败");
                             this.isLoading = false;
@@ -953,13 +1009,7 @@
                         this.isLoading = false;
                     }
                 },
-                async pollAIResponse() {
-                    let assistantMessage = {
-                        role: 'assistant',
-                        content: '正在思考...'
-                    };
-                    this.messages.push(assistantMessage);
-                    
+                async pollAIResponse(assistantMessage) {
                     while (this.isLoading) {
                         try {
                             const response = await axios.post('/model/chat/completeBatch', {
@@ -977,21 +1027,104 @@
                                 
                                 if (segment.type === 1) {
                                     // 数据片段
-                                    assistantMessage.content = segment.content;
+                                    // 如果是第一个数据片段，清除"正在输入..."文本
+                                    if (!assistantMessage.hasReceivedData) {
+                                        assistantMessage.content = '';
+                                        assistantMessage.hasReceivedData = true;
+                                        assistantMessage.isTyping = false;
+                                    }
+                                    assistantMessage.content += segment.content;
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
+                                    }
+                                    
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
                                     this.scrollToBottom();
                                 } else if (segment.type === 2) {
                                     // 结束片段
-                                    if (segment.content) {
-                                        assistantMessage.content = segment.content;
+                                    // 如果是第一个数据片段，清除"正在输入..."文本
+                                    if (!assistantMessage.hasReceivedData) {
+                                        assistantMessage.content = '';
+                                        assistantMessage.hasReceivedData = true;
+                                        assistantMessage.isTyping = false;
                                     }
+                                    
+                                    if (segment.content) {
+                                        assistantMessage.content += segment.content;
+                                    }
+                                    
+                                    // 更新historyId
+                                    if (segment.historyId) {
+                                        assistantMessage.id = segment.historyId;
+                                    }
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
+                                    }
+                                    
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
                                     this.scrollToBottom();
                                     this.isLoading = false;
+
+                                    // 清除之前的定时器
+                                    if(this.refreshThreadListTimer) {
+                                        clearTimeout(this.refreshThreadListTimer);
+                                    }
+                                    
+                                    // 3秒后刷新会话列表
+                                    this.refreshThreadListTimer = setTimeout(() => {
+                                        this.throttledLoadThreadList()();
+                                    }, 3000);
+                                    
+                                    break;
+                                } else if (segment.type === 10) {
+                                    // 错误片段
+                                    assistantMessage.content = segment.content || "AI响应出错";
+                                    assistantMessage.hasReceivedData = true;
+                                    assistantMessage.isTyping = false;
+                                    
+                                    // 更新名称和头像（如果后端返回了这些信息）
+                                    if (segment.name) {
+                                        assistantMessage.name = segment.name;
+                                    }
+                                    if (segment.avatarPath) {
+                                        assistantMessage.avatarPath = segment.avatarPath;
+                                    }
+                                    
+                                    // 触发视图更新
+                                    this.messages = [...this.messages];
+                                    this.scrollToBottom();
+                                    this.isLoading = false;
+                                    
+                                    // 显示错误提示
+                                    showToast("danger", "生成失败: " + assistantMessage.content);
                                     break;
                                 }
                             }
                         } catch (error) {
                             console.error('获取AI响应错误:', error);
+                            assistantMessage.content = "获取AI响应出错，请重试";
+                            assistantMessage.hasReceivedData = true;
+                            assistantMessage.isTyping = false;
+                            
+                            // 触发视图更新
+                            this.messages = [...this.messages];
+                            this.scrollToBottom();
                             this.isLoading = false;
+                            
+                            // 显示错误提示
+                            showToast("danger", "网络错误，请检查连接");
                             break;
                         }
                         
@@ -1031,9 +1164,9 @@
                 },
                 async createNewThread() {
                     try {
-                        // 创建新会话
-                        const response = await axios.post('/model/chat/recoverChat', {
-                            newThread: true
+                        // 调用创建空会话接口
+                        const response = await axios.post('/model/chat/createEmptyThread', {
+                            model: this.selectedModel
                         });
                         
                         if (response.data.code === 0) {
@@ -1041,8 +1174,11 @@
                             await this.loadThread(response.data.data.threadId);
                             // 刷新会话列表
                             await this.loadThreadList();
+                            
                             // 关闭移动端菜单
                             this.isMobileMenuOpen = false;
+                            
+                            showToast("success", "新会话创建成功");
                         } else {
                             showToast("danger", response.data.message || "创建会话失败");
                         }
@@ -1063,6 +1199,13 @@
                             
                             // 更新当前会话ID
                             this.currentThreadId = threadId;
+                            
+                            // 如果返回了modelCode，更新选中的模型
+                            if (data.modelCode) {
+                                this.$nextTick(() => {
+                                    this.selectedModel = data.modelCode;
+                                });
+                            }
                             
                             // 更新消息列表
                             this.messages = data.messages.map(msg => ({
@@ -1097,6 +1240,11 @@
                         
                         if (response.data.code === 0) {
                             this.threads = response.data.data || [];
+                            
+                            // 如果当前没有选中的会话，且列表为空，重置状态
+                            if (!this.currentThreadId && this.threads.length === 0) {
+                                this.resetChatState();
+                            }
                         } else {
                             showToast("danger", response.data.message || "加载会话列表失败");
                         }
@@ -1138,14 +1286,13 @@
                         });
                         
                         if (response.data.code === 0) {
-                            // 从列表中移除会话
-                            this.threads = this.threads.filter(t => t.id !== threadId);
-                            
-                            // 如果删除的是当前会话，创建新会话
+                            // 如果删除的是当前会话，重置状态
                             if (threadId === this.currentThreadId) {
-                                await this.createNewThread();
+                                this.resetChatState();
                             }
                             
+                            // 刷新会话列表
+                            await this.loadThreadList();
                             showToast("success", "会话已删除");
                         } else {
                             showToast("danger", response.data.message || "删除会话失败");
@@ -1306,11 +1453,36 @@
                         });
                         
                         if (response.data.code === 0) {
-                            // 更新消息内容为"正在重新生成..."
-                            message.content = '正在重新生成...';
+                            // 找到当前AI消息的索引
+                            const currentMsgIndex = this.messages.findIndex(m => m.id === message.id);
                             
-                            // 开始轮询获取新的响应
-                            await this.pollAIResponse();
+                            // 创建新的助手消息对象
+                            const assistantMessage = {
+                                id: message.id,
+                                role: 'assistant',
+                                content: '正在重新生成...',
+                                name: message.name || 'AI助手',
+                                avatarPath: message.avatarPath,
+                                createTime: new Date().toISOString(),
+                                isTyping: true,
+                                hasReceivedData: false
+                            };
+                            
+                            // 仅替换当前AI消息，保留其他所有消息
+                            if (currentMsgIndex !== -1) {
+                                this.messages.splice(currentMsgIndex, 1, assistantMessage);
+                                // 确保Vue能够检测到变化
+                                this.messages = [...this.messages];
+                            } else {
+                                // 如果找不到原消息，则添加到消息列表末尾
+                                this.messages.push(assistantMessage);
+                            }
+                            
+                            // 滚动到底部
+                            this.scrollToBottom();
+                            
+                            // 开始轮询获取AI响应
+                            await this.pollAIResponse(assistantMessage);
                         } else {
                             // 重新生成失败，显示错误信息
                             showToast("danger", response.data.message || '重新生成失败');
@@ -1321,18 +1493,38 @@
                         showToast("danger", '重新生成失败: ' + (error.response?.data?.message || error.message));
                         this.isLoading = false;
                     }
+                },
+                // 重置聊天状态
+                resetChatState() {
+                    this.currentThreadId = null;
+                    this.messages = [];
+                    this.messageInput = '';
+                    this.isLoading = false;
                 }
             },
-            mounted() {
+            async mounted() {
                 this.adjustTextareaHeight();
                 
                 // 加载会话列表
-                this.loadThreadList().then(async () => {
-                    // 如果有会话，加载最近的会话
-                    if (this.threads.length > 0) {
-                        await this.loadThread(this.threads[0].id);
-                    }
-                });
+                await this.loadThreadList();
+                
+                // 检查是否有上次使用的会话ID
+                const lastThreadId = '[[${lastThread}]]';
+
+                if (lastThreadId) {
+                    // 加载上次使用的会话
+                    await this.loadThread(lastThreadId);
+                    return;
+                }
+                
+                // 没有上次使用的会话，重置状态
+                this.resetChatState();
+            },
+            beforeUnmount() {
+                // 组件销毁前清理定时器
+                if(this.refreshThreadListTimer) {
+                    clearTimeout(this.refreshThreadListTimer);
+                }
             }
         });
 
