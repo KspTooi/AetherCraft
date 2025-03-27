@@ -259,6 +259,9 @@ public class ModelRpService {
             throw new BizException("模型角色信息不存在");
         }
 
+        // 先获取全部历史记录
+        List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(threadCt.getId());
+
         Long userHistoryId = null;
 
         if(dto.getQueryKind() == 0){
@@ -310,8 +313,6 @@ public class ModelRpService {
         param.setModelCode(dto.getModel());
         param.setSystemPrompt(finalPrompt);
 
-        // 获取全部历史记录并转换为ModelChatParamHistory
-        List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(threadCt.getId());
 
         List<ModelChatParamHistory> paramHistories = new ArrayList<>();
         param.setHistories(paramHistories);

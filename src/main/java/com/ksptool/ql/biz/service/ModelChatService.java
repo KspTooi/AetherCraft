@@ -211,6 +211,9 @@ public class ModelChatService {
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
+            // 先获取全部消息历史
+            List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
+
             // 处理重新生成逻辑
             Long userHistoryId = null;
 
@@ -278,8 +281,6 @@ public class ModelChatService {
             thread.setModelCode(modelEnum.getCode());
             threadRepository.save(thread);
 
-            //获取全部消息历史
-            List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
             modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
             //解密记录内容
