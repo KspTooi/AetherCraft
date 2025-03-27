@@ -276,11 +276,15 @@ public class ModelRpService {
         }
 
         // 先获取全部历史记录
-        List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(threadCt.getId());
+        List<ModelRpHistoryPo> histories = new ArrayList<>();
 
         Long userHistoryId = null;
 
         if(dto.getQueryKind() == 0){
+
+            //获取用户之前的加密聊天记录
+            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
+
             //创建加密的用户的历史消息
             ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
             userHistoryId = userHistoryCt.getId();
@@ -303,6 +307,9 @@ public class ModelRpService {
             // 使用根消息的内容作为当前要发送的消息
             dto.setMessage(css.decryptForCurUser(rootHistory.getRawContent()));
             userHistoryId = rootHistory.getId();
+
+            //获取用户加密聊天记录
+            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
         }
 
         //创建主Prompt
