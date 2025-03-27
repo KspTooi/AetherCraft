@@ -690,7 +690,7 @@ public class ModelRpService {
         example.orderByDesc("updateTime");
         
         // 执行查询，查询指定modelRoleId的记录
-        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get());
+        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get(),example.getSort());
 
         //解密全部会话
         css.processList(threads,false);
