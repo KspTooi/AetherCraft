@@ -415,7 +415,6 @@ public class PanelApiKeyService {
         Example<ApiKeyPo> example = Example.of(probe, matcher);
         List<ApiKeyPo> ownedKeys = apiKeyRepository.findAll(example);
 
-
         if (!ownedKeys.isEmpty()) {
             for (ApiKeyPo key : ownedKeys) {
                 AvailableApiKeyVo vo = new AvailableApiKeyVo();
