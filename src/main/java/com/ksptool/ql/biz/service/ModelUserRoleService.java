@@ -138,7 +138,7 @@ public class ModelUserRoleService {
 
         //用户将当前更新的角色设为了默认
         if(dto.getIsDefault() == 1){
-            rep.updateAllToNonDefault();
+            rep.updateAllToNonDefault(currentUserId);
             // 清除实体管理器缓存，确保后续操作使用最新的数据库状态
             entityManager.clear();
         }

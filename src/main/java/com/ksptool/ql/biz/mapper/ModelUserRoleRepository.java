@@ -14,14 +14,15 @@ import org.springframework.stereotype.Repository;
 public interface ModelUserRoleRepository extends JpaRepository<ModelUserRolePo, Long> {
     
     /**
-     * 将所有角色设置为非默认
+     * 将该用户下的所有用户角色设置为非默认
      */
     @Modifying
     @Query("""
-            UPDATE ModelUserRolePo r 
+            UPDATE ModelUserRolePo r
             SET r.isDefault = 0
+            WHERE r.userId = :userId
             """)
-    void updateAllToNonDefault();
+    void updateAllToNonDefault(@Param("userId") Long userId);
     
     /**
      * 根据角色名称查询角色
