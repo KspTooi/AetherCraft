@@ -55,6 +55,6 @@ public class ModelChatThreadPo {
     
     @PreUpdate
     protected void onUpdate() {
-        updateTime = new Date();
+        //updateTime = new Date();
     }
 } 

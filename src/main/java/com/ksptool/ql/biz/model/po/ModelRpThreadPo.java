@@ -73,6 +73,6 @@ public class ModelRpThreadPo {
     
     @PreUpdate
     protected void onUpdate() {
-        updateTime = new Date();
+        //updateTime = new Date();
     }
 } 
