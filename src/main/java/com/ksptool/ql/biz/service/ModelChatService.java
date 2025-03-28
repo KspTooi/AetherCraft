@@ -927,19 +927,25 @@ public class ModelChatService {
                     css.encryptEntity(endSegment);
                     segmentRepository.save(endSegment);
 
+                    // 清理会话状态 解锁会话
+                    threadToContextIdMap.remove(threadId);
+
                     if (modelEnum != null) {
 
-                        // 尝试生成会话标题
-                        try {
-                            generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
-                        } catch (Exception e) {
-                            log.error("生成会话标题失败", e);
-                            // 生成标题失败不影响主流程
-                        }
+                        //异步生成会话标题
+                        Thread.ofVirtual().start(()->{
+
+                            try {
+                                generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
+                            } catch (Exception e) {
+                                log.error("生成会话标题失败", e);
+                                // 生成标题失败不影响主流程
+                            }
+
+                        });
+
                     }
 
-                    // 清理会话状态
-                    threadToContextIdMap.remove(threadId);
                     return;
                 }
 
