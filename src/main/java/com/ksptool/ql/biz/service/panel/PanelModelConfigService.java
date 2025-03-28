@@ -108,7 +108,7 @@ public class PanelModelConfigService {
         
         // 获取最大输出长度，默认800
         String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
-        config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800);
+        config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 4096);
         
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
         config.setApiKeys(panelApiKeyService.getCurrentUserAvailableApiKey(modelEnum.getSeries()));

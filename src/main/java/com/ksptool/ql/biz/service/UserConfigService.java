@@ -211,7 +211,7 @@ public class UserConfigService {
         double temperature = getDouble(temperatureK.execute(), 0.7,uid);
         double topP = getDouble(topPK.execute(), 1.0,uid);
         int topK = getInt(topKK.execute(), 40,uid);
-        int maxOutputTokens = getInt(maxOutputTokensK.execute(), 800,uid);
+        int maxOutputTokens = getInt(maxOutputTokensK.execute(), 4096,uid);
         
         // 设置参数到ModelChatParam对象
         param.setTemperature(temperature);
