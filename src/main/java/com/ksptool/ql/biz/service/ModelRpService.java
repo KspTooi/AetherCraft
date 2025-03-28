@@ -275,9 +275,16 @@ public class ModelRpService {
             throw new BizException("模型角色信息不存在");
         }
 
+        // 先获取全部历史记录
+        List<ModelRpHistoryPo> histories = new ArrayList<>();
+
         Long userHistoryId = null;
 
         if(dto.getQueryKind() == 0){
+
+            //获取用户之前的加密聊天记录
+            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
+
             //创建加密的用户的历史消息
             ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
             userHistoryId = userHistoryCt.getId();
@@ -300,6 +307,9 @@ public class ModelRpService {
             // 使用根消息的内容作为当前要发送的消息
             dto.setMessage(css.decryptForCurUser(rootHistory.getRawContent()));
             userHistoryId = rootHistory.getId();
+
+            //获取用户加密聊天记录
+            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
         }
 
         //创建主Prompt
@@ -326,8 +336,6 @@ public class ModelRpService {
         param.setModelCode(dto.getModel());
         param.setSystemPrompt(finalPrompt);
 
-        // 获取全部历史记录并转换为ModelChatParamHistory
-        List<ModelRpHistoryPo> histories = historyRepository.findByThreadIdOrderBySequence(threadCt.getId());
 
         List<ModelChatParamHistory> paramHistories = new ArrayList<>();
         param.setHistories(paramHistories);
@@ -689,7 +697,7 @@ public class ModelRpService {
         example.orderByDesc("updateTime");
         
         // 执行查询，查询指定modelRoleId的记录
-        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get());
+        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get(),example.getSort());
 
         //解密全部会话
         css.processList(threads,false);

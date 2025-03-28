@@ -211,11 +211,18 @@ public class ModelChatService {
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
+            // 先获取全部消息历史
+            List<ModelChatHistoryPo> historyPos = new ArrayList<>();
+
             // 处理重新生成逻辑
             Long userHistoryId = null;
 
             // 保存用户消息
             if(dto.getQueryKind() == 0){
+
+                //获取用户加密聊天记录
+                historyPos.addAll(historyRepository.getByThreadId(thread.getId()));
+
                 ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
                 userHistoryId = userHistory.getId();
             }
@@ -241,6 +248,9 @@ public class ModelChatService {
                 // 使用根消息的ID作为当前用户消息ID
                 userHistoryId = rootHistory.getId();
                 thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
+
+                //获取用户加密聊天记录
+                historyPos.addAll(historyRepository.getByThreadId(thread.getId()));
             }
 
             // 清理之前的片段（如果有）
@@ -278,8 +288,6 @@ public class ModelChatService {
             thread.setModelCode(modelEnum.getCode());
             threadRepository.save(thread);
 
-            //获取全部消息历史
-            List<ModelChatHistoryPo> historyPos = historyRepository.getByThreadId(thread.getId());
             modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
             //解密记录内容
