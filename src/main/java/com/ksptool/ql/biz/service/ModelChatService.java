@@ -251,6 +251,13 @@ public class ModelChatService {
 
                 //获取用户加密聊天记录
                 historyPos.addAll(historyRepository.getByThreadId(thread.getId()));
+
+                //需要移除最后一条消息(防止历史记录中的消息与当前要发送的消息出现重复)
+                if(!historyPos.isEmpty()){
+                    if(historyPos.getLast().getRole() == 0){
+                        historyPos.removeLast();
+                    }
+                }
             }
 
             // 清理之前的片段（如果有）

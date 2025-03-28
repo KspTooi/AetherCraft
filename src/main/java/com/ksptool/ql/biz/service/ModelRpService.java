@@ -276,14 +276,14 @@ public class ModelRpService {
         }
 
         // 先获取全部历史记录
-        List<ModelRpHistoryPo> histories = new ArrayList<>();
+        List<ModelRpHistoryPo> historyPos = new ArrayList<>();
 
         Long userHistoryId = null;
 
         if(dto.getQueryKind() == 0){
 
             //获取用户之前的加密聊天记录
-            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
+            historyPos.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
 
             //创建加密的用户的历史消息
             ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
@@ -309,7 +309,15 @@ public class ModelRpService {
             userHistoryId = rootHistory.getId();
 
             //获取用户加密聊天记录
-            histories.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
+            historyPos.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
+
+            //需要移除最后一条消息(防止历史记录中的消息与当前要发送的消息出现重复)
+            if(!historyPos.isEmpty()){
+                if(historyPos.getLast().getType() == 0){
+                    historyPos.removeLast();
+                }
+            }
+
         }
 
         //创建主Prompt
@@ -340,7 +348,7 @@ public class ModelRpService {
         List<ModelChatParamHistory> paramHistories = new ArrayList<>();
         param.setHistories(paramHistories);
 
-        for (ModelRpHistoryPo history : histories) {
+        for (ModelRpHistoryPo history : historyPos) {
             ModelChatParamHistory paramHistory = new ModelChatParamHistory();
             paramHistory.setRole(history.getType()); // 设置角色类型：0-用户 1-AI助手
             paramHistory.setContent(css.decryptForCurUser(history.getRawContent()));
