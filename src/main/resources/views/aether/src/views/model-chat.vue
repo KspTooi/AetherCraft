@@ -1172,7 +1172,7 @@ onUnmounted(() => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .mobile-menu-btn {
-    display: block;
+    display: flex !important;
     position: absolute;
     left: 12px;
     top: 12px;
@@ -1185,7 +1185,6 @@ onUnmounted(() => {
     cursor: pointer;
     font-size: 20px;
     line-height: 1;
-    display: flex;
     align-items: center;
     justify-content: center;
     transition: opacity 0.3s ease, transform 0.3s ease;
