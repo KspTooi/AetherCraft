@@ -104,6 +104,12 @@ const loadModels = async () => {
     const response = await axios.post('/model/series/getModelSeries')
     if (response.data.code === 0) {
       models.value = response.data.data
+      
+      // 如果当前未选择模型，自动选择第一个
+      if (models.value.length > 0 && !props.modelValue) {
+        console.log('自动选择第一个模型:', models.value[0].modelCode)
+        emit('update:modelValue', models.value[0].modelCode)
+      }
     }
   } catch (error) {
     console.error('加载模型列表失败:', error)

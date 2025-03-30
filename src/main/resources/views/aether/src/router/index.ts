@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../views/model-chat.vue'),
     },
     {
+      path: '/rp',
+      name: 'model-rp',
+      component: () => import('../views/model-rp.vue'),
+    },
+    {
       path: '/effects-test',
       name: 'effects-test',
       component: () => import('../components/EffectsTest.vue'),

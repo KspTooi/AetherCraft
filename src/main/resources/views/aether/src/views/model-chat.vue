@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, inject } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import ModelChatThreadList from "@/components/ModelChatThreadList.vue"
@@ -77,6 +77,9 @@ const activeColor = computed(() => themeStore.activeColor)
 const primaryHover = computed(() => themeStore.primaryHover)
 const primaryButton = computed(() => themeStore.primaryButton)
 const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+
+// 获取提前解除加载状态的方法
+const finishLoading = inject<() => void>('finishLoading')
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -614,6 +617,9 @@ const handleThreadRemove = (threadId: string) => {
 // 生命周期钩子
 onMounted(async () => {
   await threadListRef.value?.loadThreadList()
+  
+  // 数据加载完成后，提前解除加载状态
+  if (finishLoading) finishLoading()
 })
 
 // 组件销毁前清理定时器

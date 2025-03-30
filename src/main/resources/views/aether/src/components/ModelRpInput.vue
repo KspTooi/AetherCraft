@@ -65,16 +65,10 @@ const cornerStyle = computed(() => {
 });
 
 // Props
-const props = defineProps({
-  isLoading: {
-    type: Boolean,
-    default: false
-  },
-  isDisabled: {
-    type: Boolean,
-    default: false
-  }
-})
+const props = defineProps<{
+  isLoading: boolean
+  isDisabled: boolean
+}>()
 
 // Emits
 const emit = defineEmits<{

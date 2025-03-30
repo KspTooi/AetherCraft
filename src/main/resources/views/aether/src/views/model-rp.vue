@@ -17,13 +17,14 @@
       <div class="thread-list" :class="{ show: isMobileMenuOpen }">
         <ModelRpThreadList
             ref="threadListRef"
-            :currentRoleId="currentRoleId"
-            :currentThreadId="currentThreadId"
+            :currentRoleId="currentRoleId !== null ? String(currentRoleId) : null"
+            :currentThreadId="currentThreadId !== null ? String(currentThreadId) : null"
             :isMobileMenuOpen="isMobileMenuOpen"
             @roleChecked="handleRoleChecked"
             @roleEdit="handleRoleEdit"
             @roleConfig="handleRoleConfig"
-            @threadManage="showThreadManagement" />
+            @threadManage="showThreadManagement"
+            @startNewSession="handleStartNewSession" />
       </div>
 
       <!-- 主聊天区域 -->
@@ -37,8 +38,8 @@
           <ModelRpMsgBox
             ref="messagesRef"
             :messages="messages"
-            :currentThreadId="currentThreadId"
-            :currentRoleId="currentRoleId"
+            :currentThreadId="currentThreadId ? String(currentThreadId) : null"
+            :currentRoleId="currentRoleId ? String(currentRoleId) : null"
             :isEditing="isEditing"
             @messageEdit="handleMessageEdit"
             @messageRemove="handleMessageRemove"
@@ -66,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed, inject } from 'vue'
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import ModelRpThreadList from "@/components/ModelRpThreadList.vue"
 import ModelRpMsgBox from "@/components/ModelRpMsgBox.vue"
@@ -86,6 +87,9 @@ const activeColor = computed(() => themeStore.activeColor)
 const primaryHover = computed(() => themeStore.primaryHover)
 const primaryButton = computed(() => themeStore.primaryButton)
 const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+
+// 获取提前解除加载状态的方法
+const finishLoading = inject<() => void>('finishLoading')
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -116,22 +120,40 @@ const selectedModalRoleId = ref('')
 const selectedModalRoleName = ref('')
 const currentUserRole = ref<any>(null)
 
-// 声明 showToast 函数类型
-declare function showToast(type: string, message: string): void;
-
-// 工具函数
-const throttle = (fn: Function, delay: number) => {
-  let timer: any = null
-  return function(this: any, ...args: any[]) {
-    if(timer) {
-      return
+// 挂载后初始化
+onMounted(async () => {
+  console.log('组件挂载，开始加载角色列表...')
+  // 获取可用模型列表
+  try {
+    const response = await axios.post('/model/series/getModelSeries')
+    if (response.data.code === 0 && response.data.data.length > 0) {
+      // 设置默认模型
+      selectedModel.value = response.data.data[0].modelCode
+      console.log('设置默认模型:', selectedModel.value)
     }
-    timer = setTimeout(() => {
-      fn.apply(this, args)
-      timer = null
-    }, delay)
+  } catch (error) {
+    console.error('获取模型列表失败:', error)
   }
-}
+  
+  // 加载角色列表
+  await threadListRef.value?.loadRoleList()
+  
+  // 角色列表加载完成后，提前结束加载动画
+  if (finishLoading) {
+    console.log('调用finishLoading解除加载状态')
+    finishLoading() 
+  }
+  
+  // 获取URL中的角色ID参数
+  const urlParams = new URLSearchParams(window.location.search)
+  const roleIdParam = urlParams.get('roleId')
+  
+  // 如果URL中有角色ID参数，自动加载该角色的会话
+  if (roleIdParam) {
+    console.log(`从URL参数加载角色: ${roleIdParam}`)
+    await loadRoleThread(roleIdParam, false, null)
+  }
+})
 
 // 重置聊天状态
 const resetChatState = () => {
@@ -142,38 +164,52 @@ const resetChatState = () => {
 
 // 加载角色的会话
 const loadRoleThread = async (roleId: string, newThread: boolean = false, threadId: string | null = null) => {
+  if (!roleId) {
+    console.error("角色ID不能为空")
+    return
+  }
+  
   isLoading.value = true
   resetChatState()
   
   try {
     const requestData: any = {
-      roleId: roleId
+      modelRoleId: roleId,
+      modelCode: selectedModel.value || 'gemini-pro'
     }
     
     if (threadId) {
       // 加载指定会话
+      console.log(`加载指定会话, threadId: ${threadId}`)
       requestData.threadId = threadId
-    } else if (newThread) {
+    } else if (newThread === true) {
       // 创建新会话
+      console.log('创建新会话, newThread=0')
       requestData.newThread = 0
     } else {
       // 加载最近的会话
+      console.log('加载最近会话, newThread=1')
       requestData.newThread = 1
     }
     
+    console.log('加载角色会话, 请求参数:', JSON.stringify(requestData))
     const response = await axios.post('/model/rp/recoverRpChat', requestData)
     
     if (response.data.code === 0) {
       const data = response.data.data
+      console.log('API返回数据:', data)
       
       // 更新当前角色ID
       currentRoleId.value = roleId
       
       // 保存会话ID
-      currentThreadId.value = data.threadId
+      currentThreadId.value = data.threadId ? String(data.threadId) : null
+      
+      console.log('会话加载成功, threadId:', data.threadId)
       
       // 更新选中的模型
       if (data.modelCode) {
+        console.log('从会话获取模型代码:', data.modelCode)
         selectedModel.value = data.modelCode
       }
       
@@ -187,26 +223,68 @@ const loadRoleThread = async (roleId: string, newThread: boolean = false, thread
       }
       
       // 更新消息列表
-      messages.value = (data.histories || []).map((item: any) => ({
-        id: item.id,
-        role: item.isUser ? 'user' : 'assistant',
-        content: item.content,
-        name: item.name || (item.isUser ? '用户' : '助手'),
-        avatarPath: item.avatarPath,
-        createTime: item.createTime
-      }))
+      // 检查API返回的消息字段 - 优先检查messages，然后才是histories
+      let messageList: any[] = []
+
+      if (data.messages && Array.isArray(data.messages)) {
+        console.log(`API返回${data.messages.length}条messages:`, data.messages)
+        messageList = data.messages
+      } else if (data.histories && Array.isArray(data.histories)) {
+        console.log(`API返回${data.histories.length}条histories:`, data.histories)
+        messageList = data.histories
+      } else {
+        console.log('API未返回消息列表，尝试检查非数组字段')
+        // 如果返回的不是数组，看看是否单个消息对象放在了别的字段里
+        if (typeof data.message === 'object' && data.message !== null) {
+          console.log('找到单个消息对象:', data.message)
+          messageList = [data.message]
+        }
+      }
+
+      if (messageList.length > 0) {
+        console.log(`找到${messageList.length}条消息`)
+        
+        // 查看第一条消息的结构
+        if (messageList[0]) {
+          console.log('第一条消息字段:')
+          Object.keys(messageList[0]).forEach(key => {
+            console.log(`- ${key}: ${JSON.stringify(messageList[0][key])}`)
+          })
+        }
+        
+        // 将API返回的消息映射到统一格式
+        messages.value = messageList.map((item: any) => {
+          const isAssistant = item.type === 1 || item.isUser === false || false
+          
+          // 获取消息内容 - 可能在rawContent或content字段中
+          const content = item.rawContent || item.content || ''
+          
+          return {
+            id: item.id,
+            role: isAssistant ? 'assistant' : 'user',
+            content: content,
+            name: item.name || (isAssistant ? '助手' : '用户'),
+            avatarPath: item.avatarPath,
+            createTime: item.createTime
+          }
+        })
+        
+        console.log(`处理后消息列表(${messages.value.length}条):`, messages.value)
+      } else {
+        console.log('API未返回任何可用消息')
+        messages.value = []
+      }
       
       // 滚动到底部
       nextTick(() => {
         messagesRef.value?.scrollToBottom()
       })
     } else {
-      showToast("danger", response.data.message || "加载会话失败")
+      console.error('加载会话失败, 错误码:', response.data.code, '错误信息:', response.data.message)
       resetChatState()
     }
   } catch (error) {
     console.error('加载会话失败:', error)
-    showToast("danger", "加载会话失败，请检查网络连接")
     resetChatState()
   } finally {
     isLoading.value = false
@@ -218,9 +296,14 @@ const toggleThreadList = () => {
 }
 
 const showThreadManagement = (roleId: string, roleName: string) => {
+  // 设置当前选中的角色ID和名称
   selectedModalRoleId.value = roleId
   selectedModalRoleName.value = roleName
+  
+  // 显示会话管理模态框
   showThreadModal.value = true
+  
+  console.log('打开会话管理模态框, 角色:', roleName, '(ID:', roleId, ')')
 }
 
 const closeThreadModal = () => {
@@ -232,20 +315,61 @@ const scrollToBottom = () => {
 }
 
 const handleRoleChecked = async (roleId: string) => {
-  if (roleId === currentRoleId.value) return
-  await loadRoleThread(roleId)
+  try {
+    console.log(`处理角色选择事件: roleId=${roleId}, 当前roleId=${currentRoleId.value}, 当前threadId=${currentThreadId.value}`)
+    
+    // 隐藏移动端菜单（如果打开）
+    if (isMobileMenuOpen.value) {
+      toggleThreadList()
+    }
+    
+    // 如果点击的是当前角色，根据情况处理
+    if (roleId === String(currentRoleId.value) && currentThreadId.value) {
+      console.log("点击了当前已选中的角色，无需重新加载会话")
+      return
+    }
+    
+    // 重置当前会话ID，避免使用上一个角色的会话ID
+    currentThreadId.value = null
+    
+    // 加载角色会话
+    console.log(`加载角色 ${roleId} 的会话...`)
+    await loadRoleThread(roleId)
+  } catch (error) {
+    console.error('加载角色会话失败:', error)
+  }
 }
 
 const handleRoleEdit = (roleId: string) => {
-  window.location.href = `/panel/model/role/list?id=${roleId}`
+  // 跳转到角色编辑页面
+  window.location.href = `/dashboard?redirect=/panel/model/role/list?id=${roleId}`
 }
 
 const handleRoleConfig = async (roleId: string) => {
-  showToast("info", "模型角色设置功能即将上线")
-  await loadRoleThread(roleId, true, null)
+  // 目前模型角色设置功能未上线，创建新会话
+  console.log("模型角色设置功能即将上线")
+  
+  try {
+    // 创建新会话
+    await loadRoleThread(roleId, true, null)
+  } catch (error) {
+    console.error('创建新会话失败:', error)
+  }
+}
+
+const handleStartNewSession = async (roleId: string) => {
+  try {
+    console.log(`开始新会话: roleId=${roleId}`)
+    // 创建新会话
+    await loadRoleThread(roleId, true, null)
+  } catch (error) {
+    console.error('创建新会话失败:', error)
+  }
 }
 
 const handleThreadChecked = async (roleId: string, threadId: string) => {
+  console.log(`选择会话: roleId=${roleId}, threadId=${threadId}`)
+  // 传递threadId参数加载指定会话
   await loadRoleThread(roleId, false, threadId)
   closeThreadModal()
 }
@@ -255,7 +379,7 @@ const handleMessageEdit = async (historyId: string, content: string) => {
   
   try {
     isEditing.value = true
-    const response = await axios.post('/model/rp/updateRpHistory', {
+    const response = await axios.post('/model/rp/editHistory', {
       historyId: historyId,
       content: content
     })
@@ -267,13 +391,12 @@ const handleMessageEdit = async (historyId: string, content: string) => {
         message.content = content
         message.isEditing = false
       }
-      showToast("success", "消息更新成功")
+      console.log("消息更新成功")
     } else {
-      showToast("danger", response.data.message || "更新消息失败")
+      console.error("更新消息失败:", response.data.message)
     }
   } catch (error) {
     console.error('更新消息失败:', error)
-    showToast("danger", "更新消息失败，请检查网络连接")
   } finally {
     isEditing.value = false
   }
@@ -283,20 +406,19 @@ const handleMessageRemove = async (historyId: string) => {
   if (!currentThreadId.value) return
   
   try {
-    const response = await axios.post('/model/rp/removeRpHistory', {
+    const response = await axios.post('/model/rp/removeHistory', {
       historyId: historyId
     })
     
     if (response.data.code === 0) {
       // 删除消息
       messages.value = messages.value.filter(m => m.id !== historyId)
-      showToast("success", "消息删除成功")
+      console.log("消息删除成功")
     } else {
-      showToast("danger", response.data.message || "删除消息失败")
+      console.error("删除消息失败:", response.data.message)
     }
   } catch (error) {
     console.error('删除消息失败:', error)
-    showToast("danger", "删除消息失败，请检查网络连接")
   }
 }
 
@@ -326,10 +448,14 @@ const handleRegenerate = async (message: ChatMessage) => {
       messages.value.push(assistantMessage)
       messagesRef.value?.scrollToBottom()
       
+      // 确保有有效的模型代码
+      const modelCode = selectedModel.value || 'gemini-pro'
+      console.log('重新生成使用模型:', modelCode)
+      
       // 调用完成接口
       const response = await axios.post('/model/rp/rpCompleteBatch', {
         threadId: currentThreadId.value,
-        model: selectedModel.value,
+        model: modelCode,
         queryKind: 0,
         regenerate: 1
       })
@@ -338,27 +464,31 @@ const handleRegenerate = async (message: ChatMessage) => {
         // 开始轮询响应
         await pollAIResponse(assistantMessage)
       } else {
-        showToast("danger", response.data.message || "重新生成失败")
+        console.error("重新生成失败:", response.data.message)
         isLoading.value = false
         // 移除临时消息
         messages.value.pop()
       }
     } else {
-      showToast("warning", "无法找到上一条用户消息")
+      console.error("无法找到上一条用户消息")
       isLoading.value = false
     }
   } catch (error) {
     console.error('重新生成失败:', error)
-    showToast("danger", "重新生成失败，请检查网络连接")
     isLoading.value = false
   }
 }
 
 const sendMessage = async (message: string) => {
-  if (isLoading.value || !currentThreadId.value) return
-
+  console.log('开始发送消息')
+  if (isLoading.value || !currentThreadId.value) {
+    console.log('无法发送消息：' + (isLoading.value ? '正在加载中' : '当前没有活动会话'))
+    return
+  }
+  
   // 添加用户消息到列表
-  const tempUserMessage: ChatMessage = {
+  const userMessage: ChatMessage = {
+    id: Date.now().toString(),
     role: 'user',
     content: message,
     name: currentUserRole.value?.name || '用户',
@@ -366,23 +496,32 @@ const sendMessage = async (message: string) => {
     createTime: new Date().toISOString()
   }
   
-  messages.value.push(tempUserMessage)
+  console.log('添加用户消息到消息列表:', userMessage)
+  messages.value.push(userMessage)
   messagesRef.value?.scrollToBottom()
-
+  
   isLoading.value = true
   
   try {
-    const response = await axios.post('/model/rp/rpCompleteBatch', {
+    // 确保有有效的模型代码
+    const modelCode = selectedModel.value || 'gemini-pro'
+    
+    const requestParams = {
       threadId: currentThreadId.value,
-      model: selectedModel.value,
+      model: modelCode,
       message: message,
       queryKind: 0
-    })
+    }
+    console.log('发送消息请求参数:', requestParams)
+    
+    const response = await axios.post('/model/rp/rpCompleteBatch', requestParams)
+    console.log('接收到发送消息响应:', response.data)
     
     if (response.data.code === 0) {
       const segment = response.data.data
       if (segment && segment.historyId) {
-        tempUserMessage.id = segment.historyId
+        console.log('更新用户消息ID:', segment.historyId)
+        userMessage.id = segment.historyId
       }
       
       const assistantMessage: ChatMessage = {
@@ -394,17 +533,18 @@ const sendMessage = async (message: string) => {
         hasReceivedData: false
       }
       
+      console.log("添加AI临时消息:", assistantMessage)
       messages.value.push(assistantMessage)
       messagesRef.value?.scrollToBottom()
       
+      console.log("开始轮询AI响应...")
       await pollAIResponse(assistantMessage)
     } else {
-      showToast("danger", response.data.message || "发送消息失败")
+      console.error("发送消息失败:", response.data)
       isLoading.value = false
     }
   } catch (error) {
     console.error('发送消息错误:', error)
-    showToast("danger", "发送消息失败，请检查网络连接")
     isLoading.value = false
   }
 }
@@ -425,6 +565,8 @@ const pollAIResponse = async (assistantMessage: any) => {
           continue
         }
         
+        console.log('收到流式响应片段:', segment)
+        
         if (segment.type === 1) {
           // 数据片段
           // 如果是第一个数据片段，清除"正在输入..."文本
@@ -439,7 +581,12 @@ const pollAIResponse = async (assistantMessage: any) => {
             }
           }
           
-          assistantMessage.content += segment.content
+          // 检查segment中的内容字段
+          const contentToAdd = segment.content || segment.rawContent || ''
+          if (contentToAdd) {
+            console.log(`添加内容片段: "${contentToAdd.substring(0, 30)}..."`)
+            assistantMessage.content += contentToAdd
+          }
           
           // 更新名称和头像（如果后端返回了这些信息）
           if (segment.name) {
@@ -458,6 +605,8 @@ const pollAIResponse = async (assistantMessage: any) => {
           // 数据流结束
           assistantMessage.isTyping = false
           isLoading.value = false
+          
+          console.log('流式响应完成，最终消息:', assistantMessage)
           
           // 通知线程列表更新
           threadListRef.value?.loadRoleList()
@@ -481,23 +630,34 @@ const terminateAIResponse = async () => {
   if (!isLoading.value || !currentThreadId.value) return
   
   try {
-    await axios.post('/model/rp/terminateRpResponse', {
-      threadId: currentThreadId.value
+    // 调用终止响应接口
+    await axios.post('/model/rp/rpCompleteBatch', {
+      threadId: currentThreadId.value,
+      queryKind: 2  // 2:终止AI响应
     })
     
+    console.log('已终止AI响应')
     isLoading.value = false
   } catch (error) {
     console.error('终止响应失败:', error)
+    // 即使出错也要将loading状态重置
+    isLoading.value = false
   }
 }
 
-// 加载初始角色列表
-onMounted(async () => {
-  // 加载角色列表
-  if (threadListRef.value) {
-    await threadListRef.value.loadRoleList()
+// 工具函数 - 保留throttle函数，可能在某处被使用
+const throttle = (fn: Function, delay: number) => {
+  let timer: any = null
+  return function(this: any, ...args: any[]) {
+    if(timer) {
+      return
+    }
+    timer = setTimeout(() => {
+      fn.apply(this, args)
+      timer = null
+    }, delay)
   }
-})
+}
 </script>
 
 <style scoped>
@@ -506,11 +666,19 @@ onMounted(async () => {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  color: #fff;
+  min-height: 0;
+  position: relative;
+  border-radius: 0 !important;
 }
 
 .chat-layout {
   display: flex;
   height: 100%;
+  min-height: 0;
+  border-radius: 0 !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .thread-list {
@@ -530,30 +698,48 @@ onMounted(async () => {
   flex-direction: column;
   background: transparent;
   overflow: hidden;
+  border-radius: 0 !important;
+  backdrop-filter: blur(v-bind(mainBlur));
+  -webkit-backdrop-filter: blur(v-bind(mainBlur));
 }
 
 .model-select {
   padding: 8px 20px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  position: relative;
 }
 
-.chat-messages-wrapper {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
+/* 添加渐变边框效果，替代之前的实线边框 */
+.model-select::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(to right, 
+    transparent, 
+    rgba(79, 172, 254, 0.15), 
+    rgba(79, 172, 254, 0.3), 
+    rgba(79, 172, 254, 0.15), 
+    transparent
+  );
+  pointer-events: none;
 }
 
 /* 移动端适配 */
 .mobile-menu-btn {
   display: none;
   position: fixed;
-  top: 60px;
-  left: 10px;
-  z-index: 100;
+  left: 12px;
+  top: 12px;
+  z-index: 1001;
   padding: 6px 10px;
   font-size: 12px;
+  width: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .thread-list-mask {
@@ -578,23 +764,37 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .thread-list {
     position: fixed;
-    top: 45px;
-    left: 0;
+    top: 0;
+    left: -240px;
     bottom: 0;
     z-index: 100;
-    transform: translateX(-100%);
+    transform: none;
+    height: 100vh;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    background-color: rgba(20, 30, 40, 0.95);
   }
   
   .thread-list.show {
-    transform: translateX(0);
+    transform: translateX(240px);
   }
   
   .mobile-menu-btn {
-    display: block;
+    display: flex !important;
   }
   
   .thread-list-mask {
     display: block;
   }
+}
+
+.chat-messages-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 </style> 

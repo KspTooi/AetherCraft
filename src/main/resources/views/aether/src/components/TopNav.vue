@@ -24,7 +24,7 @@
             <router-link class="nav-link" to="/chat" @click="handleNavItemClick">聊天</router-link>
           </div>
           <div class="nav-item">
-            <router-link class="nav-link" to="/chat-rp" @click="handleNavItemClick">聊天(RP)</router-link>
+            <router-link class="nav-link" to="/rp" @click="handleNavItemClick">角色扮演</router-link>
           </div>
           <div class="nav-item">
             <router-link class="nav-link" to="/chat-agent" @click="handleNavItemClick">聊天(AGENT)</router-link>

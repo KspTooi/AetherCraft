@@ -22,9 +22,9 @@
     </div>
     
     <!-- 消息列表 -->
-    <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="`${currentThreadId}`">
+    <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="`thread-${currentThreadId}`">
       <div v-for="(message, index) in messages" 
-           :key="index"
+           :key="`msg-${message.id || index}`"
            :class="['message', 'message-hover-effect', message.role === 'user' ? 'user' : 'assistant', { 'editing': message.isEditing }]">
         <div class="message-header">
           <div class="avatar" :class="{ 'no-image': !message.avatarPath, 'avatar-loading': message.isTyping }">
@@ -89,12 +89,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
 
 // 初始化主题
 const themeStore = useThemeStore()
+
+// 添加主题悬浮颜色计算方法
+if (!themeStore.getMessageHoverUser) {
+  themeStore.getMessageHoverUser = () => 'rgba(0, 0, 0, 0.1)'
+}
+
+if (!themeStore.getMessageHoverModel) {
+  themeStore.getMessageHoverModel = () => 'rgba(50, 50, 60, 0.1)'
+}
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -129,6 +138,23 @@ const emit = defineEmits<{
 // Refs
 const messagesContainer = ref<HTMLDivElement | null>(null)
 const editTextarea = ref<HTMLTextAreaElement[] | null>(null)
+
+// 监听currentThreadId和messages变化，自动滚动到底部
+watch(() => props.currentThreadId, (newVal) => {
+  if (newVal) {
+    console.log(`消息框监听到threadId变化: ${newVal}`)
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
+})
+
+watch(() => props.messages.length, (newVal) => {
+  console.log(`消息数量变化: ${newVal}`)
+  nextTick(() => {
+    scrollToBottom()
+  })
+})
 
 // Methods
 const formatTime = (timestamp: string) => {
@@ -238,25 +264,26 @@ const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement | null, message:
   document.body.removeChild(tempDiv)
 }
 
-// 暴露方法给父组件
-defineExpose({
-  scrollToBottom: () => {
-    nextTick(() => {
-      const container = messagesContainer.value
-      if (container) {
-        container.scrollTop = container.scrollHeight
-      }
-    })
-  }
-})
-
-// 自动滚动到底部
-onMounted(() => {
+const scrollToBottom = () => {
   nextTick(() => {
     const container = messagesContainer.value
     if (container) {
       container.scrollTop = container.scrollHeight
+      console.log('滚动到底部')
     }
+  })
+}
+
+// 暴露方法给父组件
+defineExpose({
+  scrollToBottom
+})
+
+// 自动滚动到底部
+onMounted(() => {
+  console.log('消息框组件挂载完成，初始化滚动')
+  nextTick(() => {
+    scrollToBottom()
   })
 })
 </script>
@@ -267,121 +294,384 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* 空状态提示 */
-.empty-state {
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 16px 12px 25px; /* 减少左侧内边距 */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  gap: 2px;
+  min-height: 0;
+  width: 100%; /* 使用完整宽度 */
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 自定义滚动条样式 */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
-  height: 100%;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  width: 100%;
+  max-width: 400px;
+  padding: 0 20px;
 }
 
 .empty-state i {
   font-size: 48px;
-  margin-bottom: 15px;
-  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 16px;
+  display: block;
+  opacity: 0.8;
 }
 
 .empty-state .title {
   font-size: 18px;
   margin-bottom: 8px;
   color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 
 .empty-state .subtitle {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.5);
-  max-width: 300px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-/* 消息列表 */
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  height: 100%;
-}
-
-/* 消息项 */
 .message {
+  width: 100%; /* 使用完整宽度 */
+  padding: 6px 16px 6px 2px; /* 减少上下内边距，缩小左侧边距 */
+  line-height: 1.5;
+  font-size: 14px;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  position: relative; /* 确保伪元素定位正确 */
+  box-sizing: border-box;
   display: flex;
-  position: relative;
-  padding: 15px;
-  border-radius: 0;
-  transition: background-color 0.3s ease;
+  gap: 8px; /* 减少头像与内容间的间距 */
+  transition: background-color 0.5s ease;
+  border-radius: 6px;
+  background-color: transparent;
+  margin: 0; /* 移除外边距 */
 }
 
-.message.user {
-  background-color: rgba(0, 0, 0, 0.1);
+.message .message-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.message.assistant {
-  background-color: rgba(50, 50, 60, 0.1);
-}
-
-.message-header {
-  margin-right: 12px;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
+.message .message-header .avatar {
+  width: 28px; /* 减小头像尺寸 */
+  height: 28px; /* 减小头像尺寸 */
   border-radius: 50%;
-  overflow: hidden;
   background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.avatar img {
+.message .message-header .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.avatar.no-image i {
-  font-size: 18px;
+.message .message-header .avatar.no-image {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.message .message-content {
+  flex: 1;
+  min-width: 0;
+  padding-right: 60px; /* 减少右侧内边距，为按钮留出空间 */
+}
+
+.message .message-content .name {
+  font-size: 13px; /* 减小名称字体大小 */
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2px; /* 减少名称与内容的间距 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message .message-content .name .time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.message .message-content .text {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Markdown 内容样式 */
+.message .message-content .text :deep(p) {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.message .message-content .text :deep(ul), 
+.message .message-content .text :deep(ol) {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 20px;
+}
+
+.message .message-content .text :deep(pre) {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.message .message-content .text :deep(code) {
+  font-family: 'Courier New', Courier, monospace;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.message .message-content .text :deep(pre code) {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.message .message-content .text :deep(a) {
+  color: #4dabf7;
+  text-decoration: none;
+}
+
+.message .message-content .text :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.message .message-content .text :deep(blockquote) {
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  margin: 10px 0;
+  padding-left: 10px;
   color: rgba(255, 255, 255, 0.7);
 }
 
-.avatar-loading {
-  filter: grayscale(100%);
+.message .message-content .text :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
 }
 
-.message-content {
-  flex: 1;
-  min-width: 0;
+.message .message-content .text :deep(th), 
+.message .message-content .text :deep(td) {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  text-align: left;
 }
 
-.name {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 5px;
-  font-weight: 500;
+.message .message-content .text :deep(th) {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.message .message-actions {
+  position: absolute;
+  right: 8px; /* 减少右侧距离，防止按钮超出容器 */
+  top: 8px;
+  display: none;
+  z-index: 10; /* 确保按钮位于最上层 */
+}
+
+/* 编辑模式下总是显示操作按钮 */
+.message.editing .message-actions {
   display: flex;
-  align-items: center;
+  gap: 4px;
 }
 
-.time {
-  margin-left: 8px;
-  font-size: 11px;
+.message:hover .message-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.message .message-delete-btn,
+.message .message-edit-btn,
+.message .message-confirm-btn,
+.message .message-cancel-btn,
+.message .message-regenerate-btn {
+  background: transparent;
+  border: none;
   color: rgba(255, 255, 255, 0.4);
-  font-weight: normal;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
+.message .message-delete-btn:hover,
+.message .message-edit-btn:hover,
+.message .message-confirm-btn:hover,
+.message .message-cancel-btn:hover,
+.message .message-regenerate-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message .message-confirm-btn:disabled,
+.message .message-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message .message-confirm-btn {
+  color: rgba(75, 210, 143, 0.7);
+}
+
+.message .message-confirm-btn:hover {
+  color: rgba(75, 210, 143, 1);
+}
+
+.message .message-cancel-btn {
+  color: rgba(255, 107, 107, 0.7);
+}
+
+.message .message-cancel-btn:hover {
+  color: rgba(255, 107, 107, 1);
+}
+
+.message .message-regenerate-btn {
+  color: rgba(79, 172, 254, 0.7);
+}
+
+.message .message-regenerate-btn:hover {
+  color: rgba(79, 172, 254, 1);
+}
+
+.message .editable-content {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  font-family: inherit;
+  overflow-y: auto;
+}
+
+.message .editable-content:focus {
+  outline: none;
+  border-color: rgba(79, 172, 254, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 鼠标悬浮效果 - 使用伪元素扩展背景 */
+.message.message-hover-effect.user:hover::before,
+.message.message-hover-effect.assistant:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -10px; /* 减小向左延伸的宽度，避免触发水平滚动 */
+  right: 0;
+  bottom: 0;
+  border-radius: 6px;
+  z-index: -1;
+}
+
+.message.message-hover-effect.user:hover::before {
+  background-color: v-bind('themeStore.getMessageHoverUser()');
+}
+
+.message.message-hover-effect.assistant:hover::before {
+  background-color: v-bind('themeStore.getMessageHoverModel()');
+}
+
+/* 移除原有的背景色设置 */
+.message.message-hover-effect.user:hover {
+  background-color: transparent;
+}
+
+.message.message-hover-effect.assistant:hover {
+  background-color: transparent;
+}
+
+/* 添加角色类型特定样式 */
+.message.user {
+  background: transparent;
+}
+
+.message.assistant {
+  background: transparent;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .chat-messages {
+    /*padding: 12px 12px 12px 6px;*/
+  }
+  
+  .message {
+    font-size: 13px;
+    padding: 6px 12px 6px 2px;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+  .chat-messages {
+    padding: 8px 8px 8px 4px;
+    gap: 1px;
+  }
+  
+  .message {
+    font-size: 12px;
+    padding: 4px 10px 4px 1px;
+  }
+  
+  .message .message-header .avatar {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* 保留ModelRpMsgBox特有的打字动画样式 */
 .typing {
   margin-left: 8px;
   font-size: 12px;
@@ -411,181 +701,7 @@ onMounted(() => {
   100% { opacity: 0.2; }
 }
 
-.text {
-  font-size: 14px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* Markdown 内容样式 */
-.text :deep(p) {
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.text :deep(ul), .text :deep(ol) {
-  margin-top: 0;
-  margin-bottom: 10px;
-  padding-left: 20px;
-}
-
-.text :deep(pre) {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 10px;
-  border-radius: 0;
-  overflow-x: auto;
-  margin: 10px 0;
-}
-
-.text :deep(code) {
-  font-family: 'Courier New', Courier, monospace;
-  padding: 2px 4px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.text :deep(pre code) {
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-}
-
-.text :deep(a) {
-  color: #4dabf7;
-  text-decoration: none;
-}
-
-.text :deep(a:hover) {
-  text-decoration: underline;
-}
-
-.text :deep(blockquote) {
-  border-left: 3px solid rgba(255, 255, 255, 0.2);
-  margin: 10px 0;
-  padding-left: 10px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.text :deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 10px 0;
-}
-
-.text :deep(th), .text :deep(td) {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 8px;
-  text-align: left;
-}
-
-.text :deep(th) {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* 可编辑消息 */
-.editable-content {
-  width: 100%;
-  min-height: 60px;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
-  color: white;
-  resize: vertical;
-  font-size: 14px;
-  line-height: 1.5;
-  font-family: inherit;
-}
-
-.editable-content:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-/* 消息操作按钮 */
-.message-actions {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 5px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.message-hover-effect:hover .message-actions {
-  opacity: 1;
-}
-
-.message.editing .message-actions {
-  opacity: 1;
-}
-
-.message-actions button {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.message-actions button:hover {
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-}
-
-.message-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.message-edit-btn:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.message-delete-btn:hover {
-  background: rgba(255, 0, 0, 0.2) !important;
-  border-color: rgba(255, 0, 0, 0.4);
-}
-
-.message-confirm-btn:hover {
-  background: rgba(0, 255, 0, 0.1) !important;
-  border-color: rgba(0, 255, 0, 0.3);
-}
-
-.message-cancel-btn:hover {
-  background: rgba(255, 0, 0, 0.1) !important;
-  border-color: rgba(255, 0, 0, 0.3);
-}
-
-.message-regenerate-btn:hover {
-  background: rgba(0, 100, 255, 0.2) !important;
-  border-color: rgba(0, 100, 255, 0.4);
-}
-
-/* 自定义滚动条 */
-.chat-messages::-webkit-scrollbar {
-  width: 5px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2.5px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+.avatar-loading {
+  filter: grayscale(100%);
 }
 </style> 
