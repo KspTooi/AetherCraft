@@ -27,7 +27,7 @@
            :key="`msg-${message.id || index}`"
            :class="['message', 'message-hover-effect', message.role === 'user' ? 'user' : 'assistant', { 'editing': message.isEditing }]">
         <div class="message-header">
-          <div class="avatar" :class="{ 'no-image': !message.avatarPath, 'avatar-loading': message.isTyping }">
+          <div class="avatar" :class="{ 'no-image': !message.avatarPath }">
             <img v-if="message.avatarPath" :src="message.avatarPath" :alt="message.name">
             <i v-else class="bi bi-person"></i>
           </div>
@@ -39,8 +39,10 @@
             <span v-if="message.isTyping" class="typing">正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></span>
           </div>
           <div v-if="!message.isEditing">
-            <div class="text" v-if="message.role === 'user'">{{ message.content }}</div>
-            <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
+            <div v-if="!message.isTyping || message.hasReceivedData" class="text" :class="{ 'user': message.role === 'user' }">
+              <div v-if="message.role === 'user'">{{ message.content }}</div>
+              <div v-else v-html="renderMarkdown(message.content)"></div>
+            </div>
           </div>
           <div v-else>
             <textarea class="editable-content" 
@@ -682,7 +684,7 @@ onMounted(() => {
 }
 
 .typing-dots span {
-  animation: typingDot 1.4s infinite;
+  animation: typingDots 1.4s infinite;
   animation-fill-mode: both;
   margin-left: 2px;
 }
@@ -695,13 +697,9 @@ onMounted(() => {
   animation-delay: 0.4s;
 }
 
-@keyframes typingDot {
+@keyframes typingDots {
   0% { opacity: 0.2; }
   20% { opacity: 1; }
   100% { opacity: 0.2; }
-}
-
-.avatar-loading {
-  filter: grayscale(100%);
 }
 </style> 

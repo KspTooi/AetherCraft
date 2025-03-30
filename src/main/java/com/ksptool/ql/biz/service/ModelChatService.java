@@ -16,6 +16,7 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
+import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,6 @@ import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
@@ -62,11 +62,8 @@ public class ModelChatService {
     private static final double DEFAULT_TOP_P = 1.0;
     private static final int DEFAULT_TOP_K = 40;
 
-    // 线程安全的容器，记录聊天状态 <threadId, contextId>
-    private final ConcurrentHashMap<Long, String> threadToContextIdMap = new ConcurrentHashMap<>();
-    
-    // 终止列表，存储已经被终止的contextId
-    private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
+    //线程会话状态跟踪
+    private final ThreadStatusTrack track = new ThreadStatusTrack();
 
     @Autowired
     private UserConfigService userConfigService;
@@ -184,11 +181,10 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public ChatSegmentVo chatCompleteSendBatch(BatchChatCompleteDto dto) throws BizException {
-
         Long threadId = dto.getThreadId();
 
         // 检查该会话是否正在处理中
-        if (!threadId.equals(-1L) && threadToContextIdMap.containsKey(threadId)) {
+        if (!threadId.equals(-1L) && track.isLocked(threadId)) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -210,6 +206,9 @@ public class ModelChatService {
 
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
+
+            // 创建新会话
+            track.newSession(thread.getId());
 
             // 先获取全部消息历史
             List<ModelChatHistoryPo> historyPos = new ArrayList<>();
@@ -305,21 +304,19 @@ public class ModelChatService {
             // 根据模型类型选择不同的服务发送请求
             if (dto.getModel().contains("grok")) {
                 // 使用GROK服务
-                String contextId = modelGrokService.sendMessageStream(
+                modelGrokService.sendMessageStream(
                         client,
                         modelChatParam,
                         onModelMessageRcv(thread, userId)
                 );
-                threadToContextIdMap.put(threadId, contextId);
             }
             if(dto.getModel().contains("gemini")){
                 // 使用Gemini服务
-                String contextId = modelGeminiService.sendMessageStream(
+                modelGeminiService.sendMessageStream(
                         client,
                         modelChatParam,
                         onModelMessageRcv(thread, userId)
                 );
-                threadToContextIdMap.put(threadId, contextId);
             }
 
             // 返回用户消息作为第一次响应
@@ -335,9 +332,10 @@ public class ModelChatService {
             return vo;
 
         } catch (Exception e) {
-            // 发生异常时清理会话状态
+            // 发生异常时通知会话失败
             if (!threadId.equals(-1L)) {
-                threadToContextIdMap.remove(threadId);
+                track.notifyFailed(threadId);
+                track.closeSession(threadId);
             }
 
             // 清理所有片段
@@ -373,17 +371,17 @@ public class ModelChatService {
         int waitTimes = 0;
         
         while (waitTimes < MAX_WAIT_TIMES) {
+            // 检查会话状态
+            if(track.getStatus(threadId) == 0){
+                continue;
+            }
+
             // 一次性查询所有未读片段，按sequence排序
             unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId);
             
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
                 break;
-            }
-            
-            // 如果没有未读片段，且会话不在处理中，直接返回null
-            if (!threadToContextIdMap.containsKey(threadId)) {
-                return null;
             }
             
             // 等待一段时间后再次尝试
@@ -510,17 +508,14 @@ public class ModelChatService {
             throw new BizException("无权访问该会话");
         }
 
-        // 获取当前正在进行的contextId
-        String contextId = threadToContextIdMap.get(threadId);
-        if (contextId == null) {
+        // 检查会话状态
+        int status = track.getStatus(threadId);
+        if(status != 0 && status != 1){
             throw new BizException("该会话未在进行中或已经终止");
         }
 
-        // 将contextId加入终止列表
-        terminatedContextIds.put(contextId, true);
-        
-        // 清理会话状态
-        threadToContextIdMap.remove(threadId);
+        // 通知会话已终止
+        track.notifyTerminated(threadId);
 
         // 获取当前最大序号
         int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
@@ -707,7 +702,7 @@ public class ModelChatService {
      */
     public ChatSegmentVo chatCompleteRegenerateBatch(BatchChatCompleteDto dto) throws BizException {
         // 检查该会话是否正在处理中
-        if (threadToContextIdMap.containsKey(dto.getThreadId())) {
+        if (track.isLocked(dto.getThreadId())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -882,24 +877,22 @@ public class ModelChatService {
     private Consumer<ModelChatContext> onModelMessageRcv(ModelChatThreadPo thread, Long userId) {
         return context -> {
             try {
-                // 从ModelChatContext中获取contextId
-                String contextId = context.getContextId();
                 Long threadId = thread.getId();
                 String modelCode = context.getModelCode();
                 AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
 
-                // 检查该contextId是否已被终止
-                if (terminatedContextIds.containsKey(contextId)) {
-                    // 如果是完成或错误回调，从终止列表中移除
+                //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
+                if(track.getStatus(threadId) == 11){
+                    // 如果是完成或错误回调，需要关闭Session
                     if (context.getType() == 1 || context.getType() == 2) {
-                        terminatedContextIds.remove(contextId);
+                        track.closeSession(threadId);
                     }
                     return;
                 }
 
-                // 首次收到消息时，将contextId存入映射表
-                if (!threadToContextIdMap.containsValue(contextId)) {
-                    threadToContextIdMap.put(threadId, contextId);
+                //当为正在等待响应状态 首次收到消息时需要转换状态
+                if(track.getStatus(threadId) == 0){
+                    track.notifyReceive(threadId);
                 }
 
                 // 获取当前最大序号
@@ -936,25 +929,21 @@ public class ModelChatService {
                     css.encryptEntity(endSegment);
                     segmentRepository.save(endSegment);
 
-                    // 清理会话状态 解锁会话
-                    threadToContextIdMap.remove(threadId);
+                    // 通知会话已结束
+                    track.notifyFinished(threadId);
+                    track.closeSession(threadId);
 
                     if (modelEnum != null) {
-
                         //异步生成会话标题
                         Thread.ofVirtual().start(()->{
-
                             try {
                                 generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
                             } catch (Exception e) {
                                 log.error("生成会话标题失败", e);
                                 // 生成标题失败不影响主流程
                             }
-
                         });
-
                     }
-
                     return;
                 }
 
@@ -969,8 +958,9 @@ public class ModelChatService {
                     errorSegment.setType(10); // 错误类型
                     segmentRepository.save(errorSegment);
 
-                    // 清理会话状态
-                    threadToContextIdMap.remove(threadId);
+                    // 通知会话已失败
+                    track.notifyFailed(threadId);
+                    track.closeSession(threadId);
                 }
             } catch (Exception e) {
                 log.error("处理聊天片段失败", e);
@@ -1010,7 +1000,7 @@ public class ModelChatService {
             vo.setTitle(css.decryptForCurUser(thread.getTitle()));
             vo.setModelCode(thread.getModelCode());
             vo.setChecked(0);
-            
+
             // 检查是否为上次选中的会话
             if (lastThreadId != null && thread.getId().equals(lastThreadId)) {
                 vo.setChecked(1);

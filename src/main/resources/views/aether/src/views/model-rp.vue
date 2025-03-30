@@ -97,7 +97,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   name: string;
-  avatarPath?: string;
+  avatarPath?: string | null;
   createTime: string;
   isEditing?: boolean;
   editContent?: string;
@@ -119,6 +119,12 @@ const showThreadModal = ref(false)
 const selectedModalRoleId = ref('')
 const selectedModalRoleName = ref('')
 const currentUserRole = ref<any>(null)
+// 缓存当前 AI 角色信息
+const currentAIRole = ref<{id: string, name: string, avatarPath: string | null}>({
+  id: '',
+  name: '助手',
+  avatarPath: null
+})
 
 // 挂载后初始化
 onMounted(async () => {
@@ -238,6 +244,19 @@ const loadRoleThread = async (roleId: string, newThread: boolean = false, thread
           id: data.userRole.id,
           name: data.userRole.name || '用户',
           avatar: data.userRole.avatarPath
+        }
+      }
+
+      // 从角色列表中获取当前 AI 角色的详细信息并缓存
+      if (threadListRef.value && threadListRef.value.roles && threadListRef.value.roles.length > 0) {
+        const aiRole = threadListRef.value.roles.find((r: any) => String(r.id) === String(roleId))
+        if (aiRole) {
+          console.log('缓存 AI 角色信息:', aiRole)
+          currentAIRole.value = {
+            id: aiRole.id,
+            name: aiRole.name || '助手',
+            avatarPath: aiRole.avatarPath || null
+          }
         }
       }
       
@@ -516,10 +535,12 @@ const sendMessage = async (message: string) => {
       messages.value.push(userMessage)
       messagesRef.value?.scrollToBottom()
       
+      // 使用缓存的 AI 角色信息创建临时消息
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: '正在输入...',
-        name: '助手',
+        content: '', // 不再显示"正在输入..."文本
+        name: currentAIRole.value.name,
+        avatarPath: currentAIRole.value.avatarPath,
         createTime: new Date().toISOString(),
         isTyping: true,
         hasReceivedData: false
@@ -561,11 +582,10 @@ const pollAIResponse = async (assistantMessage: any) => {
         
         if (segment.type === 1) {
           // 数据片段
-          // 如果是第一个数据片段，清除"正在输入..."文本
+          // 如果是第一个数据片段，设置接收状态标记
           if (!assistantMessage.hasReceivedData) {
-            assistantMessage.content = ''
             assistantMessage.hasReceivedData = true
-            assistantMessage.isTyping = false
+            assistantMessage.content = '' // 确保内容从空开始
             
             // 更新ID和其他信息
             if (segment.historyId) {
@@ -599,9 +619,6 @@ const pollAIResponse = async (assistantMessage: any) => {
           isLoading.value = false
           
           console.log('流式响应完成，最终消息:', assistantMessage)
-          
-          // 通知线程列表更新
-          threadListRef.value?.loadRoleList()
           
           break
         }

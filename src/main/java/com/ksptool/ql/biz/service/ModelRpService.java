@@ -8,10 +8,7 @@ import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.po.*;
-import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
-import com.ksptool.ql.biz.model.vo.RecoverRpChatHistoryVo;
-import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
-import com.ksptool.ql.biz.model.vo.RpSegmentVo;
+import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
@@ -39,8 +36,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 
 import static com.ksptool.entities.Entities.as;
@@ -51,9 +46,11 @@ public class ModelRpService {
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
-    
+
     //线程会话状态跟踪
     private final ThreadStatusTrack track = new ThreadStatusTrack();
+
+    private final ConcurrentHashMap<Long, ThreadModelRoleVo> threadModelRoleMap = new ConcurrentHashMap<>();
 
     @Autowired
     private ModelRoleRepository modelRoleRepository;
@@ -357,6 +354,14 @@ public class ModelRpService {
 
         userConfigService.readUserModelParam(param,null);
 
+        //保存该线程的角色数据到缓存中
+        threadModelRoleMap.remove(threadCt.getId());
+        var roleCache = new ThreadModelRoleVo();
+        roleCache.setRoleId(modelPlayRoleCt.getId());
+        roleCache.setRoleName(modelPlayRoleCt.getName());
+        roleCache.setRoleAvatarPath(css.decryptForCurUser(modelPlayRoleCt.getAvatarPath()));
+        threadModelRoleMap.put(threadCt.getId(),roleCache);
+
         try {
 
             //锁定Thread
@@ -515,6 +520,10 @@ public class ModelRpService {
             throw new BizException("无权访问该会话");
         }
 
+        //查询角色数据
+        ThreadModelRoleVo roleCache = threadModelRoleMap.get(threadId);
+
+
         // 优先处理错误片段(type=10)和开始片段(type=0)
         for (ModelRpSegmentPo segment : unreadSegments) {
             //开始片段，只标记该片段为已读并返回
@@ -528,6 +537,12 @@ public class ModelRpService {
                 vo.setContent(segment.getContent());
                 vo.setType(segment.getType());
                 vo.setRole(1);
+
+                if(roleCache != null){
+                    vo.setRoleId(roleCache.getRoleId());
+                    vo.setRoleName(roleCache.getRoleName());
+                    vo.setRoleAvatarPath(roleCache.getRoleAvatarPath());
+                }
                 return vo;
             }
 
@@ -543,6 +558,13 @@ public class ModelRpService {
                 vo.setContent(segment.getContent() != null ? segment.getContent() : "AI响应出错");
                 vo.setType(segment.getType());
                 vo.setRole(1);
+
+                if(roleCache != null){
+                    vo.setRoleId(roleCache.getRoleId());
+                    vo.setRoleName(roleCache.getRoleName());
+                    vo.setRoleAvatarPath(roleCache.getRoleAvatarPath());
+                }
+
                 return vo;
             }
         }
@@ -578,6 +600,11 @@ public class ModelRpService {
             vo.setContent(combinedContent.toString());
             vo.setType(1);
             vo.setRole(1);
+            if(roleCache != null){
+                vo.setRoleId(roleCache.getRoleId());
+                vo.setRoleName(roleCache.getRoleName());
+                vo.setRoleAvatarPath(roleCache.getRoleAvatarPath());
+            }
             return vo;
         }
         
@@ -592,6 +619,12 @@ public class ModelRpService {
         vo.setContent(firstSegment.getContent());
         vo.setType(firstSegment.getType());
         vo.setRole(1);
+
+        if(roleCache != null){
+            vo.setRoleId(roleCache.getRoleId());
+            vo.setRoleName(roleCache.getRoleName());
+            vo.setRoleAvatarPath(roleCache.getRoleAvatarPath());
+        }
         return vo;
     }
     

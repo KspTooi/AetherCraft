@@ -165,6 +165,13 @@ const handleRoleManage = () => {
 // Event Handlers
 const handleRoleClick = (roleId: string) => {
   console.log(`角色点击: roleId=${roleId}, 当前roleId=${props.currentRoleId}`)
+  
+  // 如果点击的是当前已选中的角色，不触发事件
+  if (String(roleId) === String(props.currentRoleId)) {
+    console.log("点击了当前已选中的角色，不触发事件")
+    return
+  }
+  
   emit('roleChecked', roleId)
 }
 
@@ -230,7 +237,8 @@ onUnmounted(() => {
 
 // Expose loadRoleList function to parent
 defineExpose({
-  loadRoleList
+  loadRoleList,
+  roles
 })
 </script>
 
