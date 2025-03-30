@@ -22,4 +22,9 @@ public class ThreadListItemVo {
      * 模型代码
      */
     private String modelCode;
+
+    /**
+     * 是否默认选中 0:否 1:是
+     */
+    private Integer checked = 0;
 } 

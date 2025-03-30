@@ -9,25 +9,27 @@
     </div>
 
     <!-- 下拉列表 -->
-    <div class="dropdown-menu" v-show="isOpen">
-      <div v-if="loading" class="loading-state">
-        <i class="bi bi-arrow-repeat spinning"></i>
-        加载中...
-      </div>
-      <template v-else>
-        <!-- 按系列分组显示模型 -->
-        <div v-for="series in groupedModels" :key="series.name" class="model-series">
-          <div class="series-name">{{ series.name }}</div>
-          <div class="model-item" 
-               v-for="model in series.models" 
-               :key="model.modelCode"
-               :class="{ 'active': modelValue === model.modelCode }"
-               @click="selectModel(model)">
-            {{ model.modelName }}
-          </div>
+    <transition name="dropdown">
+      <div class="dropdown-menu" v-show="isOpen">
+        <div v-if="loading" class="loading-state">
+          <i class="bi bi-arrow-repeat spinning"></i>
+          加载中...
         </div>
-      </template>
-    </div>
+        <template v-else>
+          <!-- 按系列分组显示模型 -->
+          <div v-for="series in groupedModels" :key="series.name" class="model-series">
+            <div class="series-name">{{ series.name }}</div>
+            <div class="model-item" 
+                 v-for="model in series.models" 
+                 :key="model.modelCode"
+                 :class="{ 'active': modelValue === model.modelCode }"
+                 @click="selectModel(model)">
+              {{ model.modelName }}
+            </div>
+          </div>
+        </template>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -133,10 +135,10 @@ const vClickOutside = {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -153,14 +155,14 @@ const vClickOutside = {
 
 .model-name {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .bi-chevron-down {
-  font-size: 16px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
   transition: transform 0.3s ease;
 }
@@ -171,13 +173,13 @@ const vClickOutside = {
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 2px);
   left: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  max-height: 300px;
+  border-radius: 4px;
+  max-height: 250px;
   overflow-y: auto;
   z-index: 1000;
   backdrop-filter: blur(10px);
@@ -208,16 +210,16 @@ const vClickOutside = {
 }
 
 .series-name {
-  padding: 4px 12px;
+  padding: 2px 10px;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 .model-item {
-  padding: 8px 12px;
+  padding: 6px 10px;
   color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -247,5 +249,18 @@ const vClickOutside = {
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* 下拉动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+  transform-origin: top;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: scaleY(0.8);
 }
 </style> 

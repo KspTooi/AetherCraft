@@ -988,6 +988,17 @@ public class ModelChatService {
         // 查询该用户的所有会话，按更新时间排序
         List<ModelChatThreadPo> threads = threadRepository.findByUserIdOrderByUpdateTimeDesc(userId);
         
+        // 获取用户上次选择的会话ID
+        String lastThreadIdStr = userConfigService.get(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+        Long lastThreadId = null;
+        if (StringUtils.isNotBlank(lastThreadIdStr)) {
+            try {
+                lastThreadId = Long.parseLong(lastThreadIdStr);
+            } catch (NumberFormatException e) {
+                log.warn("无效的 lastThreadId: {}", lastThreadIdStr);
+            }
+        }
+        
         // 转换为VO
         List<ThreadListItemVo> voList = new ArrayList<>();
         
@@ -996,6 +1007,12 @@ public class ModelChatService {
             vo.setId(thread.getId());
             vo.setTitle(css.decryptForCurUser(thread.getTitle()));
             vo.setModelCode(thread.getModelCode());
+            vo.setChecked(0);
+            
+            // 检查是否为上次选中的会话
+            if (lastThreadId != null && thread.getId().equals(lastThreadId)) {
+                vo.setChecked(1);
+            }
             voList.add(vo);
         }
         
