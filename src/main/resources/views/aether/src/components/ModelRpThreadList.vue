@@ -49,24 +49,48 @@
         </div>
       </div>
     </div>
-    
-    <!-- 三点菜单下拉框 -->
-    <div class="dropdown-overlay" v-if="openMenuId !== null" @click="closeMenu"></div>
-    <div class="dropdown-menu" v-if="openMenuId !== null" :style="menuPosition">
-      <div class="menu-item" @click="handleStartNewSession(openMenuId)">
-        <i class="bi bi-plus-circle"></i> 开始新会话
-      </div>
-      <div class="menu-item" @click="handleThreadManage(openMenuId, openMenuName)">
-        <i class="bi bi-folder2-open"></i> 管理全部会话
-      </div>
-      <div class="menu-item" @click="handleEditRole(openMenuId)">
-        <i class="bi bi-pencil-square"></i> 编辑角色
-      </div>
-      <div class="menu-item" @click="handleConfigRole(openMenuId)">
-        <i class="bi bi-gear"></i> 设置模型角色
+  </div>
+  
+  <!-- 使用teleport将菜单传送到body下 -->
+  <teleport to="body">
+    <div class="menu-teleport-container" v-if="openMenuId !== null">
+      <div class="global-menu-overlay" @click="closeMenu"></div>
+      <div class="global-menu" :style="menuPosition">
+        <div class="menu-top-border"></div>
+        <template v-if="!isThreadMenu">
+          <div class="menu-title">{{ openMenuName }}</div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" @click="handleStartNewSession(openMenuId)">
+            开始新会话
+          </div>
+          <div class="menu-item" @click="handleThreadManage(openMenuId, openMenuName)">
+            管理全部会话
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" @click="handleEditRole(openMenuId)">
+            编辑角色
+          </div>
+          <div class="menu-item" @click="handleConfigRole(openMenuId)">
+            设置模型角色
+          </div>
+        </template>
+        <template v-else>
+          <div class="menu-title">会话操作</div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" @click="handleThreadDirectClick(openMenuId)">
+            打开会话
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" @click="handleThreadEdit(openMenuId)">
+            编辑会话
+          </div>
+          <div class="menu-item" @click="handleThreadDelete(openMenuId)">
+            删除会话
+          </div>
+        </template>
       </div>
     </div>
-  </div>
+  </teleport>
 </template>
 
 <script setup lang="ts">
@@ -83,6 +107,10 @@ const primaryHover = computed(() => themeStore.primaryHover)
 const primaryButton = computed(() => themeStore.primaryButton)
 const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
 const sideBlur = computed(() => themeStore.sideBlur)
+const textareaColor = computed(() => themeStore.textareaColor)
+const menuColor = computed(() => themeStore.menuColor)
+const menuActiveColor = computed(() => themeStore.menuActiveColor)
+const menuBlur = computed(() => themeStore.menuBlur)
 
 // Props
 const props = defineProps<{
@@ -99,6 +127,9 @@ const emit = defineEmits<{
   (e: 'threadManage', roleId: string, roleName: string): void
   (e: 'startNewSession', roleId: string): void
   (e: 'toggleMobileMenu'): void
+  (e: 'threadEdit', threadId: string): void
+  (e: 'threadDelete', threadId: string): void
+  (e: 'threadChecked', threadId: string): void
 }>()
 
 // State
@@ -110,6 +141,8 @@ const menuPosition = ref({
   top: '0px',
   left: '0px'
 })
+const threads = ref<any[]>([])
+const isThreadMenu = ref(false)
 
 // Methods
 const loadRoleList = async () => {
@@ -209,6 +242,7 @@ const handleStartNewSession = (roleId: string) => {
 
 const toggleRoleMenu = (roleId: string, roleName: string, event: Event) => {
   event.stopPropagation()
+  isThreadMenu.value = false
   
   // 如果已经打开同一个菜单，则关闭
   if (openMenuId.value === roleId) {
@@ -219,17 +253,46 @@ const toggleRoleMenu = (roleId: string, roleName: string, event: Event) => {
   openMenuId.value = roleId
   openMenuName.value = roleName
   
-  // 获取当前点击的元素位置
-  const target = event.currentTarget as HTMLElement
-  const rect = target.getBoundingClientRect()
+  // 获取窗口尺寸和鼠标事件的位置
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const mouseEvent = event as MouseEvent
+  const mouseX = mouseEvent.pageX
+  const mouseY = mouseEvent.pageY
   
-  // 计算菜单位置
-  menuPosition.value = {
-    top: `${rect.bottom + 5}px`,
-    left: `${rect.right - 180}px` // 菜单宽度180px，右对齐
+  // 菜单尺寸估计
+  const menuWidth = 150
+  const menuHeight = 160
+  
+  // 检查边界
+  const isNearRightEdge = mouseX + menuWidth + 5 > windowWidth
+  const isNearBottomEdge = mouseY + menuHeight + 5 > windowHeight
+  
+  // 设置菜单位置
+  let topPosition = mouseY
+  let leftPosition = mouseX
+  
+  // 边界调整
+  if (isNearRightEdge) {
+    leftPosition = mouseX - menuWidth
   }
   
-  // 添加点击事件监听器以关闭菜单
+  if (isNearBottomEdge) {
+    topPosition = mouseY - menuHeight
+  }
+  
+  // 确保不超出左边界
+  if (leftPosition < 10) {
+    leftPosition = 10
+  }
+  
+  // 更新菜单位置
+  menuPosition.value = {
+    top: `${topPosition}px`,
+    left: `${leftPosition}px`
+  }
+  
+  // 添加全局点击监听
   document.addEventListener('click', closeMenuOnClickOutside)
 }
 
@@ -240,6 +303,78 @@ const closeMenuOnClickOutside = (event: MouseEvent) => {
 
 const closeMenu = () => {
   openMenuId.value = null
+  isThreadMenu.value = false
+}
+
+const toggleThreadMenu = (event: Event, threadId: string) => {
+  event.stopPropagation()
+  isThreadMenu.value = true
+  
+  // 如果已经打开同一个菜单，则关闭
+  if (openMenuId.value === threadId) {
+    openMenuId.value = null
+    isThreadMenu.value = false
+    return
+  }
+  
+  openMenuId.value = threadId
+  
+  // 获取窗口尺寸和鼠标事件的位置
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  const mouseEvent = event as MouseEvent
+  const mouseX = mouseEvent.pageX
+  const mouseY = mouseEvent.pageY
+  
+  // 菜单尺寸估计
+  const menuWidth = 150
+  const menuHeight = 150
+  
+  // 检查边界
+  const isNearRightEdge = mouseX + menuWidth + 5 > windowWidth
+  const isNearBottomEdge = mouseY + menuHeight + 5 > windowHeight
+  
+  // 设置菜单位置
+  let topPosition = mouseY
+  let leftPosition = mouseX
+  
+  // 边界调整
+  if (isNearRightEdge) {
+    leftPosition = mouseX - menuWidth
+  }
+  
+  if (isNearBottomEdge) {
+    topPosition = mouseY - menuHeight
+  }
+  
+  // 确保不超出左边界
+  if (leftPosition < 10) {
+    leftPosition = 10
+  }
+  
+  // 更新菜单位置
+  menuPosition.value = {
+    top: `${topPosition}px`,
+    left: `${leftPosition}px`
+  }
+  
+  // 添加全局点击监听
+  document.addEventListener('click', closeMenuOnClickOutside)
+}
+
+const handleThreadEdit = (threadId: string) => {
+  emit('threadEdit', threadId)
+  checkAndCloseMenu()
+}
+
+const handleThreadDelete = (threadId: string) => {
+  emit('threadDelete', threadId)
+  checkAndCloseMenu()
+}
+
+const handleThreadDirectClick = (threadId: string) => {
+  emit('threadChecked', threadId)
+  checkAndCloseMenu()
 }
 
 onMounted(() => {
@@ -498,50 +633,81 @@ defineExpose({
 .menu-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 4px 6px;
+  border-radius: 0px;
   cursor: pointer;
-  width: 28px;
-  height: 28px;
+  transition: color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  font-size: 16px;
-  transition: all 0.3s;
-  opacity: 0;
-  margin-right: -5px; /* 轻微缩小右侧间距 */
-}
-
-.thread-item:hover .menu-btn {
-  opacity: 1;
 }
 
 .menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.dropdown-overlay {
+.menu-btn i {
+  font-size: 16px;
+}
+
+/* 传送到body的菜单容器 */
+.menu-teleport-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2147483647; /* 最大可能z-index值 */
+}
+
+/* 菜单遮罩层 */
+.global-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 998;
   background: transparent;
+  pointer-events: auto;
+  z-index: 2147483646;
 }
 
-.dropdown-menu {
-  position: absolute;
-  background: rgba(40, 40, 40, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  width: 180px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  z-index: 999;
+/* 下拉菜单 */
+.global-menu {
+  position: fixed;
+  background: v-bind(menuColor);
+  backdrop-filter: blur(v-bind(menuBlur));
+  -webkit-backdrop-filter: blur(v-bind(menuBlur));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0px;
+  width: 150px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 2147483647;
   overflow: hidden;
   animation: menuFadeIn 0.15s ease-out;
   transform-origin: top right;
+  padding: 1px 0;
+  transition: all 0.15s ease-out;
+  pointer-events: auto;
+}
+
+.menu-top-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: v-bind(menuActiveColor);
+  box-shadow: 0 0 6px v-bind(menuActiveColor);
+}
+
+.menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 1px 0;
 }
 
 @keyframes menuFadeIn {
@@ -556,27 +722,67 @@ defineExpose({
 }
 
 .menu-item {
-  padding: 10px 12px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 13px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: 11px;
+  border-left: 2px solid transparent;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  pointer-events: auto !important;
+  user-select: none;
 }
 
 .menu-item:hover {
-  background: v-bind(primaryHover);
-  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 1);
+  border-left: 2px solid v-bind(menuActiveColor);
+}
+
+.menu-item:active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .menu-item i {
-  font-size: 14px;
+  display: none; /* 不再显示图标 */
 }
 
 .thread-item.active .role-avatar {
   border-color: v-bind(activeColor);
   box-shadow: 0 0 8px v-bind('`rgba(${activeColor.split("(")[1].split(")")[0].split(",").join(", ")}, 0.5)`');
+}
+
+.thread-menu-btn {
+  opacity: 0;
+}
+
+.thread-item:hover .thread-menu-btn {
+  opacity: 1;
+}
+
+/* 菜单标题样式 */
+.menu-title {
+  padding: 6px 8px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  user-select: none;
+  background: v-bind('`rgba(${menuActiveColor.split("(")[1].split(")")[0]}, 0.2)`');
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 移除标题后的分隔线，用标题自带的底部边框代替 */
+.menu-title + .menu-divider {
+  display: none;
 }
 </style> 

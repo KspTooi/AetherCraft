@@ -51,7 +51,16 @@ export const useThemeStore = defineStore('theme', () => {
   const modalBlur = ref('10px')
   
   // 模态窗口激活颜色
-  const modalActive = ref('rgba(94, 203, 245, 0.85)')
+  const modalActive = ref('rgba(0, 180, 240, 0.85)')
+  
+  // 三点菜单背景颜色
+  const menuColor = ref('rgba(22, 56, 66, 0.51)')
+  
+  // 三点菜单激活颜色
+  const menuActiveColor = ref('rgb(51, 168, 184)')
+  
+  // 三点菜单模糊程度
+  const menuBlur = ref('6px')
   
   // 选择器背景颜色
   const selectorColor = ref('rgba(25, 35, 60, 0.5)')
@@ -141,6 +150,21 @@ export const useThemeStore = defineStore('theme', () => {
   // 获取模态窗口激活颜色
   function getModalActive() {
     return modalActive.value
+  }
+  
+  // 获取三点菜单背景颜色
+  function getMenuColor() {
+    return menuColor.value
+  }
+  
+  // 获取三点菜单激活颜色
+  function getMenuActiveColor() {
+    return menuActiveColor.value
+  }
+  
+  // 获取三点菜单模糊程度
+  function getMenuBlur() {
+    return menuBlur.value
   }
   
   // 获取选择器背景颜色
@@ -243,6 +267,21 @@ export const useThemeStore = defineStore('theme', () => {
     modalActive.value = color
   }
   
+  // 设置三点菜单背景颜色
+  function setMenuColor(color: string) {
+    menuColor.value = color
+  }
+  
+  // 设置三点菜单激活颜色
+  function setMenuActiveColor(color: string) {
+    menuActiveColor.value = color
+  }
+  
+  // 设置三点菜单模糊程度
+  function setMenuBlur(blur: string) {
+    menuBlur.value = blur
+  }
+  
   // 设置选择器背景颜色
   function setSelectorColor(color: string) {
     selectorColor.value = color
@@ -284,6 +323,9 @@ export const useThemeStore = defineStore('theme', () => {
     modalColor,
     modalBlur,
     modalActive,
+    menuColor,
+    menuActiveColor,
+    menuBlur,
     selectorColor,
     selectorActiveColor,
     selectorBorderColor,
@@ -304,6 +346,9 @@ export const useThemeStore = defineStore('theme', () => {
     getModalColor,
     getModalBlur,
     getModalActive,
+    getMenuColor,
+    getMenuActiveColor,
+    getMenuBlur,
     getSelectorColor,
     getSelectorActiveColor,
     getSelectorBorderColor,
@@ -324,6 +369,9 @@ export const useThemeStore = defineStore('theme', () => {
     setModalColor,
     setModalBlur,
     setModalActive,
+    setMenuColor,
+    setMenuActiveColor,
+    setMenuBlur,
     setSelectorColor,
     setSelectorActiveColor,
     setSelectorBorderColor,
