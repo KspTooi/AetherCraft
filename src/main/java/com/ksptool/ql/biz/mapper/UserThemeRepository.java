@@ -20,7 +20,7 @@ public interface UserThemeRepository extends JpaRepository<UserTheme, Long> {
     @Query("""
             SELECT t FROM UserTheme t
             LEFT JOIN FETCH t.themeValues
-            WHERE t.userId = :userId
+            WHERE t.user.id = :userId
             ORDER BY t.isActive DESC, t.updateTime DESC
             """)
     List<UserTheme> findByUserIdWithValues(@Param("userId") Long userId);
@@ -31,12 +31,12 @@ public interface UserThemeRepository extends JpaRepository<UserTheme, Long> {
     @Query("""
             SELECT t FROM UserTheme t
             LEFT JOIN FETCH t.themeValues
-            WHERE t.userId = :userId AND t.isActive = 1
+            WHERE t.user.id = :userId AND t.isActive = 1
             """)
     UserTheme findActiveThemeByUserId(@Param("userId") Long userId);
     
     /**
      * 判断主题名称是否存在
      */
-    boolean existsByUserIdAndThemeName(Long userId, String themeName);
+    boolean existsByUser_IdAndThemeName(Long userId, String themeName);
 } 

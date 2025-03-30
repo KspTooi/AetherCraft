@@ -17,9 +17,10 @@ public class UserTheme {
     @Comment("主题ID")
     private Long id;
 
-    @Column(nullable = false)
-    @Comment("用户ID")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("所属用户")
+    private UserPo user;
 
     @Column(length = 50, nullable = false)
     @Comment("主题名称")

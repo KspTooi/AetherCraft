@@ -8,6 +8,8 @@ import lombok.EqualsAndHashCode;
 import java.util.Date;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "users")
@@ -69,6 +71,12 @@ public class UserPo {
     @EqualsAndHashCode.Exclude
     @Comment("用户所属的用户组")
     private Set<GroupPo> groups = new HashSet<>();
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户主题列表")
+    private List<UserTheme> themes = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
