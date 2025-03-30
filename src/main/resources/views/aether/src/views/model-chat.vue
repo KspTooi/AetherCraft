@@ -2,7 +2,7 @@
   <div class="chat-container">
     <div class="chat-layout">
       <!-- 移动端菜单按钮 -->
-      <button class="mobile-menu-btn d-md-none" @click="toggleThreadList">
+      <button class="mobile-menu-btn" @click="toggleThreadList">
         <i class="bi bi-chat-left-text"></i>
       </button>
       
@@ -1436,6 +1436,81 @@ onUnmounted(() => {
 }
 
 /* 移动端适配 */
+@media (max-width: 768px) {
+  .thread-list {
+    position: absolute;
+    left: -240px;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .thread-list.show {
+    transform: translateX(240px);
+  }
+  
+  .mobile-menu-btn {
+    display: block;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 101;
+    background: rgba(79, 172, 254, 0.3);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .mobile-menu-btn.hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+  }
+  
+  .thread-list-mask {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
+  
+  .thread-list-mask.show {
+    display: block;
+  }
+
+  .model-select {
+    padding: 6px 12px;
+    margin-top: 4px;
+  }
+
+  .model-select select {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .model-select label {
+    font-size: 13px;
+  }
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .thread-list {
     position: absolute;
