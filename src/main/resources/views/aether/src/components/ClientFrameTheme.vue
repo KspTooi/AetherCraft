@@ -50,7 +50,7 @@ import TopNav from '@/components/TopNav.vue'
 
 .content-area {
   flex-grow: 1; 
-  padding: 1rem;
+  /*padding: 1rem;*/
   /* 确保内容区域有背景或定位，避免被背景层覆盖 */
   position: relative; 
 }
