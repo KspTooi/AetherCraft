@@ -1020,7 +1020,6 @@ onUnmounted(() => {
     min-height: 32px;
     height: auto;
     width: auto;
-    font-size: 14px;
     padding: 5px 8px !important; /* 覆盖LaserButton默认内边距 */
     font-size: 12px!important;
   }

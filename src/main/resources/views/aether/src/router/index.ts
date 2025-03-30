@@ -19,6 +19,11 @@ const router = createRouter({
       component: () => import('../views/model-rp.vue'),
     },
     {
+      path: '/agent',
+      name: 'model-agent',
+      component: () => import('../views/model-agent.vue'),
+    },
+    {
       path: '/effects-test',
       name: 'effects-test',
       component: () => import('../components/EffectsTest.vue'),

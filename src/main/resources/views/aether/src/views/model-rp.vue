@@ -802,12 +802,14 @@ const throttle = (fn: Function, delay: number) => {
   display: none;
   position: fixed;
   left: 12px;
-  top: 12px;
+  top: 8px;
   z-index: 1001;
-  padding: 6px 10px;
-  font-size: 12px;
   width: auto;
+  height: 32px!important;
+  min-height: 32px!important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  padding: 5px 8px !important; /* 覆盖LaserButton默认内边距 */
+  font-size: 12px!important;
 }
 
 .thread-list-mask {

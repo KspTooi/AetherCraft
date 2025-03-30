@@ -27,7 +27,7 @@
             <router-link class="nav-link" to="/rp" @click="handleNavItemClick">角色扮演</router-link>
           </div>
           <div class="nav-item">
-            <router-link class="nav-link" to="/chat-agent" @click="handleNavItemClick">聊天(AGENT)</router-link>
+            <router-link class="nav-link" to="/agent" @click="handleNavItemClick">聊天(AGENT)</router-link>
           </div>
           <div class="nav-item">
             <router-link class="nav-link" to="/customize" @click="handleNavItemClick">个性化</router-link>
