@@ -9,7 +9,26 @@ import ClientFrameTheme from '@/components/ClientFrameTheme.vue'
   </ClientFrameTheme>
 </template>
 
-<style scoped>
-/* 移除原有的header和nav样式，TopNav组件自带样式 */
-/* 这里的样式可以根据全局需要添加，或者保持为空 */
+<style>
+
+/* 重置 body 边距 */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* 推荐添加，使得 padding 和 border 不会增加元素总宽度 */
+}
+
+/* 可选：重置 html 元素的边距和内边距 */
+html {
+  margin: 0;
+  padding: 0;
+}
+
+/* 如果需要，可以把之前 #app 的一些基础样式加回来，但移除宽度/边距限制 */
+#app {
+  font-weight: normal;
+  /* 其他需要的全局字体、颜色等样式 */
+}
+
+
 </style>
