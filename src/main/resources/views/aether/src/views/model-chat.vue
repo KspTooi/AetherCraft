@@ -9,45 +9,15 @@
       <!-- 遮罩层 -->
       <div class="thread-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleThreadList"></div>
       
-      <!-- 会话列表 -->
-      <div class="thread-list" :class="{ show: isMobileMenuOpen }">
-        <a href="#" class="manage-thread-btn" @click.prevent="createNewThread">
-          <i class="bi bi-plus-circle"></i>
-          新建会话
-        </a>
-        <div class="thread-items">
-          <!-- 会话列表为空时的提示 -->
-          <div v-if="threads.length === 0" class="empty-thread-tip">
-            <i class="bi bi-chat-square-text"></i>
-            <div class="tip-text">还没有会话记录</div>
-            <a href="#" class="create-thread-btn" @click.prevent="createNewThread">
-              创建新会话
-            </a>
-          </div>
-          <div v-for="thread in threads" 
-               :key="thread.id"
-               @click="loadThread(thread.id)"
-               :class="['thread-item', { active: String(thread.id) === String(currentThreadId) }]">
-            <div class="thread-content">
-              <div class="thread-title">{{ thread.title }}</div>
-              <div class="thread-time">{{ formatTime(thread.updateTime) }}</div>
-              <div class="thread-message" v-if="thread.lastMessage">{{ thread.lastMessage }}</div>
-            </div>
-            <div class="thread-actions">
-              <button class="thread-action-btn" 
-                      @click.stop="editThreadTitle(thread)"
-                      title="编辑标题">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="thread-action-btn" 
-                      @click.stop="deleteThread(thread.id)"
-                      title="删除会话">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- 会话列表组件 -->
+      <ModelChatThreadList 
+        ref="threadListRef" 
+        :currentThreadId="currentThreadId" 
+        :isMobileMenuOpen="isMobileMenuOpen"
+        @threadChecked="handleThreadChecked"
+        @threadEdit="handleThreadEdit"
+        @threadRemove="handleThreadRemove"
+        @createNewThread="createNewThread" />
 
       <!-- 主聊天区域 -->
       <div class="chat-main">
@@ -156,23 +126,37 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
+import ModelChatThreadList from "@/components/ModelChatThreadList.vue"
 import axios from 'axios'
 import { marked } from 'marked'
 
+// 定义消息类型接口
+interface ChatMessage {
+  id?: string; // historyId，用户发送的临时消息可能没有
+  role: 'user' | 'assistant';
+  content: string;
+  name: string;
+  avatarPath?: string;
+  createTime: string;
+  isEditing?: boolean;
+  editContent?: string;
+  isTyping?: boolean; // 用于AI助手输入状态
+  hasReceivedData?: boolean; // 用于AI助手输入状态
+}
+
 // 状态定义
-const messages = ref([])
+const messages = ref<ChatMessage[]>([])
 const selectedModel = ref('')
 const messageInput = ref('')
 const isLoading = ref(false)
-const currentThreadId = ref(null)
+const currentThreadId = ref<string | null>(null)
 const isMobileMenuOpen = ref(false)
-const threads = ref([])
 const isEditing = ref(false)
-const refreshThreadListTimer = ref(null)
-const messagesContainer = ref(null)
-const messageTextarea = ref(null)
-const editTextarea = ref(null)
-const models = ref([])
+const refreshThreadListTimer = ref<number | null>(null) // 明确类型
+const messagesContainer = ref<HTMLDivElement | null>(null) // 明确类型
+const messageTextarea = ref<HTMLTextAreaElement | null>(null) // 明确类型
+const editTextarea = ref<HTMLTextAreaElement[] | null>(null) // 注意这是数组
+const threadListRef = ref<InstanceType<typeof ModelChatThreadList> | null>(null)
 
 // 工具函数
 const throttle = (fn: Function, delay: number) => {
@@ -194,9 +178,9 @@ const loadThreadList = async () => {
     const response = await axios.post('/model/chat/getThreadList')
     
     if (response.data.code === 0) {
-      threads.value = response.data.data || []
+      // threads.value = response.data.data || []
       
-      if (!currentThreadId.value && threads.value.length === 0) {
+      if (!currentThreadId.value && response.data.data.length === 0) {
         resetChatState()
       }
     } else {
@@ -227,8 +211,11 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
+// 声明 showToast 函数类型 (根据实际情况调整)
+declare function showToast(type: string, message: string): void;
+
 const adjustTextareaHeight = () => {
-  const textarea = messageTextarea.value
+  const textarea = messageTextarea.value // 类型已明确
   if (!textarea) return
   
   textarea.style.height = '40px'
@@ -258,7 +245,7 @@ const sendMessage = async () => {
   adjustTextareaHeight()
 
   // 添加用户消息到列表
-  const tempUserMessage = {
+  const tempUserMessage: ChatMessage = {
     role: 'user',
     content: userMessage,
     name: '用户',
@@ -270,7 +257,6 @@ const sendMessage = async () => {
   isLoading.value = true
   
   try {
-    // 发送消息到后端
     const response = await axios.post('/model/chat/completeBatch', {
       threadId: currentThreadId.value,
       model: selectedModel.value,
@@ -279,13 +265,10 @@ const sendMessage = async () => {
     })
     
     if (response.data.code === 0) {
-      // 如果后端返回了用户信息，更新临时用户消息
       const segment = response.data.data
       if (segment && segment.historyId) {
         tempUserMessage.id = segment.historyId
       }
-      
-      // 如果后端返回了名称和头像，则更新
       if (segment && segment.name) {
         tempUserMessage.name = segment.name
       }
@@ -293,11 +276,9 @@ const sendMessage = async () => {
         tempUserMessage.avatarPath = segment.avatarPath
       }
       
-      // 触发视图更新以反映用户消息的更新
       messages.value = [...messages.value]
       
-      // 创建AI助手的空消息（等待响应）
-      const assistantMessage = {
+      const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: '正在输入...',
         name: 'AI助手',
@@ -306,13 +287,10 @@ const sendMessage = async () => {
         hasReceivedData: false
       }
       
-      // 添加到消息列表
       messages.value.push(assistantMessage)
       
-      // 滚动到底部
       scrollToBottom()
       
-      // 开始轮询获取AI响应
       await pollAIResponse(assistantMessage)
     } else {
       showToast("danger", response.data.message || "发送消息失败")
@@ -394,7 +372,7 @@ const pollAIResponse = async (assistantMessage: any) => {
           isLoading.value = false
 
           // 清除之前的定时器
-          if(refreshThreadListTimer.value) {
+          if(refreshThreadListTimer.value !== null) {
             clearTimeout(refreshThreadListTimer.value)
           }
           
@@ -474,7 +452,7 @@ const renderMarkdown = (content: string) => {
 
 const scrollToBottom = () => {
   nextTick(() => {
-    const container = messagesContainer.value
+    const container = messagesContainer.value // 类型已明确
     if (container) {
       container.scrollTop = container.scrollHeight
     }
@@ -487,20 +465,14 @@ const toggleThreadList = () => {
 
 const createNewThread = async () => {
   try {
-    // 调用创建空会话接口
     const response = await axios.post('/model/chat/createEmptyThread', {
       model: selectedModel.value
     })
-    
     if (response.data.code === 0) {
-      // 加载新创建的会话
-      await loadThread(response.data.data.threadId)
-      // 刷新会话列表
-      await loadThreadList()
-      
-      // 关闭移动端菜单
+      const newThreadId = response.data.data.threadId
+      await loadThread(newThreadId)
+      await threadListRef.value?.loadThreadList()
       isMobileMenuOpen.value = false
-      
       showToast("success", "新会话创建成功")
     } else {
       showToast("danger", response.data.message || "创建会话失败")
@@ -513,42 +485,31 @@ const createNewThread = async () => {
 
 const loadThread = async (threadId: string) => {
   try {
-    // 加载指定会话
     const response = await axios.post('/model/chat/recoverChat', {
       threadId: threadId
     })
-    
     if (response.data.code === 0) {
       const data = response.data.data
-      
-      // 更新当前会话ID
       currentThreadId.value = threadId
-      
-      // 如果返回了modelCode，更新选中的模型
+      localStorage.setItem('lastThreadId', threadId)
       if (data.modelCode) {
         nextTick(() => {
           selectedModel.value = data.modelCode
         })
       }
-      
-      // 更新消息列表
-      messages.value = data.messages.map((msg: any) => ({
+      messages.value = data.messages.map((msg: any): ChatMessage => ({
         id: msg.id,
-        role: msg.type === 0 ? 'user' : 'assistant',
+        role: msg.role === 0 ? 'user' : 'assistant',
         content: msg.content,
-        name: msg.name || (msg.type === 0 ? '用户' : 'AI助手'),
+        name: msg.name || (msg.role === 0 ? '用户' : 'AI助手'),
         avatarPath: msg.avatarPath,
         createTime: msg.createTime,
         isEditing: false,
         editContent: msg.content
       }))
-      
-      // 滚动到底部
       nextTick(() => {
         scrollToBottom()
       })
-      
-      // 关闭移动端菜单
       isMobileMenuOpen.value = false
     } else {
       showToast("danger", response.data.message || "加载会话失败")
@@ -562,16 +523,13 @@ const loadThread = async (threadId: string) => {
 const editThreadTitle = async (thread: any) => {
   const newTitle = prompt('请输入新的会话标题:', thread.title)
   if (!newTitle || newTitle.trim() === thread.title) return
-  
   try {
     const response = await axios.post('/model/chat/editThread', {
       threadId: thread.id,
       title: newTitle.trim()
     })
-    
     if (response.data.code === 0) {
-      // 更新本地会话标题
-      thread.title = newTitle.trim()
+      await threadListRef.value?.loadThreadList()
       showToast("success", "会话标题已更新")
     } else {
       showToast("danger", response.data.message || "更新会话标题失败")
@@ -586,25 +544,20 @@ const deleteThread = async (threadId: string) => {
   if (!confirm('确定要删除这个会话吗？此操作不可恢复。')) {
     return
   }
-  
   try {
     const response = await axios.post('/model/chat/removeThread', {
       threadId: threadId
     })
-    
     if (response.data.code === 0) {
-      // 如果删除的是当前会话，重置状态
-      if (threadId === currentThreadId.value) {
+      if (String(threadId) === String(currentThreadId.value)) {
         resetChatState()
       }
-      
-      // 刷新会话列表
-      await loadThreadList()
+      await threadListRef.value?.loadThreadList()
       showToast("success", "会话已删除")
     } else {
       showToast("danger", response.data.message || "删除会话失败")
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('删除会话失败:', error)
     showToast("danger", "删除会话失败，请检查网络连接")
   }
@@ -631,17 +584,16 @@ const formatTime = (timestamp: string) => {
   }
 }
 
-const editMessage = (message: any) => {
+const editMessage = (message: ChatMessage) => {
   message.isEditing = true
   message.editContent = message.content
   nextTick(() => {
     if (editTextarea.value && editTextarea.value.length > 0) {
+      // 假设我们总是操作第一个编辑框（或根据逻辑选择）
       const textarea = editTextarea.value[0]
       textarea.focus()
-      // 动态调整编辑框高度
-      adjustEditTextareaHeight(textarea, message)
+      adjustEditTextareaHeight(textarea, message) // 传递 textarea
       
-      // 检查是否是最后一条消息，如果是则滚动到底部
       const lastMessage = messages.value[messages.value.length - 1]
       if (lastMessage && lastMessage.id === message.id) {
         scrollToBottom()
@@ -650,7 +602,7 @@ const editMessage = (message: any) => {
   })
 }
 
-const confirmEdit = (message: any) => {
+const confirmEdit = (message: ChatMessage) => {
   if (!message.editContent || message.editContent.trim() === '') {
     alert('消息内容不能为空')
     return
@@ -681,7 +633,7 @@ const confirmEdit = (message: any) => {
   })
 }
 
-const cancelEdit = (message: any) => {
+const cancelEdit = (message: ChatMessage) => {
   // 取消编辑，恢复原始内容
   message.editContent = message.content
   message.isEditing = false
@@ -708,13 +660,13 @@ const deleteMessage = async (messageId: string) => {
     } else {
       showToast("danger", response.data.message || "删除消息失败")
     }
-  } catch (error) {
-    console.error('删除消息出错:', error)
+  } catch (error: any) {
+    console.error('删除消息失败:', error)
     showToast("danger", "删除消息失败，请检查网络连接")
   }
 }
 
-const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement, message: any) => {
+const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement, message: ChatMessage) => {
   // 创建一个临时元素来计算原始内容的高度
   const tempDiv = document.createElement('div')
   tempDiv.className = 'text'
@@ -729,7 +681,7 @@ const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement, message: any) =
   if (message.role === 'user') {
     tempDiv.textContent = message.content
   } else {
-    tempDiv.innerHTML = renderMarkdown(message.content)
+    tempDiv.innerHTML = renderMarkdown(message.content ?? '')
   }
   
   document.body.appendChild(tempDiv)
@@ -746,7 +698,7 @@ const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement, message: any) =
   document.body.removeChild(tempDiv)
 }
 
-const regenerateAIResponse = async (message: any) => {
+const regenerateAIResponse = async (message: ChatMessage) => {
   if (isLoading.value) return
   
   // 验证threadId是否存在
@@ -771,7 +723,7 @@ const regenerateAIResponse = async (message: any) => {
       const currentMsgIndex = messages.value.findIndex(m => m.id === message.id)
       
       // 创建新的助手消息对象
-      const assistantMessage = {
+      const assistantMessage: ChatMessage = {
         id: message.id,
         role: 'assistant',
         content: '正在重新生成...',
@@ -809,29 +761,30 @@ const regenerateAIResponse = async (message: any) => {
   }
 }
 
+// 事件处理
+const handleThreadChecked = (threadId: string) => {
+  loadThread(threadId)
+}
+
+const handleThreadEdit = (thread: any) => {
+  editThreadTitle(thread)
+}
+
+const handleThreadRemove = (threadId: string) => {
+  deleteThread(threadId)
+}
+
 // 生命周期钩子
 onMounted(async () => {
   adjustTextareaHeight()
   
-  // 加载会话列表
-  await loadThreadList()
-  
-  // 检查是否有上次使用的会话ID
-  const lastThreadId = localStorage.getItem('lastThreadId')
-
-  if (lastThreadId) {
-    // 加载上次使用的会话
-    await loadThread(lastThreadId)
-    return
-  }
-  
-  // 没有上次使用的会话，重置状态
-  resetChatState()
+  // 调用子组件的加载方法
+  await threadListRef.value?.loadThreadList()
 })
 
 // 组件销毁前清理定时器
 onUnmounted(() => {
-  if(refreshThreadListTimer.value) {
+  if(refreshThreadListTimer.value !== null) { // 明确检查 null
     clearTimeout(refreshThreadListTimer.value)
   }
 })
@@ -1216,232 +1169,8 @@ onUnmounted(() => {
   background: rgba(254, 79, 79, 0.8);
 }
 
-/* 会话列表区域 */
-.thread-list {
-  width: 240px;
-  background: rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0 !important;
-}
-
-.manage-thread-btn {
-  margin: 12px;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(79, 172, 254, 0.2);
-  color: white;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.manage-thread-btn i {
-  font-size: 16px;
-}
-
-.manage-thread-btn:hover {
-  background: rgba(79, 172, 254, 0.3);
-  transform: translateY(-1px);
-}
-
-.manage-thread-btn:active {
-  transform: translateY(0);
-}
-
-.thread-items {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* 会话列表为空时的提示样式 */
-.empty-thread-tip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px 20px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.empty-thread-tip i {
-  font-size: 36px;
-  margin-bottom: 12px;
-}
-
-.empty-thread-tip .tip-text {
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-.create-thread-btn {
-  padding: 8px 16px;
-  background: rgba(79, 172, 254, 0.3);
-  color: white;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.create-thread-btn:hover {
-  background: rgba(79, 172, 254, 0.5);
-  transform: translateY(-2px);
-}
-
-.thread-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-left: 3px solid transparent;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.thread-item .thread-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.thread-item .thread-title {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.thread-item .thread-time {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 4px;
-}
-
-.thread-item .thread-message {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.thread-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.thread-item.active {
-  background: rgba(79, 172, 254, 0.2);
-  border-left-color: #4facfe;
-}
-
-.thread-actions {
-  display: none;
-  gap: 4px;
-}
-
-.thread-item:hover .thread-actions {
-  display: flex;
-}
-
-.thread-action-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.4);
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.thread-action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* 自定义滚动条 - 会话列表 */
-.thread-items::-webkit-scrollbar {
-  width: 4px;
-}
-
-.thread-items::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.thread-items::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-.thread-items::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* 动画效果 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.messages-container-fade-in {
-  opacity: 0;
-  animation: fadeIn 0.6s ease forwards;
-}
-
-/* 角色头像加载动画 */
-.avatar-loading {
-  filter: grayscale(100%);
-}
-
-.avatar-loading-fade-out {
-  filter: grayscale(0%);
-  transition: filter 0.5s ease;
-}
-
-/* 消息悬浮效果 */
-.message-hover-effect {
-  transition: background-color 0.5s ease !important;
-}
-
-.message-hover-effect:not(.editing):hover {
-  background-color: rgba(0, 0, 0, 0.15) !important;
-}
-
 /* 移动端适配 */
 @media (max-width: 768px) {
-  .thread-list {
-    position: absolute;
-    left: -240px;
-    top: 0;
-    bottom: 0;
-    z-index: 100;
-    transition: transform 0.3s ease;
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
-  .thread-list.show {
-    transform: translateX(240px);
-  }
-  
   .mobile-menu-btn {
     display: block;
     position: absolute;
@@ -1481,95 +1210,10 @@ onUnmounted(() => {
   
   .thread-list-mask.show {
     display: block;
-  }
-
-  .model-select {
-    padding: 6px 12px;
-    margin-top: 4px;
-  }
-
-  .model-select select {
-    padding: 4px 8px;
-    font-size: 13px;
-  }
-
-  .model-select label {
-    font-size: 13px;
   }
 }
 
 .mobile-menu-btn {
   display: none;
-}
-
-@media (max-width: 768px) {
-  .thread-list {
-    position: absolute;
-    left: -240px;
-    top: 0;
-    bottom: 0;
-    z-index: 100;
-    transition: transform 0.3s ease;
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
-  .thread-list.show {
-    transform: translateX(240px);
-  }
-  
-  .mobile-menu-btn {
-    display: block;
-    position: absolute;
-    left: 12px;
-    top: 12px;
-    z-index: 101;
-    background: rgba(79, 172, 254, 0.3);
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  
-  .mobile-menu-btn.hide {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-20px);
-  }
-  
-  .thread-list-mask {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 99;
-  }
-  
-  .thread-list-mask.show {
-    display: block;
-  }
-
-  .model-select {
-    padding: 6px 12px;
-    margin-top: 4px;
-  }
-
-  .model-select select {
-    padding: 4px 8px;
-    font-size: 13px;
-  }
-
-  .model-select label {
-    font-size: 13px;
-  }
 }
 </style> 
