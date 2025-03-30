@@ -66,6 +66,7 @@
       </div>
     </div>
   </div>
+  <ConfirmModal ref="confirmModal" />
 </template>
 
 <script setup lang="ts">
@@ -73,6 +74,7 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 import LaserButton from './LaserButton.vue'
 import { useThemeStore } from '../stores/theme'
+import ConfirmModal from './ConfirmModal.vue'
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -100,6 +102,7 @@ const emit = defineEmits<{
 // State
 const threads = ref<any[]>([])
 const loading = ref(false)
+const confirmModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
 
 // Methods
 const loadThreadList = async () => {
@@ -151,7 +154,7 @@ const handleEditThread = (thread: any) => {
   emit('threadEdit', thread)
 }
 
-const handleDeleteThread = (threadId: string) => {
+const handleDeleteThread = async (threadId: string) => {
   emit('threadRemove', threadId)
 }
 

@@ -44,23 +44,28 @@
             <router-link class="nav-link" to="/dashboard" @click="handleNavItemClick">管理台</router-link>
           </div>
           <div class="nav-item">
-            <a class="nav-link" @click="handleLogout">注销</a>
+            <a class="nav-link cursor-pointer" @click="showLogoutConfirm">注销</a>
           </div>
         </div>
       </div>
     </div>
   </nav>
+  
+  <ConfirmModal ref="logoutModal" />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
+import ConfirmModal from './ConfirmModal.vue'
+import axios from 'axios'
 
 const router = useRouter()
 const route = useRoute()
 const isExpanded = ref(false)
 const brandName = ref('AetherCraft')
+const logoutModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -98,6 +103,38 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
+// 显示注销确认对话框
+const showLogoutConfirm = async () => {
+  if (!logoutModal.value) return
+  
+  const confirmed = await logoutModal.value.showConfirm({
+    title: '确认注销',
+    content: '您确定要注销登录吗？',
+    confirmText: '确认注销',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
+    handleLogout()
+  }
+  
+  handleNavItemClick() // 关闭导航栏
+}
+
+// 执行注销操作
+const handleLogout = async () => {
+  try {
+    // 调用注销接口
+    await axios.get('/logout')
+    // 注销成功后重定向到登录页面
+    window.location.href = '/login'
+  } catch (error) {
+    console.error('注销失败', error)
+    // 如果请求失败，仍然跳转到登录页
+    window.location.href = '/login'
+  }
+}
+
 // 页面加载时设置事件监听
 onMounted(() => {
   // 在移动端点击品牌名称切换导航栏
@@ -119,12 +156,6 @@ onUnmounted(() => {
   
   document.removeEventListener('click', handleClickOutside)
 })
-
-const handleLogout = () => {
-  // 这里添加登出逻辑
-  console.log('用户登出')
-  handleNavItemClick() // 点击后关闭导航栏
-}
 </script>
 
 <style>
@@ -393,5 +424,9 @@ body, html {
   .nav-link:hover {
     background-color: v-bind(primaryHover);
   }
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style> 

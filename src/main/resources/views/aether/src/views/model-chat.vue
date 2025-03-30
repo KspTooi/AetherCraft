@@ -54,6 +54,7 @@
       </div>
     </div>
   </div>
+  <ConfirmModal ref="confirmModal" />
 </template>
 
 <script setup lang="ts">
@@ -67,6 +68,7 @@ import axios from 'axios'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
 import LaserButton from "@/components/LaserButton.vue"
+import ConfirmModal from "@/components/ConfirmModal.vue"
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -105,6 +107,7 @@ const isEditing = ref(false)
 const refreshThreadListTimer = ref<number | null>(null)
 const threadListRef = ref<InstanceType<typeof ModelChatThreadList> | null>(null)
 const messagesRef = ref<InstanceType<typeof ModelChatMsgBox> | null>(null)
+const confirmModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
 
 // 声明 showToast 函数类型
 declare function showToast(type: string, message: string): void;
@@ -449,9 +452,17 @@ const editThreadTitle = async (thread: any) => {
 }
 
 const deleteThread = async (threadId: string) => {
-  if (!confirm('确定要删除这个会话吗？此操作不可恢复。')) {
-    return
-  }
+  if (!confirmModal.value) return
+  
+  const confirmed = await confirmModal.value.showConfirm({
+    title: '确认删除',
+    content: '确定要删除这个会话吗？此操作不可恢复。',
+    confirmText: '确认删除',
+    cancelText: '取消'
+  })
+  
+  if (!confirmed) return
+  
   try {
     const response = await axios.post('/model/chat/removeThread', {
       threadId: threadId
