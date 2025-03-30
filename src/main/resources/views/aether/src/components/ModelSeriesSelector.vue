@@ -36,6 +36,15 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
+import { useThemeStore } from '../stores/theme'
+
+// 获取主题颜色
+const themeStore = useThemeStore()
+const primaryColor = computed(() => themeStore.primaryColor)
+const selectorColor = computed(() => themeStore.selectorColor)
+const selectorActiveColor = computed(() => themeStore.selectorActiveColor)
+const selectorBorderColor = computed(() => themeStore.selectorBorderColor)
+const mainBlur = computed(() => themeStore.mainBlur)
 
 // 定义组件的props和emit
 const props = defineProps<{
@@ -137,8 +146,8 @@ const vClickOutside = {
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
-  background: rgba(25, 35, 60, 0.5);
-  border: 1px solid rgba(79, 172, 254, 0.15);
+  background: v-bind(selectorColor);
+  border: 1px solid v-bind(selectorBorderColor);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -153,20 +162,20 @@ const vClickOutside = {
   right: 0;
   bottom: -2px;
   height: 2px;
-  background: linear-gradient(to bottom, rgba(79, 172, 254, 0.15), transparent);
+  background: linear-gradient(to bottom, v-bind(selectorBorderColor), transparent);
   pointer-events: none;
   transition: opacity 0.3s ease;
   opacity: 0.7;
 }
 
 .selector-header:hover {
-  background: rgba(35, 55, 90, 0.5);
-  border-color: rgba(79, 172, 254, 0.25);
+  background: v-bind(selectorActiveColor);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .selector-header:hover::after {
   opacity: 1;
-  background: linear-gradient(to bottom, rgba(79, 172, 254, 0.3), transparent);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
 }
 
 .selected-model {
@@ -185,14 +194,14 @@ const vClickOutside = {
 
 .bi-chevron-down {
   font-size: 14px;
-  color: rgba(79, 172, 254, 0.6);
+  color: v-bind(selectorBorderColor);
   transition: transform 0.3s ease, color 0.3s ease;
   margin-left: 5px;
 }
 
 .bi-chevron-down.rotated {
   transform: rotate(180deg);
-  color: rgba(79, 172, 254, 0.9);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .selector-header:hover .model-name {
@@ -200,7 +209,7 @@ const vClickOutside = {
 }
 
 .selector-header:hover .bi-chevron-down {
-  color: rgba(79, 172, 254, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .dropdown-menu {
@@ -209,13 +218,14 @@ const vClickOutside = {
   left: 0;
   right: 0;
   background: rgba(20, 30, 55, 0.8);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  border: 1px solid v-bind(selectorBorderColor);
   border-radius: 0;
   max-height: 250px;
   overflow-y: auto;
   z-index: 1000;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 1px rgba(79, 172, 254, 0.2);
+  backdrop-filter: blur(v-bind(mainBlur));
+  -webkit-backdrop-filter: blur(v-bind(mainBlur));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 1px v-bind(selectorBorderColor);
 }
 
 .loading-state {
@@ -239,12 +249,12 @@ const vClickOutside = {
 }
 
 .model-series:not(:last-child) {
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  border-bottom: 1px solid v-bind(selectorBorderColor);
 }
 
 .series-name {
   padding: 3px 10px;
-  color: rgba(79, 172, 254, 0.6);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -260,13 +270,13 @@ const vClickOutside = {
 }
 
 .model-item:hover {
-  background: rgba(79, 172, 254, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
 .model-item.active {
-  background: rgba(79, 172, 254, 0.2);
-  color: rgba(79, 172, 254, 1);
+  background: v-bind(selectorActiveColor);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
@@ -280,12 +290,12 @@ const vClickOutside = {
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb {
-  background: rgba(79, 172, 254, 0.2);
+  background: v-bind(selectorBorderColor);
   border-radius: 1.5px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 172, 254, 0.4);
+  background: v-bind(primaryColor);
 }
 
 /* 下拉动画 */

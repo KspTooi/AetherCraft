@@ -17,6 +17,9 @@
       :disabled="!messageInput.trim()"
       corner="bottom-right"
       corner-size="15px"
+      :background-color="primaryButton"
+      :border-color="primaryButtonBorder"
+      :glow-color="primaryHover"
       :innerGlow="true"
       :particles="true"
       @click="handleSend">
@@ -37,8 +40,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, computed } from 'vue'
 import LaserButton from './LaserButton.vue'
+import { useThemeStore } from '../stores/theme'
+
+// 获取主题颜色
+const themeStore = useThemeStore()
+const primaryColor = computed(() => themeStore.primaryColor)
+const activeColor = computed(() => themeStore.activeColor)
+const primaryHover = computed(() => themeStore.primaryHover)
+const primaryButton = computed(() => themeStore.primaryButton)
+const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+const textareaColor = computed(() => themeStore.textareaColor)
+const textareaActive = computed(() => themeStore.textareaActive)
+const textareaBorder = computed(() => themeStore.textareaBorder)
 
 // Props
 const props = defineProps<{
@@ -122,8 +137,8 @@ onMounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(25, 35, 60, 0.4);
-  border: 1px solid rgba(79, 172, 254, 0.15);
+  background: v-bind(textareaColor);
+  border: 1px solid v-bind(textareaBorder);
   border-radius: 0;
   min-height: 40px;
   max-height: 150px;
@@ -169,8 +184,8 @@ onMounted(() => {
 }
 
 .chat-input-wrapper:focus-within {
-  background: rgba(30, 40, 70, 0.5);
-  border-color: rgba(79, 172, 254, 0.4);
+  background: v-bind(textareaActive);
+  border-color: v-bind(primaryColor);
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -181,7 +196,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, v-bind(textareaBorder), transparent);
   transform: translateY(-100%);
   opacity: 0;
   transition: all 0.3s ease;
@@ -190,8 +205,8 @@ onMounted(() => {
 .focus-border.active {
   transform: translateY(0);
   opacity: 1;
-  background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.5), transparent);
-  box-shadow: 0 0 4px rgba(79, 172, 254, 0.2);
+  background: linear-gradient(90deg, transparent, v-bind(activeColor), transparent);
+  box-shadow: 0 0 4px v-bind(textareaBorder);
 }
 
 /* 移除过度的内发光效果 */

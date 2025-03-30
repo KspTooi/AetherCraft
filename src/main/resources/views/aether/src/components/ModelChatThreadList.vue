@@ -1,14 +1,12 @@
 <template>
   <div class="thread-list-container" :class="{ show: isMobileMenuOpen }">
-    <LaserButton 
+    <LaserButton
       class="manage-thread-btn"
       :corners="['bottom-left', 'bottom-right']"
       corner-size="15px"
-      background-color="rgba(25, 45, 88, 0.8)"
-      border-color="rgba(135, 206, 250, 0.8)"
-      glow-color="rgba(135, 206, 250, 0.5)"
+      :background-color="primaryButton"
+      :border-color="primaryButtonBorder"
       @click="handleCreateNewThread">
-      <i class="bi bi-plus-circle"></i>
       新建会话
     </LaserButton>
     <div class="thread-items-wrapper">
@@ -22,9 +20,9 @@
           class="create-thread-btn"
           :corners="['bottom-left', 'bottom-right']"
           corner-size="15px"
-          background-color="rgba(25, 45, 88, 0.8)"
-          border-color="rgba(135, 206, 250, 0.8)"
-          glow-color="rgba(135, 206, 250, 0.5)"
+          :background-color="primaryButton"
+          :border-color="primaryButtonBorder"
+          :glow-color="primaryHover"
           @click="handleCreateNewThread">
           创建新会话
         </LaserButton>
@@ -71,9 +69,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 import LaserButton from './LaserButton.vue'
+import { useThemeStore } from '../stores/theme'
+
+// 获取主题颜色
+const themeStore = useThemeStore()
+const primaryColor = computed(() => themeStore.primaryColor)
+const activeColor = computed(() => themeStore.activeColor)
+const primaryHover = computed(() => themeStore.primaryHover)
+const primaryButton = computed(() => themeStore.primaryButton)
+const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+const sideBlur = computed(() => themeStore.sideBlur)
 
 // Props
 const props = defineProps<{
@@ -160,10 +168,9 @@ defineExpose({
 <style scoped>
 .thread-list-container {
   width: 240px;
-
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(79, 172, 254, 0.1);
+  border-right: 1px solid v-bind('`rgba(${primaryColor.split("(")[1].split(")")[0]}, 0.1)`');
   border-radius: 0 !important;
   transition: transform 0.3s ease;
 }
@@ -174,8 +181,6 @@ defineExpose({
   font-size: 14px;
   flex-shrink: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  background-color: rgba(25, 45, 88, 0.8) !important;
-  border-color: rgba(79, 172, 254, 0.5) !important;
 }
 
 .manage-thread-btn i {
@@ -232,8 +237,8 @@ defineExpose({
 
 .create-thread-btn {
   font-size: 14px;
-  background-color: rgba(25, 45, 88, 0.8) !important;
-  border-color: rgba(79, 172, 254, 0.5) !important;
+  background-color: v-bind(primaryButton) !important;
+  border-color: v-bind(primaryButtonBorder) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -281,7 +286,7 @@ defineExpose({
 
 .thread-item .thread-time {
   font-size: 11px;
-  color: rgba(79, 172, 254, 0.5);
+  color: v-bind(primaryColor);
   margin-bottom: 0;
   letter-spacing: 0.1px;
 }
@@ -298,13 +303,13 @@ defineExpose({
 }
 
 .thread-item:hover {
-  background: rgba(50, 70, 100, 0.3);
+  background: v-bind(primaryHover);
 }
 
 .thread-item.active {
   background: rgba(40, 90, 130, 0.25);
-  border-left-color: rgba(79, 172, 254, 0.8);
-  box-shadow: inset 3px 0 5px -2px rgba(79, 172, 254, 0.6);
+  border-left-color: v-bind(activeColor);
+  box-shadow: inset 3px 0 5px -2px v-bind(activeColor);
 }
 
 .thread-item.active .thread-title {
@@ -313,7 +318,7 @@ defineExpose({
 }
 
 .thread-item.active .thread-time {
-  color: rgba(79, 172, 254, 0.7);
+  color: v-bind(activeColor);
 }
 
 .thread-actions {
@@ -340,7 +345,7 @@ defineExpose({
 }
 
 .thread-action-btn:hover {
-  background: rgba(79, 172, 254, 0.15) !important;
+  background: v-bind('`rgba(${primaryColor.split("(")[1].split(")")[0]}, 0.15)`') !important;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -357,12 +362,12 @@ defineExpose({
 }
 
 .thread-items-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(79, 172, 254, 0.2);
+  background: v-bind(primaryHover);
   border-radius: 1.5px;
 }
 
 .thread-items-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 172, 254, 0.4);
+  background: v-bind(primaryColor);
 }
 
 @media (max-width: 768px) {
@@ -373,7 +378,8 @@ defineExpose({
     bottom: 0;
     z-index: 100;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(v-bind(sideBlur));
+    -webkit-backdrop-filter: blur(v-bind(sideBlur));
   }
   
   .thread-list-container.show {

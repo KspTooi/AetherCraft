@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import ModelChatThreadList from "@/components/ModelChatThreadList.vue"
@@ -69,6 +69,12 @@ import ModelChatMessages from "@/components/ModelChatMessages.vue"
 import ModelChatInput from "@/components/ModelChatInput.vue"
 import axios from 'axios'
 import { marked } from 'marked'
+import { useThemeStore } from '../stores/theme'
+
+// 获取主题颜色
+const themeStore = useThemeStore()
+const mainBlur = computed(() => themeStore.mainBlur)
+const sideBlur = computed(() => themeStore.sideBlur)
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -638,7 +644,8 @@ onUnmounted(() => {
 }
 
 .thread-list{
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(v-bind(sideBlur));
+  -webkit-backdrop-filter: blur(v-bind(sideBlur));
 }
 
 /* 主聊天区域 */
@@ -649,7 +656,8 @@ onUnmounted(() => {
   background: transparent;
   overflow: hidden;
   border-radius: 0 !important;
-  backdrop-filter: blur(15px);
+  backdrop-filter: blur(v-bind(mainBlur));
+  -webkit-backdrop-filter: blur(v-bind(mainBlur));
 }
 
 /* 模型选择区域 */

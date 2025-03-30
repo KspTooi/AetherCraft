@@ -50,13 +50,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useThemeStore } from '../stores/theme'
 
 const router = useRouter()
 const route = useRoute()
 const isExpanded = ref(false)
 const brandName = ref('AetherCraft')
+
+// 获取主题颜色
+const themeStore = useThemeStore()
+const primaryColor = computed(() => themeStore.primaryColor)
+const activeColor = computed(() => themeStore.activeColor)
+const primaryHover = computed(() => themeStore.primaryHover)
+const navBlur = computed(() => themeStore.navBlur)
 
 // 处理品牌点击 - 小屏幕时切换导航栏显示
 const handleBrandClick = () => {
@@ -139,13 +147,12 @@ body, html {
   z-index: 1000;
   width: 100%;
   height: var(--nav-height);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(v-bind(navBlur));
+  -webkit-backdrop-filter: blur(v-bind(navBlur));
   border-bottom: 1px solid rgba(66, 66, 66, 0.34);
   box-shadow: none;
   padding: 0.2rem 0;
   transition: background 0.3s ease;
-
 }
 
 /* 移除 container-fluid 的内边距，并在外层 navbar 或此处添加 */
@@ -162,9 +169,9 @@ body, html {
 .brand-gradient {
   background: linear-gradient(90deg, 
     rgba(180, 220, 255, 0.9) 0%, 
-    rgba(140, 180, 255, 0.9) 25%, 
-    rgba(100, 170, 255, 0.9) 50%, 
-    rgba(140, 180, 255, 0.9) 75%, 
+    v-bind(primaryColor) 25%, 
+    v-bind(primaryColor) 50%, 
+    v-bind(primaryColor) 75%, 
     rgba(180, 220, 255, 0.9) 100%
   );
   background-size: 200% auto;
@@ -172,14 +179,14 @@ body, html {
   background-clip: text;
   color: transparent !important;
   font-weight: 600;
-  text-shadow: 0px 0px 8px rgba(100, 170, 255, 0.5);
+  text-shadow: 0px 0px 8px v-bind(primaryColor);
   animation: gradient-shift 8s linear infinite;
   letter-spacing: 0.5px;
 }
 
 .brand-gradient:hover {
   animation-duration: 4s;
-  text-shadow: 0px 0px 12px rgba(100, 170, 255, 0.7);
+  text-shadow: 0px 0px 12px v-bind(primaryColor);
 }
 
 @keyframes gradient-shift {
@@ -239,7 +246,7 @@ body, html {
 }
 
 .nav-link:hover {
-  background-color: rgba(255,255,255,0.05);
+  background-color: v-bind(primaryHover);
   color: #ffffff;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
@@ -251,7 +258,7 @@ body, html {
   border-bottom-color: transparent;
 }
 
-/* 修改发光效果 */
+/* 修改激活状态下的发光效果，使用主题颜色 */
 .nav-link.router-link-active::after {
   content: '';
   position: absolute;
@@ -259,8 +266,8 @@ body, html {
   bottom: -1px;
   width: 100%;
   height: 1px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+  background: v-bind(activeColor);
+  box-shadow: 0 0 3px v-bind(activeColor);
   opacity: 1;
 }
 
@@ -322,10 +329,10 @@ body, html {
     right: 0;
     background: linear-gradient(180deg, 
       rgba(20, 30, 50, 0.9) 0%, 
-      rgba(10, 20, 40, 0.8) 100%
+      v-bind(primaryColor) 100%
     );
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(v-bind(navBlur));
+    -webkit-backdrop-filter: blur(v-bind(navBlur));
     border-bottom: none;
     box-shadow: none;
     transform-origin: top;
@@ -384,7 +391,7 @@ body, html {
 
   /* 添加hover效果 */
   .nav-link:hover {
-    background-color: rgba(255,255,255,0.2);
+    background-color: v-bind(primaryHover);
   }
 }
 </style> 

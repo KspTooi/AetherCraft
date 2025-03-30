@@ -58,7 +58,7 @@ const props = defineProps({
   // 基础样式属性
   backgroundColor: {
     type: String,
-    default: 'rgba(96, 165, 250, 0.3)' // 默认蓝色半透明背景
+    default: 'rgba(61,138,168,0.24)' // 默认蓝色半透明背景
   },
   color: {
     type: String,
