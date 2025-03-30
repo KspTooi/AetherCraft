@@ -1,5 +1,5 @@
 <template>
-  <div class="thread-list-container" :class="{ show: isMobileMenuOpen }">
+  <div class="thread-list-container">
     <LaserButton
       class="manage-thread-btn"
       :corners="['bottom-left', 'bottom-right']"
@@ -172,7 +172,8 @@ defineExpose({
   flex-direction: column;
   border-right: 1px solid v-bind('`rgba(${primaryColor.split("(")[1].split(")")[0]}, 0.1)`');
   border-radius: 0 !important;
-  transition: transform 0.3s ease;
+  height: 100%;
+  overflow: hidden;
 }
 
 .manage-thread-btn {
@@ -195,6 +196,7 @@ defineExpose({
   border-top: none;
   min-height: 0;
   margin-top: 5px;
+  height: calc(100% - 60px);
 }
 
 .loading-indicator {
@@ -371,19 +373,10 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .thread-list-container {
-    position: absolute;
-    left: -240px;
-    top: 0;
-    bottom: 0;
-    z-index: 100;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(v-bind(sideBlur));
-    -webkit-backdrop-filter: blur(v-bind(sideBlur));
-  }
-  
-  .thread-list-container.show {
-    transform: translateX(240px);
+  .thread-items-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    height: calc(100vh - 60px);
   }
 }
 </style> 

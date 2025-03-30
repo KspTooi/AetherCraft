@@ -2,15 +2,19 @@
   <div class="chat-container">
     <div class="chat-layout">
       <!-- 移动端菜单按钮 -->
-      <button class="mobile-menu-btn" @click="toggleThreadList">
-        <i class="bi bi-chat-left-text"></i>
-      </button>
+      <LaserButton 
+        class="mobile-menu-btn" 
+        @click="toggleThreadList"
+        :corners="['bottom-left']"
+        corner-size="15px">
+        聊天列表
+      </LaserButton>
       
       <!-- 遮罩层 -->
       <div class="thread-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleThreadList"></div>
       
       <!-- 会话列表组件 -->
-      <div class="thread-list">
+      <div class="thread-list" :class="{ show: isMobileMenuOpen }">
         <ModelChatThreadList
             ref="threadListRef"
             :currentThreadId="currentThreadId"
@@ -30,24 +34,15 @@
         
         <!-- 聊天消息区域 -->
         <div class="chat-messages-wrapper">
-          <!-- 空状态提示 -->
-          <div v-if="!currentThreadId" class="empty-state">
-            <i class="bi bi-chat-square-text"></i>
-            <div class="title">请选择一个会话开始对话</div>
-            <div class="subtitle">从左侧列表选择一个会话，开始精彩的对话之旅</div>
-          </div>
-          
-          <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="`${currentThreadId}`">
-            <ModelChatMessages 
-              ref="messagesRef"
-              :messages="messages"
-              :currentThreadId="currentThreadId"
-              :isEditing="isEditing"
-              @messageEdit="handleMessageEdit"
-              @messageRemove="handleMessageRemove"
-              @regenerate="handleRegenerate"
-              @scrollToBottom="scrollToBottom" />
-          </div>
+          <ModelChatMsgBox
+            ref="messagesRef"
+            :messages="messages"
+            :currentThreadId="currentThreadId"
+            :isEditing="isEditing"
+            @messageEdit="handleMessageEdit"
+            @messageRemove="handleMessageRemove"
+            @regenerate="handleRegenerate"
+            @scrollToBottom="scrollToBottom" />
         </div>
         
         <!-- 聊天输入区域 -->
@@ -65,16 +60,22 @@ import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import ModelChatThreadList from "@/components/ModelChatThreadList.vue"
-import ModelChatMessages from "@/components/ModelChatMessages.vue"
+import ModelChatMsgBox from "@/components/ModelChatMsgBox.vue"
 import ModelChatInput from "@/components/ModelChatInput.vue"
 import axios from 'axios'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
+import LaserButton from "@/components/LaserButton.vue"
 
 // 获取主题颜色
 const themeStore = useThemeStore()
 const mainBlur = computed(() => themeStore.mainBlur)
 const sideBlur = computed(() => themeStore.sideBlur)
+const primaryColor = computed(() => themeStore.primaryColor)
+const activeColor = computed(() => themeStore.activeColor)
+const primaryHover = computed(() => themeStore.primaryHover)
+const primaryButton = computed(() => themeStore.primaryButton)
+const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -99,7 +100,7 @@ const isMobileMenuOpen = ref(false)
 const isEditing = ref(false)
 const refreshThreadListTimer = ref<number | null>(null)
 const threadListRef = ref<InstanceType<typeof ModelChatThreadList> | null>(null)
-const messagesRef = ref<InstanceType<typeof ModelChatMessages> | null>(null)
+const messagesRef = ref<InstanceType<typeof ModelChatMsgBox> | null>(null)
 
 // 声明 showToast 函数类型
 declare function showToast(type: string, message: string): void;
@@ -724,7 +725,7 @@ onUnmounted(() => {
   flex-direction: column;
   min-height: 0;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden; /* 修改为hidden避免双重滚动条 */
   width: 100%;
   max-width: 100%;
 }
@@ -740,32 +741,6 @@ onUnmounted(() => {
   min-height: 0;
   width: 100%;
   max-width: 100%;
-}
-
-.empty-state {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.empty-state i {
-  font-size: 48px;
-  margin-bottom: 16px;
-  display: block;
-}
-
-.empty-state .title {
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.empty-state .subtitle {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
 }
 
 .message {
@@ -1030,21 +1005,17 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: flex !important;
-    position: absolute;
+    position: fixed;
     left: 12px;
     top: 12px;
-    z-index: 101;
-    background: rgba(79, 172, 254, 0.3);
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
+    z-index: 1001; /* 比TopNav的z-index(1000)高 */
     cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    min-height: 32px;
+    height: auto;
+    width: auto;
+    font-size: 14px;
+    padding: 5px 8px !important; /* 覆盖LaserButton默认内边距 */
+    font-size: 12px!important;
   }
   
   .mobile-menu-btn.hide {
@@ -1053,23 +1024,54 @@ onUnmounted(() => {
     transform: translateX(-20px);
   }
   
+  .mobile-menu-btn:hover {
+    transform: translateY(0) !important; /* 禁用LaserButton默认的悬停效果 */
+  }
+  
   .thread-list-mask {
     display: none;
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
-    right: 0;
-    bottom: 0;
+    width: 100vw;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 99;
+    z-index: 1000; /* 确保在导航栏上层，但在线程列表下层 */
   }
   
   .thread-list-mask.show {
     display: block;
   }
+  
+  .thread-list {
+    position: fixed;
+    left: -240px;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 1001; /* 与按钮相同层级 */
+    transition: transform 0.3s ease;
+    background-color: rgba(20, 30, 40, 0.9); /* 确保背景不透明 */
+  }
+  
+  .thread-list.show {
+    transform: translateX(240px);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .chat-main {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .mobile-menu-btn {
-  display: none;
+  display: none; /* 默认隐藏 */
+  position: fixed;
+  left: 12px;
+  top: 8px;
+  z-index: 1001;
+  width: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 </style> 

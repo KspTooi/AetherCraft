@@ -5,6 +5,12 @@ export const useThemeStore = defineStore('theme', () => {
   // 主要主题颜色
   const primaryColor = ref('rgba(135, 206, 250, 0.7)')
   
+  // 消息悬浮背景色 - 用户
+  const messageHoverUser = ref('rgba(61, 138, 168, 0.12)')
+
+  // 消息悬浮背景色 - 模型
+  const messageHoverModel = ref('rgba(61, 138, 168, 0.12)')
+  
   // 激活状态的颜色
   const activeColor = ref('rgba(94, 203, 245, 0.85)')
   
@@ -114,6 +120,16 @@ export const useThemeStore = defineStore('theme', () => {
     return selectorBorderColor.value
   }
   
+  // 获取用户消息悬浮背景色
+  function getMessageHoverUser() {
+    return messageHoverUser.value
+  }
+  
+  // 获取模型消息悬浮背景色
+  function getMessageHoverModel() {
+    return messageHoverModel.value
+  }
+  
   // 设置主题颜色
   function setPrimaryColor(color: string) {
     primaryColor.value = color
@@ -184,6 +200,16 @@ export const useThemeStore = defineStore('theme', () => {
     selectorBorderColor.value = color
   }
 
+  // 设置用户消息悬浮背景色
+  function setMessageHoverUser(color: string) {
+    messageHoverUser.value = color
+  }
+
+  // 设置模型消息悬浮背景色
+  function setMessageHoverModel(color: string) {
+    messageHoverModel.value = color
+  }
+
   return { 
     primaryColor, 
     activeColor, 
@@ -199,6 +225,8 @@ export const useThemeStore = defineStore('theme', () => {
     selectorColor,
     selectorActiveColor,
     selectorBorderColor,
+    messageHoverUser,
+    messageHoverModel,
     getPrimaryColor, 
     getActiveColor, 
     getPrimaryHover,
@@ -213,6 +241,8 @@ export const useThemeStore = defineStore('theme', () => {
     getSelectorColor,
     getSelectorActiveColor,
     getSelectorBorderColor,
+    getMessageHoverUser,
+    getMessageHoverModel,
     setPrimaryColor, 
     setActiveColor,
     setPrimaryHover,
@@ -226,6 +256,8 @@ export const useThemeStore = defineStore('theme', () => {
     setSideBlur,
     setSelectorColor,
     setSelectorActiveColor,
-    setSelectorBorderColor
+    setSelectorBorderColor,
+    setMessageHoverUser,
+    setMessageHoverModel
   }
 }) 

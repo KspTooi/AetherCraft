@@ -82,8 +82,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { marked } from 'marked'
+import { useThemeStore } from '../stores/theme'
+
+// 初始化主题
+const themeStore = useThemeStore()
 
 // 定义消息类型接口
 interface ChatMessage {
@@ -256,13 +260,33 @@ defineExpose({
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px;
+  padding: 12px 16px 12px 25px; /* 减少左侧内边距 */
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-height: 0;
-  width: 100%;
+  width: 100%; /* 使用完整宽度 */
   max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 自定义滚动条样式 */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .empty-state {
@@ -298,20 +322,21 @@ defineExpose({
 }
 
 .message {
-  width: 100%;
-  padding: 8px 16px;
+  width: 100%; /* 使用完整宽度 */
+  padding: 6px 16px 6px 2px; /* 减少上下内边距，缩小左侧边距 */
   line-height: 1.5;
   font-size: 14px;
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
-  position: relative;
+  position: relative; /* 确保伪元素定位正确 */
   box-sizing: border-box;
   display: flex;
-  gap: 12px;
+  gap: 8px; /* 减少头像与内容间的间距 */
   transition: background-color 0.5s ease;
   border-radius: 6px;
   background-color: transparent;
+  margin: 0; /* 移除外边距 */
 }
 
 .message .message-header {
@@ -321,8 +346,8 @@ defineExpose({
 }
 
 .message .message-header .avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px; /* 减小头像尺寸 */
+  height: 28px; /* 减小头像尺寸 */
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
@@ -346,12 +371,13 @@ defineExpose({
 .message .message-content {
   flex: 1;
   min-width: 0;
+  padding-right: 60px; /* 减少右侧内边距，为按钮留出空间 */
 }
 
 .message .message-content .name {
-  font-size: 14px;
+  font-size: 13px; /* 减小名称字体大小 */
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 4px;
+  margin-bottom: 2px; /* 减少名称与内容的间距 */
   display: flex;
   align-items: center;
   gap: 8px;
@@ -369,9 +395,16 @@ defineExpose({
 
 .message .message-actions {
   position: absolute;
-  right: 12px;
+  right: 8px; /* 减少右侧距离，防止按钮超出容器 */
   top: 8px;
   display: none;
+  z-index: 10; /* 确保按钮位于最上层 */
+}
+
+/* 编辑模式下总是显示操作按钮 */
+.message.editing .message-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .message:hover .message-actions {
@@ -453,5 +486,74 @@ defineExpose({
   outline: none;
   border-color: rgba(79, 172, 254, 0.5);
   background: rgba(255, 255, 255, 0.15);
+}
+
+/* 鼠标悬浮效果 - 使用伪元素扩展背景 */
+.message.message-hover-effect.user:hover::before,
+.message.message-hover-effect.assistant:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -10px; /* 减小向左延伸的宽度，避免触发水平滚动 */
+  right: 0;
+  bottom: 0;
+  border-radius: 6px;
+  z-index: -1;
+}
+
+.message.message-hover-effect.user:hover::before {
+  background-color: v-bind('themeStore.getMessageHoverUser()');
+}
+
+.message.message-hover-effect.assistant:hover::before {
+  background-color: v-bind('themeStore.getMessageHoverModel()');
+}
+
+/* 移除原有的背景色设置 */
+.message.message-hover-effect.user:hover {
+  background-color: transparent;
+}
+
+.message.message-hover-effect.assistant:hover {
+  background-color: transparent;
+}
+
+/* 添加角色类型特定样式 */
+.message.user {
+  background: transparent;
+}
+
+.message.assistant {
+  background: transparent;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .chat-messages {
+    padding: 12px 12px 12px 6px;
+  }
+  
+  .message {
+    font-size: 13px;
+    padding: 6px 12px 6px 2px;
+  }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+  .chat-messages {
+    padding: 8px 8px 8px 4px;
+    gap: 1px;
+  }
+  
+  .message {
+    font-size: 12px;
+    padding: 4px 10px 4px 1px;
+  }
+  
+  .message .message-header .avatar {
+    width: 24px;
+    height: 24px;
+  }
 }
 </style> 
