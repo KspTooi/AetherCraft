@@ -24,7 +24,8 @@
             @roleEdit="handleRoleEdit"
             @roleConfig="handleRoleConfig"
             @threadManage="showThreadManagement"
-            @startNewSession="handleStartNewSession" />
+            @startNewSession="handleStartNewSession"
+            @toggleMobileMenu="toggleThreadList" />
       </div>
 
       <!-- 主聊天区域 -->
@@ -162,9 +163,7 @@ onMounted(async () => {
   } catch (error) {
     console.error('获取上次会话状态失败:', error)
   }
-  
 
-  
   // 获取URL中的角色ID参数
   const urlParams = new URLSearchParams(window.location.search)
   const roleIdParam = urlParams.get('roleId')
@@ -176,10 +175,12 @@ onMounted(async () => {
   }
 
   //结束加载动画
-  if (finishLoading) {
-    console.log('调用finishLoading解除加载状态')
-    finishLoading()
-  }
+/*  setTimeout(()=>{
+    if (finishLoading) {
+      finishLoading()
+    }
+  },200)*/
+
 })
 
 // 重置聊天状态
@@ -407,11 +408,15 @@ const handleStartNewSession = async (roleId: string) => {
   }
 }
 
-const handleThreadChecked = async (roleId: string, threadId: string) => {
-  console.log(`选择会话: roleId=${roleId}, threadId=${threadId}`)
+const handleThreadChecked = async (roleId: string, threadId: string, shouldCloseModal: boolean = true) => {
+  console.log(`选择会话: roleId=${roleId}, threadId=${threadId}, 是否关闭模态框: ${shouldCloseModal}`)
   // 传递threadId参数加载指定会话
   await loadRoleThread(roleId, false, threadId)
-  closeThreadModal()
+  
+  // 根据参数决定是否关闭模态框
+  if (shouldCloseModal) {
+    closeThreadModal()
+  }
 }
 
 const handleMessageEdit = async (historyId: string, content: string) => {

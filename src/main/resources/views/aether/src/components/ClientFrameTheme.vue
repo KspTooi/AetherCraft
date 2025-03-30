@@ -117,13 +117,15 @@ onMounted(() => {
   align-items: center;
 }
 
-/* 淡入淡出过渡效果 */
-.fade-enter-active,
+/* 淡入淡出过渡效果 - 仅退出有动画 */
 .fade-leave-active {
   transition: opacity 0.4s ease;
 }
 
-.fade-enter-from,
+.fade-enter-active {
+  transition: none;
+}
+
 .fade-leave-to {
   opacity: 0;
 }

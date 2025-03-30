@@ -98,6 +98,7 @@ const emit = defineEmits<{
   (e: 'roleConfig', roleId: string): void
   (e: 'threadManage', roleId: string, roleName: string): void
   (e: 'startNewSession', roleId: string): void
+  (e: 'toggleMobileMenu'): void
 }>()
 
 // State
@@ -175,21 +176,35 @@ const handleRoleClick = (roleId: string) => {
   emit('roleChecked', roleId)
 }
 
+// 检查是否是移动端视图，需要关闭侧边栏
+const checkAndCloseMenu = () => {
+  closeMenu()
+  // 如果是移动端视图（isMobileMenuOpen为true），则触发关闭移动端菜单事件
+  if (props.isMobileMenuOpen) {
+    console.log('关闭移动端菜单')
+    emit('toggleMobileMenu')
+  }
+}
+
 const handleEditRole = (roleId: string) => {
   emit('roleEdit', roleId)
+  checkAndCloseMenu()
 }
 
 const handleConfigRole = (roleId: string) => {
   emit('roleConfig', roleId)
+  checkAndCloseMenu()
 }
 
 const handleThreadManage = (roleId: string, roleName: string) => {
   emit('threadManage', roleId, roleName)
+  checkAndCloseMenu()
 }
 
 const handleStartNewSession = (roleId: string) => {
   console.log(`触发startNewSession事件: roleId=${roleId}`)
   emit('startNewSession', roleId)
+  checkAndCloseMenu()
 }
 
 const toggleRoleMenu = (roleId: string, roleName: string, event: Event) => {

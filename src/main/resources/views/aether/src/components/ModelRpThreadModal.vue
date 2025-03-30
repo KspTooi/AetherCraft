@@ -1,6 +1,7 @@
 <template>
   <div class="thread-modal-overlay" @click.self="closeModal">
     <div class="thread-modal-container">
+      <div class="modal-glow-border"></div>
       <div class="thread-modal-header">
         <h3 class="thread-modal-title">{{ selectedRoleName }} 的会话列表</h3>
         <button class="thread-modal-close" @click="closeModal">×</button>
@@ -22,24 +23,29 @@
                class="thread-item"
                :class="{ 'active': currentThreadId === thread.id }">
             <div class="thread-content">
-              <div class="thread-title">{{ thread.title || '未命名会话' }}</div>
+              <div class="thread-title">
+                {{ thread.title || '未命名会话' }}
+                <span v-if="thread.active === 1" class="active-badge">当前</span>
+              </div>
               <div class="thread-time">{{ formatTime(thread.updateTime) }}</div>
               <div class="thread-message" v-if="thread.lastMessage">{{ thread.lastMessage }}</div>
+              <div class="thread-message" v-else>暂无对话内容</div>
             </div>
             <div class="thread-actions">
               <LaserButton 
-                class="thread-action-btn"
+                v-if="thread.active !== 1"
+                class="thread-action-btn activate-btn"
                 width="28px"
                 height="28px"
                 background-color="transparent"
                 border-color="transparent"
                 glowIntensity="0"
-                @click.stop="handleEditThread(thread)"
-                title="编辑标题">
-                <i class="bi bi-pencil"></i>
+                @click.stop="handleActivateThread(thread.id)"
+                title="激活会话">
+                <i class="bi bi-check-circle"></i>
               </LaserButton>
               <LaserButton 
-                class="thread-action-btn"
+                class="thread-action-btn delete-btn"
                 width="28px"
                 height="28px"
                 background-color="transparent"
@@ -68,6 +74,15 @@ const themeStore = useThemeStore()
 const primaryColor = computed(() => themeStore.primaryColor)
 const activeColor = computed(() => themeStore.activeColor)
 const primaryHover = computed(() => themeStore.primaryHover)
+const brandColor = computed(() => themeStore.brandColor)
+const primaryButton = computed(() => themeStore.primaryButton)
+const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+const mainBlur = computed(() => themeStore.mainBlur)
+const sideBlur = computed(() => themeStore.sideBlur)
+const textareaColor = computed(() => themeStore.textareaColor)
+const modalColor = computed(() => themeStore.modalColor)
+const modalBlur = computed(() => themeStore.modalBlur)
+const modalActive = computed(() => themeStore.modalActive)
 
 // Props
 const props = defineProps<{
@@ -77,7 +92,7 @@ const props = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  (e: 'threadChecked', roleId: string, threadId: string): void
+  (e: 'threadChecked', roleId: string, threadId: string, shouldCloseModal: boolean): void
   (e: 'close'): void
 }>()
 
@@ -99,10 +114,10 @@ const loadThreadList = async () => {
     if (response.data.code === 0) {
       threads.value = response.data.data || []
       
-      // 获取当前选中的会话ID
-      const defaultThread = threads.value.find(t => t.checked === 1)
-      if (defaultThread) {
-        currentThreadId.value = defaultThread.id
+      // 获取当前活动的会话ID
+      const activeThread = threads.value.find(t => t.active === 1)
+      if (activeThread) {
+        currentThreadId.value = activeThread.id
       }
     } else {
       console.error('加载会话列表失败:', response.data.message)
@@ -134,7 +149,7 @@ const formatTime = (timestamp: string) => {
 }
 
 const handleThreadSelect = (threadId: string) => {
-  emit('threadChecked', props.selectedRoleId, threadId)
+  emit('threadChecked', props.selectedRoleId, threadId, true)
 }
 
 const handleEditThread = async (thread: any) => {
@@ -160,6 +175,48 @@ const handleEditThread = async (thread: any) => {
     }
   } catch (error) {
     console.error('更新会话标题失败:', error)
+  }
+}
+
+const handleActivateThread = async (threadId: string) => {
+  try {
+    // 查找对应的线程对象，以获取正确的模型代码
+    const thread = threads.value.find(t => t.id === threadId)
+    if (!thread) {
+      console.error('找不到相应的会话')
+      return
+    }
+    
+    console.log(`激活会话: roleId=${props.selectedRoleId}, threadId=${threadId}, modelCode=${thread.modelCode}`)
+    
+    // 使用线程对象中的模型代码
+    const requestData = {
+      modelRoleId: Number(props.selectedRoleId),
+      threadId: Number(threadId),
+      modelCode: thread.modelCode || 'gemini-pro' // 优先使用线程中的模型代码，如果没有则使用默认值
+    }
+    
+    console.log('发送请求:', requestData)
+    const response = await axios.post('/model/rp/recoverRpChat', requestData)
+    
+    if (response.data.code === 0) {
+      console.log('激活会话成功, 响应:', response.data)
+      
+      // 更新当前激活会话
+      threads.value.forEach(t => {
+        t.active = t.id === threadId ? 1 : 0
+      })
+      currentThreadId.value = threadId
+      
+      // 触发threadChecked事件以加载消息，但指定不关闭模态框
+      emit('threadChecked', props.selectedRoleId, threadId, false)
+    } else {
+      console.error('激活会话失败:', response.data.message)
+      alert('激活会话失败: ' + response.data.message)
+    }
+  } catch (error) {
+    console.error('激活会话失败:', error)
+    alert('激活会话失败: ' + (error instanceof Error ? error.message : '未知错误'))
   }
 }
 
@@ -208,7 +265,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,41 +282,57 @@ onMounted(() => {
   width: 90%;
   max-width: 800px;
   max-height: 80vh;
-  background: rgba(30, 30, 30, 0.95);
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  background: v-bind(modalColor);
+  backdrop-filter: blur(v-bind(modalBlur));
+  -webkit-backdrop-filter: blur(v-bind(modalBlur));
+  border-radius: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: modalIn 0.3s ease;
+  position: relative;
 }
 
 @keyframes modalIn {
   from { 
-    transform: scale(0.95); 
+    transform: translateY(-10px); 
     opacity: 0;
   }
   to { 
-    transform: scale(1); 
+    transform: translateY(0); 
     opacity: 1;
   }
+}
+
+.modal-glow-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: v-bind(modalActive);
+  box-shadow: 0 0 15px v-bind(modalActive);
+  z-index: 1;
 }
 
 .thread-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(40, 40, 40, 0.9);
+  background: v-bind('`rgba(${modalColor.split("(")[1].split(")")[0].split(",").map((n, i) => i < 3 ? Math.max(0, parseInt(n) - 5) : n).join(",")}, 1)`');
+  position: relative;
 }
 
 .thread-modal-title {
-  font-size: 18px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
-  font-weight: normal;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .thread-modal-close {
@@ -273,12 +346,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 0;
   transition: all 0.2s;
 }
 
 .thread-modal-close:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.2)`');
   color: white;
 }
 
@@ -287,7 +360,7 @@ onMounted(() => {
   padding: 0;
   overflow-y: auto;
   min-height: 200px;
-  max-height: calc(80vh - 60px);
+  max-height: calc(80vh - 56px);
 }
 
 /* 加载状态 */
@@ -315,14 +388,14 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 30px 20px;
   text-align: center;
 }
 
 .empty-state i {
-  font-size: 48px;
-  color: rgba(255, 255, 255, 0.3);
-  margin-bottom: 20px;
+  font-size: 42px;
+  color: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.3)`');
+  margin-bottom: 15px;
 }
 
 .empty-title {
@@ -338,51 +411,106 @@ onMounted(() => {
 
 /* 会话列表 */
 .thread-list {
-  padding: 10px;
+  padding: 4px;
 }
 
 .thread-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px;
-  border-radius: 0;
-  margin-bottom: 6px;
+  padding: 12px 15px;
+  border-radius: 0px;
+  margin-bottom: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
+  background: v-bind('`rgba(${modalColor.split("(")[1].split(")")[0]}, 0.5)`');
+  transition: all 0.3s ease, border-left-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
+  border-left: 3px solid transparent;
+  overflow: hidden;
 }
 
 .thread-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: v-bind('`rgba(${modalColor.split("(")[1].split(")")[0]}, 0.7)`');
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .thread-item.active {
-  background: v-bind('`rgba(${primaryColor.split("(")[1].split(")")[0]}, 0.2)`');
-  border-left: 3px solid v-bind(activeColor);
+  background: rgba(40, 90, 130, 0.25);
+  border-left: 3px solid v-bind(modalActive);
+  box-shadow: inset 3px 0 5px -2px v-bind(modalActive);
+}
+
+.thread-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.05)`') 0%, 
+    transparent 30%);
+  pointer-events: none;
+}
+
+.thread-item.active .thread-title {
+  color: rgba(255, 255, 255, 1);
+  font-weight: 500;
+}
+
+.thread-item.active .thread-time {
+  color: v-bind(modalActive);
 }
 
 .thread-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .thread-title {
-  font-size: 15px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.active-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background-color: v-bind(modalActive);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 1px 6px;
+  border-radius: 0px;
+  margin-left: 8px;
+  font-weight: normal;
+  box-shadow: 0 0 8px v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.5)`');
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  height: 18px;
+  letter-spacing: 0.5px;
 }
 
 .thread-time {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 5px;
+  font-size: 11px;
+  color: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.7)`');
+  margin-bottom: 4px;
 }
 
 .thread-message {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
   overflow: hidden;
@@ -393,7 +521,7 @@ onMounted(() => {
 .thread-actions {
   display: flex;
   gap: 2px;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 
@@ -403,16 +531,30 @@ onMounted(() => {
 
 .thread-action-btn {
   color: rgba(255, 255, 255, 0.6);
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  border-radius: 0 !important;
 }
 
 .thread-action-btn:hover {
   color: rgba(255, 255, 255, 0.9);
+  background: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.2)`') !important;
+}
+
+.thread-item.active .thread-action-btn {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.activate-btn:hover {
+  color: v-bind(modalActive);
+}
+
+.delete-btn:hover {
+  color: rgba(255, 100, 100, 0.9);
 }
 
 /* 自定义滚动条 */
 .thread-modal-body::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .thread-modal-body::-webkit-scrollbar-track {
@@ -420,11 +562,11 @@ onMounted(() => {
 }
 
 .thread-modal-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  background: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.3)`');
+  border-radius: 1.5px;
 }
 
 .thread-modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: v-bind(modalActive);
 }
 </style> 

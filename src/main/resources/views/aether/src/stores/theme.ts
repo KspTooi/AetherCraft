@@ -44,6 +44,15 @@ export const useThemeStore = defineStore('theme', () => {
   // 次要内容模糊程度
   const sideBlur = ref('15px')
   
+  // 模态窗口背景颜色
+  const modalColor = ref('rgba(2, 98, 136, 0.1)')
+  
+  // 模态窗口模糊程度
+  const modalBlur = ref('10px')
+  
+  // 模态窗口激活颜色
+  const modalActive = ref('rgba(94, 203, 245, 0.85)')
+  
   // 选择器背景颜色
   const selectorColor = ref('rgba(25, 35, 60, 0.5)')
   
@@ -52,6 +61,12 @@ export const useThemeStore = defineStore('theme', () => {
   
   // 选择器边框颜色
   const selectorBorderColor = ref('rgba(79, 172, 254, 0.15)')
+
+
+  
+
+
+
   
   // 获取品牌颜色
   function getBrandColor() {
@@ -111,6 +126,21 @@ export const useThemeStore = defineStore('theme', () => {
   // 获取次要内容模糊程度
   function getSideBlur() {
     return sideBlur.value
+  }
+  
+  // 获取模态窗口背景颜色
+  function getModalColor() {
+    return modalColor.value
+  }
+  
+  // 获取模态窗口模糊程度
+  function getModalBlur() {
+    return modalBlur.value
+  }
+  
+  // 获取模态窗口激活颜色
+  function getModalActive() {
+    return modalActive.value
   }
   
   // 获取选择器背景颜色
@@ -198,6 +228,21 @@ export const useThemeStore = defineStore('theme', () => {
     sideBlur.value = blur
   }
   
+  // 设置模态窗口背景颜色
+  function setModalColor(color: string) {
+    modalColor.value = color
+  }
+  
+  // 设置模态窗口模糊程度
+  function setModalBlur(blur: string) {
+    modalBlur.value = blur
+  }
+  
+  // 设置模态窗口激活颜色
+  function setModalActive(color: string) {
+    modalActive.value = color
+  }
+  
   // 设置选择器背景颜色
   function setSelectorColor(color: string) {
     selectorColor.value = color
@@ -236,6 +281,9 @@ export const useThemeStore = defineStore('theme', () => {
     navBlur,
     mainBlur,
     sideBlur,
+    modalColor,
+    modalBlur,
+    modalActive,
     selectorColor,
     selectorActiveColor,
     selectorBorderColor,
@@ -253,6 +301,9 @@ export const useThemeStore = defineStore('theme', () => {
     getNavBlur,
     getMainBlur,
     getSideBlur,
+    getModalColor,
+    getModalBlur,
+    getModalActive,
     getSelectorColor,
     getSelectorActiveColor,
     getSelectorBorderColor,
@@ -270,6 +321,9 @@ export const useThemeStore = defineStore('theme', () => {
     setNavBlur,
     setMainBlur,
     setSideBlur,
+    setModalColor,
+    setModalBlur,
+    setModalActive,
     setSelectorColor,
     setSelectorActiveColor,
     setSelectorBorderColor,
