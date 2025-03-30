@@ -48,6 +48,7 @@
         <!-- 聊天输入区域 -->
         <ModelChatInput 
           :isLoading="isLoading"
+          :isDisabled="!currentThreadId"
           @send="sendMessage"
           @stop="terminateAIResponse" />
       </div>

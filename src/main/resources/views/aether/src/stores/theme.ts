@@ -2,6 +2,9 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useThemeStore = defineStore('theme', () => {
+  // 品牌颜色
+  const brandColor = ref('rgba(75, 227, 238, 0.62)')
+  
   // 主要主题颜色
   const primaryColor = ref('rgba(135, 206, 250, 0.7)')
   
@@ -49,6 +52,11 @@ export const useThemeStore = defineStore('theme', () => {
   
   // 选择器边框颜色
   const selectorBorderColor = ref('rgba(79, 172, 254, 0.15)')
+  
+  // 获取品牌颜色
+  function getBrandColor() {
+    return brandColor.value
+  }
   
   // 获取主题颜色
   function getPrimaryColor() {
@@ -128,6 +136,11 @@ export const useThemeStore = defineStore('theme', () => {
   // 获取模型消息悬浮背景色
   function getMessageHoverModel() {
     return messageHoverModel.value
+  }
+  
+  // 设置品牌颜色
+  function setBrandColor(color: string) {
+    brandColor.value = color
   }
   
   // 设置主题颜色
@@ -211,6 +224,7 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   return { 
+    brandColor,
     primaryColor, 
     activeColor, 
     primaryHover,
@@ -227,6 +241,7 @@ export const useThemeStore = defineStore('theme', () => {
     selectorBorderColor,
     messageHoverUser,
     messageHoverModel,
+    getBrandColor,
     getPrimaryColor, 
     getActiveColor, 
     getPrimaryHover,
@@ -243,6 +258,7 @@ export const useThemeStore = defineStore('theme', () => {
     getSelectorBorderColor,
     getMessageHoverUser,
     getMessageHoverModel,
+    setBrandColor,
     setPrimaryColor, 
     setActiveColor,
     setPrimaryHover,

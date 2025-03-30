@@ -61,6 +61,7 @@ const brandName = ref('AetherCraft')
 
 // 获取主题颜色
 const themeStore = useThemeStore()
+const brandColor = computed(() => themeStore.brandColor)
 const primaryColor = computed(() => themeStore.primaryColor)
 const activeColor = computed(() => themeStore.activeColor)
 const primaryHover = computed(() => themeStore.primaryHover)
@@ -168,25 +169,21 @@ body, html {
 
 .brand-gradient {
   background: linear-gradient(90deg, 
-    rgba(180, 220, 255, 0.9) 0%, 
-    v-bind(primaryColor) 25%, 
-    v-bind(primaryColor) 50%, 
-    v-bind(primaryColor) 75%, 
-    rgba(180, 220, 255, 0.9) 100%
+    v-bind(brandColor) 0%, 
+    v-bind(primaryColor) 70%
   );
-  background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
-  font-weight: 600;
-  text-shadow: 0px 0px 8px v-bind(primaryColor);
-  animation: gradient-shift 8s linear infinite;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  text-shadow: 0px 0px 4px v-bind(brandColor);
+  letter-spacing: 0.8px;
 }
 
 .brand-gradient:hover {
-  animation-duration: 4s;
-  text-shadow: 0px 0px 12px v-bind(primaryColor);
+  text-shadow: 0px 0px 8px v-bind(brandColor);
+  transform: scale(1.02);
+  transition: text-shadow 0.2s ease, transform 0.2s ease;
 }
 
 @keyframes gradient-shift {
@@ -208,7 +205,7 @@ body, html {
 
 .navbar-brand:hover {
   transform: scale(1.03);
-  text-shadow: 0px 0px 15px rgba(100, 170, 255, 0.6);
+  text-shadow: 0px 0px 12px v-bind(brandColor);
 }
 
 .nav-left, .nav-right {

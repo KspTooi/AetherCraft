@@ -5,7 +5,8 @@
       <textarea 
         v-model="messageInput"
         ref="messageTextarea"
-        placeholder="怎麽不问问神奇的 Gemini 呢?"
+        :placeholder="isDisabled ? '请先选择或创建一个会话' : '怎麽不问问神奇的 Gemini 呢?'"
+        :disabled="isLoading || isDisabled"
         @keydown="handleKeyPress"
         @input="adjustTextareaHeight"
         @focus="isFocused = true"
@@ -15,7 +16,7 @@
     </div>
     <LaserButton 
       v-if="!isLoading" 
-      :disabled="!messageInput.trim()"
+      :disabled="!messageInput.trim() || isDisabled"
       corner="bottom-right"
       corner-size="15px"
       :background-color="primaryButton"
@@ -41,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, computed } from 'vue'
+import { ref, nextTick, onMounted, computed, watch } from 'vue'
 import LaserButton from './LaserButton.vue'
 import { useThemeStore } from '../stores/theme'
 
@@ -65,9 +66,16 @@ const cornerStyle = computed(() => {
 });
 
 // Props
-const props = defineProps<{
-  isLoading: boolean
-}>()
+const props = defineProps({
+  isLoading: {
+    type: Boolean,
+    default: false
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false
+  }
+})
 
 // Emits
 const emit = defineEmits<{
@@ -89,7 +97,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 const handleSend = () => {
-  if (!messageInput.value.trim() || props.isLoading) return
+  if (!messageInput.value.trim() || props.isLoading || props.isDisabled) return
   emit('send', messageInput.value.trim())
   messageInput.value = ''
   nextTick(() => {
