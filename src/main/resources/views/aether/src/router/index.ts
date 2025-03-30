@@ -24,10 +24,15 @@ const router = createRouter({
       component: () => import('../views/model-agent.vue'),
     },
     {
+      path: '/customize',
+      name: 'customize',
+      component: () => import('../views/customize.vue'),
+    },
+    {
       path: '/effects-test',
       name: 'effects-test',
       component: () => import('../components/EffectsTest.vue'),
-    },
+    }
   ],
 })
 

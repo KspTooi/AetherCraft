@@ -15,6 +15,7 @@ public enum UserConfigEnum {
     MODEL_RP_CURRENT_THREAD("model.rp.current.thread", null, "用户最后一次选中的RP_THREAD"),
     MODEL_RP_CURRENT_ROLE("model.rp.current.role", null, "用户最后一次选中的RP_ROLE"),
 
+    WALLPAPER_PATH("wallpaper.path", null, "用户的壁纸路径(相对路径)"),
 
     CUSTOM_MAIN_COLOR("theme.custom.main.color", null, "主要区域颜色"),
     CUSTOM_MAIN_FILTER("theme.custom.main.filter", null, "主要区域模糊"),

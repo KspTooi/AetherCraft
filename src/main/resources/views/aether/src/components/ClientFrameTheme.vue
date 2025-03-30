@@ -79,7 +79,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/customize/wallpaper');
+  background-image: url('/customize/getWallpaper');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
