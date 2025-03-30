@@ -52,14 +52,7 @@
       <!-- 主聊天区域 -->
       <div class="chat-main">
         <div class="model-select">
-          <label>选择模型：</label>
-          <select v-model="selectedModel">
-            <option v-for="model in models" 
-                    :key="model.code"
-                    :value="model.code">
-              {{ model.name }}
-            </option>
-          </select>
+          <ModelSeriesSelector v-model="selectedModel" />
         </div>
         
         <!-- 聊天消息区域 -->
@@ -162,6 +155,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
+import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import axios from 'axios'
 import { marked } from 'marked'
 
@@ -877,9 +871,6 @@ onUnmounted(() => {
 /* 模型选择区域 */
 .model-select {
   padding: 8px 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0 !important;
 }
