@@ -423,54 +423,30 @@ const handleMessageRemove = async (historyId: string) => {
 }
 
 const handleRegenerate = async (message: ChatMessage) => {
-  if (isLoading.value || !currentThreadId.value || !message.id) return
+  if (isLoading.value || !currentThreadId.value) return
   
   try {
     isLoading.value = true
     
-    // 删除当前消息
-    messages.value = messages.value.filter(m => m.id !== message.id)
+    // 发送重新生成请求
+    const response = await axios.post('/model/rp/rpCompleteBatch', {
+      threadId: currentThreadId.value,
+      model: selectedModel.value || 'gemini-pro',
+      queryKind: 3 // 3:重新生成最后一条AI消息
+    })
     
-    // 获取上一条用户消息
-    const lastUserMessage = [...messages.value].reverse().find(m => m.role === 'user')
-    
-    if (lastUserMessage && lastUserMessage.content) {
-      // 创建临时助手消息
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: '正在输入...',
-        name: '助手',
-        createTime: new Date().toISOString(),
-        isTyping: true,
-        hasReceivedData: false
-      }
+    if (response.data.code === 0) {
+      console.log('重新生成请求成功')
       
-      messages.value.push(assistantMessage)
-      messagesRef.value?.scrollToBottom()
+      // 更新消息内容为"正在重新生成..."
+      message.content = '正在输入(RE)...'
+      message.hasReceivedData = false
+      message.isTyping = true
       
-      // 确保有有效的模型代码
-      const modelCode = selectedModel.value || 'gemini-pro'
-      console.log('重新生成使用模型:', modelCode)
-      
-      // 调用完成接口
-      const response = await axios.post('/model/rp/rpCompleteBatch', {
-        threadId: currentThreadId.value,
-        model: modelCode,
-        queryKind: 0,
-        regenerate: 1
-      })
-      
-      if (response.data.code === 0) {
-        // 开始轮询响应
-        await pollAIResponse(assistantMessage)
-      } else {
-        console.error("重新生成失败:", response.data.message)
-        isLoading.value = false
-        // 移除临时消息
-        messages.value.pop()
-      }
+      // 开始轮询获取新的响应
+      await pollAIResponse(message)
     } else {
-      console.error("无法找到上一条用户消息")
+      console.error("重新生成失败:", response.data.message)
       isLoading.value = false
     }
   } catch (error) {
@@ -485,20 +461,6 @@ const sendMessage = async (message: string) => {
     console.log('无法发送消息：' + (isLoading.value ? '正在加载中' : '当前没有活动会话'))
     return
   }
-  
-  // 添加用户消息到列表
-  const userMessage: ChatMessage = {
-    id: Date.now().toString(),
-    role: 'user',
-    content: message,
-    name: currentUserRole.value?.name || '用户',
-    avatarPath: currentUserRole.value?.avatar,
-    createTime: new Date().toISOString()
-  }
-  
-  console.log('添加用户消息到消息列表:', userMessage)
-  messages.value.push(userMessage)
-  messagesRef.value?.scrollToBottom()
   
   isLoading.value = true
   
@@ -518,11 +480,22 @@ const sendMessage = async (message: string) => {
     console.log('接收到发送消息响应:', response.data)
     
     if (response.data.code === 0) {
-      const segment = response.data.data
-      if (segment && segment.historyId) {
-        console.log('更新用户消息ID:', segment.historyId)
-        userMessage.id = segment.historyId
+      const userData = response.data.data
+      console.log('后端返回的用户消息数据:', userData)
+      
+      // 在收到后端响应后，根据返回数据添加用户消息到列表
+      const userMessage: ChatMessage = {
+        id: userData.historyId,
+        role: 'user',
+        content: userData.content || message,
+        name: userData.roleName || currentUserRole.value?.name || '用户',
+        avatarPath: userData.roleAvatarPath || currentUserRole.value?.avatar,
+        createTime: new Date().toISOString()
       }
+      
+      console.log('添加用户消息到消息列表:', userMessage)
+      messages.value.push(userMessage)
+      messagesRef.value?.scrollToBottom()
       
       const assistantMessage: ChatMessage = {
         role: 'assistant',
