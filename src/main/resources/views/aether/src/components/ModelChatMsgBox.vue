@@ -593,20 +593,18 @@ defineExpose({
   
   .message {
     font-size: 13px;
-    padding: 6px 12px 6px 2px;
   }
 }
 
 /* 超小屏幕适配 */
 @media (max-width: 480px) {
   .chat-messages {
-    padding: 8px 8px 8px 4px;
+    /*padding: 8px 8px 8px 4px;*/
     gap: 1px;
   }
   
   .message {
     font-size: 12px;
-    padding: 4px 10px 4px 1px;
   }
   
   .message .message-header .avatar {

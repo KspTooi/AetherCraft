@@ -685,7 +685,7 @@ onMounted(() => {
 /* 超小屏幕适配 */
 @media (max-width: 480px) {
   .chat-messages {
-    padding: 8px 8px 8px 4px;
+    /*padding: 8px 8px 8px 4px;*/
     gap: 1px;
   }
   
