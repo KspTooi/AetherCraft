@@ -365,16 +365,18 @@ public class ModelRpService {
             if(dto.getModel().contains("grok")){
                 param.setUrl(GROK_BASE_URL);
                 // 异步调用ModelGrokService发送流式请求
-                modelGrokService.sendMessageStream(client, param,
+                String contextId = modelGrokService.sendMessageStream(client, param,
                         onModelRpMessageRcv(threadCt, threadCt.getUserId())
                 );
+                rpThreadToContextIdMap.put(threadCt.getId(), contextId);
             }
 
             if(dto.getModel().contains("gemini")){
                 // 异步调用ModelGeminiService发送流式请求
-                modelGeminiService.sendMessageStream(client, param,
+                String contextId =modelGeminiService.sendMessageStream(client, param,
                         onModelRpMessageRcv(threadCt, threadCt.getUserId())
                 );
+                rpThreadToContextIdMap.put(threadCt.getId(), contextId);
             }
 
             // 返回用户消息作为第一次响应

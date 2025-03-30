@@ -305,19 +305,21 @@ public class ModelChatService {
             // 根据模型类型选择不同的服务发送请求
             if (dto.getModel().contains("grok")) {
                 // 使用GROK服务
-                modelGrokService.sendMessageStream(
+                String contextId = modelGrokService.sendMessageStream(
                         client,
                         modelChatParam,
                         onModelMessageRcv(thread, userId)
                 );
+                threadToContextIdMap.put(threadId, contextId);
             }
             if(dto.getModel().contains("gemini")){
                 // 使用Gemini服务
-                modelGeminiService.sendMessageStream(
+                String contextId = modelGeminiService.sendMessageStream(
                         client,
                         modelChatParam,
                         onModelMessageRcv(thread, userId)
                 );
+                threadToContextIdMap.put(threadId, contextId);
             }
 
             // 返回用户消息作为第一次响应
