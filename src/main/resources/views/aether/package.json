@@ -1,10 +1,11 @@
 {
   "name": "aether",
-  "version": "0.0.0",
+  "version": "1.2N-65-M3",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "serve": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",

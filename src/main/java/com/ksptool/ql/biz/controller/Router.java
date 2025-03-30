@@ -40,7 +40,7 @@ public class Router {
             return "redirect:/install-wizard/";
         }
 
-        // 当前登录用户有效，跳转到应用中心
+        // 当前登录用户有效，跳转到应用中心(旧版)
         if(authService.verifyUser(hsr) != null){
             return "redirect:/model/chat/view";
         }
@@ -48,6 +48,24 @@ public class Router {
         // 未登录用户跳转到欢迎页
         return "redirect:/welcome";
     }
+
+    @GetMapping("/client-ui")
+    public String clientUI(HttpServletRequest hsr) {
+        // 如果启用向导模式，跳转到向导
+        if(installWizardService.hasInstallWizardMode()){
+            return "redirect:/install-wizard/";
+        }
+
+        // 当前登录用户有效，跳转到客户端SPA页面
+        if(authService.verifyUser(hsr) != null){
+            return "client-ui-entry";
+        }
+
+        // 未登录用户跳转到欢迎页
+        return "redirect:/welcome";
+    }
+
+
 
     @GetMapping("/welcome")
     public ModelAndView welcome() {

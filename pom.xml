@@ -6,7 +6,7 @@
 
     <groupId>com.ksptooi</groupId>
     <artifactId>AetherCraft</artifactId>
-    <version>1.2N-58-M3</version>
+    <version>1.2N-65-M3</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -163,10 +163,75 @@
                     <include>**/**.woff2</include>
                     <include>**/**.jpeg</include>
                 </includes>
+                <excludes>
+                    <exclude>views/aether/**</exclude>
+                </excludes>
             </resource>
         </resources>
         
         <plugins>
+            <!-- 前端构建插件 -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.0</version>
+                <configuration>
+                    <workingDirectory>src/main/resources/views/aether</workingDirectory>
+                    <nodeVersion>v20.11.1</nodeVersion>
+                    <npmVersion>10.2.4</npmVersion>
+                </configuration>
+                <executions>
+                    <!-- 安装 node 和 npm -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <!-- 执行 npm install -->
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                    </execution>
+                    <!-- 执行 npm run build -->
+                    <execution>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 复制构建后的文件 -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-dist</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/views/new</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources/views/aether/dist</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

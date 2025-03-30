@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -38,7 +39,7 @@ public class AuthController {
             var token = authService.loginByPassword(dto.getUsername(), dto.getPassword());
             
             // 设置 cookie
-            var cookie = new jakarta.servlet.http.Cookie("token", token);
+            var cookie = new Cookie("token", token);
             cookie.setPath("/");
             cookie.setHttpOnly(true);  // 防止 XSS 攻击
             cookie.setMaxAge(7 * 24 * 60 * 60);  // 7天有效期
