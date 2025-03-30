@@ -17,12 +17,31 @@ public enum UserConfigEnum {
 
     WALLPAPER_PATH("wallpaper.path", null, "用户的壁纸路径(相对路径)"),
 
-    CUSTOM_MAIN_COLOR("theme.custom.main.color", null, "主要区域颜色"),
-    CUSTOM_MAIN_FILTER("theme.custom.main.filter", null, "主要区域模糊"),
-    CUSTOM_TOP_NAV_COLOR("theme.custom.nav.color", null, "导航栏颜色"),
-    CUSTOM_TOP_NAV_FILTER("theme.custom.nav.filter", null, "导航栏模糊"),
-    CUSTOM_ACTIVE_STYLE("theme.custom.active.style", null, "激活主题配色"),
-    CUSTOM_BUTTON_STYLE("theme.custom.button.style", null, "按钮主题配色"),
+    CUSTOM_THEME_BRAND_COLOR("custom.theme.brand.color", "rgba(75, 227, 238, 0.62)", "品牌颜色"),
+    CUSTOM_THEME_PRIMARY_COLOR("custom.theme.primary.color", "rgba(135, 206, 250, 0.7)", "主要主题颜色"),
+    CUSTOM_THEME_MESSAGE_HOVER_USER("custom.theme.message.hover.user", "rgba(61, 138, 168, 0.12)", "消息悬浮背景色 - 用户"),
+    CUSTOM_THEME_MESSAGE_HOVER_MODEL("custom.theme.message.hover.model", "rgba(61, 138, 168, 0.12)", "消息悬浮背景色 - 模型"),
+    CUSTOM_THEME_ACTIVE_COLOR("custom.theme.active.color", "rgba(94, 203, 245, 0.85)", "激活状态的颜色"),
+    CUSTOM_THEME_PRIMARY_HOVER("custom.theme.primary.hover", "rgba(135, 206, 250, 0.2)", "hover状态的颜色"),
+    CUSTOM_THEME_PRIMARY_BUTTON("custom.theme.primary.button", "rgba(61, 138, 168, 0.24)", "按钮背景颜色"),
+    CUSTOM_THEME_PRIMARY_BUTTON_BORDER("custom.theme.primary.button.border", "rgba(135, 206, 250, 0.7)", "按钮边框颜色"),
+    CUSTOM_THEME_TEXTAREA_COLOR("custom.theme.textarea.color", "rgba(2, 98, 136, 0.1)", "textarea背景颜色"),
+    CUSTOM_THEME_TEXTAREA_ACTIVE("custom.theme.textarea.active", "rgba(61, 138, 168, 0.18)", "textarea激活颜色"),
+    CUSTOM_THEME_TEXTAREA_BORDER("custom.theme.textarea.border", "rgba(135, 206, 250, 0.22)", "textarea边框颜色"),
+    CUSTOM_THEME_NAV_BLUR("custom.theme.nav.blur", "15px", "导航栏模糊程度"),
+    CUSTOM_THEME_MAIN_BLUR("custom.theme.main.blur", "15px", "主要内容模糊程度"),
+    CUSTOM_THEME_SIDE_BLUR("custom.theme.side.blur", "15px", "次要内容模糊程度"),
+    CUSTOM_THEME_MODAL_COLOR("custom.theme.modal.color", "rgba(2, 98, 136, 0.1)", "模态窗口背景颜色"),
+    CUSTOM_THEME_MODAL_BLUR("custom.theme.modal.blur", "10px", "模态窗口模糊程度"),
+    CUSTOM_THEME_MODAL_ACTIVE("custom.theme.modal.active", "rgba(0, 212, 240, 0.6)", "模态窗口激活颜色"),
+    CUSTOM_THEME_MENU_COLOR("custom.theme.menu.color", "rgba(22, 56, 66, 0.51)", "三点菜单背景颜色"),
+    CUSTOM_THEME_MENU_ACTIVE_COLOR("custom.theme.menu.active.color", "rgb(51, 168, 184)", "三点菜单激活颜色"),
+    CUSTOM_THEME_MENU_BLUR("custom.theme.menu.blur", "6px", "三点菜单模糊程度"),
+    CUSTOM_THEME_SELECTOR_COLOR("custom.theme.selector.color", "rgba(25, 35, 60, 0.5)", "选择器背景颜色"),
+    CUSTOM_THEME_SELECTOR_ACTIVE_COLOR("custom.theme.selector.active.color", "rgba(23, 140, 194, 0.5)", "选择器激活颜色"),
+    CUSTOM_THEME_SELECTOR_BORDER_COLOR("custom.theme.selector.border.color", "rgba(79, 172, 254, 0.15)", "选择器边框颜色");
+
+
     ;
 
     /**

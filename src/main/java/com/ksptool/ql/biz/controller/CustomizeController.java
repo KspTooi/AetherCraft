@@ -1,25 +1,15 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.SaveColorStyleDto;
-import com.ksptool.ql.biz.model.dto.WallpaperDto;
-import com.ksptool.ql.biz.model.po.UserFilePo;
+import com.ksptool.ql.biz.model.dto.SaveThemeSettingsDto;
+import com.ksptool.ql.biz.model.vo.GetThemeSettingsVo;
 import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.commons.web.Result;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
-import java.util.Base64;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 
 @RestController
 @RequestMapping("/customize")
@@ -41,6 +31,23 @@ public class CustomizeController {
 
     @PostMapping("/saveColorTheme")
     public Result<?> saveColorTheme(@RequestBody SaveColorStyleDto dto) {
+
+        return null;
+    }
+
+
+    @PostMapping("saveThemeSettings")
+    public Result<?> saveThemeSettings(@RequestBody SaveThemeSettingsDto dto) {
+
+
+        return null;
+    }
+
+    @PostMapping("getThemeSettings")
+    public Result<GetThemeSettingsVo> getThemeSettings() {
+
+        userConfigService.get("","");
+
 
         return null;
     }

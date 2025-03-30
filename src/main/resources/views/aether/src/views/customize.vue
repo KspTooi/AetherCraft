@@ -48,16 +48,7 @@
         </div>
 
         <div v-if="activeSection === 'colors'" class="section-content">
-          <div class="section-header">
-            <h2>主题颜色</h2>
-            <p class="section-description">调整应用的主题和界面颜色</p>
-          </div>
-          <div class="settings-panel">
-            <div class="coming-soon">
-              <i class="bi bi-tools"></i>
-              <span>功能开发中，敬请期待</span>
-            </div>
-          </div>
+          <CustomizeTheme />
         </div>
 
         <div v-if="activeSection === 'effects'" class="section-content">
@@ -99,6 +90,7 @@ import { useThemeStore } from '../stores/theme'
 import LaserButton from '@/components/LaserButton.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import CustomizeWallpaper from '@/components/CustomizeWallpaper.vue'
+import CustomizeTheme from '../components/CustomizeTheme.vue'
 
 // 获取提前解除加载状态的方法
 const finishLoading = inject<() => void>('finishLoading')
