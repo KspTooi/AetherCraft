@@ -55,6 +55,7 @@
     </div>
   </div>
   <ConfirmModal ref="confirmModal" />
+  <InputModal ref="inputModal" />
 </template>
 
 <script setup lang="ts">
@@ -69,6 +70,7 @@ import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
 import LaserButton from "@/components/LaserButton.vue"
 import ConfirmModal from "@/components/ConfirmModal.vue"
+import InputModal from "@/components/InputModal.vue"
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -108,6 +110,7 @@ const refreshThreadListTimer = ref<number | null>(null)
 const threadListRef = ref<InstanceType<typeof ModelChatThreadList> | null>(null)
 const messagesRef = ref<InstanceType<typeof ModelChatMsgBox> | null>(null)
 const confirmModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
+const inputModal = ref<InstanceType<typeof InputModal> | null>(null)
 
 // 声明 showToast 函数类型
 declare function showToast(type: string, message: string): void;
@@ -432,8 +435,19 @@ const loadThread = async (threadId: string) => {
 }
 
 const editThreadTitle = async (thread: any) => {
-  const newTitle = prompt('请输入新的会话标题:', thread.title)
+  if (!inputModal.value) return
+  
+  const newTitle = await inputModal.value.showInput({
+    title: '编辑会话标题',
+    content: '请输入新的会话标题:',
+    defaultValue: thread.title,
+    placeholder: '输入新标题...',
+    confirmText: '保存',
+    cancelText: '取消'
+  })
+  
   if (!newTitle || newTitle.trim() === thread.title) return
+  
   try {
     const response = await axios.post('/model/chat/editThread', {
       threadId: thread.id,
