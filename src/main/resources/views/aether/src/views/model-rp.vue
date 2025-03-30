@@ -163,11 +163,7 @@ onMounted(async () => {
     console.error('获取上次会话状态失败:', error)
   }
   
-  // 角色列表加载完成后，提前结束加载动画
-  if (finishLoading) {
-    console.log('调用finishLoading解除加载状态')
-    finishLoading() 
-  }
+
   
   // 获取URL中的角色ID参数
   const urlParams = new URLSearchParams(window.location.search)
@@ -177,6 +173,12 @@ onMounted(async () => {
   if (roleIdParam) {
     console.log(`从URL参数加载角色: ${roleIdParam}`)
     await loadRoleThread(roleIdParam, false, null)
+  }
+
+  //结束加载动画
+  if (finishLoading) {
+    console.log('调用finishLoading解除加载状态')
+    finishLoading()
   }
 })
 
@@ -802,50 +804,57 @@ const throttle = (fn: Function, delay: number) => {
   display: none;
   position: fixed;
   left: 12px;
-  top: 8px;
-  z-index: 1001;
+  top: 12px;
+  z-index: 1001; /* 比TopNav的z-index(1000)高 */
+  cursor: pointer;
+  min-height: 32px;
+  height: auto;
   width: auto;
-  height: 32px!important;
-  min-height: 32px!important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   padding: 5px 8px !important; /* 覆盖LaserButton默认内边距 */
   font-size: 12px!important;
 }
 
+.mobile-menu-btn.hide {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-20px);
+}
+
+.mobile-menu-btn:hover {
+  transform: translateY(0) !important; /* 禁用LaserButton默认的悬停效果 */
+}
+
 .thread-list-mask {
   display: none;
   position: fixed;
-  top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 90;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+  z-index: 1000; /* 确保在导航栏上层，但在线程列表下层 */
 }
 
 .thread-list-mask.show {
-  opacity: 1;
-  pointer-events: auto;
+  display: block;
 }
 
 @media (max-width: 768px) {
   .thread-list {
     position: fixed;
-    top: 0;
     left: -240px;
-    bottom: 0;
-    z-index: 100;
-    transform: none;
+    top: 0;
     height: 100vh;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-    background-color: rgba(20, 30, 40, 0.95);
+    width: 240px;
+    z-index: 1001; /* 与按钮相同层级 */
+    transition: transform 0.3s ease;
+    background-color: rgba(20, 30, 40, 0.9); /* 确保背景不透明 */
   }
   
   .thread-list.show {
     transform: translateX(240px);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   }
   
   .mobile-menu-btn {
@@ -853,7 +862,16 @@ const throttle = (fn: Function, delay: number) => {
   }
   
   .thread-list-mask {
-    display: block;
+    display: none; /* 默认隐藏遮罩层 */
+  }
+  
+  .thread-list-mask.show {
+    display: block; /* 仅当菜单打开时显示遮罩层 */
+  }
+  
+  .chat-main {
+    width: 100%;
+    margin-left: 0;
   }
 }
 

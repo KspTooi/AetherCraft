@@ -116,7 +116,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   name: string;
-  avatarPath?: string;
+  avatarPath?: string | null;
   createTime: string;
   isEditing?: boolean;
   editContent?: string;
@@ -426,7 +426,7 @@ onMounted(() => {
 .message .message-content {
   flex: 1;
   min-width: 0;
-  padding-right: 60px; /* 减少右侧内边距，为按钮留出空间 */
+ /* padding-right: 60px;*/ /* 减少右侧内边距，为按钮留出空间 */
 }
 
 .message .message-content .name {
