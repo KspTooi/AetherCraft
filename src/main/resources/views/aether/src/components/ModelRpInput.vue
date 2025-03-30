@@ -4,8 +4,8 @@
       <textarea 
         v-model="messageInput"
         ref="messageTextarea"
-        :placeholder="isDisabled ? '请先选择一个角色' : '在这里输入您的消息...'"
-        :disabled="isLoading || isDisabled"
+        :placeholder="isDisabled ? '请先选择一个角色' : '怎麽不问问神奇的 Gemini 呢?'"
+        :disabled="isDisabled"
         @keydown="handleKeyPress"
         @input="adjustTextareaHeight"
         @focus="isFocused = true"
@@ -15,7 +15,7 @@
     </div>
     <LaserButton 
       v-if="!isLoading" 
-      :disabled="!messageInput.trim() || isDisabled"
+      :disabled="!messageInput.trim() || isDisabled || isLoading"
       corner="bottom-right"
       corner-size="15px"
       :background-color="primaryButton"
@@ -85,7 +85,9 @@ const isFocused = ref(false)
 const handleKeyPress = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
-    handleSend()
+    if (!props.isLoading) {
+      handleSend()
+    }
   }
 }
 
