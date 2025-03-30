@@ -51,13 +51,7 @@ public class ModelRpService {
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
-
-    // 线程安全的容器，记录RP聊天状态 <threadId, contextId>
-    private final ConcurrentHashMap<Long, String> rpThreadToContextIdMap = new ConcurrentHashMap<>();
     
-    // 终止列表，存储已经被终止的contextId
-    private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
-
     //线程会话状态跟踪
     private final ThreadStatusTrack track = new ThreadStatusTrack();
 
@@ -410,8 +404,10 @@ public class ModelRpService {
             return vo;
 
         } catch (Exception e) {
-            // 发生异常时清理会话状态
-            rpThreadToContextIdMap.remove(threadCt.getId());
+
+            // 发生异常时关闭会话
+            track.notifyFailed(threadCt.getId());
+            track.closeSession(threadCt.getId());
 
             // 清理所有片段
             try {
@@ -432,8 +428,9 @@ public class ModelRpService {
      */
     @Transactional(rollbackFor = Exception.class)
     public RpSegmentVo rpCompleteRegenerateBatch(BatchRpCompleteDto dto) throws BizException {
+
         // 检查该会话是否正在处理中
-        if (rpThreadToContextIdMap.containsKey(dto.getThreadId())) {
+        if (track.isLocked(dto.getThreadId())) {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -618,17 +615,14 @@ public class ModelRpService {
             throw new BizException("无权访问该会话");
         }
 
-        // 获取当前正在进行的contextId
-        String contextId = rpThreadToContextIdMap.get(threadId);
-        if (contextId == null) {
+        int status = track.getStatus(threadId);
+
+        if(status != 0 && status != 1){
             throw new BizException("该会话未在进行中或已经终止");
         }
 
-        // 将contextId加入终止列表
-        terminatedContextIds.put(contextId, true);
-        
-        // 清理会话状态
-        rpThreadToContextIdMap.remove(threadId);
+        //将thread标记为终止
+        track.notifyTerminated(thread.getId());
 
         // 获取当前最大序号
         int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
