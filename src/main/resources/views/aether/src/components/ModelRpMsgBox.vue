@@ -53,19 +53,22 @@
         </div>
         <div class="message-actions">
           <template v-if="!message.isEditing">
-            <button v-if="message.role === 'assistant' && index === messages.length - 1" 
+            <button v-if="index === messages.length - 1" 
                     class="message-regenerate-btn" 
                     @click="handleRegenerate(message)"
+                    :disabled="hasTypingMessage"
                     title="重新生成">
               <i class="bi bi-arrow-repeat"></i>
             </button>
             <button class="message-edit-btn" 
                     @click="handleEdit(message)"
+                    :disabled="hasTypingMessage"
                     title="编辑消息">
               <i class="bi bi-pencil"></i>
             </button>
             <button class="message-delete-btn" 
                     @click="handleDelete(message)"
+                    :disabled="hasTypingMessage"
                     title="删除消息">
               <i class="bi bi-trash"></i>
             </button>
@@ -73,13 +76,13 @@
           <template v-else>
             <button class="message-confirm-btn" 
                     @click="handleConfirmEdit(message)"
-                    :disabled="isEditing"
+                    :disabled="isEditing || hasTypingMessage"
                     title="确认编辑">
               <i class="bi bi-check-lg"></i>
             </button>
             <button class="message-cancel-btn" 
                     @click="handleCancelEdit(message)"
-                    :disabled="isEditing"
+                    :disabled="isEditing || hasTypingMessage"
                     title="取消编辑">
               <i class="bi bi-x-lg"></i>
             </button>
@@ -91,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, watch } from 'vue'
+import { ref, nextTick, onMounted, watch, computed } from 'vue'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
 
@@ -140,6 +143,11 @@ const emit = defineEmits<{
 // Refs
 const messagesContainer = ref<HTMLDivElement | null>(null)
 const editTextarea = ref<HTMLTextAreaElement[] | null>(null)
+
+// 计算是否有正在输入中的消息
+const hasTypingMessage = computed(() => {
+  return props.messages.some(m => m.isTyping === true);
+});
 
 // 监听currentThreadId和messages变化，自动滚动到底部
 watch(() => props.currentThreadId, (newVal) => {
@@ -553,10 +561,13 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.message .message-confirm-btn:disabled,
-.message .message-cancel-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.message-regenerate-btn:disabled,
+.message-edit-btn:disabled,
+.message-delete-btn:disabled,
+.message-confirm-btn:disabled,
+.message-cancel-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
 }
 
 .message .message-confirm-btn {

@@ -466,30 +466,69 @@ const handleRegenerate = async (message: ChatMessage) => {
   try {
     isLoading.value = true
     
+    // 检查最后一条消息的类型
+    const lastMessage = messages.value[messages.value.length - 1];
+    
+    // 如果最后一条是AI消息，则删除它
+    if (lastMessage.role === 'assistant') {
+      console.log('最后一条是AI消息，删除它并创建新的临时消息');
+      
+      // 如果有ID，先从服务器删除
+      if (lastMessage.id) {
+        try {
+          await axios.post('/model/rp/removeHistory', {
+            historyId: lastMessage.id
+          });
+        } catch(e) {
+          console.error('删除最后一条AI消息失败，但继续执行重新生成:', e);
+        }
+      }
+      
+      // 从本地消息列表中删除
+      messages.value.pop();
+    }
+    
+    // 使用缓存的AI角色信息创建新的临时消息
+    const assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      name: currentAIRole.value.name,
+      avatarPath: currentAIRole.value.avatarPath,
+      createTime: new Date().toISOString(),
+      isTyping: true,
+      hasReceivedData: false
+    };
+    
+    // 添加临时消息到列表
+    console.log("添加新的AI临时消息:", assistantMessage);
+    messages.value.push(assistantMessage);
+    messagesRef.value?.scrollToBottom();
+    
     // 发送重新生成请求
     const response = await axios.post('/model/rp/rpCompleteBatch', {
       threadId: currentThreadId.value,
       model: selectedModel.value || 'gemini-pro',
       queryKind: 3 // 3:重新生成最后一条AI消息
-    })
+    });
     
     if (response.data.code === 0) {
-      console.log('重新生成请求成功')
-      
-      // 更新消息内容为"正在重新生成..."
-      message.content = '正在输入(RE)...'
-      message.hasReceivedData = false
-      message.isTyping = true
+      console.log('重新生成请求成功');
       
       // 开始轮询获取新的响应
-      await pollAIResponse(message)
+      await pollAIResponse(assistantMessage);
     } else {
-      console.error("重新生成失败:", response.data.message)
-      isLoading.value = false
+      console.error("重新生成失败:", response.data.message);
+      // 移除临时消息
+      messages.value.pop();
+      isLoading.value = false;
     }
   } catch (error) {
-    console.error('重新生成失败:', error)
-    isLoading.value = false
+    console.error('重新生成失败:', error);
+    // 确保在错误情况下也移除临时消息
+    if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+      messages.value.pop();
+    }
+    isLoading.value = false;
   }
 }
 
@@ -617,6 +656,26 @@ const pollAIResponse = async (assistantMessage: any) => {
           // 数据流结束
           assistantMessage.isTyping = false
           isLoading.value = false
+          
+          // 将结束片段中的historyId和角色信息附加到消息
+          if (segment.historyId && !assistantMessage.id) {
+            console.log(`为消息附加历史ID: ${segment.historyId}`)
+            assistantMessage.id = segment.historyId
+          }
+          
+          // 更新角色信息（如果有）
+          if (segment.roleName) {
+            assistantMessage.name = segment.roleName
+          }
+          
+          if (segment.roleAvatarPath) {
+            assistantMessage.avatarPath = segment.roleAvatarPath && segment.roleAvatarPath.startsWith('/res/') 
+              ? segment.roleAvatarPath 
+              : segment.roleAvatarPath ? `/res/${segment.roleAvatarPath}` : null
+          }
+          
+          // 强制更新视图
+          messages.value = [...messages.value]
           
           console.log('流式响应完成，最终消息:', assistantMessage)
           
