@@ -21,21 +21,21 @@
       >
         <div class="nav-left d-flex align-items-center">
           <div class="nav-item">
-            <router-link class="nav-link" to="/chat">聊天</router-link>
+            <router-link class="nav-link" to="/chat" @click="handleNavItemClick">聊天</router-link>
           </div>
           <div class="nav-item">
-            <router-link class="nav-link" to="/chat-rp">聊天(RP)</router-link>
+            <router-link class="nav-link" to="/chat-rp" @click="handleNavItemClick">聊天(RP)</router-link>
           </div>
           <div class="nav-item">
-            <router-link class="nav-link" to="/chat-agent">聊天(AGENT)</router-link>
+            <router-link class="nav-link" to="/chat-agent" @click="handleNavItemClick">聊天(AGENT)</router-link>
           </div>
           <div class="nav-item">
-            <router-link class="nav-link" to="/customize">个性化</router-link>
+            <router-link class="nav-link" to="/customize" @click="handleNavItemClick">个性化</router-link>
           </div>
         </div>
         <div class="nav-right d-flex align-items-center ms-auto">
           <div class="nav-item">
-            <router-link class="nav-link" to="/dashboard">管理台</router-link>
+            <router-link class="nav-link" to="/dashboard" @click="handleNavItemClick">管理台</router-link>
           </div>
           <div class="nav-item">
             <a class="nav-link" @click="handleLogout">注销</a>
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
@@ -63,18 +63,52 @@ const handleBrandClick = () => {
   }
 }
 
-// 页面加载时设置当前活动导航项
+// 处理导航项点击 - 关闭导航栏
+const handleNavItemClick = () => {
+  if (window.innerWidth < 768) {
+    isExpanded.value = false
+  }
+}
+
+// 处理点击外部 - 关闭导航栏
+const handleClickOutside = (event: MouseEvent) => {
+  if (window.innerWidth < 768 && isExpanded.value) {
+    const navbar = document.querySelector('.navbar')
+    const target = event.target as HTMLElement
+    
+    // 如果点击的不是导航栏内的元素，则关闭导航栏
+    if (navbar && !navbar.contains(target)) {
+      isExpanded.value = false
+    }
+  }
+}
+
+// 页面加载时设置事件监听
 onMounted(() => {
   // 在移动端点击品牌名称切换导航栏
   const brandElement = document.querySelector('.navbar-brand')
   if (brandElement) {
     brandElement.addEventListener('click', handleBrandClick)
   }
+  
+  // 添加全局点击事件监听
+  document.addEventListener('click', handleClickOutside)
+})
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+  const brandElement = document.querySelector('.navbar-brand')
+  if (brandElement) {
+    brandElement.removeEventListener('click', handleBrandClick)
+  }
+  
+  document.removeEventListener('click', handleClickOutside)
 })
 
 const handleLogout = () => {
   // 这里添加登出逻辑
   console.log('用户登出')
+  handleNavItemClick() // 点击后关闭导航栏
 }
 </script>
 
@@ -225,10 +259,10 @@ body, html {
 @media (max-width: 767.98px) {
   /* 调整容器布局为垂直堆叠 */
   .container-fluid {
-    flex-direction: column; /* 强制垂直排列 */
-    /* align-items: center; */ /* 在垂直布局下可能不需要或需要调整 */
-    padding-left: 0; /* 移动端不需要左右内边距 */
+    flex-direction: column;
+    padding-left: 0;
     padding-right: 0;
+    min-height: 30px;
   }
 
   /* 在小屏幕下隐藏 Toggler 按钮 */
@@ -239,38 +273,66 @@ body, html {
   /* 品牌样式调整 */
   .navbar-brand {
     display: block;
-    width: 100%; /* 占据整行 */
+    width: 100%;
     text-align: center;
-    margin-bottom: 0; /* 移除可能存在的底部边距 */
+    margin: 0;
     padding: 0.3rem 0;
-    /* 可以考虑增加最小高度确保可点击区域 */
-    min-height: 30px; /* 示例值，根据实际导航栏高度调整 */
+    cursor: pointer;
   }
   
   /* 默认隐藏导航内容，准备动画 */
   .navbar-collapse {
-    max-height: 0; /* 初始高度为0 */
-    overflow: hidden; /* 隐藏溢出内容 */
-    transition: max-height 0.35s ease-in-out; /* 添加过渡动画 */
-    width: 100%; /* 确保宽度一致 */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(200,230,255,0.1) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transform-origin: top;
+    transform: scaleY(0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.2s ease-out;
   }
 
-  /* 当展开时 (有 .show 类)，设置最大高度以显示内容 */
+  /* 展开状态 */
   .navbar-collapse.show {
-    max-height: 500px; /* 设置足够大的最大高度，根据内容调整 */
+    transform: scaleY(1);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   /* 调整内部导航组在小屏幕下的布局 */
   .nav-left, .nav-right {
     width: 100%;
-    justify-content: center; /* 居中显示导航项 */
-    flex-wrap: wrap; /* 允许换行 */
-    padding-top: 0.5rem; /* 在品牌下方添加一些间距 */
+    display: flex;
+    justify-content: flex-start; /* 改为左对齐 */
+    flex-direction: column; /* 垂直排列 */
+    padding: 0; /* 移除内边距 */
   }
   
   .nav-item {
-    margin: 0.1rem;
-    padding: 0.2rem 0.3rem;
+    margin: 0; /* 移除外边距 */
+    padding: 0;
+    width: 100%;
+    text-align: left; /* 文字左对齐 */
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.8rem 1.2rem; /* 增加垂直内边距，保持水平内边距 */
+    width: 100%;
+    text-align: left;
+  }
+
+  /* 添加hover效果 */
+  .nav-link:hover {
+    background-color: rgba(255,255,255,0.2);
   }
 }
 </style> 
