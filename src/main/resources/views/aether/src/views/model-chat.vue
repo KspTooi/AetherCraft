@@ -192,8 +192,8 @@ const sendMessage = async (message: string) => {
       
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: '正在输入...',
-        name: 'AI助手',
+        content: '',
+        name: '----',
         createTime: new Date().toISOString(),
         isTyping: true,
         hasReceivedData: false
@@ -237,7 +237,6 @@ const pollAIResponse = async (assistantMessage: any) => {
           if (!assistantMessage.hasReceivedData) {
             assistantMessage.content = ''
             assistantMessage.hasReceivedData = true
-            assistantMessage.isTyping = false
           }
           assistantMessage.content += segment.content
           
@@ -258,7 +257,6 @@ const pollAIResponse = async (assistantMessage: any) => {
           if (!assistantMessage.hasReceivedData) {
             assistantMessage.content = ''
             assistantMessage.hasReceivedData = true
-            assistantMessage.isTyping = false
           }
           
           if (segment.content) {
@@ -281,6 +279,9 @@ const pollAIResponse = async (assistantMessage: any) => {
           // 触发视图更新
           messages.value = [...messages.value]
           messagesRef.value?.scrollToBottom()
+          
+          // 消息完全接收完后，才取消输入状态
+          assistantMessage.isTyping = false
           isLoading.value = false
 
           // 清除之前的定时器
@@ -551,53 +552,110 @@ const handleRegenerate = async (message: ChatMessage) => {
   isLoading.value = true
   
   try {
+    // 获取消息列表中的最后一条消息
+    const lastMessage = messages.value[messages.value.length - 1];
+    
+    // 如果最后一条是用户消息，直接根据它生成AI响应
+    if (lastMessage.role === 'user') {
+      console.log('最后一条是用户消息，直接根据它生成AI响应');
+      
+      // 创建新的AI消息
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: '',
+        name: '----',
+        avatarPath: undefined,
+        createTime: new Date().toISOString(),
+        isTyping: true,
+        hasReceivedData: false
+      };
+      
+      // 添加AI消息到列表
+      messages.value.push(assistantMessage);
+      messagesRef.value?.scrollToBottom();
+      
+      // 发送标准请求
+      const response = await axios.post('/model/chat/completeBatch', {
+        threadId: currentThreadId.value,
+        model: selectedModel.value,
+        queryKind: 3 // 3:重新生成
+      });
+      
+      if (response.data.code === 0) {
+        // 开始轮询获取AI响应
+        await pollAIResponse(assistantMessage);
+      } else {
+        // 生成失败，显示错误信息
+        showToast("danger", response.data.message || '生成失败');
+        // 移除临时消息
+        messages.value.pop();
+        isLoading.value = false;
+      }
+      return;
+    }
+    
+    // 如果最后一条是AI消息，删除它并重新生成
+    if (lastMessage.role === 'assistant') {
+      console.log('最后一条是AI消息，删除它并创建新的临时消息');
+      
+      // 如果有ID，先从服务器删除
+      if (lastMessage.id) {
+        try {
+          // 先删除最后一条AI消息
+          await axios.post('/model/chat/removeHistory', {
+            threadId: currentThreadId.value,
+            historyId: lastMessage.id
+          });
+        } catch(e) {
+          console.error('删除最后一条AI消息失败，但继续执行重新生成:', e);
+        }
+      }
+      
+      // 从本地消息列表中删除
+      messages.value.pop();
+    }
+    
+    // 创建新的助手消息对象
+    const assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      name: '----',
+      avatarPath: undefined,
+      createTime: new Date().toISOString(),
+      isTyping: true,
+      hasReceivedData: false
+    };
+    
+    // 添加AI消息到列表
+    messages.value.push(assistantMessage);
+    messagesRef.value?.scrollToBottom();
+    
     // 发送重新生成请求
     const response = await axios.post('/model/chat/completeBatch', {
       threadId: currentThreadId.value,
       model: selectedModel.value,
       queryKind: 3 // 3:重新生成最后一条AI消息
-    })
+    });
     
     if (response.data.code === 0) {
-      // 找到当前AI消息的索引
-      const currentMsgIndex = messages.value.findIndex(m => m.id === message.id)
-      
-      // 创建新的助手消息对象
-      const assistantMessage: ChatMessage = {
-        id: message.id,
-        role: 'assistant',
-        content: '正在重新生成...',
-        name: message.name || 'AI助手',
-        avatarPath: message.avatarPath,
-        createTime: new Date().toISOString(),
-        isTyping: true,
-        hasReceivedData: false
-      }
-      
-      // 仅替换当前AI消息，保留其他所有消息
-      if (currentMsgIndex !== -1) {
-        messages.value.splice(currentMsgIndex, 1, assistantMessage)
-        // 确保Vue能够检测到变化
-        messages.value = [...messages.value]
-      } else {
-        // 如果找不到原消息，则添加到消息列表末尾
-        messages.value.push(assistantMessage)
-      }
-      
-      // 滚动到底部
-      messagesRef.value?.scrollToBottom()
-      
       // 开始轮询获取AI响应
-      await pollAIResponse(assistantMessage)
+      await pollAIResponse(assistantMessage);
     } else {
       // 重新生成失败，显示错误信息
-      showToast("danger", response.data.message || '重新生成失败')
-      isLoading.value = false
+      showToast("danger", response.data.message || '重新生成失败');
+      // 移除临时消息
+      messages.value.pop();
+      isLoading.value = false;
     }
   } catch (error) {
-    console.error('重新生成错误:', error)
-    showToast("danger", '重新生成失败')
-    isLoading.value = false
+    console.error('重新生成错误:', error);
+    showToast("danger", '重新生成失败');
+    // 确保在错误情况下也移除临时消息
+    if (messages.value.length > 0 && 
+        messages.value[messages.value.length - 1].isTyping) {
+      messages.value.pop();
+    }
+    isLoading.value = false;
   }
 }
 

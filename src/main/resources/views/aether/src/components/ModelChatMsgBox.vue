@@ -30,6 +30,7 @@
           <div class="name">
             {{ message.name }}
             <span class="time">{{ formatTime(message.createTime) }}</span>
+            <span v-if="message.isTyping" class="typing">正在输入<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></span>
           </div>
           <div v-if="!message.isEditing">
             <div class="text" v-if="message.role === 'user'">{{ message.content }}</div>
@@ -44,19 +45,22 @@
         </div>
         <div class="message-actions">
           <template v-if="!message.isEditing">
-            <button v-if="message.role === 'assistant' && index === messages.length - 1" 
+            <button v-if="index === messages.length - 1" 
                     class="message-regenerate-btn" 
                     @click="handleRegenerate(message)"
+                    :disabled="hasTypingMessage"
                     title="重新生成">
               <i class="bi bi-arrow-repeat"></i>
             </button>
             <button class="message-edit-btn" 
                     @click="handleEdit(message)"
+                    :disabled="hasTypingMessage"
                     title="编辑消息">
               <i class="bi bi-pencil"></i>
             </button>
             <button class="message-delete-btn" 
                     @click="handleDelete(message)"
+                    :disabled="hasTypingMessage"
                     title="删除消息">
               <i class="bi bi-trash"></i>
             </button>
@@ -64,13 +68,13 @@
           <template v-else>
             <button class="message-confirm-btn" 
                     @click="handleConfirmEdit(message)"
-                    :disabled="isEditing"
+                    :disabled="isEditing || hasTypingMessage"
                     title="确认编辑">
               <i class="bi bi-check-lg"></i>
             </button>
             <button class="message-cancel-btn" 
                     @click="handleCancelEdit(message)"
-                    :disabled="isEditing"
+                    :disabled="isEditing || hasTypingMessage"
                     title="取消编辑">
               <i class="bi bi-x-lg"></i>
             </button>
@@ -85,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, computed } from 'vue'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
 import ConfirmModal from './ConfirmModal.vue'
@@ -126,6 +130,11 @@ const emit = defineEmits<{
 const messagesContainer = ref<HTMLDivElement | null>(null)
 const editTextarea = ref<HTMLTextAreaElement[] | null>(null)
 const confirmModal = ref<any>(null)
+
+// 计算是否有正在输入中的消息
+const hasTypingMessage = computed(() => {
+  return props.messages.some(m => m.isTyping === true);
+});
 
 // Methods
 const formatTime = (timestamp: string) => {
@@ -453,10 +462,13 @@ defineExpose({
   color: rgba(255, 255, 255, 0.8);
 }
 
-.message .message-confirm-btn:disabled,
-.message .message-cancel-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.message-regenerate-btn:disabled,
+.message-edit-btn:disabled,
+.message-delete-btn:disabled,
+.message-confirm-btn:disabled,
+.message-cancel-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
 }
 
 .message .message-confirm-btn {
@@ -541,6 +553,36 @@ defineExpose({
 
 .message.assistant {
   background: transparent;
+}
+
+/* 打字动画样式 */
+.typing {
+  margin-left: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+}
+
+.typing-dots span {
+  animation: typingDots 1.4s infinite;
+  animation-fill-mode: both;
+  margin-left: 2px;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDots {
+  0% { opacity: 0.2; }
+  20% { opacity: 1; }
+  100% { opacity: 0.2; }
 }
 
 /* 移动端适配 */

@@ -490,6 +490,47 @@ const handleRegenerate = async (message: ChatMessage) => {
     // 检查最后一条消息的类型
     const lastMessage = messages.value[messages.value.length - 1];
     
+    // 如果最后一条是用户消息，直接根据它生成AI响应
+    if (lastMessage.role === 'user') {
+      console.log('最后一条是用户消息，直接根据它生成AI响应');
+      
+      // 使用缓存的AI角色信息创建新的临时消息
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: '',
+        name: currentAIRole.value.name,
+        avatarPath: currentAIRole.value.avatarPath,
+        createTime: new Date().toISOString(),
+        isTyping: true,
+        hasReceivedData: false
+      };
+      
+      // 添加临时消息到列表
+      console.log("添加新的AI临时消息:", assistantMessage);
+      messages.value.push(assistantMessage);
+      messagesRef.value?.scrollToBottom();
+      
+      // 发送响应请求
+      const response = await axios.post('/model/rp/rpCompleteBatch', {
+        threadId: currentThreadId.value,
+        model: selectedModel.value || 'gemini-pro',
+        queryKind: 0 // 0:标准消息处理
+      });
+      
+      if (response.data.code === 0) {
+        console.log('生成请求成功');
+        
+        // 开始轮询获取新的响应
+        await pollAIResponse(assistantMessage);
+      } else {
+        console.error("生成失败:", response.data.message);
+        // 移除临时消息
+        messages.value.pop();
+        isLoading.value = false;
+      }
+      return;
+    }
+    
     // 如果最后一条是AI消息，则删除它
     if (lastMessage.role === 'assistant') {
       console.log('最后一条是AI消息，删除它并创建新的临时消息');
