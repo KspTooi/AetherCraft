@@ -90,6 +90,9 @@
         </div>
       </div>
     </div>
+    
+    <!-- 确认删除对话框 -->
+    <ConfirmModal ref="confirmModal" />
   </div>
 </template>
 
@@ -97,6 +100,7 @@
 import { ref, nextTick, onMounted, watch, computed } from 'vue'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
+import ConfirmModal from './ConfirmModal.vue'
 
 // 初始化主题
 const themeStore = useThemeStore()
@@ -143,6 +147,7 @@ const emit = defineEmits<{
 // Refs
 const messagesContainer = ref<HTMLDivElement | null>(null)
 const editTextarea = ref<HTMLTextAreaElement[] | null>(null)
+const confirmModal = ref<any>(null)
 
 // 计算是否有正在输入中的消息
 const hasTypingMessage = computed(() => {
@@ -230,10 +235,21 @@ const handleCancelEdit = (message: ChatMessage) => {
   message.isEditing = false
 }
 
-const handleDelete = (message: ChatMessage) => {
-  if (!message.id) return
-  if (!confirm('确定要删除这条消息吗？此操作不可恢复。')) return
-  emit('messageRemove', message.id)
+const handleDelete = async (message: ChatMessage) => {
+  if (!message.id) {
+    return
+  }
+  
+  const confirmed = await confirmModal.value.showConfirm({
+    title: '删除消息',
+    content: '确定要删除这条消息吗？此操作不可恢复。',
+    confirmText: '删除',
+    cancelText: '取消'
+  })
+  
+  if (confirmed) {
+    emit('messageRemove', message.id)
+  }
 }
 
 const handleRegenerate = (message: ChatMessage) => {
