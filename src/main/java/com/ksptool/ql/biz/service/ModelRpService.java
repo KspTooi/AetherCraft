@@ -18,6 +18,7 @@ import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
+import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
@@ -56,6 +57,9 @@ public class ModelRpService {
     
     // 终止列表，存储已经被终止的contextId
     private final ConcurrentHashMap<String, Boolean> terminatedContextIds = new ConcurrentHashMap<>();
+
+    //线程会话状态跟踪
+    private final ThreadStatusTrack track = new ThreadStatusTrack();
 
     @Autowired
     private ModelRoleRepository modelRoleRepository;
@@ -244,8 +248,7 @@ public class ModelRpService {
     @Transactional
     public RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
 
-        // 检查该会话是否正在处理中
-        if (rpThreadToContextIdMap.containsKey(dto.getThreadId())) {
+        if(track.isLocked(dto.getThreadId())){
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
@@ -362,21 +365,22 @@ public class ModelRpService {
 
         try {
 
+            //锁定Thread
+            track.newSession(threadCt.getId());
+
             if(dto.getModel().contains("grok")){
                 param.setUrl(GROK_BASE_URL);
                 // 异步调用ModelGrokService发送流式请求
-                String contextId = modelGrokService.sendMessageStream(client, param,
+                modelGrokService.sendMessageStream(client, param,
                         onModelRpMessageRcv(threadCt, threadCt.getUserId())
                 );
-                rpThreadToContextIdMap.put(threadCt.getId(), contextId);
             }
 
             if(dto.getModel().contains("gemini")){
                 // 异步调用ModelGeminiService发送流式请求
-                String contextId =modelGeminiService.sendMessageStream(client, param,
+                modelGeminiService.sendMessageStream(client, param,
                         onModelRpMessageRcv(threadCt, threadCt.getUserId())
                 );
-                rpThreadToContextIdMap.put(threadCt.getId(), contextId);
             }
 
             // 返回用户消息作为第一次响应
@@ -480,17 +484,17 @@ public class ModelRpService {
         int waitTimes = 0;
         
         while (waitTimes < MAX_WAIT_TIMES) {
+
+            if(track.getStatus(threadId) == 0){
+                continue;
+            }
+
             // 一次性查询所有未读片段，按sequence排序
             unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId);
 
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
                 break;
-            }
-            
-            // 如果没有未读片段，且会话不在处理中，直接返回null
-            if (!rpThreadToContextIdMap.containsKey(threadId)) {
-                return null;
             }
             
             // 等待一段时间后再次尝试
@@ -823,18 +827,20 @@ public class ModelRpService {
                 String contextId = context.getContextId();
                 Long threadId = thread.getId();
 
-                // 检查该contextId是否已被终止
-                if (terminatedContextIds.containsKey(contextId)) {
-                    // 如果是完成或错误回调，从终止列表中移除
+                //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
+                if(track.getStatus(threadId) == 11){
+
+                    // 如果是完成或错误回调，需要关闭Session
                     if (context.getType() == 1 || context.getType() == 2) {
-                        terminatedContextIds.remove(contextId);
+                        track.closeSession(threadId);
                     }
+
                     return;
                 }
 
-                // 首次收到消息时，将contextId存入映射表
-                if (!rpThreadToContextIdMap.containsValue(contextId)) {
-                    rpThreadToContextIdMap.put(threadId, contextId);
+                //当为正在等待响应状态 首次收到消息时需要转换状态
+                if(track.getStatus(threadId) == 0){
+                    track.notifyReceive(threadId);
                 }
 
                 // 获取当前最大序号
@@ -871,8 +877,9 @@ public class ModelRpService {
                     endSegment.setHistoryId(modelHistory.getId()); // 设置关联的历史记录ID
                     segmentRepository.save(endSegment);
 
-                    // 清理会话状态
-                    rpThreadToContextIdMap.remove(threadId);
+                    //释放Thread
+                    track.notifyFinished(threadId);
+                    track.closeSession(threadId);
                     return;
                 }
 
@@ -888,8 +895,9 @@ public class ModelRpService {
                     css.encryptEntity(errorSegment);
                     segmentRepository.save(errorSegment);
 
-                    // 清理会话状态
-                    rpThreadToContextIdMap.remove(threadId);
+                    //释放Thread
+                    track.notifyFailed(threadId);
+                    track.closeSession(threadId);
                 }
             } catch (Exception e) {
                 log.error("处理RP对话片段失败", e);
