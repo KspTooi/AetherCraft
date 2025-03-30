@@ -47,6 +47,9 @@
         </div>-->
       </div>
       <div class="nav-right d-flex align-items-center ms-auto">
+        <div class="nav-item">
+          <a class="nav-link" th:href="@{/client-ui}">新版(BETA)</a>
+        </div>
         <div class="nav-item" sec:authorize="panel:access">
           <a class="nav-link" th:href="@{/dashboard}">管理台</a>
         </div>

@@ -26,9 +26,9 @@
           <div class="nav-item">
             <router-link class="nav-link" to="/rp" @click="handleNavItemClick">角色扮演</router-link>
           </div>
-          <div class="nav-item">
+<!--           <div class="nav-item">
             <router-link class="nav-link" to="/agent" @click="handleNavItemClick">聊天(AGENT)</router-link>
-          </div>
+          </div> -->
           <div class="nav-item">
             <router-link class="nav-link" to="/customize" @click="handleNavItemClick">个性化</router-link>
           </div>
@@ -37,6 +37,9 @@
           </div>
         </div>
         <div class="nav-right d-flex align-items-center ms-auto">
+          <div class="nav-item">
+            <a class="nav-link" href="/model/chat/view" @click="handleNavItemClick">经典UI</a>
+          </div>
           <div class="nav-item">
             <router-link class="nav-link" to="/dashboard" @click="handleNavItemClick">管理台</router-link>
           </div>
