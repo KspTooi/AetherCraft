@@ -30,5 +30,23 @@ html {
   /* 其他需要的全局字体、颜色等样式 */
 }
 
+/* Bootstrap Icons 字体配置 */
+@font-face {
+  font-family: "bootstrap-icons";
+  src: url("bootstrap-icons/font/fonts/bootstrap-icons.woff2") format("woff2"),
+       url("bootstrap-icons/font/fonts/bootstrap-icons.woff") format("woff");
+}
+
+.bi::before {
+  font-family: bootstrap-icons !important;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -0.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 </style>

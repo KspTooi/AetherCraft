@@ -11,6 +11,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/commons/**").addResourceLocations("classpath:/views/commons/");
         registry.addResourceHandler("/res/**").addResourceLocations("file:userdata/res/");
+        registry.addResourceHandler("/node_modules/**").addResourceLocations("file:src/main/resources/views/aether/node_modules/");
         registry.addResourceHandler("/**").addResourceLocations("classpath:/views/static/");
     }
 }

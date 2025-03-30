@@ -114,10 +114,15 @@ const handleLogout = () => {
 
 <style>
 /* 全局样式，确保导航栏充满整个宽度 */
+:root {
+  --nav-height: 40px;
+}
+
 body, html {
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* 防止水平滚动条 */
+  overflow-x: hidden;
+  height: 100%;
 }
 
 #app {
@@ -129,13 +134,14 @@ body, html {
 .my-vista-taskbar {
   position: relative;
   z-index: 1000;
-  width: 100%; /* 确保导航栏占满全宽 */
+  width: 100%;
+  height: var(--nav-height);
   background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(200,230,255,0.1) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255,255,255,0.3);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  padding: 0.2rem 0; /* 移除左右内边距 */
+  padding: 0.2rem 0;
   transition: background 0.3s ease;
 }
 
