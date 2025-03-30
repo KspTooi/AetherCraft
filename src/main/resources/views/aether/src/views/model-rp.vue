@@ -64,6 +64,9 @@
       :selectedRoleName="selectedModalRoleName"
       @close="closeThreadModal"
       @threadChecked="handleThreadChecked" />
+      
+    <!-- 确认模态框 -->
+    <ConfirmModal ref="confirmModalRef" />
   </div>
 </template>
 
@@ -75,6 +78,7 @@ import ModelRpMsgBox from "@/components/ModelRpMsgBox.vue"
 import ModelRpInput from "@/components/ModelRpInput.vue"
 import ModelRpThreadModal from "@/components/ModelRpThreadModal.vue"
 import LaserButton from "@/components/LaserButton.vue"
+import ConfirmModal from "@/components/ConfirmModal.vue"
 import axios from 'axios'
 import { marked } from 'marked'
 import { useThemeStore } from '../stores/theme'
@@ -120,6 +124,7 @@ const showThreadModal = ref(false)
 const selectedModalRoleId = ref('')
 const selectedModalRoleName = ref('')
 const currentUserRole = ref<any>(null)
+const confirmModalRef = ref<InstanceType<typeof ConfirmModal> | null>(null)
 // 缓存当前 AI 角色信息
 const currentAIRole = ref<{id: string, name: string, avatarPath: string | null}>({
   id: '',
@@ -448,7 +453,16 @@ const handleMessageEdit = async (historyId: string, content: string) => {
 }
 
 const handleMessageRemove = async (historyId: string) => {
-  if (!currentThreadId.value) return
+  if (!currentThreadId.value || !confirmModalRef.value) return
+  
+  const confirmed = await confirmModalRef.value.showConfirm({
+    title: '删除消息',
+    content: '您确定要删除此消息吗？此操作不可恢复。',
+    confirmText: '删除',
+    cancelText: '取消'
+  })
+  
+  if (!confirmed) return
   
   try {
     const response = await axios.post('/model/rp/removeHistory', {
@@ -705,6 +719,18 @@ const terminateAIResponse = async () => {
   if (!isLoading.value || !currentThreadId.value) return
   
   try {
+    // 使用确认模态框确认是否终止响应
+    if (confirmModalRef.value) {
+      const confirmed = await confirmModalRef.value.showConfirm({
+        title: '终止生成',
+        content: '您确定要终止AI正在生成的回复吗？',
+        confirmText: '终止',
+        cancelText: '继续生成'
+      })
+      
+      if (!confirmed) return
+    }
+    
     // 调用终止响应接口
     await axios.post('/model/rp/rpCompleteBatch', {
       threadId: currentThreadId.value,
@@ -809,7 +835,7 @@ const throttle = (fn: Function, delay: number) => {
   display: none;
   position: fixed;
   left: 12px;
-  top: 12px;
+  top: 8px;
   z-index: 1001; /* 比TopNav的z-index(1000)高 */
   cursor: pointer;
   min-height: 32px;

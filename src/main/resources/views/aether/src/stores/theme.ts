@@ -51,7 +51,7 @@ export const useThemeStore = defineStore('theme', () => {
   const modalBlur = ref('10px')
   
   // 模态窗口激活颜色
-  const modalActive = ref('rgba(0, 180, 240, 0.85)')
+  const modalActive = ref('rgba(0, 212, 240, 0.6)')
   
   // 三点菜单背景颜色
   const menuColor = ref('rgba(22, 56, 66, 0.51)')

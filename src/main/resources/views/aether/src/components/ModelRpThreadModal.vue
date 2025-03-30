@@ -35,8 +35,8 @@
               <LaserButton 
                 v-if="thread.active !== 1"
                 class="thread-action-btn activate-btn"
-                width="28px"
-                height="28px"
+                width="30px"
+                height="30px"
                 background-color="transparent"
                 border-color="transparent"
                 glowIntensity="0"
@@ -46,12 +46,14 @@
               </LaserButton>
               <LaserButton 
                 class="thread-action-btn delete-btn"
-                width="28px"
-                height="28px"
+                width="30px"
+                height="30px"
                 background-color="transparent"
                 border-color="transparent"
                 glowIntensity="0"
                 @click.stop="handleDeleteThread(thread.id)"
+                :disabled="threads.length <= 1"
+                :class="{ 'disabled': threads.length <= 1 }"
                 title="删除会话">
                 <i class="bi bi-trash"></i>
               </LaserButton>
@@ -61,12 +63,16 @@
       </div>
     </div>
   </div>
+  
+  <!-- 确认模态框 -->
+  <ConfirmModal ref="confirmModalRef" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import LaserButton from './LaserButton.vue'
+import ConfirmModal from './ConfirmModal.vue'
 import { useThemeStore } from '../stores/theme'
 
 // 获取主题颜色
@@ -100,6 +106,7 @@ const emit = defineEmits<{
 const threads = ref<any[]>([])
 const loading = ref(false)
 const currentThreadId = ref('')
+const confirmModalRef = ref<InstanceType<typeof ConfirmModal> | null>(null)
 
 // Methods
 const loadThreadList = async () => {
@@ -221,7 +228,23 @@ const handleActivateThread = async (threadId: string) => {
 }
 
 const handleDeleteThread = async (threadId: string) => {
-  if (!confirm('确定要删除这个会话吗？此操作不可恢复。')) return
+  if (!confirmModalRef.value) return
+  
+  // 检查是否为最后一个会话
+  if (threads.value.length <= 1) {
+    return // 直接返回，不执行删除操作
+  }
+  
+  const threadTitle = threads.value.find(t => t.id === threadId)?.title || '未命名会话'
+  
+  const confirmed = await confirmModalRef.value.showConfirm({
+    title: '删除会话',
+    content: `您确定要删除 "${threadTitle}" 会话吗？此操作不可恢复。`,
+    confirmText: '删除',
+    cancelText: '取消'
+  })
+  
+  if (!confirmed) return
   
   try {
     const response = await axios.post('/model/rp/removeThread', {
@@ -269,8 +292,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
+  z-index: 2147483646;
+  animation: fadeIn 0.2s ease;
 }
 
 @keyframes fadeIn {
@@ -287,11 +310,11 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(v-bind(modalBlur));
   border-radius: 0px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalIn 0.3s ease;
+  animation: modalIn 0.25s ease;
   position: relative;
 }
 
@@ -311,9 +334,9 @@ onMounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 1px;
   background: v-bind(modalActive);
-  box-shadow: 0 0 15px v-bind(modalActive);
+  box-shadow: 0 0 10px 1px v-bind(modalActive);
   z-index: 1;
 }
 
@@ -321,10 +344,11 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 16px 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: v-bind('`rgba(${modalColor.split("(")[1].split(")")[0].split(",").map((n, i) => i < 3 ? Math.max(0, parseInt(n) - 5) : n).join(",")}, 1)`');
   position: relative;
+  margin-bottom: 8px;
 }
 
 .thread-modal-title {
@@ -411,7 +435,7 @@ onMounted(() => {
 
 /* 会话列表 */
 .thread-list {
-  padding: 4px;
+  padding: 4px 8px 8px;
 }
 
 .thread-item {
@@ -520,7 +544,7 @@ onMounted(() => {
 
 .thread-actions {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   opacity: 1;
   transition: opacity 0.2s ease;
 }
@@ -533,6 +557,9 @@ onMounted(() => {
   color: rgba(255, 255, 255, 0.6);
   transition: all 0.2s ease;
   border-radius: 0 !important;
+  padding: 6px 0;
+  font-size: 13px;
+  height: 28px;
 }
 
 .thread-action-btn:hover {
@@ -552,9 +579,20 @@ onMounted(() => {
   color: rgba(255, 100, 100, 0.9);
 }
 
+.thread-action-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.thread-action-btn.disabled:hover {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* 自定义滚动条 */
 .thread-modal-body::-webkit-scrollbar {
-  width: 3px;
+  width: 4px;
 }
 
 .thread-modal-body::-webkit-scrollbar-track {
@@ -563,7 +601,7 @@ onMounted(() => {
 
 .thread-modal-body::-webkit-scrollbar-thumb {
   background: v-bind('`rgba(${modalActive.split("(")[1].split(")")[0]}, 0.3)`');
-  border-radius: 1.5px;
+  border-radius: 2px;
 }
 
 .thread-modal-body::-webkit-scrollbar-thumb:hover {
