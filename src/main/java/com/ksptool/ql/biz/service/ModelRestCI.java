@@ -15,6 +15,6 @@ public interface ModelRestCI {
 
     String sendMessageSync(OkHttpClient client, ModelChatParam dto) throws BizException;
 
-    void sendMessageStream(OkHttpClient client, ModelChatParam param, Consumer<ModelChatContext> callback);
+    String sendMessageStream(OkHttpClient client, ModelChatParam param, Consumer<ModelChatContext> callback);
 
 }

@@ -104,8 +104,9 @@ public class ModelGrokService implements ModelRestCI{
      * @param client HTTP客户端
      * @param param 聊天请求参数
      * @param callback 统一回调 - 处理所有类型的消息和错误
+     * @return 立即返回ContextID
      */
-    public void sendMessageStream(
+    public String sendMessageStream(
             OkHttpClient client, 
             ModelChatParam param,
             Consumer<ModelChatContext> callback) {
@@ -242,6 +243,8 @@ public class ModelGrokService implements ModelRestCI{
                 }
             }
         });
+
+        return contextId;
     }
 
     /**

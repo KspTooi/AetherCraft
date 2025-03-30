@@ -138,6 +138,25 @@ onMounted(async () => {
   // 加载角色列表
   await threadListRef.value?.loadRoleList()
   
+  // 获取用户上次使用的会话和角色
+  try {
+    console.log('获取用户上次使用的会话和角色...')
+    const lastStatusResponse = await axios.post('/model/rp/getRpLastStatus')
+    
+    if (lastStatusResponse.data.code === 0) {
+      const lastStatus = lastStatusResponse.data.data
+      console.log('获取到上次状态:', lastStatus)
+      
+      // 如果有上次使用的角色和会话，恢复它们
+      if (lastStatus.lastRole && lastStatus.lastThread) {
+        console.log(`恢复上次会话: 角色ID=${lastStatus.lastRole}, 会话ID=${lastStatus.lastThread}`)
+        await loadRoleThread(lastStatus.lastRole, false, lastStatus.lastThread)
+      }
+    }
+  } catch (error) {
+    console.error('获取上次会话状态失败:', error)
+  }
+  
   // 角色列表加载完成后，提前结束加载动画
   if (finishLoading) {
     console.log('调用finishLoading解除加载状态')
@@ -148,7 +167,7 @@ onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search)
   const roleIdParam = urlParams.get('roleId')
   
-  // 如果URL中有角色ID参数，自动加载该角色的会话
+  // 如果URL中有角色ID参数，自动加载该角色的会话（优先级高于上次会话状态）
   if (roleIdParam) {
     console.log(`从URL参数加载角色: ${roleIdParam}`)
     await loadRoleThread(roleIdParam, false, null)

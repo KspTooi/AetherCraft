@@ -15,7 +15,7 @@ public class ModelDeepSeekService implements ModelRestCI {
     }
 
     @Override
-    public void sendMessageStream(OkHttpClient client, ModelChatParam param, Consumer<ModelChatContext> callback) {
-
+    public String sendMessageStream(OkHttpClient client, ModelChatParam param, Consumer<ModelChatContext> callback) {
+        return null;
     }
 }

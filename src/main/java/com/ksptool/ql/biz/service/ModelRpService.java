@@ -344,7 +344,6 @@ public class ModelRpService {
         param.setModelCode(dto.getModel());
         param.setSystemPrompt(finalPrompt);
 
-
         List<ModelChatParamHistory> paramHistories = new ArrayList<>();
         param.setHistories(paramHistories);
 

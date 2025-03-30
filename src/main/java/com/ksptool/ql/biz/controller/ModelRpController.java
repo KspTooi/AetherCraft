@@ -8,10 +8,7 @@ import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
-import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
-import com.ksptool.ql.biz.model.vo.RecoverRpChatVo;
-import com.ksptool.ql.biz.model.vo.RpSegmentVo;
-import com.ksptool.ql.biz.model.vo.ModelRoleThreadListVo;
+import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.ModelRpService;
 import com.ksptool.ql.biz.service.UserConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
@@ -65,6 +62,24 @@ public class ModelRpController {
     @PostMapping("/getRoleList")
     public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto queryDto) throws BizException {
         return Result.success(modelRpService.getModelRoleList(queryDto));
+    }
+
+    @PostMapping("/getRpLastStatus")
+    public Result<?> getRpLastStatus(){
+
+        GetRpLastStatusVo vo = new GetRpLastStatusVo();
+
+        String lastThread = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
+        String lastRole = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+
+        if(StringUtils.isNotBlank(lastThread)){
+            vo.setLastThread(lastThread);
+        }
+        if(StringUtils.isNotBlank(lastRole)){
+            vo.setLastRole(lastRole);
+        }
+
+        return Result.success(vo);
     }
 
     /**
