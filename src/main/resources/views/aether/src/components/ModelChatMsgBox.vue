@@ -530,7 +530,7 @@ defineExpose({
 /* 移动端适配 */
 @media (max-width: 768px) {
   .chat-messages {
-    padding: 12px 12px 12px 6px;
+    /*padding: 12px 12px 12px 6px;*/
   }
   
   .message {

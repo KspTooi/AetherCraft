@@ -5,7 +5,7 @@
       <LaserButton 
         class="mobile-menu-btn" 
         @click="toggleThreadList"
-        :corners="['bottom-left']"
+        :corners="['top-left']"
         corner-size="15px">
         聊天列表
       </LaserButton>

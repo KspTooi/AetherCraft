@@ -11,6 +11,7 @@
         @focus="isFocused = true"
         @blur="isFocused = false"></textarea>
       <div class="focus-border" :class="{ active: isFocused }"></div>
+      <span class="corner-fill corner-bl-fill" :class="{ active: isFocused }" :style="cornerStyle"></span>
     </div>
     <LaserButton 
       v-if="!isLoading" 
@@ -54,6 +55,14 @@ const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
 const textareaColor = computed(() => themeStore.textareaColor)
 const textareaActive = computed(() => themeStore.textareaActive)
 const textareaBorder = computed(() => themeStore.textareaBorder)
+
+// 角落样式
+const cornerStyle = computed(() => {
+  return {
+    '--corner-size': '15px',
+    '--corner-color': primaryButtonBorder.value,
+  };
+});
 
 // Props
 const props = defineProps<{
@@ -145,6 +154,30 @@ onMounted(() => {
   padding: 2px 4px;
   transition: all 0.3s ease;
   overflow: hidden;
+}
+
+/* 角落填充效果 */
+.corner-fill {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  pointer-events: none; /* 确保不影响点击事件 */
+  z-index: 3; /* 确保显示在其他元素上面 */
+  transition: all 0.3s ease;
+  opacity: 0; /* 默认隐藏 */
+}
+
+/* 左下角 */
+.corner-bl-fill {
+  left: 0;
+  bottom: 0;
+  border-width: var(--corner-size) 0 0 var(--corner-size);
+  border-color: transparent transparent transparent var(--corner-color);
+}
+
+.corner-fill.active {
+  opacity: 1; /* 激活时显示 */
 }
 
 .chat-input textarea {
