@@ -1,9 +1,16 @@
 <template>
   <div class="thread-list-container" :class="{ show: isMobileMenuOpen }">
-    <a href="#" class="manage-thread-btn" @click.prevent="handleCreateNewThread">
+    <LaserButton 
+      class="manage-thread-btn"
+      :corners="['bottom-left', 'bottom-right']"
+      corner-size="15px"
+      background-color="rgba(25, 45, 88, 0.8)"
+      border-color="rgba(135, 206, 250, 0.8)"
+      glow-color="rgba(135, 206, 250, 0.5)"
+      @click="handleCreateNewThread">
       <i class="bi bi-plus-circle"></i>
       新建会话
-    </a>
+    </LaserButton>
     <div class="thread-items-wrapper">
       <div v-if="loading" class="loading-indicator">
         <i class="bi bi-arrow-repeat spinning"></i> 加载中...
@@ -11,9 +18,16 @@
       <div v-else-if="threads.length === 0" class="empty-thread-tip">
         <i class="bi bi-chat-square-text"></i>
         <div class="tip-text">还没有会话记录</div>
-        <a href="#" class="create-thread-btn" @click.prevent="handleCreateNewThread">
+        <LaserButton
+          class="create-thread-btn"
+          :corners="['bottom-left', 'bottom-right']"
+          corner-size="15px"
+          background-color="rgba(25, 45, 88, 0.8)"
+          border-color="rgba(135, 206, 250, 0.8)"
+          glow-color="rgba(135, 206, 250, 0.5)"
+          @click="handleCreateNewThread">
           创建新会话
-        </a>
+        </LaserButton>
       </div>
       <div v-else class="thread-items">
         <div v-for="thread in threads" 
@@ -27,16 +41,28 @@
             <div class="thread-message" v-if="thread.lastMessage">{{ thread.lastMessage }}</div>
           </div>
           <div class="thread-actions">
-            <button class="thread-action-btn" 
-                    @click.stop="handleEditThread(thread)"
-                    title="编辑标题">
+            <LaserButton 
+              class="thread-action-btn"
+              width="24px"
+              height="24px"
+              background-color="transparent"
+              border-color="transparent"
+              glowIntensity="0"
+              @click.stop="handleEditThread(thread)"
+              title="编辑标题">
               <i class="bi bi-pencil"></i>
-            </button>
-            <button class="thread-action-btn" 
-                    @click.stop="handleDeleteThread(thread.id)"
-                    title="删除会话">
+            </LaserButton>
+            <LaserButton 
+              class="thread-action-btn"
+              width="24px"
+              height="24px"
+              background-color="transparent"
+              border-color="transparent"
+              glowIntensity="0"
+              @click.stop="handleDeleteThread(thread.id)"
+              title="删除会话">
               <i class="bi bi-trash"></i>
-            </button>
+            </LaserButton>
           </div>
         </div>
       </div>
@@ -47,6 +73,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
+import LaserButton from './LaserButton.vue'
 
 // Props
 const props = defineProps<{
@@ -133,43 +160,26 @@ defineExpose({
 <style scoped>
 .thread-list-container {
   width: 240px;
-  background: rgba(0, 0, 0, 0.2);
+
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(79, 172, 254, 0.1);
   border-radius: 0 !important;
   transition: transform 0.3s ease;
 }
 
 .manage-thread-btn {
-  margin: 12px;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(79, 172, 254, 0.2);
-  color: white;
-  cursor: pointer;
+  margin: 12px 12px 5px 12px;
+  padding: 10px 15px;
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  flex-shrink: 0; /* 防止按钮被压缩 */
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  background-color: rgba(25, 45, 88, 0.8) !important;
+  border-color: rgba(79, 172, 254, 0.5) !important;
 }
 
 .manage-thread-btn i {
   font-size: 16px;
-}
-
-.manage-thread-btn:hover {
-  background: rgba(79, 172, 254, 0.3);
-  transform: translateY(-1px);
-}
-
-.manage-thread-btn:active {
-  transform: translateY(0);
 }
 
 .thread-items-wrapper {
@@ -177,14 +187,16 @@ defineExpose({
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 0; /* 重要，确保flex布局正常 */
+  border-top: none;
+  min-height: 0;
+  margin-top: 5px;
 }
 
 .loading-indicator {
   padding: 20px;
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
+  margin-top: 10px;
 }
 
 .spinning {
@@ -201,10 +213,11 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px;
+  padding: 20px 20px;
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
-  flex: 1; /* 占据剩余空间 */
+  flex: 1;
+  margin-top: 10px;
 }
 
 .empty-thread-tip i {
@@ -218,111 +231,125 @@ defineExpose({
 }
 
 .create-thread-btn {
-  padding: 8px 16px;
-  background: rgba(79, 172, 254, 0.3);
-  color: white;
-  border-radius: 4px;
-  text-decoration: none;
   font-size: 14px;
-  transition: all 0.3s;
-}
-
-.create-thread-btn:hover {
-  background: rgba(79, 172, 254, 0.5);
-  transform: translateY(-2px);
+  background-color: rgba(25, 45, 88, 0.8) !important;
+  border-color: rgba(79, 172, 254, 0.5) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .thread-items {
   display: flex;
   flex-direction: column;
+  padding: 4px 0;
 }
 
 .thread-item {
-  padding: 10px 16px; /* 微调内边距 */
+  padding: 10px 16px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.25s ease, border-left-color 0.25s ease, box-shadow 0.25s ease;
   border-left: 3px solid transparent;
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
+  margin: 2px 4px;
+  border-radius: 2px;
+}
+
+.thread-item:first-child {
+  margin-top: 5px;
 }
 
 .thread-item .thread-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .thread-item .thread-title {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 2px; /* 减小间距 */
+  margin-bottom: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
 .thread-item .thread-time {
-  font-size: 11px; /* 减小字体 */
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 2px;
+  font-size: 11px;
+  color: rgba(79, 172, 254, 0.5);
+  margin-bottom: 0;
+  letter-spacing: 0.1px;
 }
 
 .thread-item .thread-message {
-  font-size: 12px; /* 减小字体 */
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 1; /* 最多显示一行 */
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   line-height: 1.4;
 }
 
 .thread-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(50, 70, 100, 0.3);
 }
 
 .thread-item.active {
-  background: rgba(79, 172, 254, 0.15);
-  border-left-color: #4facfe;
+  background: rgba(40, 90, 130, 0.25);
+  border-left-color: rgba(79, 172, 254, 0.8);
+  box-shadow: inset 3px 0 5px -2px rgba(79, 172, 254, 0.6);
+}
+
+.thread-item.active .thread-title {
+  color: rgba(255, 255, 255, 1);
+  font-weight: 500;
+}
+
+.thread-item.active .thread-time {
+  color: rgba(79, 172, 254, 0.7);
 }
 
 .thread-actions {
-  display: none;
+  display: flex;
   gap: 4px;
-  align-items: center; /* 垂直居中按钮 */
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  flex-shrink: 0;
+  right: 0;
 }
 
 .thread-item:hover .thread-actions {
-  display: flex;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .thread-action-btn {
-  background: transparent;
-  border: none;
   color: rgba(255, 255, 255, 0.4);
-  width: 24px; /* 减小按钮大小 */
-  height: 24px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.thread-action-btn i {
-  font-size: 14px; /* 减小图标大小 */
+  min-height: 24px;
+  padding: 0;
+  transition: all 0.2s ease;
 }
 
 .thread-action-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(79, 172, 254, 0.15) !important;
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* 自定义滚动条 */
+.thread-action-btn i {
+  font-size: 14px;
+}
+
 .thread-items-wrapper::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .thread-items-wrapper::-webkit-scrollbar-track {
@@ -330,15 +357,14 @@ defineExpose({
 }
 
 .thread-items-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  background: rgba(79, 172, 254, 0.2);
+  border-radius: 1.5px;
 }
 
 .thread-items-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(79, 172, 254, 0.4);
 }
 
-/* 移动端适配 */
 @media (max-width: 768px) {
   .thread-list-container {
     position: absolute;
@@ -346,7 +372,7 @@ defineExpose({
     top: 0;
     bottom: 0;
     z-index: 100;
-    background: rgba(0, 0, 0, 0.85); /* 加深背景以便看清 */
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(5px);
   }
   

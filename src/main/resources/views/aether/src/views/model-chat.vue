@@ -10,14 +10,17 @@
       <div class="thread-list-mask" :class="{ show: isMobileMenuOpen }" @click="toggleThreadList"></div>
       
       <!-- 会话列表组件 -->
-      <ModelChatThreadList 
-        ref="threadListRef" 
-        :currentThreadId="currentThreadId" 
-        :isMobileMenuOpen="isMobileMenuOpen"
-        @threadChecked="handleThreadChecked"
-        @threadEdit="handleThreadEdit"
-        @threadRemove="handleThreadRemove"
-        @createNewThread="createNewThread" />
+      <div class="thread-list">
+        <ModelChatThreadList
+            ref="threadListRef"
+            :currentThreadId="currentThreadId"
+            :isMobileMenuOpen="isMobileMenuOpen"
+            @threadChecked="handleThreadChecked"
+            @threadEdit="handleThreadEdit"
+            @threadRemove="handleThreadRemove"
+            @createNewThread="createNewThread" />
+      </div>
+
 
       <!-- 主聊天区域 -->
       <div class="chat-main">
@@ -35,88 +38,23 @@
           </div>
           
           <div v-else class="chat-messages messages-container-fade-in" ref="messagesContainer" :key="`${currentThreadId}`">
-            <div v-for="(message, index) in messages" 
-                 :key="index"
-                 :class="['message', 'message-hover-effect', message.role === 'user' ? 'user' : 'assistant', { 'editing': message.isEditing }]">
-              <div class="message-header">
-                <div class="avatar" :class="{ 'no-image': !message.avatarPath }">
-                  <img v-if="message.avatarPath" :src="message.avatarPath" :alt="message.name">
-                  <i v-else class="bi bi-person"></i>
-                </div>
-              </div>
-              <div class="message-content">
-                <div class="name">
-                  {{ message.name }}
-                  <span class="time">{{ formatTime(message.createTime) }}</span>
-                </div>
-                <div v-if="!message.isEditing">
-                  <div class="text" v-if="message.role === 'user'">{{ message.content }}</div>
-                  <div class="text" v-else v-html="renderMarkdown(message.content)"></div>
-                </div>
-                <div v-else>
-                  <textarea class="editable-content" 
-                            v-model="message.editContent" 
-                            ref="editTextarea"></textarea>
-                </div>
-              </div>
-              <div class="message-actions">
-                <template v-if="!message.isEditing">
-                  <button v-if="message.role === 'assistant' && index === messages.length - 1" 
-                          class="message-regenerate-btn" 
-                          @click="regenerateAIResponse(message)"
-                          title="重新生成">
-                    <i class="bi bi-arrow-repeat"></i>
-                  </button>
-                  <button class="message-edit-btn" 
-                          @click="editMessage(message)"
-                          title="编辑消息">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="message-delete-btn" 
-                          @click="deleteMessage(message.id)"
-                          title="删除消息">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </template>
-                <template v-else>
-                  <button class="message-confirm-btn" 
-                          @click="confirmEdit(message)"
-                          :disabled="isEditing"
-                          title="确认编辑">
-                    <i class="bi bi-check-lg"></i>
-                  </button>
-                  <button class="message-cancel-btn" 
-                          @click="cancelEdit(message)"
-                          :disabled="isEditing"
-                          title="取消编辑">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                </template>
-              </div>
-            </div>
+            <ModelChatMessages 
+              ref="messagesRef"
+              :messages="messages"
+              :currentThreadId="currentThreadId"
+              :isEditing="isEditing"
+              @messageEdit="handleMessageEdit"
+              @messageRemove="handleMessageRemove"
+              @regenerate="handleRegenerate"
+              @scrollToBottom="scrollToBottom" />
           </div>
         </div>
         
         <!-- 聊天输入区域 -->
-        <div class="chat-input">
-          <div class="chat-input-wrapper">
-            <textarea 
-              v-model="messageInput"
-              ref="messageTextarea"
-              placeholder="怎麽不问问神奇的 Gemini 呢?"
-              @keydown="handleKeyPress"
-              @input="adjustTextareaHeight"></textarea>
-          </div>
-          <button v-if="!isLoading" class="send-btn" 
-                  @click="sendMessage"
-                  :disabled="!messageInput.trim()">
-            发送
-          </button>
-          <button v-else class="stop-btn" 
-                  @click="terminateAIResponse">
-            停止生成
-          </button>
-        </div>
+        <ModelChatInput 
+          :isLoading="isLoading"
+          @send="sendMessage"
+          @stop="terminateAIResponse" />
       </div>
     </div>
   </div>
@@ -127,12 +65,14 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import GlassBox from "@/components/GlassBox.vue"
 import ModelSeriesSelector from "@/components/ModelSeriesSelector.vue"
 import ModelChatThreadList from "@/components/ModelChatThreadList.vue"
+import ModelChatMessages from "@/components/ModelChatMessages.vue"
+import ModelChatInput from "@/components/ModelChatInput.vue"
 import axios from 'axios'
 import { marked } from 'marked'
 
 // 定义消息类型接口
 interface ChatMessage {
-  id?: string; // historyId，用户发送的临时消息可能没有
+  id?: string;
   role: 'user' | 'assistant';
   content: string;
   name: string;
@@ -140,28 +80,28 @@ interface ChatMessage {
   createTime: string;
   isEditing?: boolean;
   editContent?: string;
-  isTyping?: boolean; // 用于AI助手输入状态
-  hasReceivedData?: boolean; // 用于AI助手输入状态
+  isTyping?: boolean;
+  hasReceivedData?: boolean;
 }
 
 // 状态定义
 const messages = ref<ChatMessage[]>([])
 const selectedModel = ref('')
-const messageInput = ref('')
 const isLoading = ref(false)
 const currentThreadId = ref<string | null>(null)
 const isMobileMenuOpen = ref(false)
 const isEditing = ref(false)
-const refreshThreadListTimer = ref<number | null>(null) // 明确类型
-const messagesContainer = ref<HTMLDivElement | null>(null) // 明确类型
-const messageTextarea = ref<HTMLTextAreaElement | null>(null) // 明确类型
-const editTextarea = ref<HTMLTextAreaElement[] | null>(null) // 注意这是数组
+const refreshThreadListTimer = ref<number | null>(null)
 const threadListRef = ref<InstanceType<typeof ModelChatThreadList> | null>(null)
+const messagesRef = ref<InstanceType<typeof ModelChatMessages> | null>(null)
+
+// 声明 showToast 函数类型
+declare function showToast(type: string, message: string): void;
 
 // 工具函数
 const throttle = (fn: Function, delay: number) => {
   let timer: any = null
-  return function(...args: any[]) {
+  return function(this: any, ...args: any[]) {
     if(timer) {
       return
     }
@@ -199,55 +139,16 @@ const throttledLoadThreadList = throttle(loadThreadList, 3000)
 const resetChatState = () => {
   currentThreadId.value = null
   messages.value = []
-  messageInput.value = ''
   isLoading.value = false
 }
 
-// 方法定义
-const handleKeyPress = (event: KeyboardEvent) => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault()
-    sendMessage()
-  }
-}
-
-// 声明 showToast 函数类型 (根据实际情况调整)
-declare function showToast(type: string, message: string): void;
-
-const adjustTextareaHeight = () => {
-  const textarea = messageTextarea.value // 类型已明确
-  if (!textarea) return
-  
-  textarea.style.height = '40px'
-  const scrollHeight = textarea.scrollHeight
-
-  if (scrollHeight <= 40 || !messageInput.value.trim()) {
-    textarea.style.height = '40px'
-    textarea.style.overflowY = 'hidden'
-    return
-  }
-
-  if (scrollHeight > 120) {
-    textarea.style.height = '120px'
-    textarea.style.overflowY = 'auto'
-  } else {
-    textarea.style.height = scrollHeight + 'px'
-    textarea.style.overflowY = 'hidden'
-  }
-}
-
-const sendMessage = async () => {
-  if (!messageInput.value.trim() || isLoading.value) return
-
-  const userMessage = messageInput.value.trim()
-  messageInput.value = ''
-  await nextTick()
-  adjustTextareaHeight()
+const sendMessage = async (message: string) => {
+  if (isLoading.value) return
 
   // 添加用户消息到列表
   const tempUserMessage: ChatMessage = {
     role: 'user',
-    content: userMessage,
+    content: message,
     name: '用户',
     createTime: new Date().toISOString()
   }
@@ -260,7 +161,7 @@ const sendMessage = async () => {
     const response = await axios.post('/model/chat/completeBatch', {
       threadId: currentThreadId.value,
       model: selectedModel.value,
-      message: userMessage,
+      message: message,
       queryKind: 0
     })
     
@@ -289,7 +190,7 @@ const sendMessage = async () => {
       
       messages.value.push(assistantMessage)
       
-      scrollToBottom()
+      messagesRef.value?.scrollToBottom()
       
       await pollAIResponse(assistantMessage)
     } else {
@@ -339,7 +240,7 @@ const pollAIResponse = async (assistantMessage: any) => {
           
           // 触发视图更新
           messages.value = [...messages.value]
-          scrollToBottom()
+          messagesRef.value?.scrollToBottom()
         } else if (segment.type === 2) {
           // 结束片段
           // 如果是第一个数据片段，清除"正在输入..."文本
@@ -368,7 +269,7 @@ const pollAIResponse = async (assistantMessage: any) => {
           
           // 触发视图更新
           messages.value = [...messages.value]
-          scrollToBottom()
+          messagesRef.value?.scrollToBottom()
           isLoading.value = false
 
           // 清除之前的定时器
@@ -398,7 +299,7 @@ const pollAIResponse = async (assistantMessage: any) => {
           
           // 触发视图更新
           messages.value = [...messages.value]
-          scrollToBottom()
+          messagesRef.value?.scrollToBottom()
           isLoading.value = false
           
           // 显示错误提示
@@ -414,7 +315,7 @@ const pollAIResponse = async (assistantMessage: any) => {
       
       // 触发视图更新
       messages.value = [...messages.value]
-      scrollToBottom()
+      messagesRef.value?.scrollToBottom()
       isLoading.value = false
       
       // 显示错误提示
@@ -451,12 +352,7 @@ const renderMarkdown = (content: string) => {
 }
 
 const scrollToBottom = () => {
-  nextTick(() => {
-    const container = messagesContainer.value // 类型已明确
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  })
+  messagesRef.value?.scrollToBottom()
 }
 
 const toggleThreadList = () => {
@@ -584,75 +480,40 @@ const formatTime = (timestamp: string) => {
   }
 }
 
-const editMessage = (message: ChatMessage) => {
-  message.isEditing = true
-  message.editContent = message.content
-  nextTick(() => {
-    if (editTextarea.value && editTextarea.value.length > 0) {
-      // 假设我们总是操作第一个编辑框（或根据逻辑选择）
-      const textarea = editTextarea.value[0]
-      textarea.focus()
-      adjustEditTextareaHeight(textarea, message) // 传递 textarea
-      
-      const lastMessage = messages.value[messages.value.length - 1]
-      if (lastMessage && lastMessage.id === message.id) {
-        scrollToBottom()
-      }
-    }
-  })
-}
-
-const confirmEdit = (message: ChatMessage) => {
-  if (!message.editContent || message.editContent.trim() === '') {
-    alert('消息内容不能为空')
-    return
-  }
-  
-  if (message.content === message.editContent) {
-    message.isEditing = false
-    return
-  }
-  
-  // 调用后端API保存编辑后的消息
-  axios.post('/model/chat/editHistory', {
-    historyId: message.id,
-    content: message.editContent
-  }).then(response => {
+const handleMessageEdit = async (historyId: string, content: string) => {
+  try {
+    const response = await axios.post('/model/chat/editHistory', {
+      historyId: historyId,
+      content: content
+    })
+    
     if (response.data.code === 0) {
       // 更新本地消息内容
-      message.content = message.editContent
-      message.isEditing = false
+      const message = messages.value.find(msg => msg.id === historyId)
+      if (message) {
+        message.content = content
+        message.isEditing = false
+      }
       showToast("success", "消息编辑成功")
     } else {
       showToast("danger", response.data.message || '更新失败')
-      console.error('更新消息失败:', response.data)
     }
-  }).catch(error => {
+  } catch (error) {
     console.error('更新消息失败:', error)
     showToast("danger", '更新失败，请稍后重试')
-  })
-}
-
-const cancelEdit = (message: ChatMessage) => {
-  // 取消编辑，恢复原始内容
-  message.editContent = message.content
-  message.isEditing = false
-}
-
-const deleteMessage = async (messageId: string) => {
-  if (!confirm('确定要删除这条消息吗？此操作不可恢复。')) {
-    return
   }
-  
+}
+
+const handleMessageRemove = async (historyId: string) => {
   try {
     const response = await axios.post('/model/chat/removeHistory', {
       threadId: currentThreadId.value,
-      historyId: messageId
+      historyId: historyId
     })
     
     if (response.data.code === 0) {
       // 从本地消息列表中移除该消息
-      const index = messages.value.findIndex(msg => msg.id === messageId)
+      const index = messages.value.findIndex(msg => msg.id === historyId)
       if (index !== -1) {
         messages.value.splice(index, 1)
       }
@@ -660,45 +521,13 @@ const deleteMessage = async (messageId: string) => {
     } else {
       showToast("danger", response.data.message || "删除消息失败")
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('删除消息失败:', error)
     showToast("danger", "删除消息失败，请检查网络连接")
   }
 }
 
-const adjustEditTextareaHeight = (textarea: HTMLTextAreaElement, message: ChatMessage) => {
-  // 创建一个临时元素来计算原始内容的高度
-  const tempDiv = document.createElement('div')
-  tempDiv.className = 'text'
-  tempDiv.style.position = 'absolute'
-  tempDiv.style.visibility = 'hidden'
-  tempDiv.style.width = textarea.offsetWidth + 'px'
-  tempDiv.style.fontSize = '14px'
-  tempDiv.style.lineHeight = '1.5'
-  tempDiv.style.padding = '8px'
-  
-  // 根据消息类型设置内容
-  if (message.role === 'user') {
-    tempDiv.textContent = message.content
-  } else {
-    tempDiv.innerHTML = renderMarkdown(message.content ?? '')
-  }
-  
-  document.body.appendChild(tempDiv)
-  
-  // 获取内容高度并设置编辑框高度
-  const contentHeight = tempDiv.offsetHeight
-  const minHeight = 60 // 最小高度
-  const maxHeight = 300 // 最大高度
-  
-  // 设置高度，但限制最大高度
-  textarea.style.height = Math.min(Math.max(contentHeight, minHeight), maxHeight) + 'px'
-  
-  // 移除临时元素
-  document.body.removeChild(tempDiv)
-}
-
-const regenerateAIResponse = async (message: ChatMessage) => {
+const handleRegenerate = async (message: ChatMessage) => {
   if (isLoading.value) return
   
   // 验证threadId是否存在
@@ -745,7 +574,7 @@ const regenerateAIResponse = async (message: ChatMessage) => {
       }
       
       // 滚动到底部
-      scrollToBottom()
+      messagesRef.value?.scrollToBottom()
       
       // 开始轮询获取AI响应
       await pollAIResponse(assistantMessage)
@@ -756,7 +585,7 @@ const regenerateAIResponse = async (message: ChatMessage) => {
     }
   } catch (error) {
     console.error('重新生成错误:', error)
-    showToast("danger", '重新生成失败: ' + (error.response?.data?.message || error.message))
+    showToast("danger", '重新生成失败')
     isLoading.value = false
   }
 }
@@ -776,9 +605,6 @@ const handleThreadRemove = (threadId: string) => {
 
 // 生命周期钩子
 onMounted(async () => {
-  adjustTextareaHeight()
-  
-  // 调用子组件的加载方法
   await threadListRef.value?.loadThreadList()
 })
 
@@ -811,6 +637,10 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.thread-list{
+  backdrop-filter: blur(10px);
+}
+
 /* 主聊天区域 */
 .chat-main {
   flex: 1;
@@ -819,13 +649,32 @@ onUnmounted(() => {
   background: transparent;
   overflow: hidden;
   border-radius: 0 !important;
+  backdrop-filter: blur(15px);
 }
 
 /* 模型选择区域 */
 .model-select {
   padding: 8px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0 !important;
+  border-bottom: none;
+  position: relative;
+}
+
+/* 添加渐变边框效果，替代之前的实线边框 */
+.model-select::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(to right, 
+    transparent, 
+    rgba(79, 172, 254, 0.15), 
+    rgba(79, 172, 254, 0.3), 
+    rgba(79, 172, 254, 0.15), 
+    transparent
+  );
+  pointer-events: none;
 }
 
 .model-select label {

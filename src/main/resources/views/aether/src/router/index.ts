@@ -13,6 +13,11 @@ const router = createRouter({
       name: 'model-chat',
       component: () => import('../views/model-chat.vue'),
     },
+    {
+      path: '/effects-test',
+      name: 'effects-test',
+      component: () => import('../components/EffectsTest.vue'),
+    },
   ],
 })
 

@@ -32,6 +32,9 @@
           <div class="nav-item">
             <router-link class="nav-link" to="/customize" @click="handleNavItemClick">个性化</router-link>
           </div>
+          <div class="nav-item">
+            <router-link class="nav-link" to="/effects-test" @click="handleNavItemClick">特效测试</router-link>
+          </div>
         </div>
         <div class="nav-right d-flex align-items-center ms-auto">
           <div class="nav-item">
@@ -136,13 +139,13 @@ body, html {
   z-index: 1000;
   width: 100%;
   height: var(--nav-height);
-  background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(200,230,255,0.1) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(66, 66, 66, 0.34);
+  box-shadow: none;
   padding: 0.2rem 0;
   transition: background 0.3s ease;
+
 }
 
 /* 移除 container-fluid 的内边距，并在外层 navbar 或此处添加 */
@@ -157,20 +160,26 @@ body, html {
 }
 
 .brand-gradient {
-  background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 10%, #fad0c4 20%, #a18cd1 30%, #fbc2eb 40%, #8fd3f4 50%, #84fab0 60%, #8fd3f4 70%, #fbc2eb 80%, #a18cd1 90%, #ff9a9e 100%);
+  background: linear-gradient(90deg, 
+    rgba(180, 220, 255, 0.9) 0%, 
+    rgba(140, 180, 255, 0.9) 25%, 
+    rgba(100, 170, 255, 0.9) 50%, 
+    rgba(140, 180, 255, 0.9) 75%, 
+    rgba(180, 220, 255, 0.9) 100%
+  );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
   font-weight: 600;
-  text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+  text-shadow: 0px 0px 8px rgba(100, 170, 255, 0.5);
   animation: gradient-shift 8s linear infinite;
   letter-spacing: 0.5px;
 }
 
 .brand-gradient:hover {
-  animation-duration: 3s;
-  text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.4);
+  animation-duration: 4s;
+  text-shadow: 0px 0px 12px rgba(100, 170, 255, 0.7);
 }
 
 @keyframes gradient-shift {
@@ -179,18 +188,20 @@ body, html {
 }
 
 .navbar-brand {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   height: 100%;
-  padding: 0.3rem 0.6rem;
+  padding: 0.3rem 0.8rem 0.3rem 0.6rem;
+  transition: transform 0.2s ease, text-shadow 0.2s ease;
+  margin-right: 0.5rem;
 }
 
 .navbar-brand:hover {
-  transform: scale(1.05);
-  text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.4);
+  transform: scale(1.03);
+  text-shadow: 0px 0px 15px rgba(100, 170, 255, 0.6);
 }
 
 .nav-left, .nav-right {
@@ -216,36 +227,53 @@ body, html {
 }
 
 .nav-link {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
   text-decoration: none;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  padding: 0.2rem 0.3rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  padding: 0.5rem 0.6rem;
   border-radius: 4px;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease, text-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  border-bottom: 2px solid transparent;
 }
 
 .nav-link:hover {
-  background-color: rgba(255,255,255,0.1);
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-  transform: translateY(-1px);
-  box-shadow: 0 0 5px rgba(255,255,255,0.1);
+  background-color: rgba(255,255,255,0.05);
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 .nav-link.router-link-active {
-  background: rgba(255,255,255,0.15);
-  box-shadow: 0 0 8px rgba(255,255,255,0.2);
   color: #ffffff;
   font-weight: 500;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-  position: relative;
-  transform: translateY(-1px);
-  animation: subtle-glow 2s ease-in-out infinite alternate;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  border-bottom-color: transparent;
 }
 
-@keyframes subtle-glow {
-  from { box-shadow: 0 0 8px rgba(255,255,255,0.2); }
-  to { box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+/* 修改发光效果 */
+.nav-link.router-link-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: all 0.3s ease;
+  opacity: 0;
 }
 
 /* 响应式设计优化 */
@@ -292,17 +320,35 @@ body, html {
     top: 100%;
     left: 0;
     right: 0;
-    background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(200,230,255,0.1) 100%);
+    background: linear-gradient(180deg, 
+      rgba(20, 30, 50, 0.9) 0%, 
+      rgba(10, 20, 40, 0.8) 100%
+    );
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.3);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border-bottom: none;
+    box-shadow: none;
     transform-origin: top;
     transform: scaleY(0);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: all 0.2s ease-out;
+  }
+
+  /* 为下拉菜单添加底部渐变过渡 */
+  .navbar-collapse::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6px;
+    background: linear-gradient(to bottom, 
+      rgba(0, 0, 0, 0.3),
+      rgba(0, 0, 0, 0)
+    );
+    pointer-events: none;
   }
 
   /* 展开状态 */

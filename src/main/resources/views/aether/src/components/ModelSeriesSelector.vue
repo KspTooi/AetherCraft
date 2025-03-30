@@ -129,6 +129,7 @@ const vClickOutside = {
   position: relative;
   width: 100%;
   user-select: none;
+  margin-bottom: 2px; /* 为了留出底部过渡的空间 */
 }
 
 .selector-header {
@@ -136,16 +137,36 @@ const vClickOutside = {
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(25, 35, 60, 0.5);
+  border: 1px solid rgba(79, 172, 254, 0.15);
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative; /* 为after伪元素定位 */
+}
+
+/* 移除底部边框，用渐变阴影替代 */
+.selector-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: linear-gradient(to bottom, rgba(79, 172, 254, 0.15), transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0.7;
 }
 
 .selector-header:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(35, 55, 90, 0.5);
+  border-color: rgba(79, 172, 254, 0.25);
+}
+
+.selector-header:hover::after {
+  opacity: 1;
+  background: linear-gradient(to bottom, rgba(79, 172, 254, 0.3), transparent);
 }
 
 .selected-model {
@@ -154,21 +175,32 @@ const vClickOutside = {
 }
 
 .model-name {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px; /* 增加字母间距 */
 }
 
 .bi-chevron-down {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  transition: transform 0.3s ease;
+  color: rgba(79, 172, 254, 0.6);
+  transition: transform 0.3s ease, color 0.3s ease;
+  margin-left: 5px;
 }
 
 .bi-chevron-down.rotated {
   transform: rotate(180deg);
+  color: rgba(79, 172, 254, 0.9);
+}
+
+.selector-header:hover .model-name {
+  color: rgba(255, 255, 255, 1);
+}
+
+.selector-header:hover .bi-chevron-down {
+  color: rgba(79, 172, 254, 0.8);
 }
 
 .dropdown-menu {
@@ -176,13 +208,14 @@ const vClickOutside = {
   top: calc(100% + 2px);
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(20, 30, 55, 0.8);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 0;
   max-height: 250px;
   overflow-y: auto;
   z-index: 1000;
   backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 1px rgba(79, 172, 254, 0.2);
 }
 
 .loading-state {
@@ -202,18 +235,19 @@ const vClickOutside = {
 }
 
 .model-series {
-  padding: 8px 0;
+  padding: 5px 0;
 }
 
 .model-series:not(:last-child) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
 }
 
 .series-name {
-  padding: 2px 10px;
-  color: rgba(255, 255, 255, 0.5);
+  padding: 3px 10px;
+  color: rgba(79, 172, 254, 0.6);
   font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .model-item {
@@ -222,20 +256,23 @@ const vClickOutside = {
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 0.2px;
 }
 
 .model-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(79, 172, 254, 0.1);
+  color: #ffffff;
 }
 
 .model-item.active {
   background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  color: rgba(79, 172, 254, 1);
+  font-weight: 500;
 }
 
 /* 自定义滚动条样式 */
 .dropdown-menu::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .dropdown-menu::-webkit-scrollbar-track {
@@ -243,24 +280,24 @@ const vClickOutside = {
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  background: rgba(79, 172, 254, 0.2);
+  border-radius: 1.5px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(79, 172, 254, 0.4);
 }
 
 /* 下拉动画 */
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: top;
 }
 
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: scaleY(0.8);
+  transform: scaleY(0.8) translateY(-5px);
 }
 </style> 
