@@ -73,3 +73,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+package-lock.json
+*.exe
+*.rar

@@ -171,7 +171,7 @@
         
         <plugins>
             <!-- 前端构建插件 -->
-<!--            <plugin>
+            <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.15.0</version>
@@ -181,21 +181,21 @@
                     <npmVersion>11.2.0</npmVersion>
                 </configuration>
                 <executions>
-                    &lt;!&ndash; 安装 node 和 npm &ndash;&gt;
+                    <!-- 安装 node 和 npm -->
                     <execution>
                         <id>install node and npm</id>
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
                     </execution>
-                    &lt;!&ndash; 执行 npm install &ndash;&gt;
+                    <!-- 执行 npm install -->
                     <execution>
                         <id>npm install</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                     </execution>
-                    &lt;!&ndash; 执行 npm run build &ndash;&gt;
+                    <!-- 执行 npm run build -->
                     <execution>
                         <id>npm run build</id>
                         <goals>
@@ -208,7 +208,7 @@
                 </executions>
             </plugin>
 
-            &lt;!&ndash; 复制构建后的文件 &ndash;&gt;
+            <!-- 复制构建后的文件 -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
@@ -220,7 +220,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.outputDirectory}/views/new</outputDirectory>
+                            <outputDirectory>${project.build.outputDirectory}/views/static</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/main/resources/views/aether/dist</directory>
@@ -230,7 +230,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
 
             <plugin>
                 <groupId>org.springframework.boot</groupId>
