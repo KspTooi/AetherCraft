@@ -171,31 +171,31 @@
         
         <plugins>
             <!-- 前端构建插件 -->
-            <plugin>
+<!--            <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.15.0</version>
                 <configuration>
                     <workingDirectory>src/main/resources/views/aether</workingDirectory>
-                    <nodeVersion>v20.11.1</nodeVersion>
-                    <npmVersion>10.2.4</npmVersion>
+                    <nodeVersion>v20.19.0</nodeVersion>
+                    <npmVersion>11.2.0</npmVersion>
                 </configuration>
                 <executions>
-                    <!-- 安装 node 和 npm -->
+                    &lt;!&ndash; 安装 node 和 npm &ndash;&gt;
                     <execution>
                         <id>install node and npm</id>
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
                     </execution>
-                    <!-- 执行 npm install -->
+                    &lt;!&ndash; 执行 npm install &ndash;&gt;
                     <execution>
                         <id>npm install</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                     </execution>
-                    <!-- 执行 npm run build -->
+                    &lt;!&ndash; 执行 npm run build &ndash;&gt;
                     <execution>
                         <id>npm run build</id>
                         <goals>
@@ -208,7 +208,7 @@
                 </executions>
             </plugin>
 
-            <!-- 复制构建后的文件 -->
+            &lt;!&ndash; 复制构建后的文件 &ndash;&gt;
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
@@ -230,7 +230,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
             <plugin>
                 <groupId>org.springframework.boot</groupId>
