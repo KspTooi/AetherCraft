@@ -1,7 +1,9 @@
 server:
   port: 30000  # 设置应用端口号
-
+  
 spring:
+  profiles:
+    active: dev  # 设置活动配置文件为开发环境
   main:
     lazy-initialization: true
 
@@ -25,7 +27,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2O-68-M4 # 应用版本号
+  version: 1.2O-75-M4 # 应用版本号
 
 # 加密配置
 encrypt:

@@ -534,7 +534,7 @@ public class ModelRpService {
                 vo.setThreadId(threadId);
                 vo.setHistoryId(segment.getHistoryId());
                 vo.setSequence(segment.getSequence());
-                vo.setContent(segment.getContent());
+                vo.setContent(css.decryptForCurUser(segment.getContent()));
                 vo.setType(segment.getType());
                 vo.setRole(1);
 
@@ -555,7 +555,7 @@ public class ModelRpService {
                 RpSegmentVo vo = new RpSegmentVo();
                 vo.setThreadId(threadId);
                 vo.setSequence(segment.getSequence());
-                vo.setContent(segment.getContent() != null ? segment.getContent() : "AI响应出错");
+                vo.setContent(css.decryptForCurUser(segment.getContent()));
                 vo.setType(segment.getType());
                 vo.setRole(1);
 

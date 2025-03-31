@@ -240,16 +240,8 @@ const handleDelete = async (message: ChatMessage) => {
     return
   }
   
-  const confirmed = await confirmModal.value.showConfirm({
-    title: '删除消息',
-    content: '确定要删除这条消息吗？此操作不可恢复。',
-    confirmText: '删除',
-    cancelText: '取消'
-  })
-  
-  if (confirmed) {
-    emit('messageRemove', message.id)
-  }
+  // 直接触发删除事件,由父组件处理确认对话框
+  emit('messageRemove', message.id)
 }
 
 const handleRegenerate = (message: ChatMessage) => {
@@ -462,7 +454,6 @@ onMounted(() => {
 .message .message-content .text {
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
-  white-space: pre-wrap;
   word-break: break-word;
 }
 

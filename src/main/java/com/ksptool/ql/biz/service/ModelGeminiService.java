@@ -168,6 +168,18 @@ public class ModelGeminiService implements ModelRestCI{
                             }
                         }
                     }
+                } catch (Exception e) {
+                    // 调用回调，返回type为2的ModelChatContext
+                    if (callback != null) {
+                        ModelChatContext context = new ModelChatContext();
+                        context.setContextId(contextId);
+                        context.setType(2); // 错误类型
+                        context.setContent(e.getMessage());
+                        context.setException(e);
+                        context.setSequence(sequence.get()); // 使用当前序列号
+                        callback.accept(context);
+                    }
+                    throw new BizException("Gemini API 调用错误");
                 }
                 
                 // 获取完整响应

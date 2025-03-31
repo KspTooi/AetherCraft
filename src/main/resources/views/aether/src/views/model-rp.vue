@@ -488,11 +488,11 @@ const handleRegenerate = async (message: ChatMessage) => {
     isLoading.value = true
     
     // 检查最后一条消息的类型
-    const lastMessage = messages.value[messages.value.length - 1];
+    const lastMessage = messages.value[messages.value.length - 1]
     
     // 如果最后一条是用户消息，直接根据它生成AI响应
     if (lastMessage.role === 'user') {
-      console.log('最后一条是用户消息，直接根据它生成AI响应');
+      console.log('最后一条是用户消息，直接根据它生成AI响应')
       
       // 使用缓存的AI角色信息创建新的临时消息
       const assistantMessage: ChatMessage = {
@@ -503,51 +503,51 @@ const handleRegenerate = async (message: ChatMessage) => {
         createTime: new Date().toISOString(),
         isTyping: true,
         hasReceivedData: false
-      };
+      }
       
       // 添加临时消息到列表
-      console.log("添加新的AI临时消息:", assistantMessage);
-      messages.value.push(assistantMessage);
-      messagesRef.value?.scrollToBottom();
+      console.log("添加新的AI临时消息:", assistantMessage)
+      messages.value.push(assistantMessage)
+      messagesRef.value?.scrollToBottom()
       
       // 发送响应请求
       const response = await axios.post('/model/rp/rpCompleteBatch', {
         threadId: currentThreadId.value,
         model: selectedModel.value || 'gemini-pro',
-        queryKind: 0 // 0:标准消息处理
-      });
+        queryKind: 3 // 3:重新生成最后一条消息
+      })
       
       if (response.data.code === 0) {
-        console.log('生成请求成功');
+        console.log('生成请求成功')
         
         // 开始轮询获取新的响应
-        await pollAIResponse(assistantMessage);
+        await pollAIResponse(assistantMessage)
       } else {
-        console.error("生成失败:", response.data.message);
+        console.error("生成失败:", response.data.message)
         // 移除临时消息
-        messages.value.pop();
-        isLoading.value = false;
+        messages.value.pop()
+        isLoading.value = false
       }
-      return;
+      return
     }
     
     // 如果最后一条是AI消息，则删除它
     if (lastMessage.role === 'assistant') {
-      console.log('最后一条是AI消息，删除它并创建新的临时消息');
+      console.log('最后一条是AI消息，删除它并创建新的临时消息')
       
       // 如果有ID，先从服务器删除
       if (lastMessage.id) {
         try {
           await axios.post('/model/rp/removeHistory', {
             historyId: lastMessage.id
-          });
+          })
         } catch(e) {
-          console.error('删除最后一条AI消息失败，但继续执行重新生成:', e);
+          console.error('删除最后一条AI消息失败，但继续执行重新生成:', e)
         }
       }
       
       // 从本地消息列表中删除
-      messages.value.pop();
+      messages.value.pop()
     }
     
     // 使用缓存的AI角色信息创建新的临时消息
@@ -559,38 +559,38 @@ const handleRegenerate = async (message: ChatMessage) => {
       createTime: new Date().toISOString(),
       isTyping: true,
       hasReceivedData: false
-    };
+    }
     
     // 添加临时消息到列表
-    console.log("添加新的AI临时消息:", assistantMessage);
-    messages.value.push(assistantMessage);
-    messagesRef.value?.scrollToBottom();
+    console.log("添加新的AI临时消息:", assistantMessage)
+    messages.value.push(assistantMessage)
+    messagesRef.value?.scrollToBottom()
     
     // 发送重新生成请求
     const response = await axios.post('/model/rp/rpCompleteBatch', {
       threadId: currentThreadId.value,
       model: selectedModel.value || 'gemini-pro',
       queryKind: 3 // 3:重新生成最后一条AI消息
-    });
+    })
     
     if (response.data.code === 0) {
-      console.log('重新生成请求成功');
+      console.log('重新生成请求成功')
       
       // 开始轮询获取新的响应
-      await pollAIResponse(assistantMessage);
+      await pollAIResponse(assistantMessage)
     } else {
-      console.error("重新生成失败:", response.data.message);
+      console.error("重新生成失败:", response.data.message)
       // 移除临时消息
-      messages.value.pop();
-      isLoading.value = false;
+      messages.value.pop()
+      isLoading.value = false
     }
   } catch (error) {
-    console.error('重新生成失败:', error);
+    console.error('重新生成失败:', error)
     // 确保在错误情况下也移除临时消息
     if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
-      messages.value.pop();
+      messages.value.pop()
     }
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
@@ -680,6 +680,28 @@ const pollAIResponse = async (assistantMessage: any) => {
         }
         
         console.log('收到流式响应片段:', segment)
+        
+        if (segment.type === 10) {
+          // 错误类型，停止轮询并显示错误提示
+          console.error('收到错误类型片段:', segment)
+          isLoading.value = false
+          
+          // 移除临时消息
+          if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+            messages.value.pop()
+          }
+          
+          // 显示错误提示
+          if (confirmModalRef.value) {
+            await confirmModalRef.value.showConfirm({
+              title: '生成失败',
+              content: segment.content || '生成回复时发生错误，请稍后重试。',
+              confirmText: '确定',
+              cancelText: undefined
+            })
+          }
+          break
+        }
         
         if (segment.type === 1) {
           // 数据片段

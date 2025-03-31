@@ -112,9 +112,6 @@ const messagesRef = ref<InstanceType<typeof ModelChatMsgBox> | null>(null)
 const confirmModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
 const inputModal = ref<InstanceType<typeof InputModal> | null>(null)
 
-// 声明 showToast 函数类型
-declare function showToast(type: string, message: string): void;
-
 // 工具函数
 const throttle = (fn: Function, delay: number) => {
   let timer: any = null
@@ -135,17 +132,27 @@ const loadThreadList = async () => {
     const response = await axios.post('/model/chat/getThreadList')
     
     if (response.data.code === 0) {
-      // threads.value = response.data.data || []
-      
       if (!currentThreadId.value && response.data.data.length === 0) {
         resetChatState()
       }
-    } else {
-      showToast("danger", response.data.message || "加载会话列表失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '加载失败',
+        content: response.data.message || '加载会话列表失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('加载会话列表失败:', error)
-    showToast("danger", "加载会话列表失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '加载失败',
+        content: '加载会话列表失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -210,13 +217,25 @@ const sendMessage = async (message: string) => {
       messagesRef.value?.scrollToBottom()
       
       await pollAIResponse(assistantMessage)
-    } else {
-      showToast("danger", response.data.message || "发送消息失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '发送失败',
+        content: response.data.message || '发送消息失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
       isLoading.value = false
     }
   } catch (error) {
     console.error('发送消息错误:', error)
-    showToast("danger", "发送消息失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '发送失败',
+        content: '发送消息失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
     isLoading.value = false
   }
 }
@@ -226,7 +245,7 @@ const pollAIResponse = async (assistantMessage: any) => {
     try {
       const response = await axios.post('/model/chat/completeBatch', {
         threadId: currentThreadId.value,
-        queryKind: 1
+        queryKind: 1 // 1:查询响应流
       })
       
       if (response.data.code === 0) {
@@ -235,6 +254,30 @@ const pollAIResponse = async (assistantMessage: any) => {
         if (!segment) {
           await new Promise(resolve => setTimeout(resolve, 500))
           continue
+        }
+        
+        console.log('收到流式响应片段:', segment)
+        
+        if (segment.type === 10) {
+          // 错误类型，停止轮询并显示错误提示
+          console.error('收到错误类型片段:', segment)
+          isLoading.value = false
+          
+          // 移除临时消息
+          if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+            messages.value.pop()
+          }
+          
+          // 显示错误提示
+          if (confirmModal.value) {
+            await confirmModal.value.showConfirm({
+              title: '生成失败',
+              content: segment.content || '生成回复时发生错误，请稍后重试。',
+              confirmText: '确定',
+              cancelText: undefined
+            })
+          }
+          break
         }
         
         if (segment.type === 1) {
@@ -301,43 +344,45 @@ const pollAIResponse = async (assistantMessage: any) => {
           }, 3000)
           
           break
-        } else if (segment.type === 10) {
-          // 错误片段
-          assistantMessage.content = segment.content || "AI响应出错"
-          assistantMessage.hasReceivedData = true
-          assistantMessage.isTyping = false
-          
-          // 更新名称和头像（如果后端返回了这些信息）
-          if (segment.name) {
-            assistantMessage.name = segment.name
-          }
-          if (segment.avatarPath) {
-            assistantMessage.avatarPath = segment.avatarPath
-          }
-          
-          // 触发视图更新
-          messages.value = [...messages.value]
-          messagesRef.value?.scrollToBottom()
-          isLoading.value = false
-          
-          // 显示错误提示
-          showToast("danger", "生成失败: " + assistantMessage.content)
-          break
         }
+      } else {
+        // 请求失败，移除临时消息并显示错误提示
+        console.error('获取AI响应失败:', response.data.message)
+        isLoading.value = false
+        
+        // 移除临时消息
+        if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+          messages.value.pop()
+        }
+        
+        if (confirmModal.value) {
+          await confirmModal.value.showConfirm({
+            title: '生成失败',
+            content: response.data.message || '获取AI响应失败',
+            confirmText: '确定',
+            cancelText: undefined
+          })
+        }
+        break
       }
     } catch (error) {
       console.error('获取AI响应错误:', error)
-      assistantMessage.content = "获取AI响应出错，请重试"
-      assistantMessage.hasReceivedData = true
-      assistantMessage.isTyping = false
-      
-      // 触发视图更新
-      messages.value = [...messages.value]
-      messagesRef.value?.scrollToBottom()
       isLoading.value = false
       
+      // 移除临时消息
+      if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+        messages.value.pop()
+      }
+      
       // 显示错误提示
-      showToast("danger", "网络错误，请检查连接")
+      if (confirmModal.value) {
+        await confirmModal.value.showConfirm({
+          title: '网络错误',
+          content: '网络错误，请检查连接',
+          confirmText: '确定',
+          cancelText: undefined
+        })
+      }
       break
     }
     
@@ -349,18 +394,53 @@ const terminateAIResponse = async () => {
   if (!isLoading.value) return
   
   try {
+    // 使用确认模态框确认是否终止响应
+    if (confirmModal.value) {
+      const confirmed = await confirmModal.value.showConfirm({
+        title: '终止生成',
+        content: '您确定要终止AI正在生成的回复吗？',
+        confirmText: '终止',
+        cancelText: '继续生成'
+      })
+      
+      if (!confirmed) return
+    }
+    
+    // 调用终止响应接口
     const response = await axios.post('/model/chat/completeBatch', {
       threadId: currentThreadId.value,
-      queryKind: 2
+      queryKind: 2  // 2:终止AI响应
     })
     
     if (response.data.code === 0) {
-      showToast("success", "已停止生成")
+      console.log('已终止AI响应')
       isLoading.value = false
+      
+      // 移除临时消息
+      if (messages.value.length > 0 && messages.value[messages.value.length - 1].isTyping) {
+        messages.value.pop()
+      }
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '终止失败',
+        content: response.data.message || '终止生成失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
-    console.error('停止生成错误:', error)
-    showToast("danger", "停止生成失败，请检查网络连接")
+    console.error('终止响应失败:', error)
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '终止失败',
+        content: '终止生成失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
+  } finally {
+    // 即使出错也要将loading状态重置
+    isLoading.value = false
   }
 }
 
@@ -387,13 +467,24 @@ const createNewThread = async () => {
       await loadThread(newThreadId)
       await threadListRef.value?.loadThreadList()
       isMobileMenuOpen.value = false
-      showToast("success", "新会话创建成功")
-    } else {
-      showToast("danger", response.data.message || "创建会话失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '创建失败',
+        content: response.data.message || '创建会话失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('创建会话失败:', error)
-    showToast("danger", "创建会话失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '创建失败',
+        content: '创建会话失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -425,12 +516,24 @@ const loadThread = async (threadId: string) => {
         scrollToBottom()
       })
       isMobileMenuOpen.value = false
-    } else {
-      showToast("danger", response.data.message || "加载会话失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '加载失败',
+        content: response.data.message || '加载会话失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('加载会话失败:', error)
-    showToast("danger", "加载会话失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '加载失败',
+        content: '加载会话失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -455,13 +558,24 @@ const editThreadTitle = async (thread: any) => {
     })
     if (response.data.code === 0) {
       await threadListRef.value?.loadThreadList()
-      showToast("success", "会话标题已更新")
-    } else {
-      showToast("danger", response.data.message || "更新会话标题失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '更新失败',
+        content: response.data.message || '更新会话标题失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('更新会话标题失败:', error)
-    showToast("danger", "更新会话标题失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '更新失败',
+        content: '更新会话标题失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -486,13 +600,22 @@ const deleteThread = async (threadId: string) => {
         resetChatState()
       }
       await threadListRef.value?.loadThreadList()
-      showToast("success", "会话已删除")
     } else {
-      showToast("danger", response.data.message || "删除会话失败")
+      await confirmModal.value.showConfirm({
+        title: '删除失败',
+        content: response.data.message || '删除会话失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error: any) {
     console.error('删除会话失败:', error)
-    showToast("danger", "删除会话失败，请检查网络连接")
+    await confirmModal.value.showConfirm({
+      title: '删除失败',
+      content: '删除会话失败，请检查网络连接',
+      confirmText: '确定',
+      cancelText: undefined
+    })
   }
 }
 
@@ -531,13 +654,24 @@ const handleMessageEdit = async (historyId: string, content: string) => {
         message.content = content
         message.isEditing = false
       }
-      showToast("success", "消息编辑成功")
-    } else {
-      showToast("danger", response.data.message || '更新失败')
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '更新失败',
+        content: response.data.message || '更新失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('更新消息失败:', error)
-    showToast("danger", '更新失败，请稍后重试')
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '更新失败',
+        content: '更新失败，请稍后重试',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -554,13 +688,24 @@ const handleMessageRemove = async (historyId: string) => {
       if (index !== -1) {
         messages.value.splice(index, 1)
       }
-      showToast("success", "消息已删除")
-    } else {
-      showToast("danger", response.data.message || "删除消息失败")
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '删除失败',
+        content: response.data.message || '删除消息失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
     }
   } catch (error) {
     console.error('删除消息失败:', error)
-    showToast("danger", "删除消息失败，请检查网络连接")
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '删除失败',
+        content: '删除消息失败，请检查网络连接',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
   }
 }
 
@@ -568,8 +713,13 @@ const handleRegenerate = async (message: ChatMessage) => {
   if (isLoading.value) return
   
   // 验证threadId是否存在
-  if (!currentThreadId.value) {
-    showToast("danger", "会话ID不存在，无法重新生成")
+  if (!currentThreadId.value && confirmModal.value) {
+    await confirmModal.value.showConfirm({
+      title: '重新生成失败',
+      content: '会话ID不存在，无法重新生成',
+      confirmText: '确定',
+      cancelText: undefined
+    })
     return
   }
   
@@ -609,9 +759,13 @@ const handleRegenerate = async (message: ChatMessage) => {
       if (response.data.code === 0) {
         // 开始轮询获取AI响应
         await pollAIResponse(assistantMessage);
-      } else {
-        // 生成失败，显示错误信息
-        showToast("danger", response.data.message || '生成失败');
+      } else if (confirmModal.value) {
+        await confirmModal.value.showConfirm({
+          title: '生成失败',
+          content: response.data.message || '生成失败',
+          confirmText: '确定',
+          cancelText: undefined
+        })
         // 移除临时消息
         messages.value.pop();
         isLoading.value = false;
@@ -665,16 +819,27 @@ const handleRegenerate = async (message: ChatMessage) => {
     if (response.data.code === 0) {
       // 开始轮询获取AI响应
       await pollAIResponse(assistantMessage);
-    } else {
-      // 重新生成失败，显示错误信息
-      showToast("danger", response.data.message || '重新生成失败');
+    } else if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '生成失败',
+        content: response.data.message || '生成失败',
+        confirmText: '确定',
+        cancelText: undefined
+      })
       // 移除临时消息
       messages.value.pop();
       isLoading.value = false;
     }
   } catch (error) {
     console.error('重新生成错误:', error);
-    showToast("danger", '重新生成失败');
+    if (confirmModal.value) {
+      await confirmModal.value.showConfirm({
+        title: '重新生成失败',
+        content: '重新生成失败，请稍后重试',
+        confirmText: '确定',
+        cancelText: undefined
+      })
+    }
     // 确保在错误情况下也移除临时消息
     if (messages.value.length > 0 && 
         messages.value[messages.value.length - 1].isTyping) {
