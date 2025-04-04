@@ -32,6 +32,11 @@ const router = createRouter({
       path: '/effects-test',
       name: 'effects-test',
       component: () => import('../components/EffectsTest.vue'),
+    },
+    {
+      path: '/laser-test',
+      name: 'laser-test',
+      component: () => import('../views/GlowTest.vue'),
     }
   ],
 })

@@ -35,6 +35,9 @@
           <div class="nav-item">
             <router-link class="nav-link" to="/effects-test" @click="handleNavItemClick">特效测试</router-link>
           </div>
+          <div class="nav-item">
+            <router-link class="nav-link" to="/laser-test" @click="handleNavItemClick">组件测试</router-link>
+          </div>
         </div>
         <div class="nav-right d-flex align-items-center ms-auto">
           <div class="nav-item">
