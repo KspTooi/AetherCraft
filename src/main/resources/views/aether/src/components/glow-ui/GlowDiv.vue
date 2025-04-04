@@ -5,7 +5,7 @@ import type { GlowThemeColors } from './GlowTheme.ts'
 
 // 定义props
 const props = withDefaults(defineProps<{
-  border?: 'full' | 'top' | 'right' | 'bottom' | 'left'
+  border?: 'full' | 'top' | 'right' | 'bottom' | 'left' | 'none'
 }>(), {
   border: 'full'
 })
@@ -44,6 +44,13 @@ const borderStyle = computed(() => {
         borderBottom: 'none',
         borderLeft: `1px solid ${theme.boxBorderColor}`
       }
+    case 'none':
+      return {
+        borderTop: 'none',
+        borderRight: 'none',
+        borderBottom: 'none',
+        borderLeft: 'none'
+      }
     default: // 'full'
       return {
         border: `1px solid ${theme.boxBorderColor}`
@@ -69,6 +76,10 @@ const hoverBorderStyle = computed(() => {
     case 'left':
       return {
         borderLeft: `1px solid ${theme.boxBorderColorHover}`
+      }
+    case 'none':
+      return {
+        border: 'none'
       }
     default: // 'full'
       return {

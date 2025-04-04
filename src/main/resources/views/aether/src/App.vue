@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import ClientFrameTheme from '@/components/ClientFrameTheme.vue'
+import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
+import ClientFrame from "@/components/glow-client/ClientFrame.vue";
 </script>
 
 <template>
-  <ClientFrameTheme>
+
+  <GlowTheme>
+    <ClientFrame>
+      <RouterView />
+    </ClientFrame>
+  </GlowTheme>
+
+<!--  <ClientFrameTheme>
     <RouterView />
-  </ClientFrameTheme>
+  </ClientFrameTheme>-->
 </template>
 
 <style>

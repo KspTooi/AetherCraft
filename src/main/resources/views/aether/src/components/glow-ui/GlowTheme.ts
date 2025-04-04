@@ -10,6 +10,7 @@ export interface GlowThemeColors {
     boxBlurHover:number
     boxBlurActive:number
     boxTextColor:string
+    boxTextColorNoActive:string
 
     mainColor:string
     mainTextColor:string
@@ -40,11 +41,12 @@ export const defaultTheme: GlowThemeColors = {
     boxAccentColorHover: 'rgba(2, 98, 136, 0.1)',
     boxGlowColor: 'rgba(75, 227, 238, 0.62)',
     boxBorderColor: 'rgba(255, 255, 255, 0.1)',
-    boxBorderColorHover: 'rgba(0,255,255,0.2)',
+    boxBorderColorHover: 'rgba(0,232,250,0.16)',
     boxBlur: 3,
     boxBlurHover: 10,
     boxBlurActive: 0,
     boxTextColor: 'rgb(255,255,255)',
+    boxTextColorNoActive: 'rgb(185, 185, 185)',
 
     mainColor: 'rgba(61, 138, 168, 0.24)',
     mainTextColor: 'rgb(255,255,255)',
