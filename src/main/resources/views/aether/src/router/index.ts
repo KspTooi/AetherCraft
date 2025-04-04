@@ -37,6 +37,16 @@ const router = createRouter({
       path: '/laser-test',
       name: 'laser-test',
       component: () => import('../views/GlowTest.vue'),
+    },
+    {
+      path: '/side-panel-test',
+      name: 'side-panel-test',
+      component: () => import('../views/SidePanelTest.vue'),
+    },
+    {
+      path: '/modelChat',
+      name: 'modelChat',
+      component: () => import('../views/ModelChat.vue'),
     }
   ],
 })

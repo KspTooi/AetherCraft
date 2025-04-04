@@ -24,7 +24,9 @@ const leftNavItems = [
   { name: '角色扮演', routerLink: '/rp' },
   { name: '个性化', routerLink: '/customize' },
   { name: '特效测试', routerLink: '/effects-test' },
-  { name: '组件测试', routerLink: '/laser-test' }
+  { name: '组件测试', routerLink: '/laser-test' },
+  { name: '侧边栏示例', routerLink: '/side-panel-test' },
+  { name: '聊天', routerLink: '/modelChat' }
 ]
 
 // 右侧导航项

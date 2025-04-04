@@ -44,7 +44,7 @@ export const defaultTheme: GlowThemeColors = {
     boxBorderColorHover: 'rgba(0,232,250,0.16)',
     boxBlur: 3,
     boxBlurHover: 10,
-    boxBlurActive: 0,
+    boxBlurActive: 10,
     boxTextColor: 'rgb(255,255,255)',
     boxTextColorNoActive: 'rgb(185, 185, 185)',
 
