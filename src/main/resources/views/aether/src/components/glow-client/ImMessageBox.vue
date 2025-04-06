@@ -13,7 +13,7 @@
         v-for="msg in messages"
         :key="msg.id"
         :message="msg"
-        :disabled="hasTempMessage"
+        :disabled="props.isGenerating"
         @select-message="handleSelectMessage"
         @delete-message="handleDeleteMessage"
       />
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, nextTick } from 'vue'
+import { ref, inject, onMounted, nextTick, watch } from 'vue'
 import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
@@ -44,24 +44,36 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 消息列表引用
 const messagesContainer = ref<HTMLDivElement | null>(null)
 
-// 消息列表数据
+// 消息列表数据 (内部状态)
 const messages = ref<Message[]>([])
 
 // 定义组件props
 const props = defineProps<{
-  messages?: Message[]
+  data?: Message[];
+  isGenerating?: boolean;
 }>()
 
-// 监听外部消息列表变化
-if (props.messages) {
-  messages.value = props.messages
+// 滚动到底部 (定义移到 watch 之前)
+const scrollToBottom = () => {
+  nextTick(() => {
+    const container = messagesContainer.value
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
 }
+
+// --- 监听外部 props.data 的变化 --- 
+watch(() => props.data, (newData) => {
+  messages.value = newData || []; // 使用新的数据更新内部 messages
+  scrollToBottom(); // 数据更新后滚动到底部
+}, { 
+  immediate: true, // 立即执行一次，处理初始数据
+  deep: true // 深度监听，如果 Message 对象内部可能变化 (通常不需要)
+});
 
 //当前选择的消息ID
 const selectMessageId = ref<string>()
-
-//当前是否有临时消息
-const hasTempMessage = ref<boolean>(false)
 
 // 事件定义
 const emit = defineEmits<{
@@ -84,57 +96,6 @@ const handleDeleteMessage = (msgId: string) => {
   emit('delete-message', msgId)
 }
 
-// 滚动到底部
-const scrollToBottom = () => {
-  nextTick(() => {
-    const container = messagesContainer.value
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  })
-}
-
-//创建一个临时消息 用于AI流式回复(如果当前已有临时消息则不创建) 临时消息的ID固定为-1
-const createTempMessage = (msg: Message) => {
-  if (hasTempMessage.value) return
-  
-  // 确保临时消息的ID为-1
-  const tempMessage = {
-    ...msg,
-    id: '-1'
-  }
-  
-  // 添加临时消息到消息列表
-  messages.value.push(tempMessage)
-  hasTempMessage.value = true
-  
-  // 滚动到底部
-  scrollToBottom()
-}
-
-//向临时消息中追加更多内容
-const appendTempMessage = (content: string) => {
-  if (!hasTempMessage.value) return
-  
-  // 找到临时消息
-  const tempMessage = messages.value.find(msg => msg.id === '-1')
-  if (tempMessage) {
-    tempMessage.content += content
-    
-    // 滚动到底部
-    scrollToBottom()
-  }
-}
-
-//移除当前的临时消息(如果当前没有则什么都不做)
-const deleteTempMessage = () => {
-  if (!hasTempMessage.value) return
-  
-  // 移除临时消息
-  messages.value = messages.value.filter(msg => msg.id !== '-1')
-  hasTempMessage.value = false
-}
-
 // 初始化
 onMounted(() => {
   scrollToBottom()
@@ -143,9 +104,6 @@ onMounted(() => {
 // 暴露方法给父组件
 defineExpose({
   selectMessageId,
-  createTempMessage,
-  appendTempMessage,
-  deleteTempMessage,
   scrollToBottom
 })
 </script>

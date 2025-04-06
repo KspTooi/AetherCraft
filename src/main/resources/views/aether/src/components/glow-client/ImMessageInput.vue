@@ -53,9 +53,7 @@ const props = defineProps<{
 
 // 事件定义
 const emit = defineEmits<{
-  (e: 'message-send', params:{
-    message: string,  //消息内容
-  }): boolean;
+  (e: 'message-send', message: string): boolean;
   (e: 'abort-generate'): void;
 }>()
 
@@ -79,9 +77,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 const handleSend = () => {
   if (!messageInput.value.trim() || props.disabled || isGenerating.value) return
   
-  emit('message-send', {
-    message: messageInput.value.trim()
-  })
+  emit('message-send', messageInput.value.trim())
   
   messageInput.value = ''
   nextTick(() => {
@@ -230,10 +226,12 @@ onMounted(() => {
 }
 
 .send-button, .abort-button {
-  align-self: flex-end;
-  height: 40px;
+  align-self: stretch;
   min-width: 80px;
   padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 移动端适配 */

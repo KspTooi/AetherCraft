@@ -118,10 +118,11 @@ const loadModelList = async () => {
     if (response.data.code === 0) {
       data.value = response.data.data
       
-      // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个
+      // 确保在有模型数据时自动选择
       if (data.value.length > 0) {
+        // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个
         const exists = data.value.some(model => model.modelCode === props.selected)
-        if (!exists) {
+        if (!props.selected || !exists) {
           emits('select-model', data.value[0].modelCode)
         }
       }
@@ -154,6 +155,7 @@ const vClickOutside = {
     document.removeEventListener('click', el._clickOutside)
   }
 }
+
 </script>
 
 <style scoped>

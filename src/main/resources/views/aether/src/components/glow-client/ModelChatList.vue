@@ -59,7 +59,7 @@
             v-for="thread in threads" 
             :key="thread.id"
             @click="handleThreadClick(thread.id)"
-            :class="['thread-item', { active: thread.id === activeThreadId }]"
+            :class="['thread-item', { active: thread.id == activeThreadId }]"
           >
             <div class="thread-content">
               <div class="thread-title">{{ thread.title }}</div>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, watch, onBeforeUnmount } from 'vue'
+import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
@@ -103,105 +103,52 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 const emit = defineEmits<{
   (e: 'select-thread', threadId: string): void;
   (e: 'delete-thread', threadId: string): void;
-  (e: 'update-title', threadId: string): void;
+  (e: 'update-title', threadId: string,oldTitle: string): void;
   (e: 'create-thread'): void;
 }>()
 
+const props = defineProps<{
+  data:{
+    id:string,
+    title:string,
+    modelCode:string,
+  }[]
+  selected: string //当前选择的会话ID
+  loading?: boolean
+}>()
+
 // 状态
-const loading = ref(false)
-const activeThreadId = ref<string>('')
-const threads = ref<Array<{
-  id: string,
-  title: string,
-  modelCode: string,
-  checked: number,
-  updateTime?: string
-}>>([])
+const loading = computed(() => props.loading ?? false)
+const threads = computed(() => props.data)
+
+// 计算属性：活动会话ID
+const activeThreadId = computed(() => props.selected)
 
 // 移动端相关状态
 const isMobile = ref(window.innerWidth <= 768)
 const mobileMenuOpen = ref(false)
 
-// 加载会话列表
-const loadThreadList = async () => {
-  loading.value = true
-  try {
-    const response = await axios.post('/model/chat/getThreadList')
-    if (response.data.code === 0) {
-      threads.value = response.data.data || []
-      
-      // 检查是否有默认选中的项
-      const defaultThread = threads.value.find(t => t.checked === 1)
-      if (defaultThread) {
-        selectThread(defaultThread.id)
-      } else if (threads.value.length > 0) {
-        // 如果没有默认选中项但有会话，选中第一个
-        selectThread(threads.value[0].id)
-      }
-      
-      return threads.value
-    } else {
-      console.error('加载会话列表失败:', response.data.message)
-      return []
-    }
-  } catch (error) {
-    console.error('加载会话列表失败:', error)
-    return []
-  } finally {
-    loading.value = false
-  }
-}
-
-// 选择会话
-const selectThread = (threadId: string) => {
-  // 更新内部activeThreadId
-  activeThreadId.value = threadId
-  
-  // 更新checked状态
-  threads.value.forEach(thread => {
-    thread.checked = thread.id === threadId ? 1 : 0
-  })
-  
-  // 通知父组件
-  emit('select-thread', threadId)
-}
-
 // 处理点击会话
 const handleThreadClick = (threadId: string) => {
-  selectThread(threadId)
+  emit('select-thread', threadId)
 }
 
 // 处理编辑会话标题
 const handleEditThread = (threadId: string) => {
-  emit('update-title', threadId)
+  const thread = threads.value.find(t => t.id === threadId);
+  if (thread) {
+    emit('update-title', threadId, thread.title);
+  }
 }
 
 // 处理删除会话
-const handleDeleteThread = async (threadId: string) => {
-  try {
-    // 通知父组件删除
-    emit('delete-thread', threadId)
-    
-    // 如果删除的是当前选中的会话
-    if (threadId === activeThreadId.value) {
-      activeThreadId.value = ''
-    }
-    
-    // 重新加载列表
-    await loadThreadList()
-  } catch (error) {
-    console.error('删除会话失败:', error)
-  }
+const handleDeleteThread = (threadId: string) => {
+  emit('delete-thread', threadId)
 }
 
 // 处理创建新会话
 const handleCreateNewThread = () => {
   emit('create-thread')
-}
-
-// 外部调用设置活动会话
-const setActiveThread = (threadId: string) => {
-  selectThread(threadId)
 }
 
 // 监听窗口大小变化
@@ -221,9 +168,8 @@ const closeMobileMenu = () => {
   mobileMenuOpen.value = false
 }
 
-// 组件挂载时加载数据
+// 组件挂载时设置窗口大小监听
 onMounted(() => {
-  loadThreadList()
   window.addEventListener('resize', handleResize)
 })
 
@@ -233,10 +179,6 @@ onBeforeUnmount(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  loadThreadList,
-  setActiveThread,
-  getActiveThreadId: () => activeThreadId.value,
-  threads,
   closeMobileMenu
 })
 </script>
