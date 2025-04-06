@@ -64,6 +64,7 @@ import type GetModelRoleListVo from '@/entity/GetModelRoleListVo';
 import type PageableView from '@/entity/PageableView';
 import type RecoverRpChatVo from '@/entity/RecoverRpChatVo';
 import type RecoverRpChatHistoryVo from '@/entity/RecoverRpChatHistoryVo';
+import type GetRpLastStatusVo from '@/entity/GetRpLastStatusVo';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -102,8 +103,9 @@ const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用
 const inputRef = ref<InstanceType<typeof GlowInput> | null>(null)
 
-onMounted(() => {
-  reloadRoleList()
+onMounted(async () => {
+  await reloadRoleList();
+  await resumeLastStatus();
 })
 
 // 定义消息框实例类型
@@ -313,23 +315,40 @@ const onBatchAbort = async () => { // 改为 async
 };
 
 //加载聊天消息列表
-const reloadMessageList = async (roleId: string) => {
+const reloadMessageList = async (roleId: string, threadId?: string) => {
+
+  // 清空当前消息列表，准备加载新的
+  messages.value = []; 
+  // 重置生成状态和临时消息标记（如果需要）
+  isGenerating.value = false;
+  hasTempMessage.value = false; 
+  // 将当前角色ID设置为传入的roleId
+  currentRoleId.value = roleId;
 
   try {
-    // 更新接口地址、请求体和期望的响应类型
-    const response = await axios.post<Result<RecoverRpChatVo>>('/model/rp/recoverRpChat', { 
-      modelRoleId: roleId, // 发送角色ID
-      modelCode: currentModelCode.value, // 发送当前模型代码
-      newThread: 1 // 固定发送 newThread=1
-    });
+    // 构建基础请求体，始终包含 newThread: 1
+    let requestBody: any = { 
+      modelRoleId: roleId, 
+      modelCode: currentModelCode.value, 
+      newThread: 1 // 始终包含 newThread: 1
+    };
+
+    // 如果提供了 threadId，则附加它
+    if (threadId) {
+      requestBody.threadId = threadId;
+    }
+
+    // 发送请求
+    const response = await axios.post<Result<RecoverRpChatVo>>('/model/rp/recoverRpChat', requestBody);
 
     if (response.data.code === 0 && response.data.data) {
-      const chatData = response.data.data; // chatData is RecoverRpChatVo
+      const chatData = response.data.data; 
 
       // 更新当前模型代码和聊天线程ID
       currentModelCode.value = chatData.modelCode || ""; 
-      currentThreadId.value = chatData.threadId || ""; // 将后端返回的threadId赋值给currentThreadId
-      // currentRoleId 保持不变
+      currentThreadId.value = chatData.threadId || ""; // 获取后端返回的实际 threadId
+      
+      // currentRoleId 已经在本函数开头设置
 
       // 处理消息列表 - 转换格式
       const backendMessages = chatData.messages || []; 
@@ -337,8 +356,8 @@ const reloadMessageList = async (roleId: string) => {
         id: msg.id, 
         name: msg.name,
         avatarPath: msg.avatarPath,
-        role: msg.type === 0 ? 'user' : 'model', // 根据 type (0/1) 转换为 role ('user'/'model')
-        content: msg.rawContent, // 使用 rawContent
+        role: msg.type === 0 ? 'user' : 'model', 
+        content: msg.rawContent, 
         createTime: msg.createTime 
       }));
       
@@ -347,12 +366,12 @@ const reloadMessageList = async (roleId: string) => {
       return
     } 
     
-    console.error(`恢复角色 ${roleId} 的会话失败 (未能获取 Thread ID):`, response.data.message || '未知错误或无消息');
-    messages.value = [];
+    console.error(`恢复角色 ${roleId} ${threadId ? '的会话 ' + threadId : '的最新会话'} 失败:`, response.data.message || '未知错误');
+    messages.value = []; // 确保失败时清空
     currentThreadId.value = ""; 
   } catch (error) {
-    console.error(`恢复角色 ${roleId} 的会话请求失败:`, error);
-    messages.value = [];
+    console.error(`恢复角色 ${roleId} ${threadId ? '的会话 ' + threadId : '的最新会话'} 请求失败:`, error);
+    messages.value = []; // 确保失败时清空
     currentThreadId.value = ""; 
   }
 };
@@ -365,32 +384,16 @@ const reloadRoleList = async () => {
     if (response.data.code === 0 && response.data.data) {
       // 从 PageableView 中提取 rows
       roleList.value = response.data.data.rows || []; 
-      
-      // 更新默认选择逻辑：选择列表中的第一个角色
-      if (roleList.value.length > 0) {
-        const defaultRole = roleList.value[0];
-        currentRoleId.value = defaultRole.id;
-        // 传入 defaultRole.id
-        await reloadMessageList(defaultRole.id); 
-      } else {
-        // 列表为空，清空选择和消息
-        messages.value = [];
-        currentRoleId.value = "";
-        currentModelCode.value = ""; // 可能也需要清空模型代码？根据业务逻辑决定
-      }
+
     } else {
       console.error('加载角色列表失败:', response.data.message || '未知错误');
       roleList.value = []; // 清空列表
-      messages.value = []; // 清空消息
-      currentRoleId.value = "";
-      currentModelCode.value = "";
+      // 不再需要在这里清空消息和ID，等待 resumeLastStatus 或后续操作
     }
   } catch (error) {
     console.error('加载角色列表失败:', error);
     roleList.value = []; // 清空列表
-    messages.value = []; // 清空消息
-    currentRoleId.value = "";
-    currentModelCode.value = "";
+     // 不再需要在这里清空消息和ID
   }
 }
 
@@ -403,9 +406,9 @@ const onSelectMode = (modeCode:string)=>{
 
 //选择会话
 const onSelectRole = async (roleId: string) => {
-  currentRoleId.value = roleId;
+  // When user manually selects a role, always load the latest/new thread for that role
+  // Do not pass threadId here, let reloadMessageList handle the newThread=1 logic
   roleListRef.value?.closeMobileMenu(); 
-  // 传入 roleId
   await reloadMessageList(roleId); 
 };
 
@@ -637,8 +640,48 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
   }
 };
 
+// 恢复最后状态函数 (移除 else)
+const resumeLastStatus = async () =>{
+  console.log("Attempting to resume last status...");
+  try {
+    const response = await axios.post<Result<GetRpLastStatusVo>>('/model/rp/getRpLastStatus');
 
+    // 检查请求是否成功以及数据是否存在
+    if (response.data.code !== 0 || !response.data.data) {
+      console.error('Failed to get last status or data is empty:', response.data.message || 'Unknown error');
+      console.log("Clearing state due to failed status fetch.");
+      clearChatState();
+      return; // 提前返回
+    }
 
+    // 请求成功且数据存在
+    const lastStatus = response.data.data;
+    console.log("Received last status:", lastStatus);
+
+    // 检查是否存在 lastRole
+    if (lastStatus.lastRole) {
+      currentRoleId.value = lastStatus.lastRole;
+    }
+
+    if(lastStatus.lastThread){
+      await reloadMessageList(lastStatus.lastRole,lastStatus.lastThread)
+    }
+
+  } catch (error) {
+    console.error('Error fetching last status:', error);
+    // 网络错误等，不加载任何角色，清空状态
+    console.log("Network error fetching status, clearing state.");
+    clearChatState();
+  }
+}
+
+// 辅助函数：清空聊天相关状态
+const clearChatState = () => {
+  messages.value = [];
+  currentRoleId.value = "";
+  currentThreadId.value = "";
+  currentModelCode.value = "";
+}
 
 </script>
 
