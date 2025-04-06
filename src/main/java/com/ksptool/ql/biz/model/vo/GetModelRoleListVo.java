@@ -12,4 +12,4 @@ public class GetModelRoleListVo {
     
     // 头像路径
     private String avatarPath;
-} 
+}

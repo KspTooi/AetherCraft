@@ -5,7 +5,7 @@
         v-model="messageInput"
         ref="messageTextarea"
         :placeholder="props.disabled ? (props.placeholderDisabled || '无法发送消息') : (props.placeholder || '请输入消息...')"
-        :disabled="props.disabled || isGenerating"
+        :disabled="props.disabled"
         @keydown="handleKeyPress"
         @input="adjustTextareaHeight"
         @focus="isFocused = true"
@@ -15,7 +15,7 @@
     </div>
     
     <GlowButton 
-      v-if="!isGenerating" 
+      v-if="!props.isGenerating" 
       :disabled="!messageInput.trim() || props.disabled"
       @click="handleSend"
       :corners="[`bottom-right`]"
@@ -27,6 +27,7 @@
       v-else
       @click="handleAbort"
       :corners="[`bottom-right`]"
+      theme="danger"
       class="abort-button danger">
       停止生成
     </GlowButton>
@@ -61,13 +62,12 @@ const emit = defineEmits<{
 const messageInput = ref('')
 const messageTextarea = ref<HTMLTextAreaElement | null>(null)
 const isFocused = ref(false)
-const isGenerating = ref(props.isGenerating || false)
 
 // 处理按键事件
 const handleKeyPress = (event: KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
-    if (!isGenerating.value) {
+    if (!props.isGenerating) {
       handleSend()
     }
   }
@@ -75,7 +75,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 // 发送消息
 const handleSend = () => {
-  if (!messageInput.value.trim() || props.disabled || isGenerating.value) return
+  if (!messageInput.value.trim() || props.disabled || props.isGenerating) return
   
   emit('message-send', messageInput.value.trim())
   

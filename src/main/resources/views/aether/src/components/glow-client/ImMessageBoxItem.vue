@@ -17,35 +17,77 @@
           <span class="dot">.</span>
         </span>
       </div>
-      <div class="text" :class="{ 'user': props.message.role === 'user' }">
+      <!-- Original Text / Markdown View -->
+      <div v-if="!isEditing" class="text" :class="{ 'user': props.message.role === 'user' }">
         <div v-if="props.message.role === 'user'">{{ props.message.content }}</div>
         <div v-else v-html="renderMarkdown(props.message.content)"></div>
       </div>
+      <!-- Editing View (using contenteditable div) -->
+      <div v-else 
+           ref="editableContentRef" 
+           class="text editable-content" 
+           :contenteditable="true" 
+           @blur="handleBlur" 
+           @keydown.enter.exact.prevent="handleConfirmEdit" 
+           @keydown.esc.exact.prevent="handleCancelEdit"
+           v-text="props.message.content" 
+      ></div>
     </div>
-    <div class="message-actions">
-      <button class="message-edit-btn" 
-              @click="handleEdit(props.message.id)"
-              :disabled="props.disabled"
-              title="编辑消息">
-        <i class="bi bi-pencil"></i>
-      </button>
-      <button class="message-delete-btn" 
-              @click="handleDelete(props.message.id)"
-              :disabled="props.disabled"
-              title="删除消息">
-        <i class="bi bi-trash"></i>
-      </button>
+    <!-- Only show actions for non-temporary messages -->
+    <div v-if="props.message.id !== '-1'" class="message-actions">
+      <!-- View Mode Actions -->
+      <template v-if="!isEditing">
+        <!-- Regenerate Button -->
+        <button v-if="props.allowRegenerate" 
+                class="message-regenerate-btn" 
+                @click="handleRegenerate"
+                :disabled="props.disabled" 
+                title="重新生成">
+          <i class="bi bi-arrow-repeat"></i>
+        </button>
+        <button class="message-edit-btn" 
+                @click="handleEdit()"
+                :disabled="props.disabled || props.message.id === '-1'" 
+                title="编辑消息">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="message-delete-btn" 
+                @click="handleDelete(props.message.id)"
+                :disabled="props.disabled || props.message.id === '-1'" 
+                title="删除消息">
+          <i class="bi bi-trash"></i>
+        </button>
+      </template>
+      <!-- Edit Mode Actions -->
+      <template v-else>
+         <button class="message-confirm-btn" 
+                @click="handleConfirmEdit"
+                title="确认编辑 (Enter)">
+          <i class="bi bi-check-lg"></i>
+        </button>
+        <button class="message-cancel-btn" 
+                @click="handleCancelEdit"
+                title="取消编辑 (Esc)">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { ref, inject, nextTick } from 'vue'
 import { marked } from 'marked'
 import { GLOW_THEME_INJECTION_KEY, type GlowThemeColors } from '../glow-ui/GlowTheme'
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY) || {} as GlowThemeColors
+
+// --- State for Editing ---
+const isEditing = ref(false)
+// const editContent = ref('') // No longer needed
+// const editTextareaRef = ref<HTMLTextAreaElement | null>(null) // No longer needed
+const editableContentRef = ref<HTMLDivElement | null>(null) // Ref for the contenteditable div
 
 // 定义组件props
 const props = defineProps<{
@@ -58,6 +100,7 @@ const props = defineProps<{
     createTime: string //消息时间
   }
   disabled: boolean //如果为true 则无法点击 编辑、删除按钮
+  allowRegenerate?: boolean // New prop
 }>()
 
 const emit = defineEmits<{
@@ -67,6 +110,7 @@ const emit = defineEmits<{
     message: string //更新后的消息
   }): void;
   (e: 'delete-message', msgId: string): void;
+  (e: 'regenerate', msgId: string): void; // New event
 }>()
 
 // 格式化时间
@@ -94,15 +138,85 @@ const renderMarkdown = (content: string) => {
   return marked.parse(content) as string
 }
 
-// 处理消息编辑
-const handleEdit = (messageId: string) => {
-  emit('select-message', messageId)
-}
+// 处理消息编辑 - Start Editing
+const handleEdit = () => {
+  if (props.disabled) return; // Prevent editing if disabled
+  isEditing.value = true;
+  // editContent.value = props.message.content; // No longer needed
+  nextTick(() => {
+    // Focus the contenteditable div
+    const el = editableContentRef.value;
+    if (el) {
+      el.focus();
+      // Optional: Move cursor to the end
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    // adjustEditTextareaHeight(); // No longer needed
+  });
+};
+
+// 处理确认编辑
+const handleConfirmEdit = () => {
+  const currentContent = editableContentRef.value?.textContent?.trim() || '';
+  if (!currentContent) {
+    console.warn('Edit content cannot be empty');
+    return;
+  }
+  if (currentContent === props.message.content) {
+    isEditing.value = false;
+    return;
+  }
+  emit('update-message', {
+    msgId: props.message.id,
+    message: currentContent // Use textContent from the div
+  });
+  isEditing.value = false; 
+};
+
+// 处理取消编辑
+const handleCancelEdit = () => {
+  isEditing.value = false;
+  // The div will automatically revert to showing the original content via v-text when re-rendered
+};
+
+// 处理失焦 (Optional: Decide behavior - cancel or confirm?)
+// For now, let's just cancel editing on blur unless handled by Enter/Esc
+const handleBlur = (event: FocusEvent) => {
+  // Check if the blur was caused by clicking the confirm/cancel buttons
+  // relatedTarget is the element receiving focus
+  const relatedTarget = event.relatedTarget as HTMLElement | null;
+  if (
+    relatedTarget && 
+    (relatedTarget.classList.contains('message-confirm-btn') || 
+     relatedTarget.classList.contains('message-cancel-btn'))
+  ) {
+     // Don't cancel if focus moved to confirm/cancel buttons
+    return; 
+  }
+  
+  // If still in editing mode after a short delay (allowing button clicks)
+  // We cancel editing. Alternatively, you could confirm here.
+  setTimeout(() => { 
+      if (isEditing.value) { 
+          handleCancelEdit();
+      }
+  }, 100); // Small delay
+};
 
 // 处理消息删除
 const handleDelete = (messageId: string) => {
   emit('delete-message', messageId)
 }
+
+// 处理重新生成 (New function)
+const handleRegenerate = () => {
+  emit('regenerate', props.message.id);
+};
 
 // 暴露方法给父组件
 defineExpose({
@@ -353,5 +467,93 @@ defineExpose({
     width: 24px;
     height: 24px;
   }
+}
+
+/* Editing Styles for contenteditable div */
+.editable-content {
+  width: 100%;
+  min-height: 3em; /* Use em for relative height, adjust as needed */
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0; /* Set border-radius to 0 for sharp corners */
+  color: #fff;
+  font-size: 14px; /* Ensure consistent font size */
+  line-height: 1.5; /* Ensure consistent line height */
+  font-family: inherit; /* Ensure consistent font family */
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+  word-break: break-word; /* Ensure long words break */
+  box-sizing: border-box;
+  cursor: text; /* Indicate text is editable */
+}
+
+.editable-content:focus {
+  outline: none;
+  border-color: rgba(79, 172, 254, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Edit/Confirm/Cancel Button Styles (reuse existing if possible or add specific) */
+.message .message-confirm-btn,
+.message .message-cancel-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.message .message-confirm-btn:hover,
+.message .message-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message .message-confirm-btn {
+  color: rgba(75, 210, 143, 0.7); /* Greenish */
+}
+
+.message .message-confirm-btn:hover {
+  color: rgba(75, 210, 143, 1);
+}
+
+.message .message-cancel-btn {
+  color: rgba(255, 107, 107, 0.7); /* Reddish */
+}
+
+.message .message-cancel-btn:hover {
+  color: rgba(255, 107, 107, 1);
+}
+
+/* Ensure actions are always visible in edit mode */
+.message.editing .message-actions { 
+  visibility: visible; 
+  opacity: 1; 
+}
+
+/* Regenerate Button Style */
+.message .message-regenerate-btn {
+  background: transparent;
+  border: none;
+  color: rgba(79, 172, 254, 0.7); /* Bluish color */
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.message .message-regenerate-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+  color: rgba(79, 172, 254, 1);
+}
+
+.message-regenerate-btn:disabled {
+   opacity: 0.3 !important;
+   cursor: not-allowed !important;
 }
 </style>

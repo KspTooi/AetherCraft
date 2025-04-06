@@ -6,17 +6,17 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('../views/model-chat.vue'),
+      redirect: '/chat'
     },
     {
       path: '/chat',
       name: 'model-chat',
-      component: () => import('../views/model-chat.vue'),
+      component: () => import('../views/ModelChat.vue'),
     },
     {
       path: '/rp',
       name: 'model-rp',
-      component: () => import('../views/model-rp.vue'),
+      component: () => import('../views/ModelRolePlay.vue'),
     },
     {
       path: '/agent',

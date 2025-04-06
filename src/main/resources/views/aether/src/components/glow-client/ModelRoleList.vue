@@ -22,14 +22,14 @@
       :class="{ 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile }"
     >
 
-      <!-- 新建会话按钮 -->
-      <div class="create-chat-btn-wrapper">
+      <!-- 管理角色按钮 -->
+      <div class="manage-role-btn-wrapper"> 
         <GlowButton
-          @click="handleCreateNewThread"
-          class="create-chat-btn"
+          @click="handleRoleManage" 
+          class="manage-role-btn"
           :corners="['bottom-right','bottom-left']"
         >
-          新建会话
+          管理角色
         </GlowButton>
       </div>
       
@@ -43,13 +43,13 @@
         
         <!-- 空列表状态 -->
         <div v-else-if="threads.length === 0" class="empty-list">
-          <i class="bi bi-chat-square-text"></i>
-          <div class="empty-text">还没有会话记录</div>
+          <i class="bi bi-person-plus"></i>
+          <div class="empty-text">您还没有创建角色</div>
           <GlowButton
-            @click="handleCreateNewThread"
+            @click="handleRoleManage" 
             class="empty-create-btn"
           >
-            创建新会话
+            创建角色
           </GlowButton>
         </div>
         
@@ -58,29 +58,15 @@
           <div 
             v-for="thread in threads" 
             :key="thread.id"
-            @click="handleThreadClick(thread.id)"
+            @click="handleRoleClick(thread.id)"
             :class="['thread-item', { active: thread.id == activeThreadId }]"
           >
-            <div class="thread-content">
-              <div class="thread-title">{{ thread.title }}</div>
-              <div class="thread-model">{{ thread.modelCode }}</div>
+            <div class="role-avatar" :class="{ 'no-image': !thread.avatarPath }">
+              <img v-if="thread.avatarPath" :src="thread.avatarPath" :alt="thread.name">
+              <i v-else class="bi bi-person"></i>
             </div>
-            
-            <div class="thread-actions">
-              <button 
-                class="thread-action-btn edit"
-                @click.stop="handleEditThread(thread.id)"
-                title="编辑标题"
-              >
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button 
-                class="thread-action-btn delete"
-                @click.stop="handleDeleteThread(thread.id)"
-                title="删除会话"
-              >
-                <i class="bi bi-trash"></i>
-              </button>
+            <div class="thread-content">
+              <div class="thread-title">{{ thread.name }}</div>
             </div>
           </div>
         </div>
@@ -95,24 +81,18 @@ import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
+import type GetModelRoleListVo from '@/entity/GetModelRoleListVo'; // 导入 GetModelRoleListVo 类型
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
 // 事件定义
 const emit = defineEmits<{
-  (e: 'select-thread', threadId: string): void;
-  (e: 'delete-thread', threadId: string): void;
-  (e: 'update-title', threadId: string,oldTitle: string): void;
-  (e: 'create-thread'): void;
+  (e: 'select-role', roleId: string): void;
 }>()
 
 const props = defineProps<{
-  data:{
-    id:string,
-    title:string,
-    modelCode:string,
-  }[]
+  data: GetModelRoleListVo[] // 使用 GetModelRoleListVo 数组类型
   selected: string //当前选择的会话ID
   loading?: boolean
 }>()
@@ -129,33 +109,20 @@ const isMobile = ref(window.innerWidth <= 768)
 const mobileMenuOpen = ref(false)
 
 // 处理点击会话
-const handleThreadClick = (threadId: string) => {
+const handleRoleClick = (roleId: string) => {
   // 如果点击的是当前已激活的会话，则不执行任何操作
-  if (threadId === activeThreadId.value) {
+  if (roleId === activeThreadId.value) {
     // 可以选择关闭移动端菜单（如果需要）
     // closeMobileMenu();
     return; 
   }
   // 只有当点击的不是当前激活的会话时才触发事件
-  emit('select-thread', threadId)
+  emit('select-role', roleId)
 }
 
-// 处理编辑会话标题
-const handleEditThread = (threadId: string) => {
-  const thread = threads.value.find(t => t.id === threadId);
-  if (thread) {
-    emit('update-title', threadId, thread.title);
-  }
-}
-
-// 处理删除会话
-const handleDeleteThread = (threadId: string) => {
-  emit('delete-thread', threadId)
-}
-
-// 处理创建新会话
-const handleCreateNewThread = () => {
-  emit('create-thread')
+// 新增：处理管理角色按钮点击
+const handleRoleManage = () => {
+  window.location.href = "/dashboard?redirect=/panel/model/role/list";
 }
 
 // 监听窗口大小变化
@@ -236,12 +203,12 @@ defineExpose({
   z-index: 1000;
 }
 
-.create-chat-btn-wrapper {
+.manage-role-btn-wrapper { 
   padding: 12px;
   flex-shrink: 0;
 }
 
-.create-chat-btn {
+.manage-role-btn { 
   width: 100%;
   padding: 10px 0;
   font-size: 14px;
@@ -284,7 +251,7 @@ defineExpose({
 }
 
 .empty-list i {
-  font-size: 32px;
+  font-size: 36px;
   margin-bottom: 16px;
   color: v-bind('theme.boxTextColorNoActive');
 }
@@ -330,12 +297,13 @@ defineExpose({
 .thread-content {
   flex: 1;
   min-width: 0;
+  align-self: center;
 }
 
 .thread-title {
   font-size: 14px;
   color: v-bind('theme.boxTextColorNoActive');
-  margin-bottom: 4px;
+  margin-bottom: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -351,45 +319,36 @@ defineExpose({
   font-weight: 500;
 }
 
-.thread-model {
-  font-size: 12px;
-  color: v-bind('theme.boxTextColorNoActive');
-  opacity: 0.7;
-}
-
-/* 操作按钮 */
-.thread-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.thread-item:hover .thread-actions {
-  opacity: 1;
-}
-
-.thread-action-btn {
-  background: transparent;
-  border: none;
-  color: v-bind('theme.boxTextColorNoActive');
-  width: 24px;
-  height: 24px;
-  padding: 0;
+/* 新增 role-avatar 样式 */
+.role-avatar {
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-right: 10px; /* 添加右边距 */
+  border-radius: 0; /* 直角 */
 }
 
-.thread-action-btn:hover {
-  background-color: v-bind('theme.boxAccentColorHover');
-  color: v-bind('theme.boxTextColor');
+.role-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.thread-action-btn.delete:hover {
-  color: #ff6b6b;
+.role-avatar.no-image i {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.thread-item.active .role-avatar {
+  border-color: v-bind('theme.boxGlowColor');
+  box-shadow: 0 0 8px v-bind('theme.boxGlowColor');
 }
 
 /* 滚动条样式 */

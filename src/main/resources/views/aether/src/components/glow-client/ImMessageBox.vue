@@ -10,12 +10,15 @@
     <!-- 消息列表 -->
     <div v-else class="messages-container" ref="messagesContainer">
       <ImMessageBoxItem
-        v-for="msg in messages"
+        v-for="(msg, index) in messages"
         :key="msg.id"
         :message="msg"
         :disabled="props.isGenerating"
+        :allow-regenerate="index === messages.length - 1"
         @select-message="handleSelectMessage"
         @delete-message="handleDeleteMessage"
+        @update-message="handleUpdateMessageForward"
+        @regenerate="handleRegenerateForward"
       />
     </div>
   </GlowDiv>
@@ -83,6 +86,7 @@ const emit = defineEmits<{
       message: string //更新后的消息
   }): void;
   (e: 'delete-message', msgId: string): void;
+  (e: 'regenerate', msgId: string): void;
 }>()
 
 // 处理消息选择
@@ -91,10 +95,21 @@ const handleSelectMessage = (msgId: string) => {
   emit('select-message', msgId)
 }
 
-// 处理消息删除
+// 处理消息删除 (改为直接向上转发)
 const handleDeleteMessage = (msgId: string) => {
-  emit('delete-message', msgId)
+  // emit('delete-message', msgId)
+  emit('delete-message', msgId); // Re-emit the event upwards
 }
+
+// 处理消息更新转发 (New function)
+const handleUpdateMessageForward = (params: { msgId: string; message: string }) => {
+  emit('update-message', params); // Re-emit the event upwards
+};
+
+// 处理重新生成转发 (New function)
+const handleRegenerateForward = (msgId: string) => {
+  emit('regenerate', msgId); // Re-emit the event upwards
+};
 
 // 初始化
 onMounted(() => {
