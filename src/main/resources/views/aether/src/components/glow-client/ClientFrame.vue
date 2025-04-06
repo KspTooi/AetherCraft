@@ -14,8 +14,11 @@ const themeStore = useThemeStore()
 // 计算内容区域高度
 const contentHeight = ref('100vh')
 const updateContentHeight = () => {
-  const navHeight = getComputedStyle(document.documentElement).getPropertyValue('--nav-height') || '40px'
-  contentHeight.value = `calc(100vh - ${navHeight})`
+  // 简化高度计算，使用flex布局自动填充
+  contentHeight.value = 'auto'
+  
+  // 确保移动端视口高度正确
+  document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`)
 }
 
 // 导航项配置
@@ -99,7 +102,7 @@ onUnmounted(() => {
       />
       
       <!-- 主内容区 -->
-      <div class="frame-content" :style="{ height: contentHeight }">
+      <div class="frame-content">
         <slot></slot>
       </div>
     </div>
@@ -112,26 +115,32 @@ onUnmounted(() => {
 /* 全局样式，确保导航栏充满整个宽度 */
 :root {
   --nav-height: 40px;
+  --vh: 1vh;
 }
 
 body, html {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
   height: 100%;
+  width: 100%;
+  position: fixed;
 }
 
 #app {
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 </style>
 
 <style scoped>
 .client-frame {
   position: relative;
-  height: 100vh;
+  height: 100%;
   width: 100%;
   overflow: hidden;
+  height: calc(var(--vh, 1vh) * 100);
 }
 
 .background-layer {
@@ -152,12 +161,15 @@ body, html {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .frame-content {
   flex: 1;
   overflow: auto;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

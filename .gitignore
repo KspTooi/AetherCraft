@@ -76,3 +76,4 @@ coverage
 package-lock.json
 *.exe
 *.rar
+node.exe
