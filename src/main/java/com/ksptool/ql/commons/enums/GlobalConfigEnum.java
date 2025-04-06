@@ -24,7 +24,7 @@ public enum GlobalConfigEnum {
 
     // 壁纸缓存相关配置（全局配置）
     CUSTOMIZE_WALLPAPER_CACHE_SECONDS("customize.wallpaper.cache.seconds", "60", "壁纸缓存时间(秒)"),
-    CUSTOMIZE_WALLPAPER_DEFAULT_PATH("customize.wallpaper.default.path", "/img/bg2.jpg", "默认壁纸路径"),
+    CUSTOMIZE_WALLPAPER_DEFAULT_PATH("customize.wallpaper.default.path", "/img/bg5.jpg", "默认壁纸路径"),
 
     // 角色扮演系统相关配置
     MODEL_RP_PROMPT_MAIN("model.rp.prompt.main", "扮演 #{model}。在与 #{user} 的虚构对话中，生成 #{model} 的下一条回复。", "RP-主提示词"),
