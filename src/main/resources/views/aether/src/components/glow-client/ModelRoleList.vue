@@ -68,18 +68,32 @@
             <div class="thread-content">
               <div class="thread-title">{{ thread.name }}</div>
             </div>
+            <!-- 三点菜单按钮 -->
+            <div class="menu-wrapper">
+              <button class="menu-btn" @click.stop="toggleContextMenu(thread.id, thread.name, $event)">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </GlowDiv>
+
+    <!-- 上下文菜单 -->
+    <GlowContextMenu
+      ref="contextMenu"
+      :header="true" 
+      :actions="menuActions"
+      @click="onContextMenuClick"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
-import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
+import GlowContextMenu from '../glow-ui/GlowContextMenu.vue' // 导入上下文菜单组件
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 import type GetModelRoleListVo from '@/entity/GetModelRoleListVo'; // 导入 GetModelRoleListVo 类型
 
@@ -89,6 +103,9 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 事件定义
 const emit = defineEmits<{
   (e: 'select-role', roleId: string): void;
+  (e: 'create-thread', role: GetModelRoleListVo): void;
+  (e: 'edit-role', role: GetModelRoleListVo): void;
+  (e: 'manage-threads', role: GetModelRoleListVo): void;
 }>()
 
 const props = defineProps<{
@@ -108,21 +125,30 @@ const activeThreadId = computed(() => props.selected)
 const isMobile = ref(window.innerWidth <= 768)
 const mobileMenuOpen = ref(false)
 
+// 上下文菜单引用
+const contextMenu = ref<InstanceType<typeof GlowContextMenu> | null>(null)
+
+// 上下文菜单操作项
+const menuActions = ref([
+  { name: '开始新会话', action: 'new-thread' },
+  { name: '管理全部会话', action: 'manage-threads' },
+  { name: '编辑角色', action: 'edit-role' },
+])
+
 // 处理点击会话
 const handleRoleClick = (roleId: string) => {
-  // 如果点击的是当前已激活的会话，则不执行任何操作
   if (roleId === activeThreadId.value) {
-    // 可以选择关闭移动端菜单（如果需要）
-    // closeMobileMenu();
+    closeMobileMenu(); // 点击当前选中项时也关闭移动菜单
     return; 
   }
-  // 只有当点击的不是当前激活的会话时才触发事件
   emit('select-role', roleId)
+  closeMobileMenu()
 }
 
-// 新增：处理管理角色按钮点击
+// 处理管理角色按钮点击
 const handleRoleManage = () => {
   window.location.href = "/dashboard?redirect=/panel/model/role/list";
+  closeMobileMenu()
 }
 
 // 监听窗口大小变化
@@ -139,7 +165,34 @@ const toggleMobileMenu = () => {
 }
 
 const closeMobileMenu = () => {
-  mobileMenuOpen.value = false
+  if (isMobile.value) {
+    mobileMenuOpen.value = false
+  }
+}
+
+// 打开/关闭上下文菜单
+const toggleContextMenu = (roleId: string, roleName: string, event: MouseEvent) => {
+  if (contextMenu.value) {
+    contextMenu.value.show(roleId, event, roleName) // 将角色名作为标题传递
+  }
+}
+
+// 处理上下文菜单点击事件
+const onContextMenuClick = (roleId: string, action: string) => {
+  const role = threads.value.find(t => t.id === roleId)
+  if (!role) return
+
+  if (action === 'new-thread') {
+    emit('create-thread', role)
+  }
+  if (action === 'manage-threads') {
+    emit('manage-threads', role)
+  }
+  if (action === 'edit-role') {
+    emit('edit-role', role)
+  }
+
+  closeMobileMenu() // 操作菜单后也关闭移动菜单
 }
 
 // 组件挂载时设置窗口大小监听
@@ -274,12 +327,13 @@ defineExpose({
 
 .thread-item {
   display: flex;
-  align-items: flex-start;
-  padding: 10px 12px;
+  align-items: center; /* 垂直居中对齐 */
+  padding: 10px 8px 10px 20px; /* 调整右边距给菜单按钮空间 */
   margin: 4px 0;
   cursor: pointer;
   transition: background-color 0.2s ease, border-left-color 0.2s ease;
   border-left: 3px solid transparent;
+  position: relative; /* 为菜单按钮定位 */
 }
 
 .thread-item:hover {
@@ -297,7 +351,8 @@ defineExpose({
 .thread-content {
   flex: 1;
   min-width: 0;
-  align-self: center;
+  /* align-self: center; */ /* 移除，因为父级已居中 */
+  margin-right: 24px; /* 给菜单按钮留出空间 */
 }
 
 .thread-title {
@@ -351,6 +406,44 @@ defineExpose({
   box-shadow: 0 0 8px v-bind('theme.boxGlowColor');
 }
 
+/* 菜单按钮相关样式 */
+.menu-wrapper {
+  position: absolute; /* 绝对定位到 thread-item 右侧 */
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  opacity: 0; /* 默认隐藏 */
+  transition: opacity 0.2s ease;
+}
+
+.thread-item:hover .menu-wrapper {
+  opacity: 1; /* 悬浮时显示 */
+}
+
+.menu-btn {
+  background: transparent;
+  border: none;
+  color: v-bind('theme.boxTextColorNoActive');
+  padding: 4px 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-btn:hover {
+  color: v-bind('theme.boxTextColor');
+  background: v-bind('theme.boxAccentColorHover');
+}
+
+.menu-btn i {
+  font-size: 16px;
+}
+
 /* 滚动条样式 */
 .threads-wrapper::-webkit-scrollbar {
   width: 3px;
@@ -377,6 +470,10 @@ defineExpose({
     height: 100vh;
     transition: transform 0.3s ease;
     box-shadow: none;
+    /* 移动端菜单总是显示 */
+    .menu-wrapper {
+      opacity: 1;
+    }
   }
   
   .chat-list-container.mobile-open {
