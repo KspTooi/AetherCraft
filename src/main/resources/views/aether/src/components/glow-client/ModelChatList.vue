@@ -1,73 +1,96 @@
 <template>
-  <GlowDiv border="right" class="chat-list-container">
+  <div class="model-chat-list-wrapper">
+    <!-- 移动端悬浮按钮 -->
+    <GlowButton
+      v-if="isMobile"
+      @click="toggleMobileMenu"
+      class="mobile-menu-btn"
+    >
+      <i class="bi bi-list"></i>
+    </GlowButton>
 
-    <!-- 新建会话按钮 -->
-    <div class="create-chat-btn-wrapper">
-      <GlowButton
-        @click="handleCreateNewThread"
-        class="create-chat-btn"
-      >
-        新建会话
-      </GlowButton>
-    </div>
-    
-    <!-- 会话列表内容 -->
-    <div class="threads-wrapper">
-      <!-- 加载中状态 -->
-      <div v-if="loading" class="loading-indicator">
-        <i class="bi bi-arrow-repeat spinning"></i> 
-        <span>加载中...</span>
-      </div>
-      
-      <!-- 空列表状态 -->
-      <div v-else-if="threads.length === 0" class="empty-list">
-        <i class="bi bi-chat-square-text"></i>
-        <div class="empty-text">还没有会话记录</div>
+    <!-- 移动端遮罩层 -->
+    <div 
+      v-if="isMobile && mobileMenuOpen" 
+      class="mobile-overlay"
+      @click="closeMobileMenu"
+    ></div>
+
+    <GlowDiv 
+      border="right" 
+      class="chat-list-container"
+      :class="{ 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile }"
+    >
+
+      <!-- 新建会话按钮 -->
+      <div class="create-chat-btn-wrapper">
         <GlowButton
           @click="handleCreateNewThread"
-          class="empty-create-btn"
+          class="create-chat-btn"
+          :corners="['bottom-right','bottom-left']"
         >
-          创建新会话
+          新建会话
         </GlowButton>
       </div>
       
-      <!-- 会话列表 -->
-      <div v-else class="thread-list">
-        <div 
-          v-for="thread in threads" 
-          :key="thread.id"
-          @click="handleThreadClick(thread.id)"
-          :class="['thread-item', { active: thread.id === activeThreadId }]"
-        >
-          <div class="thread-content">
-            <div class="thread-title">{{ thread.title }}</div>
-            <div class="thread-model">{{ thread.modelCode }}</div>
-          </div>
-          
-          <div class="thread-actions">
-            <button 
-              class="thread-action-btn edit"
-              @click.stop="handleEditThread(thread.id)"
-              title="编辑标题"
-            >
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button 
-              class="thread-action-btn delete"
-              @click.stop="handleDeleteThread(thread.id)"
-              title="删除会话"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
+      <!-- 会话列表内容 -->
+      <div class="threads-wrapper">
+        <!-- 加载中状态 -->
+        <div v-if="loading" class="loading-indicator">
+          <i class="bi bi-arrow-repeat spinning"></i> 
+          <span>加载中...</span>
+        </div>
+        
+        <!-- 空列表状态 -->
+        <div v-else-if="threads.length === 0" class="empty-list">
+          <i class="bi bi-chat-square-text"></i>
+          <div class="empty-text">还没有会话记录</div>
+          <GlowButton
+            @click="handleCreateNewThread"
+            class="empty-create-btn"
+          >
+            创建新会话
+          </GlowButton>
+        </div>
+        
+        <!-- 会话列表 -->
+        <div v-else class="thread-list">
+          <div 
+            v-for="thread in threads" 
+            :key="thread.id"
+            @click="handleThreadClick(thread.id)"
+            :class="['thread-item', { active: thread.id === activeThreadId }]"
+          >
+            <div class="thread-content">
+              <div class="thread-title">{{ thread.title }}</div>
+              <div class="thread-model">{{ thread.modelCode }}</div>
+            </div>
+            
+            <div class="thread-actions">
+              <button 
+                class="thread-action-btn edit"
+                @click.stop="handleEditThread(thread.id)"
+                title="编辑标题"
+              >
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button 
+                class="thread-action-btn delete"
+                @click.stop="handleDeleteThread(thread.id)"
+                title="删除会话"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </GlowDiv>
+    </GlowDiv>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted } from 'vue'
+import { ref, inject, onMounted, watch, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
@@ -94,6 +117,10 @@ const threads = ref<Array<{
   checked: number,
   updateTime?: string
 }>>([])
+
+// 移动端相关状态
+const isMobile = ref(window.innerWidth <= 768)
+const mobileMenuOpen = ref(false)
 
 // 加载会话列表
 const loadThreadList = async () => {
@@ -177,9 +204,31 @@ const setActiveThread = (threadId: string) => {
   selectThread(threadId)
 }
 
+// 监听窗口大小变化
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+  if (!isMobile.value) {
+    mobileMenuOpen.value = false
+  }
+}
+
+// 移动端菜单控制
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+const closeMobileMenu = () => {
+  mobileMenuOpen.value = false
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
   loadThreadList()
+  window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 // 暴露方法给父组件
@@ -187,17 +236,51 @@ defineExpose({
   loadThreadList,
   setActiveThread,
   getActiveThreadId: () => activeThreadId.value,
-  threads
+  threads,
+  closeMobileMenu
 })
 </script>
 
 <style scoped>
+.model-chat-list-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+.mobile-menu-btn {
+  position: fixed;
+  top: 100px;
+  left: 10px;
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.mobile-menu-btn i {
+  font-size: 24px;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
 .chat-list-container {
   width: 240px;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1000;
 }
 
 .create-chat-btn-wrapper {
@@ -266,7 +349,7 @@ defineExpose({
 
 /* 会话列表 */
 .thread-list {
-  padding: 4px 8px;
+  padding: 1px 0;
 }
 
 .thread-item {
@@ -275,7 +358,6 @@ defineExpose({
   padding: 10px 12px;
   margin: 4px 0;
   cursor: pointer;
-  border-radius: 4px;
   transition: background-color 0.2s ease, border-left-color 0.2s ease;
   border-left: 3px solid transparent;
 }
@@ -285,7 +367,7 @@ defineExpose({
 }
 
 .thread-item.active {
-  background-color: v-bind('theme.boxAccentColorHover');
+  background-color: v-bind('theme.boxColorActive');
   border-left-color: v-bind('theme.boxGlowColor');
   box-shadow: inset 5px 0 8px -2px v-bind('theme.boxGlowColor');
   backdrop-filter: blur(v-bind('theme.boxBlurActive') + 'px');
@@ -344,7 +426,6 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -369,7 +450,6 @@ defineExpose({
 
 .threads-wrapper::-webkit-scrollbar-thumb {
   background: v-bind('theme.boxBorderColor');
-  border-radius: 1.5px;
 }
 
 .threads-wrapper::-webkit-scrollbar-thumb:hover {
@@ -379,9 +459,17 @@ defineExpose({
 /* 响应式样式 */
 @media (max-width: 768px) {
   .chat-list-container {
-    width: 100%;
-    height: auto;
-    max-height: 300px;
+    position: fixed;
+    top: 0;
+    left: -240px;
+    height: 100vh;
+    transition: transform 0.3s ease;
+    box-shadow: none;
+  }
+  
+  .chat-list-container.mobile-open {
+    transform: translateX(240px);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   }
 }
 </style>

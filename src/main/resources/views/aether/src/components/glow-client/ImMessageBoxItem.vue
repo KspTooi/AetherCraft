@@ -118,7 +118,6 @@ defineExpose({
   display: flex;
   gap: 8px;
   transition: background-color 0.3s ease;
-  border-radius: 6px;
   background-color: transparent;
   margin: 0;
   padding-right: 60px; /* 为操作按钮预留空间 */
@@ -133,7 +132,6 @@ defineExpose({
 .message .message-header .avatar {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   overflow: hidden;
@@ -194,7 +192,6 @@ defineExpose({
 .message .message-content .text :deep(pre) {
   background: rgba(0, 0, 0, 0.2);
   padding: 10px;
-  border-radius: 4px;
   overflow-x: auto;
   margin: 10px 0;
 }
@@ -203,13 +200,11 @@ defineExpose({
   font-family: 'Courier New', Courier, monospace;
   padding: 2px 4px;
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
 }
 
 .message .message-content .text :deep(pre code) {
   padding: 0;
   background: transparent;
-  border-radius: 0;
 }
 
 .message .message-content .text :deep(a) {
@@ -254,7 +249,6 @@ defineExpose({
   padding: 4px;
   font-size: 16px;
   line-height: 1;
-  border-radius: 4px;
   transition: all 0.2s;
 }
 
@@ -271,30 +265,31 @@ defineExpose({
 }
 
 /* 鼠标悬浮效果 - 使用backdrop-filter实现毛玻璃效果 */
-.message.message-hover-effect.user:hover,
-.message.message-hover-effect.assistant:hover {
-  backdrop-filter: blur(v-bind('theme.boxBlurHover + "px"'));
-  -webkit-backdrop-filter: blur(v-bind('theme.boxBlurHover + "px"'));
+.message.message-hover-effect {
+  position: relative;
+  z-index: 1;
 }
 
-.message.message-hover-effect.user:hover::before,
-.message.message-hover-effect.assistant:hover::before {
+.message.message-hover-effect::before {
   content: '';
   position: absolute;
   top: 0;
   left: -10px;
   right: 0;
   bottom: 0;
-  border-radius: 6px;
   z-index: -1;
+  background-color: v-bind('theme.boxAccentColorHover');
+  opacity: 0;
+  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
 }
 
-.message.message-hover-effect.user:hover::before {
-  background-color: rgba(0, 0, 0, 0.1);
+.message.message-hover-effect:hover {
+  backdrop-filter: blur(v-bind('theme.boxBlurHover + "px"'));
+  -webkit-backdrop-filter: blur(v-bind('theme.boxBlurHover + "px"'));
 }
 
-.message.message-hover-effect.assistant:hover::before {
-  background-color: rgba(50, 50, 60, 0.1);
+.message.message-hover-effect:hover::before {
+  opacity: 1;
 }
 
 /* 移动端适配 */

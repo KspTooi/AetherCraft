@@ -1,6 +1,7 @@
 export interface GlowThemeColors {
     boxColor:string
     boxColorHover:string
+    boxColorActive:string
     boxAccentColor:string
     boxAccentColorHover:string
     boxGlowColor:string
@@ -11,6 +12,9 @@ export interface GlowThemeColors {
     boxBlurActive:number
     boxTextColor:string
     boxTextColorNoActive:string
+
+    boxSecondColor:string
+    boxSecondColorHover:string
 
     mainColor:string
     mainTextColor:string
@@ -35,18 +39,22 @@ export interface GlowThemeColors {
 }
 
 export const defaultTheme: GlowThemeColors = {
-    boxColor: 'rgba(255,255,255,0)',
-    boxColorHover: 'rgba(255,255,255,0)',
-    boxAccentColor: 'rgba(2, 98, 136, 0.1)',
-    boxAccentColorHover: 'rgba(2, 98, 136, 0.1)',
-    boxGlowColor: 'rgba(75, 227, 238, 0.62)',
-    boxBorderColor: 'rgba(255, 255, 255, 0.1)',
-    boxBorderColorHover: 'rgba(0,232,250,0.16)',
+    boxColor: 'rgba(255,255,255,0)',                //普通色
+    boxColorHover: 'rgb(0,0,0,0)',                  //普通色Hover效
+    boxColorActive:"rgba(0,196,255,0.16)",          //普通色Active效
+    boxAccentColor: 'rgba(206,241,255,0.13)',       //强调色
+    boxAccentColorHover: 'rgba(150,250,253,0.05)',  //强调色Hover效
+    boxGlowColor: 'rgba(75, 227, 238, 0.62)',       //辉光色
+    boxBorderColor: 'rgba(255, 255, 255, 0.1)',     //边框色
+    boxBorderColorHover: 'rgba(0,232,250,0.16)',    //边框色Hover
     boxBlur: 3,
-    boxBlurHover: 10,
-    boxBlurActive: 10,
+    boxBlurHover: 15,
+    boxBlurActive: 12,
     boxTextColor: 'rgb(255,255,255)',
     boxTextColorNoActive: 'rgb(185, 185, 185)',
+
+    boxSecondColor: 'rgba(37,37,37,0.78)',           //次级色
+    boxSecondColorHover: 'rgba(1,179,195,0.4)',    //次级色Hover效
 
     mainColor: 'rgba(61, 138, 168, 0.24)',
     mainTextColor: 'rgb(255,255,255)',

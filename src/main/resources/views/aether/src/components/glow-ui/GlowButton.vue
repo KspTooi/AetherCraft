@@ -178,7 +178,7 @@ const handleClick = (event: MouseEvent) => {
 .corner-br-fill {
   right: 0;
   bottom: 0;
-  border-width: 0 0 20px 20px;
+  border-width: 0 0 15px 15px;
   border-color: transparent transparent v-bind('buttonBorderColor') transparent;
 }
 
@@ -186,7 +186,7 @@ const handleClick = (event: MouseEvent) => {
 .corner-bl-fill {
   left: 0;
   bottom: 0;
-  border-width: 20px 0 0 20px;
+  border-width: 15px 0 0 15px;
   border-color: transparent transparent transparent v-bind('buttonBorderColor');
 }
 
@@ -194,7 +194,7 @@ const handleClick = (event: MouseEvent) => {
 .corner-tr-fill {
   right: 0;
   top: 0;
-  border-width: 0 20px 20px 0;
+  border-width: 0 15px 15px 0;
   border-color: transparent v-bind('buttonBorderColor') transparent transparent;
 }
 
@@ -202,7 +202,7 @@ const handleClick = (event: MouseEvent) => {
 .corner-tl-fill {
   left: 0;
   top: 0;
-  border-width: 20px 20px 0 0;
+  border-width: 15px 15px 0 0;
   border-color: v-bind('buttonBorderColor') transparent transparent transparent;
 }
 
