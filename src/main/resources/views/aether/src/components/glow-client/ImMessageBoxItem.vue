@@ -10,6 +10,12 @@
       <div class="name">
         {{ props.message.name }}
         <span class="time">{{ formatTime(props.message.createTime) }}</span>
+        <span v-if="props.message.id === '-1'" class="typing-indicator">
+          <span>正在输入</span>
+          <span class="dot">.</span>
+          <span class="dot">.</span>
+          <span class="dot">.</span>
+        </span>
       </div>
       <div class="text" :class="{ 'user': props.message.role === 'user' }">
         <div v-if="props.message.role === 'user'">{{ props.message.content }}</div>
@@ -290,6 +296,42 @@ defineExpose({
 
 .message.message-hover-effect:hover::before {
   opacity: 1;
+}
+
+/* Typing indicator styles */
+.typing-indicator {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.typing-indicator span {
+  opacity: 0.7;
+}
+
+.typing-indicator .dot {
+  display: inline-block;
+  animation: blink 1.4s infinite both;
+}
+
+.typing-indicator .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.2;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
 }
 
 /* 移动端适配 */

@@ -57,6 +57,8 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/
 import axios from 'axios';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowInput from "@/components/glow-ui/GlowInput.vue"
+import type Result from '@/entity/Result';
+import type ChatSegmentVo from '@/entity/ChatSegmentVo';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -128,21 +130,7 @@ const onMessageSend = async (message: string) => {
 
   try {
     // 4. 调用后端接口发送消息 (queryKind = 0)
-    const response = await axios.post<{
-      code: number;
-      message: string;
-      data?: { // data 可能不存在或为空
-        threadId?: string; // 确认会话ID
-        historyId?: string; // 用户消息的最终ID
-        role?: number; // 确认角色 (0 for user)
-        sequence?: number;
-        content?: string; // 确认内容
-        type?: number;
-        name?: string; // 用户名 (后端确认)
-        avatarPath?: string; // 用户头像 (后端确认)
-        createTime?: string; // 消息创建时间
-      };
-    }>('/model/chat/completeBatch', {
+    const response = await axios.post<Result<ChatSegmentVo>>('/model/chat/completeBatch', {
       threadId: currentThreadId.value,
       model: currentModelCode.value,
       message: message,
@@ -150,9 +138,10 @@ const onMessageSend = async (message: string) => {
     });
 
     // Check for successful response and ensure data and historyId are present and valid strings
-    const backendUserMessageData = response.data.data;
+    const backendResult = response.data; // backendResult is now Result<ChatSegmentVo>
+    const backendUserMessageData = backendResult.data; // backendUserMessageData is now ChatSegmentVo
 
-    if (response.data.code === 0 && backendUserMessageData && typeof backendUserMessageData.historyId === 'string' && backendUserMessageData.historyId) {
+    if (backendResult.code === 0 && backendUserMessageData && typeof backendUserMessageData.historyId === 'string' && backendUserMessageData.historyId) {
       // 5. Use backend data to create the user message
       const userMessage = {
         id: backendUserMessageData.historyId, // Now definitely a string
@@ -160,7 +149,7 @@ const onMessageSend = async (message: string) => {
         avatarPath: backendUserMessageData.avatarPath || '',
         role: 'user' as const, // Use 'as const' for stricter type
         content: backendUserMessageData.content || message,
-        createTime: backendUserMessageData.createTime || new Date().toISOString()
+        createTime: new Date().toISOString() // Always use current frontend time
       };
       messages.value.push(userMessage);
       await nextTick(); 
@@ -174,7 +163,7 @@ const onMessageSend = async (message: string) => {
 
     } else {
       // 发送失败处理 (现在没有本地用户消息需要移除了)
-      console.error('发送消息失败或未收到有效的用户消息数据:', response.data.message || '返回数据无效');
+      console.error('发送消息失败或未收到有效的用户消息数据:', backendResult.message || '返回数据无效');
       // 可选：显示错误提示给用户
       isGenerating.value = false; // 重置加载状态
     }
@@ -193,26 +182,20 @@ const pollMessage = async () => {
 
   while (isGenerating.value) {
     try {
-      const response = await axios.post<{
-        code: number;
-        message: string;
-        data?: { // data 可能不存在或为空
-          type: number; // 0:无数据 1:数据片段 2:结束片段 10:错误片段
-          content?: string;
-          historyId?: string; // AI消息的最终ID
-          name?: string; // AI名称
-          avatarPath?: string; // AI头像
-        };
-      }>('/model/chat/completeBatch', {
+      // 使用 Result<ChatSegmentVo> 作为响应类型
+      const response = await axios.post<Result<ChatSegmentVo>>('/model/chat/completeBatch', {
         threadId: currentThreadId.value,
         queryKind: 1 // 1: 查询响应流
       });
 
-      if (response.data.code === 0) {
-        const segment = response.data.data;
+      // 使用 backendResult 访问 code 和 message
+      const backendResult = response.data;
+      if (backendResult.code === 0) {
+        // 使用 segment 访问 ChatSegmentVo 数据
+        const segment = backendResult.data;
 
+        // 如果 segment 为 null/undefined 或 type 为 0，则继续
         if (!segment || segment.type === 0) {
-          // 没有新数据，等待后继续轮询
           await new Promise(resolve => setTimeout(resolve, 500));
           continue;
         }
@@ -271,7 +254,7 @@ const pollMessage = async () => {
         }
       } else {
         // API请求失败
-        console.error('轮询AI响应失败:', response.data.message);
+        console.error('轮询AI响应失败:', backendResult.message); // 使用 backendResult.message
         removeTempMsg(); // 移除临时消息 (调用新函数)
         isGenerating.value = false; // 结束加载状态
         break; // 结束轮询
