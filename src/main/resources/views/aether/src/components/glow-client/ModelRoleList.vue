@@ -5,8 +5,9 @@
       v-if="isMobile"
       @click="toggleMobileMenu"
       class="mobile-menu-btn"
+      :corners="[`top-left`]"
     >
-      <i class="bi bi-list"></i>
+      角色列表
     </GlowButton>
 
     <!-- 移动端遮罩层 -->
@@ -222,15 +223,13 @@ defineExpose({
 
 .mobile-menu-btn {
   position: fixed;
-  top: 100px;
+  top: 8px;
   left: 10px;
   z-index: 1000;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0;
+  height: 32px;
+  min-height: 32px;
+  font-size: 12px;
+  padding: 8px;
 }
 
 .mobile-menu-btn i {
