@@ -94,7 +94,6 @@ defineExpose({
       <!-- 按钮区域 -->
       <div class="laser-confirm-buttons">
         <GlowButton
-            :corners="[`bottom-left`]"
             class="confirm-btn"
             :background-color="confirmBtnBg"
             :border-color="confirmBtnBorder"

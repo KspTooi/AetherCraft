@@ -4,6 +4,7 @@ import ClientSidePanel from '@/components/glow-client/ClientSidePanel.vue'
 import GlowTheme from '@/components/glow-ui/GlowTheme.vue'
 import GlowDiv from '@/components/glow-ui/GlowDiv.vue'
 import ModelChatList from "@/components/glow-client/ModelChatList.vue";
+import GlowSidePanel from "@/components/glow-ui/GlowSidePanel.vue";
 
 // 侧边栏配置
 const sideItems = reactive([
@@ -43,7 +44,7 @@ const handleSideAction = (action: string, itemId: string) => {
 
   <div class="main-content">
     <!-- 侧边栏 -->
-    <ClientSidePanel
+    <GlowSidePanel
       :items="sideItems"
       :activeItemId="activeItemId"
       title="应用导航"

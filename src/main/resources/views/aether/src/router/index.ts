@@ -26,7 +26,7 @@ const router = createRouter({
     {
       path: '/customize',
       name: 'customize',
-      component: () => import('../views/customize.vue'),
+      component: () => import('../views/ClientCustomize.vue'),
     },
     {
       path: '/effects-test',

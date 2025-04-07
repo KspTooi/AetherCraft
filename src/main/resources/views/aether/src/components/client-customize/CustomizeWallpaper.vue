@@ -64,29 +64,24 @@
         </div>
       </div>
     </div>
+    
+    <!-- 确认对话框组件 -->
+    <GlowConfirm ref="confirmRef" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useThemeStore } from '../stores/theme'
+import { ref, computed, onMounted, inject } from 'vue'
+import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../../components/glow-ui/GlowTheme.ts'
+import type { GlowThemeColors } from '../../components/glow-ui/GlowTheme.ts'
+import GlowConfirm from '../../components/glow-ui/GlowConfirm.vue'
 import axios from 'axios'
 
-// 获取主题颜色
-const themeStore = useThemeStore()
-const primaryColor = computed(() => themeStore.primaryColor)
-const primaryHover = computed(() => themeStore.primaryHover)
-const activeColor = computed(() => themeStore.activeColor)
-const primaryButton = computed(() => themeStore.primaryButton)
-const primaryButtonBorder = computed(() => themeStore.primaryButtonBorder)
+// 注入主题
+const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
-// 声明props以接收confirmModal
-const props = defineProps({
-  confirmModal: {
-    type: Object,
-    required: true
-  }
-});
+// 确认对话框引用
+const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 
 // 背景相关状态
 const isLoadingWallpapers = ref(false);
@@ -151,7 +146,9 @@ const checkCurrentWallpaper = async () => {
 const selectWallpaper = async (path: string) => {
   try {
     // 使用确认模态框询问用户
-    const confirmed = await props.confirmModal.showConfirm({
+    if (!confirmRef.value) return;
+    
+    const confirmed = await confirmRef.value.showConfirm({
       title: '设置背景',
       content: '确定要将该图片设置为当前背景吗？',
       confirmText: '确定',
@@ -296,7 +293,9 @@ const handleFileChange = async (event: Event) => {
 const resetWallpaper = async () => {
   try {
     // 使用确认模态框询问用户
-    const confirmed = await props.confirmModal.showConfirm({
+    if (!confirmRef.value) return;
+    
+    const confirmed = await confirmRef.value.showConfirm({
       title: '重置背景',
       content: '确定要恢复系统默认背景吗？',
       confirmText: '确定',
@@ -329,7 +328,7 @@ onMounted(() => {
 .section-header {
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid v-bind('theme.boxBorderColor');
   position: relative;
 }
 
@@ -340,13 +339,13 @@ onMounted(() => {
   left: 0;
   width: 80px;
   height: 2px;
-  background-color: v-bind(activeColor);
+  background-color: v-bind('theme.boxGlowColor');
 }
 
 .section-header h2 {
   font-size: 20px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: v-bind('theme.boxTextColor');
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -354,15 +353,15 @@ onMounted(() => {
 }
 
 .section-description {
-  color: rgba(255, 255, 255, 0.7);
+  color: v-bind('theme.boxTextColorNoActive');
   font-size: 14px;
   margin: 0;
 }
 
 .settings-panel {
-  background-color: rgba(30, 40, 60, 0.3);
+  background-color: v-bind('theme.boxColor');
   border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid v-bind('theme.boxBorderColor');
   padding: 20px;
   margin-bottom: 20px;
   position: relative;
@@ -372,7 +371,7 @@ onMounted(() => {
 .panel-title {
   font-size: 16px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: v-bind('theme.boxTextColor');
   margin-top: 0;
   margin-bottom: 16px;
   display: flex;
@@ -388,7 +387,7 @@ onMounted(() => {
   left: 0;
   width: 60px;
   height: 1px;
-  background-color: v-bind(activeColor);
+  background-color: v-bind('theme.boxGlowColor');
 }
 
 /* 当前壁纸容器 */
@@ -406,7 +405,7 @@ onMounted(() => {
   background-size: cover;
   background-position: center;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid v-bind('theme.boxBorderColor');
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   flex-shrink: 0;
@@ -434,24 +433,24 @@ onMounted(() => {
   justify-content: center;
   border-radius: 0;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  border: 1px solid v-bind('theme.boxBorderColor');
+  color: v-bind('theme.boxTextColor');
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .action-btn:hover {
   background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: v-bind('theme.boxBorderColorHover');
   transform: scale(1.05);
 }
 
 .reset-btn:hover {
-  color: rgba(255, 200, 100, 1);
+  color: v-bind('theme.dangerColorActive');
 }
 
 .download-btn:hover {
-  color: rgba(100, 255, 200, 1);
+  color: v-bind('theme.boxGlowColor');
 }
 
 .upload-container {
@@ -461,17 +460,17 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(40, 50, 70, 0.3);
+  background: v-bind('theme.boxSecondColor');
   border-radius: 0;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed v-bind('theme.boxBorderColor');
   padding: 0;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .upload-container:hover {
-  background: rgba(40, 50, 70, 0.4);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: v-bind('theme.boxSecondColorHover');
+  border-color: v-bind('theme.boxBorderColorHover');
 }
 
 .upload-button {
@@ -482,9 +481,9 @@ onMounted(() => {
   gap: 8px;
   padding: 12px;
   border-radius: 0;
-  background: v-bind(primaryButton);
-  border: 1px solid v-bind(primaryButtonBorder);
-  color: white;
+  background: v-bind('theme.mainColor');
+  border: 1px solid v-bind('theme.mainBorderColor');
+  color: v-bind('theme.mainTextColor');
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 10px;
@@ -499,12 +498,12 @@ onMounted(() => {
   height: 12px;
   bottom: 0;
   right: 0;
-  border-bottom: 2px solid v-bind(activeColor);
-  border-right: 2px solid v-bind(activeColor);
+  border-bottom: 2px solid v-bind('theme.boxGlowColor');
+  border-right: 2px solid v-bind('theme.boxGlowColor');
 }
 
 .upload-button:hover {
-  background: rgba(100, 140, 180, 0.3);
+  background: v-bind('theme.mainColorHover');
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -515,7 +514,7 @@ onMounted(() => {
 }
 
 .upload-tip {
-  color: rgba(255, 255, 255, 0.6);
+  color: v-bind('theme.boxTextColorNoActive');
   font-size: 12px;
   text-align: center;
   margin: 0;
@@ -537,8 +536,8 @@ onMounted(() => {
 .wallpaper-item {
   border-radius: 0;
   overflow: hidden;
-  background: rgba(20, 30, 40, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: v-bind('theme.boxSecondColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
@@ -572,7 +571,7 @@ onMounted(() => {
 .wallpaper-item:hover::after,
 .wallpaper-item.active::before,
 .wallpaper-item.active::after {
-  border-color: v-bind(activeColor);
+  border-color: v-bind('theme.boxGlowColor');
 }
 
 .wallpaper-preview {
@@ -606,7 +605,7 @@ onMounted(() => {
 
 .wallpaper-overlay i {
   font-size: 24px;
-  color: white;
+  color: v-bind('theme.boxTextColor');
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
   opacity: 0;
   transform: scale(0.8);
@@ -625,7 +624,7 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
-  color: rgba(255, 255, 255, 0.9);
+  color: v-bind('theme.boxTextColor');
 }
 
 /* 加载和空状态 */
@@ -634,7 +633,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 30px 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: v-bind('theme.boxTextColorNoActive');
   gap: 10px;
 }
 
@@ -653,7 +652,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 30px 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: v-bind('theme.boxTextColorNoActive');
   gap: 10px;
 }
 
@@ -663,15 +662,15 @@ onMounted(() => {
 }
 
 .wallpaper-item:hover {
-  background: rgba(40, 50, 70, 0.6);
+  background: v-bind('theme.boxSecondColorHover');
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: v-bind('theme.boxBorderColorHover');
 }
 
 .wallpaper-item.active {
-  background: rgba(40, 60, 80, 0.6);
-  border-color: v-bind(activeColor);
+  background: v-bind('theme.boxColorActive');
+  border-color: v-bind('theme.boxGlowColor');
 }
 
 /* 响应式适配 */
