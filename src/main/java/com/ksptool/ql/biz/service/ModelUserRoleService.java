@@ -117,6 +117,7 @@ public class ModelUserRoleService {
 
             modelUserRolePo = new ModelUserRolePo();
             assign(dto, modelUserRolePo);
+            modelUserRolePo.setUserId(AuthService.getCurrentUserId());
         }
 
         if(!createMode){

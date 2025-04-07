@@ -28,7 +28,7 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 
 @RestController
-@RequestMapping("/customize")
+@RequestMapping("/customize/theme")
 public class CustomizeThemeController {
     
     @Autowired

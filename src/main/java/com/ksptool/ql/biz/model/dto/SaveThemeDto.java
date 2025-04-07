@@ -9,7 +9,7 @@ public class SaveThemeDto {
 
     // 主题ID
     private Long themeId;
-    
+
     // 主题名称（可选）
     private String themeName;
     
@@ -18,4 +18,4 @@ public class SaveThemeDto {
     
     // 主题值映射，key为属性名，value为属性值
     private Map<String, String> themeValues = new HashMap<>();
-} 
+}
