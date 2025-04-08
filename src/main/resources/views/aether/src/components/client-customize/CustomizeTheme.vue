@@ -201,14 +201,8 @@ onMounted(() => {
   align-content: start;
 }
 
-@media (min-height: 768px) {
-  .theme-list {
-    grid-template-rows: repeat(auto-fill, 180px);
-  }
-}
-
 .theme-item {
-  background: linear-gradient(135deg, 
+  background: linear-gradient(135deg,
     rgba(255, 182, 193, 0.25),
     rgba(135, 206, 235, 0.25),
     rgba(144, 238, 144, 0.25),
@@ -221,7 +215,6 @@ onMounted(() => {
   box-shadow: 0 0 0 0 v-bind('theme.boxGlowColor');
   position: relative;
   overflow: hidden;
-  height: 180px;
   display: flex;
   flex-direction: column;
 }
