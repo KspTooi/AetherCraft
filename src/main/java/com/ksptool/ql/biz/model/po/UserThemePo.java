@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 @Table(name = "user_theme")
 @Data
-public class UserTheme {
+public class UserThemePo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

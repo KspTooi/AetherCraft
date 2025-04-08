@@ -4,18 +4,20 @@ import com.ksptool.ql.biz.mapper.UserThemeRepository;
 import com.ksptool.ql.biz.mapper.UserThemeValuesRepository;
 import com.ksptool.ql.biz.model.dto.ActiveThemeDto;
 import com.ksptool.ql.biz.model.dto.GetThemeValuesDto;
+import com.ksptool.ql.biz.model.dto.RemoveThemeDto;
 import com.ksptool.ql.biz.model.dto.SaveThemeDto;
 import com.ksptool.ql.biz.model.po.UserPo;
-import com.ksptool.ql.biz.model.po.UserTheme;
+import com.ksptool.ql.biz.model.po.UserThemePo;
 import com.ksptool.ql.biz.model.po.UserThemeValues;
 import com.ksptool.ql.biz.model.vo.GetActiveThemeVo;
 import com.ksptool.ql.biz.model.vo.GetThemeValuesVo;
 import com.ksptool.ql.biz.model.vo.GetUserThemeListVo;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.commons.enums.UserThemeEnum;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -51,11 +53,11 @@ public class CustomizeThemeController {
         Long userId = AuthService.getCurrentUserId();
         
         // 查询当前用户所有主题
-        List<UserTheme> themes = themeRepository.findByUserIdWithValues(userId);
+        List<UserThemePo> themes = themeRepository.findByUserIdWithValues(userId);
         
         // 将PO转换为VO
         List<GetUserThemeListVo> voList = new ArrayList<>();
-        for (UserTheme theme : themes) {
+        for (UserThemePo theme : themes) {
             GetUserThemeListVo vo = new GetUserThemeListVo();
             assign(theme, vo);
             voList.add(vo);
@@ -65,13 +67,36 @@ public class CustomizeThemeController {
         return new PageableView<>(voList, voList.size(), 1, voList.size());
     }
 
+    //移除主题
+    @PostMapping("/removeTheme")
+    @Transactional
+    public Result<String> removeTheme(@RequestBody RemoveThemeDto dto) throws BizException {
+
+        Long uid = AuthService.getCurrentUserId();
+
+        var query = new UserThemePo();
+        var user = new UserPo();
+        user.setId(uid);
+        query.setUser(user);
+        query.setId(dto.getThemeId());
+
+        UserThemePo po = themeRepository.findOne(Example.of(query)).orElseThrow(() -> new BizException("未找到主题"));
+
+        if(po.getIsActive() == 1){
+            return Result.error("主题正在使用,无法移除.");
+        }
+
+        themeRepository.delete(po);
+        return Result.success("操作成功");
+    }
+
     //创建或者更新一个主题
     @PostMapping("/saveTheme")
     @Transactional
     public Result<String> saveTheme(@RequestBody SaveThemeDto dto) {
+
         Long userId = AuthService.getCurrentUserId();
-        
-        UserTheme theme;
+        UserThemePo theme;
         
         // 根据themeId判断是创建新主题还是更新现有主题
         if (dto.getThemeId() != null) {
@@ -88,7 +113,7 @@ public class CustomizeThemeController {
             }
         } else {
             // 创建新主题
-            theme = new UserTheme();
+            theme = new UserThemePo();
             UserPo user = new UserPo();
             user.setId(userId);
             theme.setUser(user);
@@ -111,41 +136,26 @@ public class CustomizeThemeController {
         // 保存主题基本信息
         theme.setUpdateTime(new Date());
         themeRepository.save(theme);
-        
-        // 删除原有的主题值
-        themeValuesRepository.deleteByThemeId(theme.getId());
-        
-        // 获取DTO中的主题值Map
-        Map<String, String> dtoThemeValues = dto.getThemeValues();
-        
-        // 保存所有主题值，使用枚举默认值作为备选
-        List<UserThemeValues> valuesList = new ArrayList<>();
-        for (UserThemeEnum themeEnum : UserThemeEnum.values()) {
-            String key = themeEnum.key();
-            // 从DTO中的Map获取值，如果不存在则使用枚举默认值
-            String value = null;
-            
-            if (dtoThemeValues != null && dtoThemeValues.containsKey(key)) {
-                value = dtoThemeValues.get(key);
-            }
-            
-            if (StringUtils.isBlank(value)) {
-                value = themeEnum.defaultValue();
-            }
-            
-            String displayName = themeEnum.description();
-            
-            UserThemeValues themeValue = new UserThemeValues();
-            themeValue.setTheme(theme);
-            themeValue.setThemeKey(key);
-            themeValue.setThemeValue(value);
-            themeValue.setDisplayName(displayName);
-            valuesList.add(themeValue);
+
+        //处理主题值合并
+        List<UserThemeValues> themeValues = theme.getThemeValues();
+
+        if (themeValues == null) {
+            themeValues = new ArrayList<>();
+            theme.setThemeValues(themeValues);
         }
-        
-        // 批量保存
-        themeValuesRepository.saveAll(valuesList);
-        
+
+        themeValues.clear();
+
+        for(var item : dto.getThemeValues().entrySet()){
+            var po = new UserThemeValues();
+            po.setTheme(theme);
+            po.setThemeKey(item.getKey());
+            po.setThemeValue(item.getValue());
+            themeValues.add(po);
+        }
+
+        themeRepository.save(theme);
         return Result.success(theme.getId().toString());
     }
 
@@ -160,7 +170,7 @@ public class CustomizeThemeController {
         }
         
         // 查找主题
-        UserTheme theme = themeRepository.findById(dto.getThemeId()).orElse(null);
+        UserThemePo theme = themeRepository.findById(dto.getThemeId()).orElse(null);
         
         // 验证主题是否存在
         if (theme == null) {
@@ -197,7 +207,7 @@ public class CustomizeThemeController {
         Long userId = AuthService.getCurrentUserId();
         
         // 查询当前用户的激活主题
-        UserTheme activeTheme = themeRepository.findActiveThemeByUserId(userId);
+        UserThemePo activeTheme = themeRepository.findActiveThemeByUserId(userId);
         
         // 如果用户没有激活的主题，返回错误
         if (activeTheme == null) {
@@ -238,7 +248,7 @@ public class CustomizeThemeController {
         }
         
         // 查找要激活的主题
-        UserTheme themeToActive = themeRepository.findById(dto.getThemeId()).orElse(null);
+        UserThemePo themeToActive = themeRepository.findById(dto.getThemeId()).orElse(null);
         
         // 验证主题是否存在
         if (themeToActive == null) {
@@ -251,10 +261,10 @@ public class CustomizeThemeController {
         }
         
         // 查询当前用户的所有主题
-        List<UserTheme> userThemes = themeRepository.findByUserIdWithValues(userId);
+        List<UserThemePo> userThemePos = themeRepository.findByUserIdWithValues(userId);
         
         // 将所有主题设置为非激活状态
-        for (UserTheme theme : userThemes) {
+        for (UserThemePo theme : userThemePos) {
             // 只修改激活状态非当前值的主题
             if (theme.getIsActive() != 0) {
                 theme.setIsActive(0);

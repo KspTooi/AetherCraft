@@ -19,7 +19,7 @@ public class UserThemeValues {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "theme_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("所属主题")
-    private UserTheme theme;
+    private UserThemePo theme;
 
     @Column(length = 50, nullable = false)
     @Comment("设置项键名")
