@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useThemeStore } from '../../stores/theme'
-import ConfirmModal from '../ConfirmModal.vue'
+import GlowConfirm from '../glow-ui/GlowConfirm.vue'
 import axios from 'axios'
 import ClientTopNav from './ClientTopNav.vue'
 
 const brandName = ref('AetherCraft')
-const logoutModal = ref<InstanceType<typeof ConfirmModal> | null>(null)
+const logoutModal = ref<InstanceType<typeof GlowConfirm> | null>(null)
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -107,7 +107,7 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <ConfirmModal ref="logoutModal" />
+    <GlowConfirm ref="logoutModal" />
   </div>
 </template>
 
