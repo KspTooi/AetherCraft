@@ -490,7 +490,10 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
 
 //编辑角色(这里桥接到旧版编辑页面)
 const onEditRole = async (role:GetModelRoleListVo) => {
-
+  if (!role.id) {
+    return
+  }
+  window.location.href = `/dashboard?redirect=/panel/model/role/list?id=${role.id}`
 }
 
 const onManageThreads = async (role:GetModelRoleListVo) => {
