@@ -21,6 +21,11 @@ const props = defineProps<{
   title?: string
 }>()
 
+// 禁用属性继承
+defineOptions({
+  inheritAttrs: false
+})
+
 // 定义事件
 const emit = defineEmits<{
   (e: 'item-click', itemId: string): void
@@ -98,7 +103,10 @@ defineExpose({
   ></div>
 
   <!-- 侧边栏容器 -->
-  <div class="side-panel-wrapper" :class="{ 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile }">
+  <div class="side-panel-wrapper" :class="[
+    { 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile },
+    $attrs.class
+  ]">
     <GlowDiv
       border="right"
       class="side-panel"
