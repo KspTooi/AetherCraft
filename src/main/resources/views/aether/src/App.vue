@@ -1,25 +1,56 @@
 <template>
 
-  <GlowTheme @onThemeUpdate="onThemeUpdate">
+  <GlowTheme @onThemeUpdate="onThemeUpdate" >
     <ClientFrame>
       <RouterView />
     </ClientFrame>
   </GlowTheme>
 
-<!--  <ClientFrameTheme>
-    <RouterView />
-  </ClientFrameTheme>-->
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import ClientFrameTheme from '@/components/ClientFrameTheme.vue'
 import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
 import ClientFrame from "@/components/glow-client/ClientFrame.vue";
+import {onMounted, reactive} from "vue";
+import {defaultTheme, type GlowThemeColors} from "@/components/glow-ui/GlowTheme.ts";
+import type Result from "@/entity/Result";
+import type { GetActiveThemeVo } from "@/entity/vo/GetActiveThemeVo";
+import type ThemeValuesVo from "@/entity/vo/ThemeValuesVo";
+import axios from "axios";
+
+const currentTheme = reactive<GlowThemeColors>(defaultTheme)
 
 const onThemeUpdate = ()=>{
-  console.log('onThemeUpdate')
+  pullAndApplyActiveTheme()
 }
+
+const pullAndApplyActiveTheme = async () => {
+  try {
+    const response = await axios.post<Result<GetActiveThemeVo>>("/customize/theme/getActiveTheme");
+    
+    if (response.data.code === 0 && response.data.data) {
+      const themeData = response.data.data;
+      
+      if (themeData.themeValues) {
+        // 将后端返回的主题值应用到当前主题
+        const themeValues = themeData.themeValues as unknown as Record<string, string>;
+        Object.entries(themeValues).forEach(([key, value]) => {
+          if (key in currentTheme && value) {
+            // @ts-ignore 确保关键字可以被索引
+            currentTheme[key] = value;
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("获取主题数据失败:", error);
+  }
+}
+
+onMounted(()=>{
+  pullAndApplyActiveTheme()
+})
 
 </script>
 

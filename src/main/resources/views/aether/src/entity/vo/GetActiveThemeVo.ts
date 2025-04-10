@@ -1,3 +1,5 @@
+import type ThemeValuesVo from "@/entity/vo/ThemeValuesVo.ts";
+
 /**
  * 当前激活的主题
  */
@@ -25,8 +27,5 @@ export interface GetActiveThemeVo {
     /**
      * 主题值列表
      */
-    themeValues: Array<{
-        themeKey: string;
-        themeValue: string;
-    }>;
+    themeValues: ThemeValuesVo;
 } 

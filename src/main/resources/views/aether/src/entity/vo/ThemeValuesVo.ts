@@ -1,4 +1,4 @@
-export default interface ThemeValuesDto {
+export default interface ThemeValuesVo {
     //普通色
     boxColor?: string;
     //普通色Hover效
