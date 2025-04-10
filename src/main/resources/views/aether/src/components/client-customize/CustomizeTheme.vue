@@ -374,38 +374,9 @@ const isEditingTitle = ref(false);
 const editingThemeName = ref('');
 const titleInputRef = ref<HTMLInputElement | null>(null);
 
-// 开始编辑标题
-const startEditTitle = () => {
-  editingThemeName.value = currentThemeName.value;
-  isEditingTitle.value = true;
-  
-  // 在下一个渲染周期后，聚焦到输入框
-  nextTick(() => {
-    titleInputRef.value?.focus();
-  });
-};
-
-// 保存标题
-const saveThemeTitle = () => {
-  if (editingThemeName.value.trim()) {
-    currentThemeName.value = editingThemeName.value.trim();
-  }
-  isEditingTitle.value = false;
-};
-
-// 取消编辑标题
-const cancelEditTitle = () => {
-  isEditingTitle.value = false;
-};
-
-const themeList = ref<PageableView<GetUserThemeListVo>>({
-  rows: [],
-  count: 0,
-  currentPage: 1,
-  pageSize: 10
-});
-
+// 从GlowTheme注入主题和主题更新函数
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
+const notifyThemeUpdate = inject<() => void>('notifyThemeUpdate')
 
 // 定义标签项
 const themeTabItem = [
@@ -415,6 +386,13 @@ const themeTabItem = [
 
 // 当前激活的标签
 const themeCurrentTab = ref('my-themes')
+
+const themeList = ref<PageableView<GetUserThemeListVo>>({
+  rows: [],
+  count: 0,
+  currentPage: 1,
+  pageSize: 10
+});
 
 // 加载主题列表
 const reloadThemeList = async () => {
@@ -433,6 +411,11 @@ const onActiveTheme = async (theme: GetUserThemeListVo) => {
       themeId: theme.id
     });
     await reloadThemeList();
+    
+    // 通知主题更新
+    if (notifyThemeUpdate) {
+      notifyThemeUpdate();
+    }
   } catch (error) {
     console.error('激活主题失败:', error);
   }
@@ -560,6 +543,30 @@ const onRemoveTheme = async (theme: GetUserThemeListVo) => {
     }
   }
 }
+
+// 开始编辑标题
+const startEditTitle = () => {
+  editingThemeName.value = currentThemeName.value;
+  isEditingTitle.value = true;
+  
+  // 在下一个渲染周期后，聚焦到输入框
+  nextTick(() => {
+    titleInputRef.value?.focus();
+  });
+};
+
+// 保存标题
+const saveThemeTitle = () => {
+  if (editingThemeName.value.trim()) {
+    currentThemeName.value = editingThemeName.value.trim();
+  }
+  isEditingTitle.value = false;
+};
+
+// 取消编辑标题
+const cancelEditTitle = () => {
+  isEditingTitle.value = false;
+};
 
 // 组件挂载时加载数据
 onMounted(() => {

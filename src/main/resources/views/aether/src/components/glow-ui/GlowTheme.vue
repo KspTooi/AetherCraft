@@ -9,13 +9,24 @@ const props = withDefaults(defineProps<{
   theme: () => ({})
 })
 
+const emit = defineEmits<{
+  (e:"onThemeUpdate"):void
+}>()
+
 const mergedTheme = reactive<GlowThemeColors>({
   ...defaultTheme,
   ...props.theme
 })
 
+// 提供主题函数供子组件调用
+const notifyThemeUpdate = () => {
+  emit('onThemeUpdate')
+}
+
 // 提供主题对象给子组件
 provide(GLOW_THEME_INJECTION_KEY, readonly(mergedTheme))
+// 提供通知主题更新函数给子组件
+provide('notifyThemeUpdate', notifyThemeUpdate)
 </script>
 
 <template>

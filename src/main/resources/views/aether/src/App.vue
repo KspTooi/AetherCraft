@@ -1,13 +1,6 @@
-<script setup lang="ts">
-import { RouterView } from 'vue-router'
-import ClientFrameTheme from '@/components/ClientFrameTheme.vue'
-import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
-import ClientFrame from "@/components/glow-client/ClientFrame.vue";
-</script>
-
 <template>
 
-  <GlowTheme>
+  <GlowTheme @onThemeUpdate="onThemeUpdate">
     <ClientFrame>
       <RouterView />
     </ClientFrame>
@@ -17,6 +10,18 @@ import ClientFrame from "@/components/glow-client/ClientFrame.vue";
     <RouterView />
   </ClientFrameTheme>-->
 </template>
+
+<script setup lang="ts">
+import { RouterView } from 'vue-router'
+import ClientFrameTheme from '@/components/ClientFrameTheme.vue'
+import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
+import ClientFrame from "@/components/glow-client/ClientFrame.vue";
+
+const onThemeUpdate = ()=>{
+  console.log('onThemeUpdate')
+}
+
+</script>
 
 <style>
 
