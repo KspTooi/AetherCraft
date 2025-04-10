@@ -75,7 +75,7 @@
                 </div>
               </div>
               <div class="btn-group">
-                <GlowButton @click="" class="theme-opt-btn">恢复默认</GlowButton>
+                <GlowButton @click="onResetTheme" class="theme-opt-btn">恢复默认</GlowButton>
                 <GlowButton @click="onSaveTheme(false)" class="theme-opt-btn">应用</GlowButton>
                 <GlowButton @click="onSaveTheme" class="theme-opt-btn" :corners="[`bottom-right`]">保存</GlowButton>
               </div>
@@ -83,18 +83,18 @@
             
             <div class="designer-content">
               <div class="color-section">
-                <h4>基础颜色</h4>
+                <h4>基础</h4>
                 <div class="color-row-grid">
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">盒子颜色</div>
+                      <div class="color-row-label">容器</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">盒子悬停颜色</div>
+                      <div class="color-row-label">容器焦点</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxColorHover || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxColorHover = color"
@@ -103,14 +103,14 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">盒子激活颜色</div>
+                      <div class="color-row-label">容器激活</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxColorActive || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxColorActive = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">强调颜色</div>
+                      <div class="color-row-label">强调</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxAccentColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxAccentColor = color"
@@ -119,14 +119,30 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">边框颜色</div>
+                      <div class="color-row-label">强调焦点</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.boxAccentColorHover || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.boxAccentColorHover = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">辉光</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.boxGlowColor || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.boxGlowColor = color"
+                      />
+                    </div>
+                  </div>
+                  <div class="color-row-group">
+                    <div class="color-row-item">
+                      <div class="color-row-label">边框</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxBorderColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxBorderColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">边框悬停颜色</div>
+                      <div class="color-row-label">边框焦点</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxBorderColorHover || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxBorderColorHover = color"
@@ -135,17 +151,17 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">辉光颜色</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxGlowColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxGlowColor = color"
-                      />
-                    </div>
-                    <div class="color-row-item">
-                      <div class="color-row-label">次级颜色</div>
+                      <div class="color-row-label">次级</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxSecondColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxSecondColor = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">次级焦点</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.boxSecondColorHover || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.boxSecondColorHover = color"
                       />
                     </div>
                   </div>
@@ -153,18 +169,18 @@
               </div>
               
               <div class="color-section">
-                <h4>文字颜色</h4>
+                <h4>文字</h4>
                 <div class="color-row-grid">
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">主文字颜色</div>
+                      <div class="color-row-label">主文字</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxTextColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxTextColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">次文字颜色</div>
+                      <div class="color-row-label">次文字</div>
                       <GlowColorPicker 
                         :color="curThemeValues.boxTextColorNoActive || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.boxTextColorNoActive = color"
@@ -175,18 +191,18 @@
               </div>
               
               <div class="color-section">
-                <h4>主元素颜色</h4>
+                <h4>主元素</h4>
                 <div class="color-row-grid">
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">主元素颜色</div>
+                      <div class="color-row-label">主元素</div>
                       <GlowColorPicker 
                         :color="curThemeValues.mainColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.mainColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">主元素文字颜色</div>
+                      <div class="color-row-label">主元素文字</div>
                       <GlowColorPicker 
                         :color="curThemeValues.mainTextColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.mainTextColor = color"
@@ -195,14 +211,14 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">主元素边框颜色</div>
+                      <div class="color-row-label">主元素边框</div>
                       <GlowColorPicker 
                         :color="curThemeValues.mainBorderColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.mainBorderColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">主元素悬停颜色</div>
+                      <div class="color-row-label">主元素焦点</div>
                       <GlowColorPicker 
                         :color="curThemeValues.mainColorHover || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.mainColorHover = color"
@@ -211,10 +227,33 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">主元素激活颜色</div>
+                      <div class="color-row-label">主元素激活</div>
                       <GlowColorPicker 
                         :color="curThemeValues.mainColorActive || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.mainColorActive = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">主元素激活文字</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.mainTextColorActive || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.mainTextColorActive = color"
+                      />
+                    </div>
+                  </div>
+                  <div class="color-row-group">
+                    <div class="color-row-item">
+                      <div class="color-row-label">主元素边框焦点</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.mainBorderColorHover || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.mainBorderColorHover = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">主元素边框激活</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.mainBorderColorActive || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.mainBorderColorActive = color"
                       />
                     </div>
                   </div>
@@ -222,18 +261,18 @@
               </div>
               
               <div class="color-section">
-                <h4>危险元素颜色</h4>
+                <h4>危险元素</h4>
                 <div class="color-row-grid">
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">危险颜色</div>
+                      <div class="color-row-label">危险</div>
                       <GlowColorPicker 
                         :color="curThemeValues.dangerColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.dangerColor = color"
                       />
                     </div>
                     <div class="color-row-item">
-                      <div class="color-row-label">危险文字颜色</div>
+                      <div class="color-row-label">危险文字</div>
                       <GlowColorPicker 
                         :color="curThemeValues.dangerTextColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.dangerTextColor = color"
@@ -242,10 +281,71 @@
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
-                      <div class="color-row-label">危险边框颜色</div>
+                      <div class="color-row-label">危险边框</div>
                       <GlowColorPicker 
                         :color="curThemeValues.dangerBorderColor || '#ffffff'" 
                         @on-color-selected="color => curThemeValues.dangerBorderColor = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">危险焦点</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.dangerColorHover || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.dangerColorHover = color"
+                      />
+                    </div>
+                  </div>
+                  <div class="color-row-group">
+                    <div class="color-row-item">
+                      <div class="color-row-label">危险激活</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.dangerColorActive || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.dangerColorActive = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">危险激活文字</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.dangerTextColorActive || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.dangerTextColorActive = color"
+                      />
+                    </div>
+                  </div>
+                  <div class="color-row-group">
+                    <div class="color-row-item">
+                      <div class="color-row-label">危险边框焦点</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.dangerBorderColorHover || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.dangerBorderColorHover = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">危险边框激活</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.dangerBorderColorActive || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.dangerBorderColorActive = color"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="color-section">
+                <h4>禁用元素</h4>
+                <div class="color-row-grid">
+                  <div class="color-row-group">
+                    <div class="color-row-item">
+                      <div class="color-row-label">禁用</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.disabledColor || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.disabledColor = color"
+                      />
+                    </div>
+                    <div class="color-row-item">
+                      <div class="color-row-label">禁用边框</div>
+                      <GlowColorPicker 
+                        :color="curThemeValues.disabledBorderColor || '#ffffff'" 
+                        @on-color-selected="color => curThemeValues.disabledBorderColor = color"
                       />
                     </div>
                   </div>
@@ -405,6 +505,29 @@ const onEditTheme = async (theme: GetUserThemeListVo) => {
     }
   } catch (error) {
     console.error('获取主题值失败:', error);
+  }
+}
+
+//恢复默认主题
+const onResetTheme = async () => {
+  if (!curThemeId.value) {
+    return;
+  }
+  
+  if (!confirmRef.value) {
+    return;
+  }
+  
+  const confirmed = await confirmRef.value.showConfirm({
+    title: '恢复默认主题',
+    content: '确定要将当前主题恢复为默认颜色和透明度设置吗？此操作不可撤销。',
+    confirmText: '确定恢复',
+    cancelText: '取消'
+  });
+  
+  if (confirmed) {
+    // 使用默认主题替换当前主题值
+    Object.assign(curThemeValues, defaultTheme);
   }
 }
 
