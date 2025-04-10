@@ -5,80 +5,82 @@
       v-model:activeTab="currentTab"
       @tab-change="handleTabChange"
     >
-      <!-- 当前壁纸面板 -->
-      <div v-show="currentTab === 'current'" class="tab-panel">
-        <div class="current-wallpaper-container">
-          <div class="current-wallpaper-preview" :style="currentWallpaperStyle">
-            <div v-if="isCurrentWallpaperLoading" class="wallpaper-loading">
-              <div class="dot-loading">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
+      <div class="tab-content">
+        <!-- 当前壁纸面板 -->
+        <div v-show="currentTab === 'current'" class="tab-panel">
+          <div class="current-wallpaper-container">
+            <div class="current-wallpaper-preview" :style="currentWallpaperStyle">
+              <div v-if="isCurrentWallpaperLoading" class="wallpaper-loading">
+                <div class="dot-loading">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+              </div>
+              <div class="wallpaper-actions" v-if="!isCurrentWallpaperLoading">
+                <button class="action-btn download-btn" @click="downloadWallpaper" title="下载当前背景">
+                  <i class="bi bi-download"></i>
+                </button>
+                <button class="action-btn reset-btn" @click="resetWallpaper" title="恢复默认背景">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
               </div>
             </div>
-            <div class="wallpaper-actions" v-if="!isCurrentWallpaperLoading">
-              <button class="action-btn download-btn" @click="downloadWallpaper" title="下载当前背景">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="action-btn reset-btn" @click="resetWallpaper" title="恢复默认背景">
-                <i class="bi bi-arrow-counterclockwise"></i>
-              </button>
+            <div class="upload-container">
+              <div class="upload-button" @click="triggerFileUpload">
+                <i class="bi bi-upload"></i>
+                <span>上传新背景</span>
+              </div>
+              <input 
+                type="file" 
+                ref="fileInput" 
+                class="file-input" 
+                accept="image/jpeg, image/png, image/gif" 
+                @change="handleFileChange" 
+              />
+              <p class="upload-tip">支持JPG、PNG格式，建议分辨率不低于1920×1080</p>
             </div>
-          </div>
-          <div class="upload-container">
-            <div class="upload-button" @click="triggerFileUpload">
-              <i class="bi bi-upload"></i>
-              <span>上传新背景</span>
-            </div>
-            <input 
-              type="file" 
-              ref="fileInput" 
-              class="file-input" 
-              accept="image/jpeg, image/png, image/gif" 
-              @change="handleFileChange" 
-            />
-            <p class="upload-tip">支持JPG、PNG格式，建议分辨率不低于1920×1080</p>
-          </div>
-          
-          <!-- 添加缓存提示 -->
-          <div class="cache-notice">
-            <i class="bi bi-info-circle"></i>
-            <div class="notice-content">
-              <p class="notice-title">背景更新可能会有数分钟的缓存延迟</p>
-              <p class="notice-solution">
-                您可以：
-                <span class="solution-item">• 按<kbd>Ctrl</kbd>+<kbd>F5</kbd>强制刷新页面</span>
-                <span class="solution-item">• 清除浏览器缓存后刷新页面</span>
-              </p>
+            
+            <!-- 添加缓存提示 -->
+            <div class="cache-notice">
+              <i class="bi bi-info-circle"></i>
+              <div class="notice-content">
+                <p class="notice-title">背景更新可能会有数分钟的缓存延迟</p>
+                <p class="notice-solution">
+                  您可以：
+                  <span class="solution-item">• 按<kbd>Ctrl</kbd>+<kbd>F5</kbd>强制刷新页面</span>
+                  <span class="solution-item">• 清除浏览器缓存后刷新页面</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 预设壁纸面板 -->
-      <div v-show="currentTab === 'preset'" class="tab-panel">
-        <div v-if="isLoadingWallpapers" class="loading-wrapper">
-          <i class="bi bi-arrow-repeat spinning"></i>
-          <span>加载背景中...</span>
-        </div>
-        <div v-else-if="defaultWallpapers.length === 0" class="empty-wallpaper">
-          <i class="bi bi-image"></i>
-          <span>暂无可用背景</span>
-        </div>
-        <div v-else class="wallpaper-grid">
-          <div 
-            v-for="(wallpaper, index) in defaultWallpapers" 
-            :key="index"
-            class="wallpaper-item"
-            :class="{ active: currentWallpaper === wallpaper.path }"
-            @click="selectWallpaper(wallpaper.path)"
-          >
-            <div class="wallpaper-preview" :style="{ backgroundImage: `url(${wallpaper.path})` }">
-              <div class="wallpaper-overlay">
-                <i class="bi bi-check-circle-fill" v-if="currentWallpaper === wallpaper.path"></i>
+        <!-- 预设壁纸面板 -->
+        <div v-show="currentTab === 'preset'" class="tab-panel">
+          <div v-if="isLoadingWallpapers" class="loading-wrapper">
+            <i class="bi bi-arrow-repeat spinning"></i>
+            <span>加载背景中...</span>
+          </div>
+          <div v-else-if="defaultWallpapers.length === 0" class="empty-wallpaper">
+            <i class="bi bi-image"></i>
+            <span>暂无可用背景</span>
+          </div>
+          <div v-else class="wallpaper-grid">
+            <div 
+              v-for="(wallpaper, index) in defaultWallpapers" 
+              :key="index"
+              class="wallpaper-item"
+              :class="{ active: currentWallpaper === wallpaper.path }"
+              @click="selectWallpaper(wallpaper.path)"
+            >
+              <div class="wallpaper-preview" :style="{ backgroundImage: `url(${wallpaper.path})` }">
+                <div class="wallpaper-overlay">
+                  <i class="bi bi-check-circle-fill" v-if="currentWallpaper === wallpaper.path"></i>
+                </div>
               </div>
+              <div class="wallpaper-name">{{ wallpaper.name }}</div>
             </div>
-            <div class="wallpaper-name">{{ wallpaper.name }}</div>
           </div>
         </div>
       </div>
@@ -390,35 +392,210 @@ onMounted(() => {
 .customize-wallpaper {
   height: 100%;
   width: 100%;
+  overflow: hidden;
+}
+
+.tab-content {
+  height: calc(100vh - 95px);
+  overflow: hidden;
 }
 
 /* Tab面板样式 */
 .tab-panel {
-  padding: 24px;
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 135px);
+}
+
+.tab-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tab-panel::-webkit-scrollbar-thumb {
+  background: v-bind('theme.boxBorderColor');
+}
+
+.tab-panel::-webkit-scrollbar-track {
+  background: v-bind('theme.boxSecondColor');
 }
 
 /* 当前壁纸容器 */
 .current-wallpaper-container {
   display: flex;
-  gap: 24px;
-  align-items: stretch;
+  flex-direction: row;
   flex-wrap: wrap;
-  margin-bottom: 0;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.current-wallpaper-preview {
+  width: 280px;
+  height: 180px;
+  border-radius: 0;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  border: 1px solid v-bind('theme.boxBorderColor');
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.upload-container {
+  width: 280px;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: v-bind('theme.boxSecondColor');
+  border-radius: 0;
+  border: 1px dashed v-bind('theme.boxBorderColor');
+  padding: 20px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.upload-container:hover {
+  background: v-bind('theme.boxSecondColorHover');
+  border-color: v-bind('theme.boxBorderColorHover');
+}
+
+/* 缓存提示样式 */
+.cache-notice {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin-top: 8px;
+  background: v-bind('theme.boxSecondColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  color: v-bind('theme.boxTextColorNoActive');
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cache-notice i {
+  color: v-bind('theme.boxGlowColor');
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.notice-content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.notice-title {
+  color: v-bind('theme.boxTextColor');
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.notice-solution {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.solution-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cache-notice kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  height: 18px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: v-bind('theme.boxTextColor');
+  background-color: v-bind('theme.boxColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  margin: 0 2px;
+}
+
+/* 壁纸加载样式 */
+.wallpaper-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.dot-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: v-bind('theme.boxGlowColor');
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.6;
+}
+
+.dot:nth-child(1) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0.6s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 /* 预设壁纸网格 */
 .wallpaper-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   width: 100%;
-  padding: 0;
-}
-
-/* 加载和空状态容器 */
-.loading-wrapper,
-.empty-wallpaper {
-  padding: 40px 0;
 }
 
 /* 响应式调整 */
@@ -428,11 +605,28 @@ onMounted(() => {
   }
   
   .current-wallpaper-container {
+    flex-direction: column;
     gap: 16px;
   }
   
+  .current-wallpaper-preview,
+  .upload-container {
+    width: 100%;
+    height: auto;
+    min-height: 180px;
+  }
+  
   .wallpaper-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 16px;
+  }
+  
+  .cache-notice {
+    padding: 12px;
+    font-size: 12px;
+    margin-top: 0;
+    width: 100%;
+    min-width: 0;
   }
 }
 
@@ -501,19 +695,6 @@ onMounted(() => {
   background-color: v-bind('theme.boxGlowColor');
 }
 
-.current-wallpaper-preview {
-  width: 280px;
-  height: 180px;
-  border-radius: 0;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  border: 1px solid v-bind('theme.boxBorderColor');
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
 .wallpaper-actions {
   position: absolute;
   bottom: 10px;
@@ -554,26 +735,6 @@ onMounted(() => {
 
 .download-btn:hover {
   color: v-bind('theme.boxGlowColor');
-}
-
-.upload-container {
-  width: 280px;
-  height: 180px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: v-bind('theme.boxSecondColor');
-  border-radius: 0;
-  border: 1px dashed v-bind('theme.boxBorderColor');
-  padding: 0;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.upload-container:hover {
-  background: v-bind('theme.boxSecondColorHover');
-  border-color: v-bind('theme.boxBorderColorHover');
 }
 
 .upload-button {
@@ -756,132 +917,5 @@ onMounted(() => {
 .wallpaper-item.active {
   background: v-bind('theme.boxColorActive');
   border-color: v-bind('theme.boxGlowColor');
-}
-
-/* 缓存提示样式 */
-.cache-notice {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  margin-top: 16px;
-  background: v-bind('theme.boxSecondColor');
-  border: 1px solid v-bind('theme.boxBorderColor');
-  border-radius: 0;
-  color: v-bind('theme.boxTextColorNoActive');
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.cache-notice i {
-  color: v-bind('theme.boxGlowColor');
-  font-size: 16px;
-  margin-top: 2px;
-}
-
-.notice-content {
-  flex: 1;
-}
-
-.notice-title {
-  color: v-bind('theme.boxTextColor');
-  margin: 0 0 4px 0;
-  font-weight: 500;
-}
-
-.notice-solution {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.solution-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.cache-notice kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1px 5px;
-  height: 18px;
-  font-size: 12px;
-  font-family: var(--font-mono, monospace);
-  color: v-bind('theme.boxTextColor');
-  background-color: v-bind('theme.boxColor');
-  border: 1px solid v-bind('theme.boxBorderColor');
-  border-radius: 0;
-  margin: 0 2px;
-}
-
-@media (max-width: 768px) {
-  .cache-notice {
-    padding: 12px;
-    font-size: 12px;
-  }
-  
-  .cache-notice i {
-    font-size: 15px;
-  }
-}
-
-/* 壁纸加载样式 */
-.wallpaper-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-}
-
-.dot-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background-color: v-bind('theme.boxGlowColor');
-  border-radius: 50%;
-  display: inline-block;
-  opacity: 0.6;
-}
-
-.dot:nth-child(1) {
-  animation: dot-flashing 1s infinite alternate;
-  animation-delay: 0s;
-}
-
-.dot:nth-child(2) {
-  animation: dot-flashing 1s infinite alternate;
-  animation-delay: 0.3s;
-}
-
-.dot:nth-child(3) {
-  animation: dot-flashing 1s infinite alternate;
-  animation-delay: 0.6s;
-}
-
-@keyframes dot-flashing {
-  0% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
 }
 </style> 
