@@ -1,70 +1,89 @@
 <template>
-  <div>
-    <div class="section-header">
-      <h2>背景设定</h2>
-      <p class="section-description">自定义应用的背景图像和效果</p>
-    </div>
-    
-    <!-- 当前背景面板 -->
-    <div class="settings-panel">
-      <h3 class="panel-title">当前背景</h3>
-      <div class="current-wallpaper-container">
-        <div class="current-wallpaper-preview" :style="{ backgroundImage: currentWallpaperPreview }">
-          <div class="wallpaper-actions">
-            <button class="action-btn download-btn" @click="downloadWallpaper" title="下载当前背景">
-              <i class="bi bi-download"></i>
-            </button>
-            <button class="action-btn reset-btn" @click="resetWallpaper" title="恢复默认背景">
-              <i class="bi bi-arrow-counterclockwise"></i>
-            </button>
-          </div>
-        </div>
-        <div class="upload-container">
-          <div class="upload-button" @click="triggerFileUpload">
-            <i class="bi bi-upload"></i>
-            <span>上传新背景</span>
-          </div>
-          <input 
-            type="file" 
-            ref="fileInput" 
-            class="file-input" 
-            accept="image/jpeg, image/png, image/gif" 
-            @change="handleFileChange" 
-          />
-          <p class="upload-tip">支持JPG、PNG格式，建议分辨率不低于1920×1080</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 默认背景面板 -->
-    <div class="settings-panel">
-      <h3 class="panel-title">默认背景</h3>
-      <div v-if="isLoadingWallpapers" class="loading-wrapper">
-        <i class="bi bi-arrow-repeat spinning"></i>
-        <span>加载背景中...</span>
-      </div>
-      <div v-else-if="defaultWallpapers.length === 0" class="empty-wallpaper">
-        <i class="bi bi-image"></i>
-        <span>暂无可用背景</span>
-      </div>
-      <div v-else class="wallpaper-grid">
-        <div 
-          v-for="(wallpaper, index) in defaultWallpapers" 
-          :key="index"
-          class="wallpaper-item"
-          :class="{ active: currentWallpaper === wallpaper.path }"
-          @click="selectWallpaper(wallpaper.path)"
-        >
-          <div class="wallpaper-preview" :style="{ backgroundImage: `url(${wallpaper.path})` }">
-            <div class="wallpaper-overlay">
-              <i class="bi bi-check-circle-fill" v-if="currentWallpaper === wallpaper.path"></i>
+  <div class="customize-wallpaper">
+    <GlowTab
+      :items="tabItems"
+      v-model:activeTab="currentTab"
+      @tab-change="handleTabChange"
+    >
+      <!-- 当前壁纸面板 -->
+      <div v-show="currentTab === 'current'" class="tab-panel">
+        <div class="current-wallpaper-container">
+          <div class="current-wallpaper-preview" :style="currentWallpaperStyle">
+            <div v-if="isCurrentWallpaperLoading" class="wallpaper-loading">
+              <div class="dot-loading">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+            <div class="wallpaper-actions" v-if="!isCurrentWallpaperLoading">
+              <button class="action-btn download-btn" @click="downloadWallpaper" title="下载当前背景">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="action-btn reset-btn" @click="resetWallpaper" title="恢复默认背景">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
             </div>
           </div>
-          <div class="wallpaper-name">{{ wallpaper.name }}</div>
+          <div class="upload-container">
+            <div class="upload-button" @click="triggerFileUpload">
+              <i class="bi bi-upload"></i>
+              <span>上传新背景</span>
+            </div>
+            <input 
+              type="file" 
+              ref="fileInput" 
+              class="file-input" 
+              accept="image/jpeg, image/png, image/gif" 
+              @change="handleFileChange" 
+            />
+            <p class="upload-tip">支持JPG、PNG格式，建议分辨率不低于1920×1080</p>
+          </div>
+          
+          <!-- 添加缓存提示 -->
+          <div class="cache-notice">
+            <i class="bi bi-info-circle"></i>
+            <div class="notice-content">
+              <p class="notice-title">背景更新可能会有数分钟的缓存延迟</p>
+              <p class="notice-solution">
+                您可以：
+                <span class="solution-item">• 按<kbd>Ctrl</kbd>+<kbd>F5</kbd>强制刷新页面</span>
+                <span class="solution-item">• 清除浏览器缓存后刷新页面</span>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    
+
+      <!-- 预设壁纸面板 -->
+      <div v-show="currentTab === 'preset'" class="tab-panel">
+        <div v-if="isLoadingWallpapers" class="loading-wrapper">
+          <i class="bi bi-arrow-repeat spinning"></i>
+          <span>加载背景中...</span>
+        </div>
+        <div v-else-if="defaultWallpapers.length === 0" class="empty-wallpaper">
+          <i class="bi bi-image"></i>
+          <span>暂无可用背景</span>
+        </div>
+        <div v-else class="wallpaper-grid">
+          <div 
+            v-for="(wallpaper, index) in defaultWallpapers" 
+            :key="index"
+            class="wallpaper-item"
+            :class="{ active: currentWallpaper === wallpaper.path }"
+            @click="selectWallpaper(wallpaper.path)"
+          >
+            <div class="wallpaper-preview" :style="{ backgroundImage: `url(${wallpaper.path})` }">
+              <div class="wallpaper-overlay">
+                <i class="bi bi-check-circle-fill" v-if="currentWallpaper === wallpaper.path"></i>
+              </div>
+            </div>
+            <div class="wallpaper-name">{{ wallpaper.name }}</div>
+          </div>
+        </div>
+      </div>
+    </GlowTab>
+
     <!-- 确认对话框组件 -->
     <GlowConfirm ref="confirmRef" />
   </div>
@@ -75,10 +94,22 @@ import { ref, computed, onMounted, inject } from 'vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../../components/glow-ui/GlowTheme.ts'
 import type { GlowThemeColors } from '../../components/glow-ui/GlowTheme.ts'
 import GlowConfirm from '../../components/glow-ui/GlowConfirm.vue'
+import GlowTab from '../../components/glow-ui/GlowTab.vue'
 import axios from 'axios'
 
 // 注入主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
+
+// Tab相关状态
+const currentTab = ref('current')
+const tabItems = [
+  { title: '当前壁纸', action: 'current' },
+  { title: '预设壁纸', action: 'preset' }
+]
+
+const handleTabChange = (action: string) => {
+  currentTab.value = action
+}
 
 // 确认对话框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
@@ -90,14 +121,32 @@ const currentWallpaper = ref('');
 const fileInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const uploadError = ref('');
+const isCurrentWallpaperLoading = ref(true);
 
-// 当前壁纸的预览，带有fallback
-const currentWallpaperPreview = computed(() => {
-  if (currentWallpaper.value) {
-    return `url(${currentWallpaper.value})`;
-  }
-  return 'url(/img/bg1.jpg)';
+// 当前壁纸的样式,包含加载状态
+const currentWallpaperStyle = computed(() => {
+  if (!isCurrentWallpaperLoading.value && currentWallpaper.value) {
+    return { backgroundImage: `url(${currentWallpaper.value})` };
+  } 
+  return {};
 });
+
+// 预加载壁纸图像
+const preloadWallpaper = (url: string) => {
+  isCurrentWallpaperLoading.value = true;
+  
+  const img = new Image();
+  img.onload = () => {
+    isCurrentWallpaperLoading.value = false;
+  };
+  
+  img.onerror = () => {
+    console.error('壁纸图像加载失败:', url);
+    isCurrentWallpaperLoading.value = false;
+  };
+  
+  img.src = url;
+};
 
 // 获取默认背景列表
 const fetchDefaultWallpapers = async () => {
@@ -121,6 +170,7 @@ const fetchDefaultWallpapers = async () => {
 
 // 检查当前设置的壁纸
 const checkCurrentWallpaper = async () => {
+  isCurrentWallpaperLoading.value = true;
   try {
     // 检查当前用户是否有设置过壁纸
     const checkResponse = await axios.get('/customize/getWallpaper', {
@@ -129,15 +179,23 @@ const checkCurrentWallpaper = async () => {
     
     if (checkResponse.status === 200) {
       // 用户有自定义壁纸，把当前壁纸设置为对应的API地址
-      currentWallpaper.value = '/customize/getWallpaper?t=' + new Date().getTime();
+      const wallpaperUrl = '/customize/getWallpaper?t=' + new Date().getTime();
+      currentWallpaper.value = wallpaperUrl;
+      preloadWallpaper(wallpaperUrl);
     } else if (defaultWallpapers.value.length > 0) {
       // 用户没有自定义壁纸，使用第一个默认壁纸
       currentWallpaper.value = defaultWallpapers.value[0].path;
+      preloadWallpaper(defaultWallpapers.value[0].path);
+    } else {
+      isCurrentWallpaperLoading.value = false;
     }
   } catch (error) {
     // 发生错误，可能是没有设置壁纸，使用默认值
     if (defaultWallpapers.value.length > 0) {
       currentWallpaper.value = defaultWallpapers.value[0].path;
+      preloadWallpaper(defaultWallpapers.value[0].path);
+    } else {
+      isCurrentWallpaperLoading.value = false;
     }
   }
 };
@@ -186,7 +244,9 @@ const selectWallpaper = async (path: string) => {
     
     if (response.data.code === 0) {
       // 成功后重新获取当前壁纸
-      currentWallpaper.value = '/customize/getWallpaper?t=' + new Date().getTime();
+      const wallpaperUrl = '/customize/getWallpaper?t=' + new Date().getTime();
+      currentWallpaper.value = wallpaperUrl;
+      preloadWallpaper(wallpaperUrl);
     } else {
       console.error('设置壁纸失败:', response.data.message);
     }
@@ -265,7 +325,9 @@ const handleFileChange = async (event: Event) => {
       
       if (response.data.code === 0) {
         // 上传成功，更新当前壁纸
-        currentWallpaper.value = '/customize/getWallpaper?t=' + new Date().getTime();
+        const wallpaperUrl = '/customize/getWallpaper?t=' + new Date().getTime();
+        currentWallpaper.value = wallpaperUrl;
+        preloadWallpaper(wallpaperUrl);
       } else {
         uploadError.value = response.data.message || '上传失败';
       }
@@ -325,6 +387,55 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.customize-wallpaper {
+  height: 100%;
+  width: 100%;
+}
+
+/* Tab面板样式 */
+.tab-panel {
+  padding: 24px;
+}
+
+/* 当前壁纸容器 */
+.current-wallpaper-container {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+/* 预设壁纸网格 */
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  width: 100%;
+  padding: 0;
+}
+
+/* 加载和空状态容器 */
+.loading-wrapper,
+.empty-wallpaper {
+  padding: 40px 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .tab-panel {
+    padding: 16px;
+  }
+  
+  .current-wallpaper-container {
+    gap: 16px;
+  }
+  
+  .wallpaper-grid {
+    gap: 16px;
+  }
+}
+
 .section-header {
   margin-bottom: 20px;
   padding-bottom: 15px;
@@ -388,14 +499,6 @@ onMounted(() => {
   width: 60px;
   height: 1px;
   background-color: v-bind('theme.boxGlowColor');
-}
-
-/* 当前壁纸容器 */
-.current-wallpaper-container {
-  display: flex;
-  gap: 20px;
-  align-items: stretch;
-  flex-wrap: wrap;
 }
 
 .current-wallpaper-preview {
@@ -525,14 +628,6 @@ onMounted(() => {
   display: none;
 }
 
-/* 背景列表样式 */
-.wallpaper-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
-  width: 100%;
-}
-
 .wallpaper-item {
   border-radius: 0;
   overflow: hidden;
@@ -627,16 +722,6 @@ onMounted(() => {
   color: v-bind('theme.boxTextColor');
 }
 
-/* 加载和空状态 */
-.loading-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 30px 0;
-  color: v-bind('theme.boxTextColorNoActive');
-  gap: 10px;
-}
-
 .loading-wrapper i {
   font-size: 24px;
   animation: spin 1s linear infinite;
@@ -673,28 +758,130 @@ onMounted(() => {
   border-color: v-bind('theme.boxGlowColor');
 }
 
-/* 响应式适配 */
+/* 缓存提示样式 */
+.cache-notice {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  background: v-bind('theme.boxSecondColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  color: v-bind('theme.boxTextColorNoActive');
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cache-notice i {
+  color: v-bind('theme.boxGlowColor');
+  font-size: 16px;
+  margin-top: 2px;
+}
+
+.notice-content {
+  flex: 1;
+}
+
+.notice-title {
+  color: v-bind('theme.boxTextColor');
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.notice-solution {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.solution-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cache-notice kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  height: 18px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: v-bind('theme.boxTextColor');
+  background-color: v-bind('theme.boxColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  margin: 0 2px;
+}
+
 @media (max-width: 768px) {
-  .wallpaper-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
+  .cache-notice {
+    padding: 12px;
+    font-size: 12px;
   }
   
-  .current-wallpaper-container {
-    flex-direction: column;
-    gap: 15px;
+  .cache-notice i {
+    font-size: 15px;
   }
-  
-  .current-wallpaper-preview,
-  .upload-container {
-    width: 100%;
-    height: 180px;
-    max-width: none;
-    box-sizing: border-box;
+}
+
+/* 壁纸加载样式 */
+.wallpaper-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.dot-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: v-bind('theme.boxGlowColor');
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.6;
+}
+
+.dot:nth-child(1) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0.6s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
   }
-  
-  .settings-panel {
-    padding: 15px;
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
   }
 }
 </style> 

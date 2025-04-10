@@ -13,6 +13,11 @@
       >
         {{ item.title }}
       </div>
+      
+      <!-- 添加高亮线容器 -->
+      <div class="tab-highlight-container">
+        <div class="tab-highlight-line" :class="{ 'initialized': isInitialized }" :style="highlightStyle"></div>
+      </div>
     </div>
     
     <div class="tab-content">
@@ -22,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, watch } from 'vue'
+import { ref, inject, watch, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from './GlowTheme'
 import type { GlowThemeColors } from './GlowTheme'
 
@@ -47,6 +52,11 @@ const emit = defineEmits<{
 // 当前激活的标签索引
 const activeIndex = ref(0)
 
+// 用于控制高亮线显示的标志
+const isReady = ref(false)
+// 用于控制是否启用过渡动画
+const isInitialized = ref(false)
+
 // 初始化时根据activeTab设置激活的索引
 const updateActiveIndex = () => {
   const index = props.items.findIndex(item => item.action === props.activeTab)
@@ -55,12 +65,85 @@ const updateActiveIndex = () => {
   }
 }
 
-// 初始化激活索引
-updateActiveIndex()
+// 更新高亮线位置和宽度
+const updateHighlightPosition = () => {
+  nextTick(() => {
+    // 获取所有标签项
+    const tabItems = document.querySelectorAll('.tab-item')
+    if (tabItems.length > 0 && activeIndex.value >= 0 && activeIndex.value < tabItems.length) {
+      const activeItem = tabItems[activeIndex.value] as HTMLElement
+      const tabHeader = document.querySelector('.tab-header') as HTMLElement
+      
+      if (activeItem && tabHeader) {
+        const activeItemRect = activeItem.getBoundingClientRect()
+        const tabHeaderRect = tabHeader.getBoundingClientRect()
+        const leftOffset = activeItemRect.left - tabHeaderRect.left
+        
+        highlightPosition.value = {
+          left: `${leftOffset}px`,
+          width: `${activeItemRect.width}px`,
+          opacity: 1
+        }
+        
+        // 确保高亮线可见
+        isReady.value = true
+        
+        // 延迟启用过渡动画
+        if (!isInitialized.value) {
+          setTimeout(() => {
+            isInitialized.value = true
+          }, 100)
+        }
+      }
+    }
+  })
+}
+
+// 存储高亮线位置信息
+const highlightPosition = ref({
+  left: '0px',
+  width: '0px',
+  opacity: 0
+})
+
+// 计算高亮线样式
+const highlightStyle = computed(() => {
+  if (!isReady.value) {
+    return {
+      left: '0px',
+      width: '0px',
+      opacity: 0
+    }
+  }
+  return highlightPosition.value
+})
 
 // 监听activeTab变化
 watch(() => props.activeTab, () => {
   updateActiveIndex()
+  updateHighlightPosition()
+})
+
+// 监听窗口大小变化
+const handleResize = () => {
+  updateHighlightPosition()
+}
+
+// 组件挂载后初始化
+onMounted(() => {
+  updateActiveIndex()
+  // 使用setTimeout确保DOM完全渲染
+  setTimeout(() => {
+    updateHighlightPosition()
+  }, 100)
+  
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载时清理
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 // 处理标签点击
@@ -68,6 +151,7 @@ const handleTabClick = (index: number, action: string) => {
   activeIndex.value = index
   emit('tab-change', action, index)
   emit('update:activeTab', action)
+  updateHighlightPosition()
 }
 </script>
 
@@ -82,6 +166,7 @@ const handleTabClick = (index: number, action: string) => {
   display: flex;
   flex-direction: row;
   border-bottom: 1px solid v-bind('theme.boxBorderColor');
+  position: relative;
 }
 
 .tab-item {
@@ -122,16 +207,34 @@ const handleTabClick = (index: number, action: string) => {
 .tab-content {
 }
 
-/* 添加辉光效果 */
-.tab-item.active::after {
-  content: '';
+/* 高亮线容器和线样式 */
+.tab-highlight-container {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
+  height: 2px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tab-highlight-line {
+  position: absolute;
+  bottom: 0;
   height: 1px;
-  background-color: v-bind('theme.boxGlowColor');
+  background: v-bind('theme.boxGlowColor');
   box-shadow: 0 0 10px 2px v-bind('theme.boxGlowColor');
+}
+
+/* 仅在初始化后启用过渡动画 */
+.tab-highlight-line.initialized {
+  transition: all 0.3s ease;
+}
+
+/* 移除原来的静态高亮效果 */
+.tab-item.active::after {
+  display: none;
 }
 
 @media (max-width: 768px) {
