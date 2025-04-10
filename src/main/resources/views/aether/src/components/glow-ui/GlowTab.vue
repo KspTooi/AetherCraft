@@ -65,6 +65,20 @@ const updateActiveIndex = () => {
   }
 }
 
+// 防抖函数
+const debounce = (fn: Function, delay: number) => {
+  let timer: number | null = null
+  return (...args: any[]) => {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => {
+      fn(...args)
+      timer = null
+    }, delay) as unknown as number
+  }
+}
+
 // 更新高亮线位置和宽度
 const updateHighlightPosition = () => {
   nextTick(() => {
@@ -124,9 +138,17 @@ watch(() => props.activeTab, () => {
   updateHighlightPosition()
 })
 
-// 监听窗口大小变化
-const handleResize = () => {
+// 监听窗口大小变化 - 使用防抖处理
+const handleResize = debounce(() => {
   updateHighlightPosition()
+}, 100)
+
+// 监听orientation变化 - 移动设备旋转时重新计算
+const handleOrientationChange = () => {
+  // 延迟执行以确保布局已更新
+  setTimeout(() => {
+    updateHighlightPosition()
+  }, 200)
 }
 
 // 组件挂载后初始化
@@ -139,11 +161,37 @@ onMounted(() => {
   
   // 添加窗口大小变化监听
   window.addEventListener('resize', handleResize)
+  
+  // 添加设备方向变化监听
+  window.addEventListener('orientationchange', handleOrientationChange)
+  
+  // 添加观察器以捕获父元素大小变化
+  if (typeof ResizeObserver !== 'undefined') {
+    const tabElement = document.querySelector('.glow-tab')
+    if (tabElement) {
+      const resizeObserver = new ResizeObserver(debounce(() => {
+        updateHighlightPosition()
+      }, 100))
+      resizeObserver.observe(tabElement)
+      
+      // 保存观察器引用以便清理
+      resizeObserverRef.value = resizeObserver
+    }
+  }
 })
+
+// 存储ResizeObserver引用
+const resizeObserverRef = ref<ResizeObserver | null>(null)
 
 // 组件卸载时清理
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('orientationchange', handleOrientationChange)
+  
+  // 清理ResizeObserver
+  if (resizeObserverRef.value) {
+    resizeObserverRef.value.disconnect()
+  }
 })
 
 // 处理标签点击
