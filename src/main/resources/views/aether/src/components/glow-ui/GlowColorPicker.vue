@@ -5,7 +5,7 @@
     </GlowDiv>
     
     <transition name="panel-transition">
-      <GlowDiv v-if="showPanel" class="color-panel">
+      <GlowDiv v-if="showPanel" class="color-panel" @mousedown.stop>
         <div class="color-area">
           <div 
             class="color-gradient"
@@ -34,6 +34,7 @@
               max="360" 
               v-model="hue" 
               class="hue-slider"
+              @mousedown.stop
             />
           </div>
           
@@ -46,6 +47,7 @@
                 max="100" 
                 v-model="alpha" 
                 class="alpha-slider"
+                @mousedown.stop
               />
             </div>
           </div>
@@ -205,8 +207,18 @@ watch(() => props.color, (newColor) => {
 
 // 组件挂载时添加事件监听
 onMounted(() => {
-  parseRgba(props.color)
-  document.addEventListener('mousedown', handleGlobalMouseDown, true)
+  // 解析初始颜色
+  parseRgba(props.color);
+  initialColor.value = props.color;
+  
+  // 添加全局点击事件监听
+  document.addEventListener('mousedown', handleGlobalMouseDown, true);
+  
+  // 为所有输入元素添加点击事件阻止冒泡
+  const inputs = document.querySelectorAll('.color-picker-container input');
+  inputs.forEach(input => {
+    input.addEventListener('click', (e) => e.stopPropagation());
+  });
 })
 
 // 组件卸载时移除事件监听
@@ -216,43 +228,61 @@ onUnmounted(() => {
 
 // 全局鼠标按下事件处理
 const handleGlobalMouseDown = (event: MouseEvent) => {
-  const container = document.querySelector('.color-picker-container')
-  const isOutside = container && !container.contains(event.target as Node)
+  // 如果面板未显示，无需处理
+  if (!showPanel.value) return;
+
+  // 检查点击是否在颜色选择器容器外部
+  const container = document.querySelector('.color-picker-container') as HTMLElement;
+  if (!container) return;
   
-  if (showPanel.value && isOutside && !isPickingColor.value) {
-    showPanel.value = false
+  // 使用事件路径检查更准确
+  const path = event.composedPath();
+  const isOutside = !path.includes(container);
+  
+  // 只有在点击外部且不在拾取颜色状态时才关闭面板
+  if (isOutside && !isPickingColor.value) {
+    showPanel.value = false;
   }
 }
 
 // 开始拾取颜色
 const startPickingColor = (event: MouseEvent) => {
-  event.preventDefault()
-  event.stopPropagation()
+  // 阻止事件冒泡，避免触发全局点击事件
+  event.preventDefault();
+  event.stopPropagation();
   
-  isDragging.value = true
-  isPickingColor.value = true
+  // 设置拖动和拾取状态
+  isDragging.value = true;
+  isPickingColor.value = true;
   
-  updateColorFromPosition(event)
+  // 立即更新颜色
+  updateColorFromPosition(event);
   
+  // 处理鼠标移动
   const moveHandler = (e: MouseEvent) => {
     if (isDragging.value) {
-      updateColorFromPosition(e)
+      e.preventDefault();
+      updateColorFromPosition(e);
     }
-  }
+  };
   
+  // 处理鼠标释放
   const upHandler = () => {
-    isDragging.value = false
-    // 延迟重置isPickingColor状态，确保不会立即触发面板关闭
-    setTimeout(() => {
-      isPickingColor.value = false
-    }, 10)
+    isDragging.value = false;
     
-    document.removeEventListener('mousemove', moveHandler)
-    document.removeEventListener('mouseup', upHandler)
-  }
+    // 延迟重置拾取状态，防止面板立即关闭
+    setTimeout(() => {
+      isPickingColor.value = false;
+    }, 100);
+    
+    // 移除临时事件监听
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('mouseup', upHandler);
+  };
   
-  document.addEventListener('mousemove', moveHandler)
-  document.addEventListener('mouseup', upHandler)
+  // 添加临时事件监听
+  document.addEventListener('mousemove', moveHandler);
+  document.addEventListener('mouseup', upHandler);
 }
 
 // 切换颜色面板显示
@@ -266,18 +296,26 @@ const toggleColorPanel = (event: MouseEvent) => {
 }
 
 // 确认颜色选择
-const confirmColor = () => {
-  showPanel.value = false
-  isPickingColor.value = false
-  emit('on-color-selected', modelValue.value)
+const confirmColor = (event: MouseEvent) => {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  showPanel.value = false;
+  isPickingColor.value = false;
+  emit('on-color-selected', modelValue.value);
 }
 
 // 取消选择
-const cancelSelection = () => {
-  showPanel.value = false
-  isPickingColor.value = false
-  modelValue.value = initialColor.value
-  parseRgba(initialColor.value)
+const cancelSelection = (event: MouseEvent) => {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  showPanel.value = false;
+  isPickingColor.value = false;
+  modelValue.value = initialColor.value;
+  parseRgba(initialColor.value);
 }
 
 // 从鼠标位置更新颜色
