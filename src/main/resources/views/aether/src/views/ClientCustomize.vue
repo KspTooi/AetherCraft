@@ -22,7 +22,7 @@
         </div>
 
         <div v-if="sidePanelCurrentItem === 'effects'" class="section-content">
-          
+
         </div>
 
         <div v-if="sidePanelCurrentItem === 'fonts'" class="section-content">

@@ -157,12 +157,12 @@ const fetchDefaultWallpapers = async () => {
     const response = await axios.get('/customize/getDefaultWallpaper');
     if (response.data.code === 0) {
       defaultWallpapers.value = response.data.data || [];
-      
+
       // 如果有默认背景并且当前未选择背景，设置第一个为当前背景
       if (defaultWallpapers.value.length > 0 && !currentWallpaper.value) {
         checkCurrentWallpaper();
       }
-    } 
+    }
   } catch (error) {
     console.error('获取默认背景失败:', error);
   } finally {
@@ -174,25 +174,13 @@ const fetchDefaultWallpapers = async () => {
 const checkCurrentWallpaper = async () => {
   isCurrentWallpaperLoading.value = true;
   try {
-    // 检查当前用户是否有设置过壁纸
-    const checkResponse = await axios.get('/customize/getWallpaper', {
-      params: { check: true }
-    });
-    
-    if (checkResponse.status === 200) {
-      // 用户有自定义壁纸，把当前壁纸设置为对应的API地址
-      const wallpaperUrl = '/customize/getWallpaper?t=' + new Date().getTime();
-      currentWallpaper.value = wallpaperUrl;
-      preloadWallpaper(wallpaperUrl);
-    } else if (defaultWallpapers.value.length > 0) {
-      // 用户没有自定义壁纸，使用第一个默认壁纸
-      currentWallpaper.value = defaultWallpapers.value[0].path;
-      preloadWallpaper(defaultWallpapers.value[0].path);
-    } else {
-      isCurrentWallpaperLoading.value = false;
-    }
+    // 直接获取壁纸，不进行额外检查
+    const wallpaperUrl = '/customize/getWallpaper?t=' + new Date().getTime();
+    currentWallpaper.value = wallpaperUrl;
+    preloadWallpaper(wallpaperUrl);
   } catch (error) {
-    // 发生错误，可能是没有设置壁纸，使用默认值
+    console.error('获取壁纸失败:', error);
+    // 发生错误，使用默认壁纸（如果有）
     if (defaultWallpapers.value.length > 0) {
       currentWallpaper.value = defaultWallpapers.value[0].path;
       preloadWallpaper(defaultWallpapers.value[0].path);
@@ -260,17 +248,6 @@ const selectWallpaper = async (path: string) => {
 // 下载当前壁纸
 const downloadWallpaper = async () => {
   try {
-    // 检查当前是否是自定义壁纸
-    const response = await axios.get('/customize/getWallpaper', {
-      params: { check: true },
-      validateStatus: () => true  // 允许所有状态码
-    });
-    
-    if (response.status !== 200) {
-      console.warn('当前使用的是默认壁纸，无需下载');
-      return;
-    }
-    
     // 创建下载链接并触发点击
     const link = document.createElement('a');
     link.href = '/customize/getWallpaper?t=' + new Date().getTime();
