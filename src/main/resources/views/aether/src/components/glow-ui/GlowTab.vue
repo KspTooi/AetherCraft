@@ -5,7 +5,7 @@
         v-for="(item, index) in items" 
         :key="index" 
         class="tab-item"
-        :class="{ 'active': activeIndex === index }"
+        :class="{ 'active': item.action === activeTab }"
         @click="handleTabClick(index, item.action)"
       >
         {{ item.title }}
@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue'
+import { ref, inject, watch } from 'vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from './GlowTheme'
 import type { GlowThemeColors } from './GlowTheme'
 
@@ -28,6 +28,7 @@ const props = defineProps<{
     title: string,
     action: string
   }>,
+  activeTab:string
 }>()
 
 // 注入主题
@@ -36,15 +37,33 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 定义事件
 const emit = defineEmits<{
   (e: 'tab-change', action: string, index: number): void
+  (e: 'update:activeTab', value: string): void
 }>()
 
 // 当前激活的标签索引
 const activeIndex = ref(0)
 
+// 初始化时根据activeTab设置激活的索引
+const updateActiveIndex = () => {
+  const index = props.items.findIndex(item => item.action === props.activeTab)
+  if (index !== -1) {
+    activeIndex.value = index
+  }
+}
+
+// 初始化激活索引
+updateActiveIndex()
+
+// 监听activeTab变化
+watch(() => props.activeTab, () => {
+  updateActiveIndex()
+})
+
 // 处理标签点击
 const handleTabClick = (index: number, action: string) => {
   activeIndex.value = index
   emit('tab-change', action, index)
+  emit('update:activeTab', action)
 }
 </script>
 
