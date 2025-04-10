@@ -30,8 +30,5 @@ export interface GetThemeValuesVo {
     /**
      * 主题值列表
      */
-    themeValues: Array<{
-        themeKey: string;
-        themeValue: string;
-    }>;
+    themeValues: GetThemeValuesVo;
 } 
