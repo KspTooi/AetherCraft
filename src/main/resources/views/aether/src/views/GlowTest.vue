@@ -5,6 +5,7 @@ import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowModal from "@/components/glow-ui/GlowModal.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import { ref } from 'vue';
+import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 
 // 控制模态框显示状态
 const showModal = ref(false);
@@ -64,6 +65,13 @@ const confirmDangerAction = () => {
   alert('危险操作已确认');
   showDangerModal.value = false;
 };
+
+// 颜色选择器测试
+const selectedColor = ref('rgba(0, 196, 255, 0.8)');
+const handleColorChange = (color: string) => {
+  selectedColor.value = color;
+  console.log('选择的颜色:', color);
+};
 </script>
 
 <template>
@@ -109,6 +117,14 @@ const confirmDangerAction = () => {
         <GlowDiv border="left" style="padding: 20px;">
           <p>这是一个左侧有边框的LaserDiv</p>
         </GlowDiv>
+      </div>
+
+      <div class="component-section">
+        <h3>GlowColorPicker 颜色选择器组件</h3>
+        <div style="display: flex; gap: 20px; align-items: center;">
+          <GlowColorPicker color=""/>
+
+        </div>
       </div>
 
       <!-- 普通模态框 -->
@@ -171,5 +187,17 @@ p {
 
 .test-container {
   padding: 20px;
+}
+
+.color-preview-box {
+  width: 50px;
+  height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.color-value {
+  color: #fff;
+  font-size: 14px;
 }
 </style>

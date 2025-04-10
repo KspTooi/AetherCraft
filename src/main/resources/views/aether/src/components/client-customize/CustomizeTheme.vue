@@ -88,80 +88,70 @@
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">容器</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">容器焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxColorHover" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">容器激活</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxColorActive" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">强调</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxAccentColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxAccentColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxAccentColor" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">强调焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxAccentColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxAccentColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxAccentColorHover" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">辉光</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxGlowColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxGlowColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxGlowColor" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">边框</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxBorderColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxBorderColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxBorderColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">边框焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxBorderColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxBorderColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxBorderColorHover" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">次级</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxSecondColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxSecondColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxSecondColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">次级焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxSecondColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxSecondColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxSecondColorHover" 
                       />
                     </div>
                   </div>
@@ -174,16 +164,14 @@
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">主文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxTextColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxTextColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxTextColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">次文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.boxTextColorNoActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.boxTextColorNoActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.boxTextColorNoActive" 
                       />
                     </div>
                   </div>
@@ -196,64 +184,56 @@
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">主元素</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">主元素文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainTextColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainTextColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainTextColor" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">主元素边框</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainBorderColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainBorderColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainBorderColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">主元素焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainColorHover" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">主元素激活</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainColorActive" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">主元素激活文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainTextColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainTextColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainTextColorActive" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">主元素边框焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainBorderColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainBorderColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainBorderColorHover" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">主元素边框激活</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.mainBorderColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.mainBorderColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.mainBorderColorActive" 
                       />
                     </div>
                   </div>
@@ -266,64 +246,56 @@
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">危险</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">危险文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerTextColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerTextColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerTextColor" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">危险边框</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerBorderColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerBorderColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerBorderColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">危险焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerColorHover" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">危险激活</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerColorActive" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">危险激活文字</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerTextColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerTextColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerTextColorActive" 
                       />
                     </div>
                   </div>
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">危险边框焦点</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerBorderColorHover || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerBorderColorHover = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerBorderColorHover" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">危险边框激活</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.dangerBorderColorActive || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.dangerBorderColorActive = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.dangerBorderColorActive" 
                       />
                     </div>
                   </div>
@@ -336,16 +308,14 @@
                   <div class="color-row-group">
                     <div class="color-row-item">
                       <div class="color-row-label">禁用</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.disabledColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.disabledColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.disabledColor" 
                       />
                     </div>
                     <div class="color-row-item">
                       <div class="color-row-label">禁用边框</div>
-                      <GlowColorPicker 
-                        :color="curThemeValues.disabledBorderColor || '#ffffff'" 
-                        @on-color-selected="color => curThemeValues.disabledBorderColor = color"
+                      <GlowColorPicker
+                        v-model:color="curThemeValues.disabledBorderColor" 
                       />
                     </div>
                   </div>

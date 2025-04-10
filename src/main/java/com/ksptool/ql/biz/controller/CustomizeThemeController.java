@@ -161,7 +161,7 @@ public class CustomizeThemeController {
 
     //获取主题值
     @PostMapping("/getThemeValues")
-    public Result<GetThemeValuesVo> getThemeValuesDetails(GetThemeValuesDto dto) {
+    public Result<GetThemeValuesVo> getThemeValuesDetails(@RequestBody GetThemeValuesDto dto) {
         Long userId = AuthService.getCurrentUserId();
         
         // 参数校验
