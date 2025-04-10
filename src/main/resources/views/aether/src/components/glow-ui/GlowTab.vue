@@ -5,8 +5,11 @@
         v-for="(item, index) in items" 
         :key="index" 
         class="tab-item"
-        :class="{ 'active': item.action === activeTab }"
-        @click="handleTabClick(index, item.action)"
+        :class="{ 
+          'active': item.action === activeTab,
+          'disabled': item.disabled 
+        }"
+        @click="!item.disabled && handleTabClick(index, item.action)"
       >
         {{ item.title }}
       </div>
@@ -26,7 +29,8 @@ import type { GlowThemeColors } from './GlowTheme'
 const props = defineProps<{
   items: Array<{
     title: string,
-    action: string
+    action: string,
+    disabled?: boolean
   }>,
   activeTab:string
 }>()
@@ -102,6 +106,17 @@ const handleTabClick = (index: number, action: string) => {
   color: v-bind('theme.boxTextColor');
   background: transparent;
   border-bottom-color: transparent;
+}
+
+.tab-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tab-item.disabled:hover {
+  background: transparent;
+  color: v-bind('theme.boxTextColorNoActive');
 }
 
 .tab-content {
