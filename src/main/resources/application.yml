@@ -27,7 +27,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2P-21-M5 # 应用版本号
+  version: 1.2P-51-ALPHA-M5 # 应用版本号
 
 # 加密配置
 encrypt:

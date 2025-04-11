@@ -14,6 +14,12 @@ public enum AIModelEnum {
     /*正式模型*/
     GEMINI_2_FLASH("gemini-2.0-flash", "Gemini 2.0 Flash", "Gemini"),
     GEMINI_2_5_EXP_0325("gemini-2.5-pro-exp-03-25", "gemini-2.5-pro-exp-03-25", "Gemini"),
+
+
+
+
+
+
     GEMINI_2_FLASH_LITE("gemini-2.0-flash-lite", "Gemini 2.0 Flash-Lite", "Gemini"),
     GEMINI_15_FLASH("gemini-1.5-flash", "Gemini 1.5 Flash", "Gemini"),
     GEMINI_15_FLASH_8B("gemini-1.5-flash-8b", "Gemini 1.5 Flash 8B", "Gemini"),
@@ -40,7 +46,10 @@ public enum AIModelEnum {
     GEMINI_15_FLASH_002("gemini-1.5-flash-002", "Gemini 1.5 Flash #002", "Gemini"),
 
 
-    //GROK_3("grok-3", "Grok 3", "Grok"),
+    GROK_3_BETA("grok-3-beta", "Grok 3 Beta", "Grok"),
+    GROK_3_FAST_BETA("grok-3-fast-beta", "Grok 3 Fast Beta", "Grok"),
+    GROK_3_MINI_BETA("grok-3-mini-beta", "Grok 3 Mini Beta", "Grok"),
+    GROK_3_MINI_FAST_BETA("grok-3-mini-fast-beta", "Grok 3 Mini Fast Beta", "Grok"),
     GROK_2_1212("grok-2-1212", "Grok 2 #1212", "Grok"),
     //GROK_2_VISION_1212("grok-2-vision-1212", "Grok 2 Vision #1212", "Grok"),
 
