@@ -19,7 +19,8 @@ import type { GetActiveThemeVo } from "@/entity/vo/GetActiveThemeVo";
 import type ThemeValuesVo from "@/entity/vo/ThemeValuesVo";
 import Http from "@/commons/Http";
 
-const currentTheme = reactive<GlowThemeColors>(defaultTheme)
+// 创建独立副本作为当前主题
+const currentTheme = reactive<GlowThemeColors>(structuredClone(defaultTheme))
 
 const onThemeUpdate = ()=>{
   pullAndApplyActiveTheme()
