@@ -359,7 +359,6 @@ import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import type {GetUserThemeListVo} from "@/entity/vo/GetUserThemeListVo.ts";
 import type PageableView from "@/entity/PageableView.ts";
-import axios from "axios";
 import type Result from "@/entity/Result.ts";
 import type ThemeValuesDto from "@/entity/dto/ThemeValuesDto.ts";
 import type SaveThemeDto from "@/entity/dto/SaveThemeDto.ts";
@@ -398,8 +397,8 @@ const themeList = ref<PageableView<GetUserThemeListVo>>({
 // 加载主题列表
 const reloadThemeList = async () => {
   try {
-    const response = await axios.post<PageableView<GetUserThemeListVo>>('/customize/theme/getThemeList');
-    themeList.value = response.data;
+    const response = await Http.postEntity<PageableView<GetUserThemeListVo>>('/customize/theme/getThemeList', {});
+    themeList.value = response;
   } catch (error) {
     console.error('加载主题列表失败:', error);
   }
@@ -408,7 +407,7 @@ const reloadThemeList = async () => {
 // 处理使用主题
 const onActiveTheme = async (theme: GetUserThemeListVo) => {
   try {
-    await axios.post<Result<string>>('/customize/theme/activeTheme', {
+    await Http.postEntity<string>('/customize/theme/activeTheme', {
       themeId: theme.id
     });
     await reloadThemeList();
@@ -424,10 +423,18 @@ const onActiveTheme = async (theme: GetUserThemeListVo) => {
 
 const onCreateTheme = async () => {
   try {
-    const response = await axios.post<Result<string>>('/customize/theme/saveTheme', {});
-    if (response.data.code === 0) {
-      await reloadThemeList();
+    // 创建新主题时使用默认主题值
+    const body: SaveThemeDto = {
+      themeId: undefined, // 新主题不传id
+      themeName: '我的主题 ' + new Date().getTime(),
+      themeValues: defaultTheme // 使用默认主题配置
     }
+    
+    // 使用http工具替换axios
+    const themeId = await Http.postEntity<string>('/customize/theme/saveTheme', body);
+    
+    // 重新加载主题列表
+    await reloadThemeList();
   } catch (error) {
     console.error('创建新主题失败:', error);
   }
@@ -436,27 +443,25 @@ const onCreateTheme = async () => {
 // 处理设计主题
 const onEditTheme = async (theme: GetUserThemeListVo) => {
   try {
-    const response = await axios.post<Result<any>>('/customize/theme/getThemeValues', {
+    const response = await Http.postEntity<any>('/customize/theme/getThemeValues', {
       themeId: theme.id
     });
     
-    if (response.data.code === 0) {
-      // 如果有值就使用，否则使用默认值
-      if (response.data.data && response.data.data.themeValues) {
-        // 将返回的主题值赋给当前编辑的主题
-        Object.assign(curThemeValues, response.data.data.themeValues);
-      } else {
-        // 无值使用默认
-        Object.assign(curThemeValues, defaultTheme);
-      }
-      
-      // 设置当前编辑的主题ID
-      curThemeId.value = theme.id;
-      currentThemeName.value = theme.themeName;
-      
-      // 切换到主题设计器标签
-      themeCurrentTab.value = 'theme-designer';
+    // 如果有值就使用，否则使用默认值
+    if (response && response.themeValues) {
+      // 将返回的主题值赋给当前编辑的主题
+      Object.assign(curThemeValues, response.themeValues);
+    } else {
+      // 无值使用默认
+      Object.assign(curThemeValues, defaultTheme);
     }
+    
+    // 设置当前编辑的主题ID
+    curThemeId.value = theme.id;
+    currentThemeName.value = theme.themeName;
+    
+    // 切换到主题设计器标签
+    themeCurrentTab.value = 'theme-designer';
   } catch (error) {
     console.error('获取主题值失败:', error);
   }
@@ -493,21 +498,18 @@ const onSaveTheme = async (leave:boolean = false) => {
   }
   
   try {
-
     const body:SaveThemeDto = {
       themeId: curThemeId.value,
       themeValues: curThemeValues,
       themeName: currentThemeName.value
     }
 
-    const response = await axios.post<Result<string>>('/customize/theme/saveTheme', body);
+    await Http.postEntity<string>('/customize/theme/saveTheme', body);
     
-    if (response.data.code === 0) {
-      // 保存成功后返回主题列表
-      if(leave){
-        themeCurrentTab.value = 'my-themes';
-        await reloadThemeList();
-      }
+    // 保存成功后返回主题列表
+    if(leave){
+      themeCurrentTab.value = 'my-themes';
+      await reloadThemeList();
     }
   } catch (error) {
     console.error('保存主题失败:', error);
@@ -532,13 +534,11 @@ const onRemoveTheme = async (theme: GetUserThemeListVo) => {
   
   if (confirmed) {
     try {
-      const response = await axios.post<Result<string>>('/customize/theme/removeTheme', {
+      await Http.postEntity<string>('/customize/theme/removeTheme', {
         themeId: theme.id
       });
       
-      if (response.data.code === 0) {
-        await reloadThemeList();
-      }
+      await reloadThemeList();
     } catch (error) {
       console.error('移除主题失败:', error);
     }
