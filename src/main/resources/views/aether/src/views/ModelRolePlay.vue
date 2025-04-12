@@ -58,15 +58,13 @@
 <script setup lang="ts">
 import { ref, inject, onMounted, nextTick } from 'vue';
 import ImMessageBox from "@/components/glow-client/ImMessageBox.vue";
-import ModelChatList from "@/components/glow-client/ModelChatList.vue";
 import ImMessageInput from "@/components/glow-client/ImMessageInput.vue";
 import ModelSelector from "@/components/glow-client/ModelSelector.vue";
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
-import axios from 'axios';
+import http from '@/commons/Http';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowInput from "@/components/glow-ui/GlowInput.vue"
-import type Result from '@/entity/Result';
 import ModelRoleList from "@/components/glow-client/ModelRoleList.vue";
 import type GetModelRoleListVo from '@/entity/GetModelRoleListVo';
 import type PageableView from '@/entity/PageableView';
@@ -75,7 +73,6 @@ import type RecoverRpChatHistoryVo from '@/entity/RecoverRpChatHistoryVo';
 import type GetRpLastStatusVo from '@/entity/GetRpLastStatusVo';
 import type RpSegmentVo from '@/entity/RpSegmentVo';
 import RoleThreadsModal from "@/components/glow-client/RoleThreadsModal.vue";
-import type { ModelRoleThreadListVo } from '@/entity/ModelRoleThreadListVo';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -149,18 +146,15 @@ const onMessageSend = async (message: string) => {
 
   try {
     // 4. 调用后端接口发送消息 (queryKind = 0) - 更新接口地址和响应类型
-    const response = await axios.post<Result<RpSegmentVo>>('/model/rp/rpCompleteBatch', { 
+    const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
       threadId: currentThreadId.value, // 使用当前的聊天线程ID
       model: currentModelCode.value,
       message: message,
       queryKind: 0
     });
 
-    // Check for successful response and ensure data and historyId are present and valid strings
-    const backendResult = response.data; // backendResult is now Result<RpSegmentVo>
-    const segment = backendResult.data; // segment is now RpSegmentVo | null
-
-    if (backendResult.code === 0 && segment && typeof segment.historyId === 'string' && segment.historyId) {
+    // Check for successful response and ensure historyId is present and valid string
+    if (segment && typeof segment.historyId === 'string' && segment.historyId) {
       // 5. Use backend historyId and original message to create the user message
       const userMessage: MessageBoxItem = {
         id: segment.historyId, // Use historyId from backend response
@@ -182,7 +176,7 @@ const onMessageSend = async (message: string) => {
 
     } else {
       // 发送失败处理 (现在没有本地用户消息需要移除了)
-      console.error('发送消息失败或未收到有效的用户消息数据:', backendResult.message || '返回数据无效');
+      console.error('发送消息失败或未收到有效的用户消息数据:', '返回数据无效');
       // 可选：显示错误提示给用户
       isGenerating.value = false; // 重置加载状态
     }
@@ -202,79 +196,66 @@ const pollMessage = async () => {
   while (isGenerating.value) {
     try {
       // 使用 Result<RpSegmentVo> 作为响应类型 - 更新接口地址
-      const response = await axios.post<Result<RpSegmentVo>>('/model/rp/rpCompleteBatch', { 
+      const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
         threadId: currentThreadId.value, // 使用当前的聊天线程ID
         queryKind: 1 // 1: 查询响应流
       });
 
-      // 使用 backendResult 访问 code 和 message
-      const backendResult = response.data;
-      if (backendResult.code === 0) {
-        // 使用 segment 访问 RpSegmentVo 数据
-        const segment = backendResult.data;
+      // 如果 segment 为 null/undefined 或 type 为 0，则继续
+      if (!segment || segment.type === 0) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        continue;
+      }
+      
+      // --- 更新临时消息元数据 --- START
+      // 每次收到片段都尝试更新元数据 (名称、头像、最终ID)
+      console.log(segment)
+      await updateTempMsg({
+        id: segment.historyId, // historyId 在 type=2 时才有有效值
+        name: segment.roleName, // 使用 roleName
+        avatarPath: "/res/"+segment.roleAvatarPath // 使用 roleAvatarPath
+      });
+      // --- 更新临时消息元数据 --- END
 
-        // 如果 segment 为 null/undefined 或 type 为 0，则继续
-        if (!segment || segment.type === 0) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          continue;
+      if (segment.type === 1) { // 数据片段
+        if (!hasReceivedData) {
+          // 第一次收到数据，清空 "正在思考..."
+          // 直接修改临时消息的内容 (或者让 appendTempMsg 智能处理第一次追加?)
+          const tempMessage = messages.value.find(msg => msg.id === '-1');
+          if (tempMessage) tempMessage.content = ''; // 清空初始内容
+          hasReceivedData = true;
+          await appendTempMsg(segment.content || ''); // 追加第一次收到的内容
+        } else {
+          // 追加内容 (调用新函数)
+          await appendTempMsg(segment.content || '');
+        }
+        // Scrolling is handled inside appendTempMsg now
+
+      } else if (segment.type === 2) { // 结束片段
+        // 在设置最终ID之前，可能需要追加最后的内容
+        if (segment.content) {
+          if (!hasReceivedData) {
+            // 如果之前没收到数据，但结束时有内容, 直接设置最终内容
+            const tempMessage = messages.value.find(msg => msg.id === '-1');
+            if(tempMessage) tempMessage.content = segment.content;
+          } else {
+            // 如果之前有数据，结束时也有内容，追加 (调用新函数)
+             await appendTempMsg(segment.content);
+          }
         }
         
-        // --- 更新临时消息元数据 --- START
-        // 每次收到片段都尝试更新元数据 (名称、头像、最终ID)
-        console.log(segment)
-        await updateTempMsg({
-          id: segment.historyId, // historyId 在 type=2 时才有有效值
-          name: segment.roleName, // 使用 roleName
-          avatarPath: "/res/"+segment.roleAvatarPath // 使用 roleAvatarPath
-        });
-        // --- 更新临时消息元数据 --- END
+        // 只在type=2(结束)时才移除临时消息标记和结束加载
+        // removeTempMsg(); // 清理临时消息状态 (调用新函数)
+        isGenerating.value = false; // 结束加载状态
+        
+        // 可选: 稍后刷新会话列表 (参考 model-chat.vue)
+        // setTimeout(() => reloadRoleList(), 3000); 
 
-        if (segment.type === 1) { // 数据片段
-          if (!hasReceivedData) {
-            // 第一次收到数据，清空 "正在思考..."
-            // 直接修改临时消息的内容 (或者让 appendTempMsg 智能处理第一次追加?)
-            const tempMessage = messages.value.find(msg => msg.id === '-1');
-            if (tempMessage) tempMessage.content = ''; // 清空初始内容
-            hasReceivedData = true;
-            await appendTempMsg(segment.content || ''); // 追加第一次收到的内容
-          } else {
-            // 追加内容 (调用新函数)
-            await appendTempMsg(segment.content || '');
-          }
-          // Scrolling is handled inside appendTempMsg now
+        break; // 结束轮询
 
-        } else if (segment.type === 2) { // 结束片段
-          // 在设置最终ID之前，可能需要追加最后的内容
-          if (segment.content) {
-            if (!hasReceivedData) {
-              // 如果之前没收到数据，但结束时有内容, 直接设置最终内容
-              const tempMessage = messages.value.find(msg => msg.id === '-1');
-              if(tempMessage) tempMessage.content = segment.content;
-            } else {
-              // 如果之前有数据，结束时也有内容，追加 (调用新函数)
-               await appendTempMsg(segment.content);
-            }
-          }
-          
-          // 只在type=2(结束)时才移除临时消息标记和结束加载
-          // removeTempMsg(); // 清理临时消息状态 (调用新函数)
-          isGenerating.value = false; // 结束加载状态
-          
-          // 可选: 稍后刷新会话列表 (参考 model-chat.vue)
-          // setTimeout(() => reloadRoleList(), 3000); 
-
-          break; // 结束轮询
-
-        } else if (segment.type === 10) { // 错误片段
-          console.error('AI生成错误:', segment.content);
-          // 可选: 显示错误给用户
-          removeTempMsg(); // 移除临时消息 (调用新函数)
-          isGenerating.value = false; // 结束加载状态
-          break; // 结束轮询
-        }
-      } else {
-        // API请求失败
-        console.error('轮询AI响应失败:', backendResult.message); // 使用 backendResult.message
+      } else if (segment.type === 10) { // 错误片段
+        console.error('AI生成错误:', segment.content);
+        // 可选: 显示错误给用户
         removeTempMsg(); // 移除临时消息 (调用新函数)
         isGenerating.value = false; // 结束加载状态
         break; // 结束轮询
@@ -302,17 +283,12 @@ const onBatchAbort = async () => { // 改为 async
 
   try {
     // 调用后端接口中止 - 更新接口地址
-    const response = await axios.post('/model/rp/rpCompleteBatch', { 
+    await http.postEntity<void>('/model/rp/rpCompleteBatch', { 
       threadId: currentThreadId.value, // 使用当前的聊天线程ID
       queryKind: 2 // 2: 终止AI响应
     });
 
-    if (response.data.code === 0) {
-      console.log('已中止AI响应');
-    } else {
-      console.error('中止AI响应失败:', response.data.message);
-      // 即便中止失败，前端也需要清理状态
-    }
+    console.log('已中止AI响应');
   } catch (error) {
      console.error('中止AI响应请求失败:', error);
      // 即便中止失败，前端也需要清理状态
@@ -353,36 +329,29 @@ const reloadMessageList = async (roleId: string, threadId?: string) => {
     }
 
     // 发送请求
-    const response = await axios.post<Result<RecoverRpChatVo>>('/model/rp/recoverRpChat', requestBody);
+    const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', requestBody);
 
-    if (response.data.code === 0 && response.data.data) {
-      const chatData = response.data.data; 
-
-      // 更新当前模型代码和聊天线程ID
-      currentModelCode.value = chatData.modelCode || ""; 
-      currentThreadId.value = chatData.threadId || ""; // 获取后端返回的实际 threadId
-      
-      // currentRoleId 已经在本函数开头设置
-
-      // 处理消息列表 - 转换格式
-      const backendMessages = chatData.messages || []; 
-      messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
-        id: msg.id, 
-        name: msg.name,
-        avatarPath: msg.avatarPath,
-        role: msg.type === 0 ? 'user' : 'model', 
-        content: msg.rawContent, 
-        createTime: msg.createTime 
-      }));
-      
-      await nextTick();
-      messageBoxRef.value?.scrollToBottom();
-      return
-    } 
+    // 更新当前模型代码和聊天线程ID
+    currentModelCode.value = chatData.modelCode || ""; 
+    currentThreadId.value = chatData.threadId || ""; // 获取后端返回的实际 threadId
     
-    console.error(`恢复角色 ${roleId} ${threadId ? '的会话 ' + threadId : '的最新会话'} 失败:`, response.data.message || '未知错误');
-    messages.value = []; // 确保失败时清空
-    currentThreadId.value = ""; 
+    // currentRoleId 已经在本函数开头设置
+
+    // 处理消息列表 - 转换格式
+    const backendMessages = chatData.messages || []; 
+    messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
+      id: msg.id, 
+      name: msg.name,
+      avatarPath: msg.avatarPath,
+      role: msg.type === 0 ? 'user' : 'model', 
+      content: msg.rawContent, 
+      createTime: msg.createTime 
+    }));
+    
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
+    return;
+    
   } catch (error) {
     console.error(`恢复角色 ${roleId} ${threadId ? '的会话 ' + threadId : '的最新会话'} 请求失败:`, error);
     messages.value = []; // 确保失败时清空
@@ -394,20 +363,12 @@ const reloadMessageList = async (roleId: string, threadId?: string) => {
 const reloadRoleList = async () => {
   try {
     // 更新接口地址和期望的响应类型，并添加空的JSON对象作为请求体
-    const response = await axios.post<Result<PageableView<GetModelRoleListVo>>>('/model/rp/getRoleList', {}); 
-    if (response.data.code === 0 && response.data.data) {
-      // 从 PageableView 中提取 rows
-      roleList.value = response.data.data.rows || []; 
-
-    } else {
-      console.error('加载角色列表失败:', response.data.message || '未知错误');
-      roleList.value = []; // 清空列表
-      // 不再需要在这里清空消息和ID，等待 resumeLastStatus 或后续操作
-    }
+    const data = await http.postEntity<PageableView<GetModelRoleListVo>>('/model/rp/getRoleList', {}); 
+    // 从 PageableView 中提取 rows
+    roleList.value = data.rows || []; 
   } catch (error) {
     console.error('加载角色列表失败:', error);
     roleList.value = []; // 清空列表
-     // 不再需要在这里清空消息和ID
   }
 }
 
@@ -439,52 +400,36 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
   // currentThreadId.value 会在请求成功后被设置
 
   try {
-    // 显示加载状态，虽然创建新会话通常很快，但保持一致性
-    // isGenerating.value = true; 
-
-    const response = await axios.post<Result<RecoverRpChatVo>>('/model/rp/recoverRpChat', { 
+    const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', { 
       modelRoleId: role.id, 
       modelCode: currentModelCode.value, 
       newThread: 0 // 明确指示创建新线程
     });
 
-    if (response.data.code === 0 && response.data.data) {
-      const chatData = response.data.data; 
-      console.log('新会话创建成功:', chatData);
+    console.log('新会话创建成功:', chatData);
 
-      // 更新当前线程ID和模型代码
-      currentThreadId.value = chatData.threadId || ""; 
-      currentModelCode.value = chatData.modelCode || currentModelCode.value; // 如果后端没返回，保持当前选择
+    // 更新当前线程ID和模型代码
+    currentThreadId.value = chatData.threadId || ""; 
+    currentModelCode.value = chatData.modelCode || currentModelCode.value; // 如果后端没返回，保持当前选择
 
-      // 处理可能返回的初始消息 (通常新会话是空的)
-      const backendMessages = chatData.messages || []; 
-      messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
-        id: msg.id, 
-        name: msg.name,
-        avatarPath: msg.avatarPath,
-        role: msg.type === 0 ? 'user' : 'model', 
-        content: msg.rawContent, 
-        createTime: msg.createTime 
-      }));
-      
-      await nextTick();
-      messageBoxRef.value?.scrollToBottom();
-      
-      // 可选：如果创建新会话后需要刷新左侧列表状态（例如更新时间戳），可以在这里触发
-      // await reloadRoleList(); // 但通常选择角色时已加载
-
-    } else {
-      console.error(`为角色 ${role.name} 创建新会话失败:`, response.data.message || '未知错误');
-      alert(`创建新会话失败: ${response.data.message || '未知错误'}`);
-      // 创建失败，可能需要回退到之前的状态或清空
-      clearChatState();
-    }
+    // 处理可能返回的初始消息 (通常新会话是空的)
+    const backendMessages = chatData.messages || []; 
+    messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
+      id: msg.id, 
+      name: msg.name,
+      avatarPath: msg.avatarPath,
+      role: msg.type === 0 ? 'user' : 'model', 
+      content: msg.rawContent, 
+      createTime: msg.createTime 
+    }));
+    
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
+    
   } catch (error) {
     console.error(`为角色 ${role.name} 创建新会话请求失败:`, error);
     alert('创建新会话时发生网络错误');
     clearChatState();
-  } finally {
-    // isGenerating.value = false; // 关闭加载状态
   }
 }
 
@@ -593,7 +538,6 @@ const updateTempMsg = async (data: {
 
 
 const onMessageRemove = async (msgId: string) => {
-
   if (!confirmRef.value) {
     console.error('GlowConfirm component reference is not available.');
     return;
@@ -614,17 +558,10 @@ const onMessageRemove = async (msgId: string) => {
     }
 
     // 调用后端 API 删除消息 - 更新接口地址和 threadId 参数
-    const response = await axios.post<Result<unknown>>('/model/rp/removeHistory', { 
+    await http.postEntity<void>('/model/rp/removeHistory', { 
       threadId: currentThreadId.value, // 使用当前的聊天线程ID
       historyId: msgId 
     });
-
-    // API 调用失败
-    if (response.data.code !== 0) {
-      console.error(`Failed to remove message ${msgId}:`, response.data.message);
-      alert(`消息删除失败: ${response.data.message || '未知错误'}`);
-      return;
-    }
 
     // API 调用成功，从本地消息列表移除
     const index = messages.value.findIndex(msg => msg.id === msgId);
@@ -678,24 +615,13 @@ const onMessageRegenerate = async (msgId: string) => {
     await createTempMsg();
 
     // 7. 调用后端API触发重新生成 (queryKind = 3) - 更新接口地址和响应类型
-    const response = await axios.post<Result<RpSegmentVo>>('/model/rp/rpCompleteBatch', { 
+    const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
       threadId: currentThreadId.value, // 使用当前的聊天线程ID
       // 传递当前模型
       model: currentModelCode.value, 
       // 3: 重新生成最后一条响应
       queryKind: 3 
     });
-
-    // 8. 处理API响应失败
-    if (response.data.code !== 0) {
-      console.error('启动消息重新生成失败:', response.data.message);
-      alert(`重新生成失败: ${response.data.message || '未知错误'}`);
-      // 清理临时消息
-      removeTempMsg(); 
-      isGenerating.value = false;
-      // 失败时退出
-      return; 
-    }
 
     // 9. API调用成功，开始轮询新的响应流
     console.log('后端已确认重新生成请求，开始轮询...');
@@ -715,22 +641,17 @@ const onMessageRegenerate = async (msgId: string) => {
 const onMessageEdit = async (params: { msgId: string; message: string }) => {
   try {
     // 调用后端 API 更新消息历史 - 更新接口地址
-    const response = await axios.post<Result<unknown>>('/model/rp/editHistory', { 
+    await http.postEntity<void>('/model/rp/editHistory', { 
       historyId: params.msgId, 
       content: params.message
     });
 
-    if (response.data.code === 0) {
-      // API 调用成功，更新本地消息列表
-      const messageIndex = messages.value.findIndex(msg => msg.id === params.msgId);
-      if (messageIndex !== -1) {
-        messages.value[messageIndex].content = params.message;
-      }
-      console.log(`Message ${params.msgId} updated successfully.`);
-    } else {
-      console.error(`Failed to update message ${params.msgId}:`, response.data.message);
-      alert(`消息更新失败: ${response.data.message || '未知错误'}`);
+    // API 调用成功，更新本地消息列表
+    const messageIndex = messages.value.findIndex(msg => msg.id === params.msgId);
+    if (messageIndex !== -1) {
+      messages.value[messageIndex].content = params.message;
     }
+    console.log(`Message ${params.msgId} updated successfully.`);
   } catch (error) {
     console.error(`Error updating message ${params.msgId}:`, error);
     alert('消息更新时发生网络错误');
@@ -741,19 +662,7 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
 const resumeLastStatus = async () =>{
   console.log("Attempting to resume last status...");
   try {
-    const response = await axios.post<Result<GetRpLastStatusVo>>('/model/rp/getRpLastStatus');
-
-    // 检查请求是否成功以及数据是否存在
-    if (response.data.code !== 0 || !response.data.data) {
-      console.error('Failed to get last status or data is empty:', response.data.message || 'Unknown error');
-      console.log("Clearing state due to failed status fetch.");
-      clearChatState();
-      return; // 提前返回
-    }
-
-    // 请求成功且数据存在
-    const lastStatus = response.data.data;
-    console.log("Received last status:", lastStatus);
+    const lastStatus = await http.postEntity<GetRpLastStatusVo>('/model/rp/getRpLastStatus', {});
 
     // 检查是否存在 lastRole
     if (lastStatus.lastRole) {
