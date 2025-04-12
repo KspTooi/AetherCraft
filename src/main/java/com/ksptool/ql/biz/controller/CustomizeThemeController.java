@@ -89,6 +89,65 @@ public class CustomizeThemeController {
         return Result.success("操作成功");
     }
 
+    @PostMapping("/copyTheme")
+    @Transactional
+    public Result<String> copyTheme(@RequestBody @Valid GetThemeValuesDto dto) throws BizException {
+        Long userId = AuthService.getCurrentUserId();
+
+        // 查找要复制的主题
+        UserThemePo sourceTheme = themeRepository.findById(dto.getThemeId()).orElse(null);
+        
+        // 验证主题是否存在
+        if (sourceTheme == null) {
+            return Result.error("要复制的主题不存在");
+        }
+        
+        // 验证主题是否属于当前用户
+        if (!sourceTheme.getUser().getId().equals(userId)) {
+            return Result.error("无权复制此主题");
+        }
+        
+        // 创建新主题
+        UserThemePo newTheme = new UserThemePo();
+        // 复制原主题基本信息
+        assign(sourceTheme, newTheme);
+        // 设置新ID为null，使JPA生成新ID
+        newTheme.setId(null);
+        // 设置新名称
+        newTheme.setThemeName(sourceTheme.getThemeName() + " - 副本");
+        // 设置为非激活状态
+        newTheme.setIsActive(0);
+        // 设置所属用户
+        UserPo user = new UserPo();
+        user.setId(userId);
+        newTheme.setUser(user);
+        // 更新时间
+        newTheme.setUpdateTime(new Date());
+        // 清空主题值，后面会重新添加
+        newTheme.setThemeValues(new ArrayList<>());
+        
+        // 保存新主题以获取ID
+        themeRepository.save(newTheme);
+        
+        // 复制主题值
+        if (sourceTheme.getThemeValues() != null) {
+            List<UserThemeValues> newThemeValues = new ArrayList<>();
+            
+            for (UserThemeValues sourceValue : sourceTheme.getThemeValues()) {
+                UserThemeValues newValue = new UserThemeValues();
+                newValue.setTheme(newTheme);
+                newValue.setThemeKey(sourceValue.getThemeKey());
+                newValue.setThemeValue(sourceValue.getThemeValue());
+                newThemeValues.add(newValue);
+            }
+            
+            newTheme.setThemeValues(newThemeValues);
+            themeRepository.save(newTheme);
+        }
+        
+        return Result.success(newTheme.getId().toString());
+    }
+
     //创建或者更新一个主题
     @PostMapping("/saveTheme")
     @Transactional
