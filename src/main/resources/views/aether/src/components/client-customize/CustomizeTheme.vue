@@ -41,6 +41,7 @@
                   <GlowButton 
                     v-if="!item.isSystem" 
                     @click="onCopyTheme(item)"
+                    :corners="[`bottom-right`]"
                   >复制</GlowButton>
                 </div>
               </div>
