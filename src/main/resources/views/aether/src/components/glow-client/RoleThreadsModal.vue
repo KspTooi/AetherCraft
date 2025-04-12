@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { ref, inject } from 'vue'
-import axios from 'axios'
+import http from '@/commons/Http'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../glow-ui/GlowTheme'
 import type { GlowThemeColors } from '../glow-ui/GlowTheme'
@@ -97,23 +97,18 @@ const loadThreadList = async () => {
   
   loading.value = true
   try {
-    const response = await axios.post<Result<ModelRoleThreadListVo[]>>('/model/rp/getModelRoleThreadList', {
+    const threadList = await http.postEntity<ModelRoleThreadListVo[]>('/model/rp/getModelRoleThreadList', {
       modelRoleId: selectedRoleId.value
     })
     
-    if (response.data.code === 0) {
-      threads.value = response.data.data || []
-      
-      // 获取当前活动的会话ID
-      const activeThread = threads.value.find(t => t.active === 1)
-      if (activeThread) {
-        currentThreadId.value = String(activeThread.id)
-      } else if (threads.value.length > 0) {
-        currentThreadId.value = String(threads.value[0].id)
-      }
-    } else {
-      console.error('加载会话列表失败:', response.data.message)
-      threads.value = [] // 失败时清空
+    threads.value = threadList || []
+    
+    // 获取当前活动的会话ID
+    const activeThread = threads.value.find(t => t.active === 1)
+    if (activeThread) {
+      currentThreadId.value = String(activeThread.id)
+    } else if (threads.value.length > 0) {
+      currentThreadId.value = String(threads.value[0].id)
     }
   } catch (error) {
     console.error('加载会话列表失败:', error)
@@ -203,27 +198,23 @@ const handleDeleteThread = async (threadId: number) => {
   if (!confirmed) return
   
   try {
-    const response = await axios.post<Result<boolean>>('/model/rp/removeThread', {
+    await http.postEntity<boolean>('/model/rp/removeThread', {
       threadId: threadId
     })
     
-    if (response.data.code === 0) {
-      threads.value = threads.value.filter(t => t.id !== threadId)
-      console.log('会话删除成功')
+    threads.value = threads.value.filter(t => t.id !== threadId)
+    console.log('会话删除成功')
 
-      // 如果当前激活的会话被删除，更新当前会话ID
-      if (currentThreadId.value === String(threadId) && threads.value.length > 0) {
-        const firstThread = threads.value[0]
-        currentThreadId.value = String(firstThread.id)
-        
-        // 如果没有激活的会话，自动激活第一个会话
-        if (!threads.value.find(t => t.active === 1)) {
-          firstThread.active = 1
-          emit('activate-thread', selectedRoleId.value, String(firstThread.id), firstThread.modelCode || 'gemini-pro')
-        }
+    // 如果当前激活的会话被删除，更新当前会话ID
+    if (currentThreadId.value === String(threadId) && threads.value.length > 0) {
+      const firstThread = threads.value[0]
+      currentThreadId.value = String(firstThread.id)
+      
+      // 如果没有激活的会话，自动激活第一个会话
+      if (!threads.value.find(t => t.active === 1)) {
+        firstThread.active = 1
+        emit('activate-thread', selectedRoleId.value, String(firstThread.id), firstThread.modelCode || 'gemini-pro')
       }
-    } else {
-      console.error('删除会话失败:', response.data.message)
     }
   } catch (error) {
     console.error('删除会话失败:', error)
