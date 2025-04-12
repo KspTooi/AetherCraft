@@ -17,6 +17,8 @@ public enum UserConfigEnum {
 
     WALLPAPER_PATH("wallpaper.path", null, "用户的壁纸路径(相对路径)"),
 
+    USER_PREF_CLIENT_PATH("user.pref.client_path", null, "用户前端当前访问的路径"),
+
     ;
 
     /**
