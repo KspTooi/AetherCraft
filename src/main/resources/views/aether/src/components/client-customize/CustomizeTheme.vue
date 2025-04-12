@@ -76,8 +76,8 @@
               </div>
               <div class="btn-group">
                 <GlowButton @click="onResetTheme" class="theme-opt-btn">恢复默认</GlowButton>
-                <GlowButton @click="onSaveTheme(false)" class="theme-opt-btn">应用</GlowButton>
-                <GlowButton @click="onSaveTheme" class="theme-opt-btn" :corners="[`bottom-right`]">保存</GlowButton>
+                <GlowButton @click="onSaveTheme(true)" class="theme-opt-btn">应用</GlowButton>
+                <GlowButton @click="onSaveTheme(false)" class="theme-opt-btn" :corners="[`bottom-right`]">保存</GlowButton>
               </div>
             </div>
             
@@ -359,13 +359,12 @@ import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import type {GetUserThemeListVo} from "@/entity/vo/GetUserThemeListVo.ts";
 import type PageableView from "@/entity/PageableView.ts";
-import type Result from "@/entity/Result.ts";
 import type ThemeValuesDto from "@/entity/dto/ThemeValuesDto.ts";
 import type SaveThemeDto from "@/entity/dto/SaveThemeDto.ts";
 import Http from "@/commons/Http.ts";
 
 //当前正在设计的主题
-const curThemeValues = reactive<ThemeValuesDto>(defaultTheme);
+const curThemeValues = reactive<ThemeValuesDto>(structuredClone(defaultTheme));
 const curThemeId = ref<string>();
 const currentThemeName = ref<string>('');
 
@@ -469,6 +468,7 @@ const onEditTheme = async (theme: GetUserThemeListVo) => {
 
 //恢复默认主题
 const onResetTheme = async () => {
+
   if (!curThemeId.value) {
     return;
   }
@@ -491,7 +491,8 @@ const onResetTheme = async () => {
 }
 
 // 保存主题
-const onSaveTheme = async (leave:boolean = false) => {
+const onSaveTheme = async (apply:boolean = false) => {
+
   if (!curThemeId.value) {
     console.error('没有选中的主题');
     return;
@@ -504,13 +505,31 @@ const onSaveTheme = async (leave:boolean = false) => {
       themeName: currentThemeName.value
     }
 
-    await Http.postEntity<string>('/customize/theme/saveTheme', body);
-    
-    // 保存成功后返回主题列表
-    if(leave){
-      themeCurrentTab.value = 'my-themes';
+    let themeId = await Http.postEntity<string>('/customize/theme/saveTheme', body);
+
+    console.log(apply)
+
+    //应用主题
+    if(apply){
+
+      await Http.postEntity<string>('/customize/theme/activeTheme', {
+        themeId:themeId
+      });
       await reloadThemeList();
+
+      // 通知主题更新
+      if (notifyThemeUpdate) {
+        notifyThemeUpdate();
+      }
+
+      return
     }
+
+    //保存主题
+    themeCurrentTab.value = 'my-themes';
+    await reloadThemeList();
+
+
   } catch (error) {
     console.error('保存主题失败:', error);
   }
