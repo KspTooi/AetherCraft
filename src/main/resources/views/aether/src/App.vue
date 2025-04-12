@@ -1,6 +1,6 @@
 <template>
 
-  <GlowTheme @onThemeUpdate="onThemeUpdate" >
+  <GlowTheme @onThemeUpdate="onThemeUpdate" :theme="currentTheme">
     <ClientFrame>
       <RouterView />
     </ClientFrame>

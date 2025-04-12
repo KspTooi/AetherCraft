@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.UserThemeRepository;
 import com.ksptool.ql.biz.mapper.UserThemeValuesRepository;
 import com.ksptool.ql.biz.model.dto.ActiveThemeDto;
@@ -16,6 +17,7 @@ import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,7 +72,7 @@ public class CustomizeThemeController {
     //移除主题
     @PostMapping("/removeTheme")
     @Transactional
-    public Result<String> removeTheme(@RequestBody RemoveThemeDto dto) throws BizException {
+    public Result<String> removeTheme(@RequestBody @Valid RemoveThemeDto dto) throws BizException {
 
         Long uid = AuthService.getCurrentUserId();
 
@@ -93,7 +95,7 @@ public class CustomizeThemeController {
     //创建或者更新一个主题
     @PostMapping("/saveTheme")
     @Transactional
-    public Result<String> saveTheme(@RequestBody SaveThemeDto dto) {
+    public Result<String> saveTheme(@RequestBody @Valid SaveThemeDto dto) {
 
         Long userId = AuthService.getCurrentUserId();
         UserThemePo theme;
@@ -147,7 +149,9 @@ public class CustomizeThemeController {
 
         themeValues.clear();
 
-        for(var item : dto.getThemeValues().entrySet()){
+        Map<String,String> map = Any.of(dto.getThemeValues()).as(Map.class);
+
+        for(var item : map.entrySet()){
             var po = new UserThemeValues();
             po.setTheme(theme);
             po.setThemeKey(item.getKey());
@@ -161,7 +165,7 @@ public class CustomizeThemeController {
 
     //获取主题值
     @PostMapping("/getThemeValues")
-    public Result<GetThemeValuesVo> getThemeValuesDetails(@RequestBody GetThemeValuesDto dto) {
+    public Result<GetThemeValuesVo> getThemeValuesDetails(@RequestBody @Valid GetThemeValuesDto dto) {
         Long userId = AuthService.getCurrentUserId();
         
         // 参数校验
@@ -239,7 +243,7 @@ public class CustomizeThemeController {
      */
     @PostMapping("/activeTheme")
     @Transactional
-    public Result<String> activeTheme(@RequestBody ActiveThemeDto dto) {
+    public Result<String> activeTheme(@RequestBody @Valid ActiveThemeDto dto) {
         Long userId = AuthService.getCurrentUserId();
         
         // 参数校验

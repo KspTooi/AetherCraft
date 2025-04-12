@@ -1,8 +1,8 @@
 package com.ksptool.ql.biz.model.dto;
 
+import jakarta.validation.Valid;
 import lombok.Data;
-import java.util.Map;
-import java.util.HashMap;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 public class SaveThemeDto {
@@ -16,6 +16,8 @@ public class SaveThemeDto {
     // 主题描述（可选）
     private String description;
     
-    // 主题值映射，key为属性名，value为属性值
-    private Map<String, String> themeValues = new HashMap<>();
+    // 主题值对象
+    @NotNull
+    @Valid
+    private ThemeValuesDto themeValues;
 }

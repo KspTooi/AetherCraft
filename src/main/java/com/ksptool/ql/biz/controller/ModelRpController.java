@@ -97,11 +97,6 @@ public class ModelRpController {
     @PostMapping("/recoverRpChat")
     public Result<RecoverRpChatVo> recoverRpChat(@RequestBody @Valid RecoverRpChatDto dto) throws BizException {
         // 如果提供了threadId，将会优先激活并加载该会话，忽略newThread参数
-        if (dto.getThreadId() != null) {
-            // 记录日志，表示将通过threadId加载指定会话
-            System.out.println("Loading specific thread by ID: " + dto.getThreadId());
-        }
-
         return Result.success(modelRpService.recoverRpChat(dto));
     }
 

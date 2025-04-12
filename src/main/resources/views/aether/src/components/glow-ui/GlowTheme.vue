@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, reactive, readonly } from 'vue'
+import { provide, reactive, readonly, watch } from 'vue'
 import type { GlowThemeColors } from './GlowTheme.ts'
 import { defaultTheme, GLOW_THEME_INJECTION_KEY } from './GlowTheme.ts'
 
@@ -17,6 +17,11 @@ const mergedTheme = reactive<GlowThemeColors>({
   ...defaultTheme,
   ...props.theme
 })
+
+// 监听 props.theme 的变化并更新 mergedTheme
+watch(() => props.theme, (newTheme) => {
+  Object.assign(mergedTheme, defaultTheme, newTheme)
+}, { deep: true })
 
 // 提供主题函数供子组件调用
 const notifyThemeUpdate = () => {
