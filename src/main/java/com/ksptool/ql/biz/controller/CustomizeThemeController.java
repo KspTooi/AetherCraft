@@ -3,10 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.UserThemeRepository;
 import com.ksptool.ql.biz.mapper.UserThemeValuesRepository;
-import com.ksptool.ql.biz.model.dto.ActiveThemeDto;
-import com.ksptool.ql.biz.model.dto.GetThemeValuesDto;
-import com.ksptool.ql.biz.model.dto.RemoveThemeDto;
-import com.ksptool.ql.biz.model.dto.SaveThemeDto;
+import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserThemePo;
 import com.ksptool.ql.biz.model.po.UserThemeValues;
@@ -51,7 +48,7 @@ public class CustomizeThemeController {
 
     //获取当前用户拥有的主题列表(不分页查全部)
     @PostMapping("/getThemeList")
-    public PageableView<GetUserThemeListVo> getThemeList() {
+    public Result<PageableView<GetUserThemeListVo>> getThemeList() {
         Long userId = AuthService.getCurrentUserId();
         
         // 查询当前用户所有主题
@@ -66,7 +63,7 @@ public class CustomizeThemeController {
         }
         
         // 返回分页视图(不分页，显示全部)
-        return new PageableView<>(voList, voList.size(), 1, voList.size());
+        return Result.success(new PageableView<>(voList, voList.size(), 1, voList.size()));
     }
 
     //移除主题
@@ -149,9 +146,7 @@ public class CustomizeThemeController {
 
         themeValues.clear();
 
-        Map<String,String> map = Any.of(dto.getThemeValues()).as(Map.class);
-
-        for(var item : map.entrySet()){
+        for(var item : dto.getThemeValues().entrySet()){
             var po = new UserThemeValues();
             po.setTheme(theme);
             po.setThemeKey(item.getKey());

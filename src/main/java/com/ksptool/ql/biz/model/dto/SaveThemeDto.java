@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.Map;
+
 @Data
 public class SaveThemeDto {
 
@@ -18,6 +20,5 @@ public class SaveThemeDto {
     
     // 主题值对象
     @NotNull
-    @Valid
-    private ThemeValuesDto themeValues;
+    private Map<String,String> themeValues;
 }
