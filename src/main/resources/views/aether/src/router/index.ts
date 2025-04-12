@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import Http from '@/commons/Http'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -6,7 +7,19 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      redirect: '/chat'
+      component: () => import('../views/ModelChat.vue'),
+      beforeEnter: async (to, from, next) => {
+        try {
+          const response = await Http.postEntity<{clientPath: string}>('/client/getPreferences', {})
+          if (response.clientPath && response.clientPath !== '/') {
+            next(response.clientPath)
+            return
+          }
+        } catch (error) {
+          console.warn('获取保存的路由失败:', error)
+        }
+        next('/chat')
+      }
     },
     {
       path: '/chat',
@@ -49,6 +62,15 @@ const router = createRouter({
       component: () => import('../views/ModelChat.vue'),
     }
   ],
+})
+
+router.afterEach((to) => {
+  const currentPath = to.fullPath
+  Http.postEntity<string>('/client/savePreferences', {
+    clientPath: currentPath
+  }).catch(error => {
+    console.warn('保存当前路由失败:', error)
+  })
 })
 
 export default router
