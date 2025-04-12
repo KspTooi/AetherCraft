@@ -1,10 +1,15 @@
 package com.ksptool.ql.commons.web;
 
 import com.ksptool.ql.commons.exception.BizException;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.validation.BindingResult;
 
+@Getter
+@Setter
 public class Result<T> {
 
+    // Getter 方法
     /**
      * 业务状态码
      * 0 - 业务正常
@@ -56,6 +61,10 @@ public class Result<T> {
         return new Result<>(code, message, null);
     }
 
+    public static <T> Result<T> error(int code, String message,T data) {
+        return new Result<>(code, message, data);
+    }
+
     // 内部服务器错误
     public static <T> Result<Object> internalError(String message,Object throwable) {
         return new Result<>(2, message, throwable);
@@ -65,16 +74,4 @@ public class Result<T> {
         return new Result<>(2, message,null);
     }
 
-    // Getter 方法
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
-    }
 }
