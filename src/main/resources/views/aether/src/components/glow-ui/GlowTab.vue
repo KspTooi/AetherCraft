@@ -133,8 +133,13 @@ const highlightStyle = computed(() => {
 })
 
 // 监听activeTab变化
-watch(() => props.activeTab, () => {
-  updateActiveIndex()
+watch(() => props.activeTab, (newValue) => {
+  const index = props.items.findIndex(item => item.action === newValue)
+  if (index !== -1) {
+    activeIndex.value = index
+    // 触发tab-change事件
+    emit('tab-change', newValue, index)
+  }
   updateHighlightPosition()
 })
 
