@@ -36,9 +36,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, inject } from 'vue'
-import axios from 'axios'
+import http from '@/commons/Http'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
-import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -114,20 +113,16 @@ const selectModel = (model: ModelData) => {
 const loadModelList = async () => {
   loading.value = true
   try {
-    const response = await axios.post('/model/series/getModelSeries')
-    if (response.data.code === 0) {
-      data.value = response.data.data
-      
-      // 确保在有模型数据时自动选择
-      if (data.value.length > 0) {
-        // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个
-        const exists = data.value.some(model => model.modelCode === props.selected)
-        if (!props.selected || !exists) {
-          emits('select-model', data.value[0].modelCode)
-        }
+    const modelList = await http.postEntity<ModelData[]>('/model/series/getModelSeries', {})
+    data.value = modelList
+    
+    // 确保在有模型数据时自动选择
+    if (data.value.length > 0) {
+      // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个
+      const exists = data.value.some(model => model.modelCode === props.selected)
+      if (!props.selected || !exists) {
+        emits('select-model', data.value[0].modelCode)
       }
-    } else {
-      console.error('加载模型列表失败:', response.data.message)
     }
   } catch (error) {
     console.error('加载模型列表失败:', error)
