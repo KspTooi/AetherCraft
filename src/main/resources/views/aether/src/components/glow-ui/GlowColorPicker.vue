@@ -136,7 +136,7 @@ const panelStyle = ref({
   position: 'fixed' as const,
   top: '0px',
   left: '0px',
-  transform: 'none' as const
+  transform: 'none'
 })
 
 // 颜色选择器参考元素
@@ -293,6 +293,20 @@ watch(() => modelValue.value, (newValue) => {
 
 // 计算可用空间和选择器位置
 const calculatePanelPosition = (clickEvent?: MouseEvent) => {
+  // 检查是否为移动设备
+  const isMobile = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  
+  // 如果是移动设备，直接居中显示
+  if (isMobile) {
+    panelStyle.value = {
+      position: 'fixed' as const,
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)'
+    }
+    return;
+  }
+  
   const PANEL_WIDTH = 240
   const PANEL_HEIGHT = 300 // 估算值，可以根据实际情况调整
   const MARGIN = 10 // 边距
@@ -347,7 +361,7 @@ const calculatePanelPosition = (clickEvent?: MouseEvent) => {
     position: 'fixed' as const,
     top: `${y}px`,
     left: `${x}px`,
-    transform: 'none' as const
+    transform: 'none'
   }
 }
 
