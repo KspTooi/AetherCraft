@@ -93,9 +93,8 @@ public class ModelRpService {
      *
      * @param dto 查询参数 DTO
      * @return 分页视图对象
-     * @throws BizException 业务异常
      */
-    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) throws BizException {
+    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
         var query = new ModelRolePo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件

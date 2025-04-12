@@ -60,6 +60,10 @@ public class Result<T> {
     public static <T> Result<Object> internalError(String message,Object throwable) {
         return new Result<>(2, message, throwable);
     }
+    // 内部服务器错误
+    public static <T> Result<Object> internalError(String message) {
+        return new Result<>(2, message,null);
+    }
 
     // Getter 方法
     public int getCode() {
