@@ -26,9 +26,7 @@
 
 <script setup lang="ts">
 import { ref, inject, onMounted, nextTick, watch } from 'vue'
-import axios from 'axios'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
-import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import ImMessageBoxItem from "@/components/glow-client/ImMessageBoxItem.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 
