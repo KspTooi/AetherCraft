@@ -24,6 +24,9 @@
                   <span v-if="item.isActive === 1" class="theme-tag active-tag">使用中</span>
                 </div>
               </div>
+              <div v-if="!item.isSystem && item.isActive !== 1" class="remove-btn" @click.stop="onRemoveTheme(item)">
+                <i class="bi bi-x"></i>
+              </div>
               <div class="theme-description">{{ item.description || '暂无描述' }}</div>
               <div class="theme-footer">
                 <div class="theme-actions">
@@ -36,11 +39,9 @@
                     @click="onEditTheme(item)"
                   >设计</GlowButton>
                   <GlowButton 
-                    v-if="!item.isSystem && item.isActive !== 1" 
-                    theme="danger"
-                    :corners="['bottom-right']"
-                    @click="onRemoveTheme(item)"
-                  >移除</GlowButton>  
+                    v-if="!item.isSystem" 
+                    @click="onCopyTheme(item)"
+                  >复制</GlowButton>
                 </div>
               </div>
             </div>
@@ -602,6 +603,20 @@ const handleTabChange = async (action: string) => {
   await preferencesStore.saveCustomizePathTabTheme(action)
 }
 
+// 处理复制主题
+const onCopyTheme = async (theme: GetUserThemeListVo) => {
+  try {
+    await Http.postEntity<string>('/customize/theme/copyTheme', {
+      themeId: theme.id
+    });
+    
+    // 复制成功后刷新主题列表
+    await reloadThemeList();
+  } catch (error) {
+    console.error('复制主题失败:', error);
+  }
+}
+
 // 组件挂载时加载数据
 onMounted(async () => {
   // 加载保存的Tab状态
@@ -1085,5 +1100,35 @@ input[type="range"] {
   .btn-group {
     flex-wrap: wrap;
   }
+}
+
+/* 修改X按钮样式为圆角设计 */
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  color: v-bind('theme.dangerTextColor');
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  z-index: 5;
+  border: 1px dashed rgba(255, 255, 255, 0);
+}
+
+.remove-btn:hover {
+  opacity: 1;
+  color: v-bind('theme.dangerColorActive');
+  border: 1px dashed v-bind('theme.dangerColorHover');
+}
+
+.remove-btn i {
+  font-size: 16px;
+  line-height: 1;
 }
 </style>
