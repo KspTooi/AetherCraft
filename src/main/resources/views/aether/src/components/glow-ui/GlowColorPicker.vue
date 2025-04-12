@@ -299,7 +299,7 @@ const calculatePanelPosition = (clickEvent?: MouseEvent) => {
   // 如果是移动设备，直接居中显示
   if (isMobile) {
     panelStyle.value = {
-      position: 'fixed' as const,
+      position: 'fixed',
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)'
@@ -307,9 +307,9 @@ const calculatePanelPosition = (clickEvent?: MouseEvent) => {
     return;
   }
   
-  const PANEL_WIDTH = 240
-  const PANEL_HEIGHT = 300 // 估算值，可以根据实际情况调整
-  const MARGIN = 10 // 边距
+  const PANEL_WIDTH = 280  // 增大面板宽度估计值，确保足够容纳实际宽度
+  const PANEL_HEIGHT = 320 // 增大面板高度估计值
+  const MARGIN = 20 // 增加边距，提供更好的视觉效果
   
   let x = 0
   let y = 0
@@ -329,12 +329,24 @@ const calculatePanelPosition = (clickEvent?: MouseEvent) => {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
   
+  // 特别处理右侧超出的情况：如果颜色框在右半侧屏幕，则将面板向左偏移显示
+  if (colorBox.value) {
+    const rect = colorBox.value.getBoundingClientRect()
+    const colorBoxCenterX = rect.left + rect.width / 2
+    
+    // 如果颜色框在右半侧屏幕，向左偏移面板
+    if (colorBoxCenterX > viewportWidth / 2) {
+      x = rect.left - PANEL_WIDTH + rect.width
+    }
+  }
+  
+  // 再次检查并确保面板不超出任何边界
   // 调整X坐标，确保面板不超出视口左侧和右侧
   if (x < MARGIN) {
     // 左侧空间不足
     x = MARGIN
   } else if (x + PANEL_WIDTH + MARGIN > viewportWidth) {
-    // 右侧空间不足
+    // 右侧空间不足，强制向左偏移
     x = viewportWidth - PANEL_WIDTH - MARGIN
   }
   
@@ -358,7 +370,7 @@ const calculatePanelPosition = (clickEvent?: MouseEvent) => {
   
   // 设置位置样式
   panelStyle.value = {
-    position: 'fixed' as const,
+    position: 'fixed',
     top: `${y}px`,
     left: `${x}px`,
     transform: 'none'
