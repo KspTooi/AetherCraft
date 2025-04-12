@@ -17,8 +17,10 @@ public enum UserConfigEnum {
 
     WALLPAPER_PATH("wallpaper.path", null, "用户的壁纸路径(相对路径)"),
 
-    USER_PREF_CLIENT_PATH("user.pref.client_path", null, "用户前端当前访问的路径"),
-
+    USER_PREF_CLIENT_PATH("user.pref.client.path", null, "偏好:用户前端当前访问的路径"),
+    USER_PREF_CUSTOMIZE_PATH_SIDE("user.pref.customize.path.side", null, "偏好:个性化-边栏-路径"),
+    USER_PREF_CUSTOMIZE_PATH_TAB_WALLPAPER("user.pref.customize.path.tab.wallpaper", null, "偏好:个性化-背景-TAB"),
+    USER_PREF_CUSTOMIZE_PATH_TAB_THEME("user.pref.customize.path.tab.theme", null, "偏好:个性化-主题-TAB"),
     ;
 
     /**

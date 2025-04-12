@@ -93,14 +93,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, inject } from 'vue'
+import { storeToRefs } from 'pinia'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../../components/glow-ui/GlowTheme.ts'
 import type { GlowThemeColors } from '../../components/glow-ui/GlowTheme.ts'
 import GlowConfirm from '../../components/glow-ui/GlowConfirm.vue'
 import GlowTab from '../../components/glow-ui/GlowTab.vue'
+import { usePreferencesStore } from '@/stores/preferences'
 import axios from 'axios'
 
 // 注入主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
+
+// 初始化preferences store
+const preferencesStore = usePreferencesStore()
+const { customizePathTabWallpaper } = storeToRefs(preferencesStore)
 
 // Tab相关状态
 const currentTab = ref('current')
@@ -109,8 +115,10 @@ const tabItems = [
   { title: '预设壁纸', action: 'preset' }
 ]
 
-const handleTabChange = (action: string) => {
+const handleTabChange = async (action: string) => {
   currentTab.value = action
+  // 保存当前Tab状态
+  await preferencesStore.saveCustomizePathTabWallpaper(action)
 }
 
 // 确认对话框引用
@@ -359,10 +367,16 @@ const resetWallpaper = async () => {
 };
 
 // 组件挂载时加载数据
-onMounted(() => {
-  fetchDefaultWallpapers();
-  checkCurrentWallpaper();
-});
+onMounted(async () => {
+  // 加载保存的Tab状态
+  await preferencesStore.loadPreferences()
+  if (customizePathTabWallpaper.value) {
+    currentTab.value = customizePathTabWallpaper.value
+  }
+  
+  fetchDefaultWallpapers()
+  checkCurrentWallpaper()
+})
 </script>
 
 <style scoped>

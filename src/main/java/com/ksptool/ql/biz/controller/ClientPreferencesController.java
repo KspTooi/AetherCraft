@@ -27,23 +27,46 @@ public class ClientPreferencesController {
             userConfigService.setValue(UserConfigEnum.USER_PREF_CLIENT_PATH.key(), dto.getClientPath());
         }
 
+        if(StringUtils.isNotBlank(dto.getCustomizePathSide())) {
+            userConfigService.setValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_SIDE.key(), dto.getCustomizePathSide());
+        }
+
+        if(StringUtils.isNotBlank(dto.getCustomizePathTabWallpaper())) {
+            userConfigService.setValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_TAB_WALLPAPER.key(), dto.getCustomizePathTabWallpaper());
+        }
+
+        if(StringUtils.isNotBlank(dto.getCustomizePathTabTheme())) {
+            userConfigService.setValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_TAB_THEME.key(), dto.getCustomizePathTabTheme());
+        }
+
         return Result.success("success");
     }
 
-
     @PostMapping("getPreferences")
     public Result<GetPreferencesVo> getPreferences(){
-
         var ret = new GetPreferencesVo();
 
         String clientPath = userConfigService.getValue(UserConfigEnum.USER_PREF_CLIENT_PATH.key());
+        String customizePathSide = userConfigService.getValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_SIDE.key());
+        String customizePathTabWallpaper = userConfigService.getValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_TAB_WALLPAPER.key());
+        String customizePathTabTheme = userConfigService.getValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_TAB_THEME.key());
 
         if(StringUtils.isNotBlank(clientPath)) {
             ret.setClientPath(clientPath);
         }
 
+        if(StringUtils.isNotBlank(customizePathSide)) {
+            ret.setCustomizePathSide(customizePathSide);
+        }
+
+        if(StringUtils.isNotBlank(customizePathTabWallpaper)) {
+            ret.setCustomizePathTabWallpaper(customizePathTabWallpaper);
+        }
+
+        if(StringUtils.isNotBlank(customizePathTabTheme)) {
+            ret.setCustomizePathTabTheme(customizePathTabTheme);
+        }
+
         return Result.success(ret);
     }
-
-
 }

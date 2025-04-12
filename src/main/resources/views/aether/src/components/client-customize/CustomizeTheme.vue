@@ -3,6 +3,7 @@
     <GlowTab
         :items="themeTabItem"
         v-model:activeTab="themeCurrentTab"
+        @tab-change="handleTabChange"
     >
       <div class="tab-content">
         <!-- 我的主题 -->
@@ -352,16 +353,22 @@
 
 <script setup lang="ts">
 import {inject, ref, onMounted, reactive, computed, nextTick} from "vue";
+import { storeToRefs } from 'pinia'
 import {defaultTheme, GLOW_THEME_INJECTION_KEY, type GlowThemeColors} from "@/components/glow-ui/GlowTheme.ts";
 import GlowTab from "@/components/glow-ui/GlowTab.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
+import { usePreferencesStore } from '@/stores/preferences'
 import type {GetUserThemeListVo} from "@/entity/vo/GetUserThemeListVo.ts";
 import type PageableView from "@/entity/PageableView.ts";
 import type ThemeValuesDto from "@/entity/dto/ThemeValuesDto.ts";
 import type SaveThemeDto from "@/entity/dto/SaveThemeDto.ts";
 import Http from "@/commons/Http.ts";
+
+// 初始化preferences store
+const preferencesStore = usePreferencesStore()
+const { customizePathTabTheme } = storeToRefs(preferencesStore)
 
 //当前正在设计的主题
 const curThemeValues = reactive<ThemeValuesDto>(structuredClone(defaultTheme));
@@ -588,9 +595,22 @@ const cancelEditTitle = () => {
   isEditingTitle.value = false;
 };
 
+// 处理标签变化
+const handleTabChange = async (action: string) => {
+  themeCurrentTab.value = action
+  // 保存当前Tab状态
+  await preferencesStore.saveCustomizePathTabTheme(action)
+}
+
 // 组件挂载时加载数据
-onMounted(() => {
-  reloadThemeList();
+onMounted(async () => {
+  // 加载保存的Tab状态
+  await preferencesStore.loadPreferences()
+  if (customizePathTabTheme.value) {
+    themeCurrentTab.value = customizePathTabTheme.value
+  }
+  
+  reloadThemeList()
 })
 
 </script>

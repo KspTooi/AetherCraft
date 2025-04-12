@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Http from '@/commons/Http'
+import { usePreferencesStore } from '@/stores/preferences'
+import { storeToRefs } from 'pinia'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -9,14 +10,13 @@ const router = createRouter({
       name: 'home',
       component: () => import('../views/ModelChat.vue'),
       beforeEnter: async (to, from, next) => {
-        try {
-          const response = await Http.postEntity<{clientPath: string}>('/client/getPreferences', {})
-          if (response.clientPath && response.clientPath !== '/') {
-            next(response.clientPath)
-            return
-          }
-        } catch (error) {
-          console.warn('获取保存的路由失败:', error)
+        const preferences = usePreferencesStore()
+        await preferences.loadPreferences()
+        const { clientPath } = storeToRefs(preferences)
+        
+        if (clientPath.value && clientPath.value !== '/') {
+          next(clientPath.value)
+          return
         }
         next('/chat')
       }
@@ -65,12 +65,12 @@ const router = createRouter({
 })
 
 router.afterEach((to) => {
-  const currentPath = to.fullPath
-  Http.postEntity<string>('/client/savePreferences', {
-    clientPath: currentPath
-  }).catch(error => {
-    console.warn('保存当前路由失败:', error)
-  })
+  const preferences = usePreferencesStore()
+  if (to.fullPath !== '/') {
+    preferences.saveCurrentPath(to.fullPath).catch(error => {
+      console.warn('保存当前路由失败:', error)
+    })
+  }
 })
 
 export default router

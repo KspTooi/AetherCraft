@@ -36,8 +36,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useThemeStore } from '../stores/theme'
+import { usePreferencesStore } from '../stores/preferences'
 import CustomizeWallpaper from '@/components/client-customize/CustomizeWallpaper.vue'
 import CustomizeTheme from '../components/client-customize/CustomizeTheme.vue'
 import GlowSidePanel from '@/components/glow-ui/GlowSidePanel.vue'
@@ -47,9 +49,12 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 const themeStore = useThemeStore()
 const activeColor = computed(() => themeStore.activeColor)
 
+// 初始化preferences store
+const preferencesStore = usePreferencesStore()
+const { customizePathSide } = storeToRefs(preferencesStore)
+
 // 当前活动的章节
 const sidePanelCurrentItem = ref('wallpaper')
-
 
 // 菜单项定义
 const menuItems = [
@@ -68,11 +73,20 @@ const sidePanelItems = computed(() => {
   }))
 })
 
-
-const onSidePanelChange = (action: string) => {
+// 处理边栏项目变化
+const onSidePanelChange = async (action: string) => {
   sidePanelCurrentItem.value = action
+  // 保存当前选中的边栏项目
+  await preferencesStore.saveCustomizePathSide(action)
 }
 
+// 组件挂载时加载保存的边栏状态
+onMounted(async () => {
+  await preferencesStore.loadPreferences()
+  if (customizePathSide.value) {
+    sidePanelCurrentItem.value = customizePathSide.value
+  }
+})
 
 </script>
 
