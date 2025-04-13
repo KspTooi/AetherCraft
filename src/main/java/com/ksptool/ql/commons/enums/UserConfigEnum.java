@@ -21,6 +21,10 @@ public enum UserConfigEnum {
     USER_PREF_CUSTOMIZE_PATH_SIDE("user.pref.customize.path.side", null, "偏好:个性化-边栏-路径"),
     USER_PREF_CUSTOMIZE_PATH_TAB_WALLPAPER("user.pref.customize.path.tab.wallpaper", null, "偏好:个性化-背景-TAB"),
     USER_PREF_CUSTOMIZE_PATH_TAB_THEME("user.pref.customize.path.tab.theme", null, "偏好:个性化-主题-TAB"),
+
+    USER_PREF_MRE_CURRENT_ID("user.pref.mre.current.id", null, "偏好:角色扮演-角色设计器-当前正在设计的角色ID"),
+
+    USER_PREF_MRE_PATH_TAB("user.pref.mre.path.tab", null, "偏好:角色扮演-角色设计器-TAB"),
     ;
 
     /**

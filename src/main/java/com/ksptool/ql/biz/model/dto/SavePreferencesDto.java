@@ -17,4 +17,10 @@ public class SavePreferencesDto {
     //个性化-主题-TAB
     private String customizePathTabTheme;
 
+    //客户端角色设计器-当前正在设计的角色ID
+    private String modelRoleEditCurrentId;
+
+    //角色设计器-TAB
+    private String modelRoleEditPathTab;
+
 }

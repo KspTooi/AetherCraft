@@ -160,10 +160,17 @@
           <div class="role-panel">
             <div class="chat-examples-placeholder">
               <i class="bi bi-chat-dots"></i>
-              <p>对话示例功能正在开发中...请使用旧版管理台</p>
+              <p>对话示例功能正在开发中...请转到旧版管理台</p>
+              <GlowButton
+                @click="goToOldPanel"
+                class="redirect-btn"
+                title="前往旧版管理台"
+              >
+                前往旧版管理台
+              </GlowButton>
             </div>
+          </div>
         </div>
-      </div>
       </GlowTab>
     </GlowDiv>
     
@@ -603,6 +610,15 @@ const handleFileUpload = async (event: Event) => {
     target.value = '';
   }
 };
+
+// 跳转到旧版控制台角色管理页面
+const goToOldPanel = () => {
+  if (selectedRoleId.value) {
+    window.location.href = `/panel/model/role/list?id=${selectedRoleId.value}`;
+  } else {
+    window.location.href = '/panel/model/role/list';
+  }
+};
 </script>
 
 <style scoped>
@@ -849,5 +865,12 @@ const handleFileUpload = async (event: Event) => {
   .status-group {
     flex: 1;
   }
+}
+
+/* 对话示例区域中的按钮样式 */
+.redirect-btn {
+  margin-top: 15px;
+  min-width: 150px;
+  background-color: v-bind('theme.boxSecondColor');
 }
 </style>
