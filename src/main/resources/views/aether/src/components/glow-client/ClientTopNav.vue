@@ -99,10 +99,21 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 记录当前激活的导航项索引
 const activeNavIndex = ref(-1)
 
+// 路由映射表 - 将一些特殊路由映射到导航项
+const routeMapping: Record<string, string> = {
+  '/model-role-manager': '/rp', // 将角色管理页面映射到角色扮演导航项
+  // 可以根据需要添加更多映射
+}
+
 // 更新高亮线位置
 const updateHighlightPosition = () => {
   // 获取当前路由路径
-  const currentPath = route.path
+  let currentPath = route.path
+  
+  // 检查当前路由是否需要映射到其他导航项
+  if (routeMapping[currentPath]) {
+    currentPath = routeMapping[currentPath]
+  }
   
   // 检查哪个导航项匹配当前路由
   for (let i = 0; i < props.leftItems.length; i++) {
