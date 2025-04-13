@@ -11,12 +11,13 @@
         :class="{ 
           'glow-input-area-active': isFocused,
           'no-resize': props.autoResize || props.noResize,
-          'auto-resize': props.autoResize
+          'auto-resize': props.autoResize,
+          'glow-input-area-error': notBlank && isEmpty
         }"
         :disabled="disabled"
         :maxlength="maxLength > 0 ? maxLength : undefined"
         @focus="isFocused = true"
-        @blur="isFocused = false"
+        @blur="handleBlur"
         :rows="rows"
         :style="{ paddingRight: props.showLength && props.maxLength > 0 ? '50px' : '10px' }"
         v-bind="$attrs"
@@ -72,13 +73,27 @@ const props = defineProps({
   noResize: {
     type: Boolean,
     default: false
+  },
+  notBlank: {
+    type: Boolean,
+    default: false
+  },
+  typingDelay: {
+    type: Number,
+    default: 500 // 停止输入后500ms触发onTypeDone
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'typeDone'])
 
 const isFocused = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+let typingTimer: number | null = null
+
+// 判断输入是否为空
+const isEmpty = computed(() => {
+  return String(props.modelValue).trim() === ''
+})
 
 const updateValue = (event: Event) => {
   const target = event.target as HTMLTextAreaElement
@@ -94,6 +109,35 @@ const updateValue = (event: Event) => {
   if (props.autoResize) {
     // 确保我们使用的是实际的DOM元素
     adjustHeight(target)
+  }
+  
+  // 清除之前的计时器
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+  
+  // 如果不是notBlank或内容不为空，设置新的计时器
+  if (!props.notBlank || !isEmpty.value) {
+    typingTimer = window.setTimeout(() => {
+      emit('typeDone', value)
+      typingTimer = null
+    }, props.typingDelay)
+  }
+}
+
+const handleBlur = (event: FocusEvent) => {
+  isFocused.value = false
+  
+  // 清除计时器
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+  
+  // 离开输入框时如果内容不为空，立即触发typeDone
+  if (!props.notBlank || !isEmpty.value) {
+    emit('typeDone', props.modelValue)
   }
 }
 
@@ -147,6 +191,11 @@ onMounted(() => {
 
 // 组件卸载前清理事件监听器
 onBeforeUnmount(() => {
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+  
   const textarea = textareaRef.value
   if (textarea) {
     textarea.removeEventListener('touchstart', handleTouchStart)
@@ -319,5 +368,9 @@ defineExpose({
 /* 样式：自动调整大小模式 */
 .auto-resize {
   overflow: hidden !important;
+}
+
+.glow-input-area-error {
+  border-color: v-bind('theme.dangerBorderColor') !important;
 }
 </style>

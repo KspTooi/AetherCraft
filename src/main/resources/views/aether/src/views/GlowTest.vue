@@ -104,6 +104,14 @@ const seriesName = ref('');
 const textareaValue = ref('这是一个多行文本输入框示例，支持多行内容输入。');
 const autoResizeValue = ref('这是一个自动调整高度的文本域，当内容增加时会自动扩展高度。\n尝试添加更多行来查看效果。');
 const fixedTextareaValue = ref('这是一个固定大小的文本域，不允许用户手动调整大小。');
+const notBlankInputValue = ref('');
+const typeDoneResult = ref('');
+
+// 当用户停止输入时触发
+const handleTypeDone = (value: string) => {
+  typeDoneResult.value = `用户停止输入：${value ? value : '空值'}`;
+  console.log('用户停止输入:', value);
+};
 
 // GlowCheckBox测试
 const checkValue1 = ref(false);
@@ -173,6 +181,29 @@ const checkValue4 = ref(false);
               placeholder="请输入列表名称"
             />
           </div>
+          
+          <div>
+            <p>当输入停止时触发事件的输入框</p>
+            <GlowInput 
+              v-model="inputValue" 
+              title="停止输入触发事件" 
+              placeholder="输入后停顿0.5秒将触发事件"
+              @typeDone="handleTypeDone"
+            />
+            <p v-if="typeDoneResult" style="color: #4caf50; font-size: 12px; margin-top: 4px;">
+              {{ typeDoneResult }}
+            </p>
+          </div>
+          
+          <div>
+            <p>必填输入框（为空时显示错误边框）</p>
+            <GlowInput 
+              v-model="notBlankInputValue" 
+              :notBlank="true"
+              title="必填字段" 
+              placeholder="此字段不能为空"
+            />
+          </div>
         </div>
 
         <h3>GlowInputArea 文本域组件</h3>
@@ -214,6 +245,17 @@ const checkValue4 = ref(false);
               :no-resize="true"
               title="禁用调整大小"
               placeholder="不允许用户调整大小的文本域"
+            />
+          </div>
+          
+          <div>
+            <p>必填文本域（为空时显示错误边框）</p>
+            <GlowInputArea
+              v-model="notBlankInputValue"
+              :notBlank="true"
+              title="必填文本域"
+              placeholder="此文本域不能为空"
+              :rows="3"
             />
           </div>
         </div>

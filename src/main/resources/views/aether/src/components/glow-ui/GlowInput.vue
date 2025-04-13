@@ -8,9 +8,12 @@
         class="glow-input"
         :disabled="disabled"
         :maxlength="maxLength > 0 ? maxLength : undefined"
-        :class="{ 'glow-input-active': isFocused }"
+        :class="{ 
+          'glow-input-active': isFocused,
+          'glow-input-error': notBlank && isEmpty 
+        }"
         @focus="isFocused = true"
-        @blur="isFocused = false"
+        @blur="handleBlur"
         v-bind="$attrs"
         :style="inputStyle"
       />
@@ -24,7 +27,7 @@
 <script setup lang="ts">
 
 // 获取 glow 主题
-import {inject, ref, computed} from "vue";
+import {inject, ref, computed, watch, onUnmounted} from "vue";
 import {defaultTheme, GLOW_THEME_INJECTION_KEY, type GlowThemeColors} from "@/components/glow-ui/GlowTheme.ts";
 
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -53,12 +56,26 @@ const props = defineProps({
   title: {
     type: String,
     default: ''
+  },
+  notBlank: {
+    type: Boolean,
+    default: false
+  },
+  typingDelay: {
+    type: Number,
+    default: 500 // 停止输入后500ms触发onTypeDone
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'typeDone'])
 
 const isFocused = ref(false)
+let typingTimer: number | null = null
+
+// 判断输入是否为空
+const isEmpty = computed(() => {
+  return String(props.modelValue).trim() === ''
+})
 
 const updateValue = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -70,7 +87,44 @@ const updateValue = (event: Event) => {
   
   emit('update:modelValue', value)
   emit('change', value)
+  
+  // 清除之前的计时器
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+  
+  // 如果不是notBlank或内容不为空，设置新的计时器
+  if (!props.notBlank || !isEmpty.value) {
+    typingTimer = window.setTimeout(() => {
+      emit('typeDone', value)
+      typingTimer = null
+    }, props.typingDelay)
+  }
 }
+
+const handleBlur = (event: FocusEvent) => {
+  isFocused.value = false
+  
+  // 清除计时器
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+  
+  // 离开输入框时如果内容不为空，立即触发typeDone
+  if (!props.notBlank || !isEmpty.value) {
+    emit('typeDone', props.modelValue)
+  }
+}
+
+// 组件卸载时清理计时器
+onUnmounted(() => {
+  if (typingTimer !== null) {
+    window.clearTimeout(typingTimer)
+    typingTimer = null
+  }
+})
 
 const currentLength = computed(() => {
   return String(props.modelValue).length
@@ -160,5 +214,9 @@ defineExpose({
   font-size: 11px;
   color: v-bind('theme.boxTextColorNoActive');
   pointer-events: none;
+}
+
+.glow-input-error {
+  border-color: v-bind('theme.dangerBorderColor') !important;
 }
 </style>
