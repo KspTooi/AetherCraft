@@ -37,7 +37,6 @@ public class ModelRoleService {
 
         var query = new ModelRolePo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件
-        query.setStatus(1);              // 设置状态为 1 (通常表示有效或启用)
         query.setUserId(AuthService.getCurrentUserId()); // 按当前用户过滤
 
         // 创建 SimpleExample 用于构建查询条件
