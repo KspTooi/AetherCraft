@@ -97,9 +97,12 @@ import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import GlowContextMenu from '../glow-ui/GlowContextMenu.vue' // 导入上下文菜单组件
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 import type GetModelRoleListVo from '@/entity/GetModelRoleListVo'; // 导入 GetModelRoleListVo 类型
+import { useRouter } from 'vue-router' // 导入 router
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
+// 获取路由器
+const router = useRouter()
 
 // 事件定义
 const emit = defineEmits<{
@@ -148,7 +151,7 @@ const handleRoleClick = (roleId: string) => {
 
 // 处理管理角色按钮点击
 const handleRoleManage = () => {
-  window.location.href = "/dashboard?redirect=/panel/model/role/list";
+  router.push('/model-role-manager')
   closeMobileMenu()
 }
 

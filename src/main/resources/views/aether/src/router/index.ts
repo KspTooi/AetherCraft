@@ -32,6 +32,11 @@ const router = createRouter({
       component: () => import('../views/ModelRolePlay.vue'),
     },
     {
+      path: '/model-role-manager',
+      name: 'model-role-manager',
+      component: () => import('../views/ModelRoleManager.vue'),
+    },
+    {
       path: '/agent',
       name: 'model-agent',
       component: () => import('../views/model-agent.vue'),

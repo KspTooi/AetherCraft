@@ -44,7 +44,7 @@
     <GlowConfirm ref="confirmRef" />
 
     <!-- 输入框组件 -->
-    <GlowInput ref="inputRef" />
+    <GlowConfirmInput ref="inputRef" />
 
     <!-- 会话管理模态框 -->
     <RoleThreadsModal 
@@ -64,7 +64,7 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
 import http from '@/commons/Http';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
-import GlowInput from "@/components/glow-ui/GlowInput.vue"
+import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import ModelRoleList from "@/components/glow-client/ModelRoleList.vue";
 import type GetModelRoleListVo from '@/entity/GetModelRoleListVo';
 import type PageableView from '@/entity/PageableView';
@@ -109,7 +109,7 @@ const messages = ref<MessageBoxItem[]>([]);
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用
-const inputRef = ref<InstanceType<typeof GlowInput> | null>(null)
+const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 // 会话管理模态框引用
 const roleThreadsModalRef = ref<InstanceType<typeof RoleThreadsModal> | null>(null)
 

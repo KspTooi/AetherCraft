@@ -249,7 +249,7 @@ defineExpose({
   z-index: 1; /* 在内容之上 */
 }
 
-/* --- GlowInput 自身样式 (需要调整以适应新结构) --- */
+/* --- GlowConfirmInput 自身样式 (需要调整以适应新结构) --- */
 
 /* .glow-input-container 已经被 .glow-input-modal-container 替代 */
 /* 内部内容容器 */

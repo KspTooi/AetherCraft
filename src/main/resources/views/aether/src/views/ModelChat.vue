@@ -44,7 +44,7 @@
     <GlowConfirm ref="confirmRef" />
 
     <!-- 输入框组件 -->
-    <GlowInput ref="inputRef" />
+    <GlowConfirmInput ref="inputRef" />
 
   </div>
 </template>
@@ -58,7 +58,7 @@ import ModelSelector from "@/components/glow-client/ModelSelector.vue";
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
-import GlowInput from "@/components/glow-ui/GlowInput.vue"
+import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import type Result from '@/entity/Result';
 import type ChatSegmentVo from '@/entity/ChatSegmentVo';
 import Http from "@/commons/Http";
@@ -97,7 +97,7 @@ const messages = ref<Array<{
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用
-const inputRef = ref<InstanceType<typeof GlowInput> | null>(null)
+const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
 onMounted(() => {
   reloadThreadList()
