@@ -7,7 +7,6 @@
       :selected="selectedRoleId"
       :loading="loading"
       @select-role="onSelectRole"
-      @copy-role="onCopyRole"
       @create-role="onCreateRole"
     />
 
@@ -306,8 +305,12 @@ const removeModelRole = async (roleId: string) => {
   // 显示确认对话框
   const confirmed = await confirmRef.value.showConfirm({
     title: '移除角色',
-    content: '确定要移除此角色吗？此操作不可恢复。',
-    confirmText: '移除',
+    content: '警告：这是一个不可逆的操作！移除角色将同时删除：\n\n' +
+             '• 与该角色的所有聊天记录\n' +
+             '• 角色的所有个人设定数据\n' +
+             '• 所有对话示例\n\n' +
+             '删除后，您将无法恢复这些数据。确定要继续吗？',
+    confirmText: '确认移除',
     cancelText: '取消'
   });
   
@@ -411,7 +414,7 @@ const onCopyRole = async (roleId: string) => {
     // 显示成功提示
     alterRef.value?.showConfirm({
       title: '复制成功',
-      content: '角色已成功复制',
+      content: '角色已成功复制。\n\n请注意：\n• 仅复制角色基本设定和对话示例\n• 不会复制用户与角色的聊天历史记录\n• 您可以开始与新角色进行全新的对话',
       closeText: '确定'
     });
   } catch (error) {

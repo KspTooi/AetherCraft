@@ -83,12 +83,6 @@
             <div class="thread-content">
               <div class="thread-title">{{ thread.name }}</div>
             </div>
-            <!-- 添加复制按钮 -->
-            <div class="copy-btn-wrapper">
-              <button class="copy-btn" @click.stop="handleCopyRole(thread.id)">
-                <i class="bi bi-files"></i>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -112,7 +106,6 @@ const router = useRouter()
 // 事件定义
 const emit = defineEmits<{
   (e: 'select-role', roleId: string): void;
-  (e: 'copy-role', roleId: string): void;
   (e: 'create-role'): void; // 添加创建角色事件
 }>()
 
@@ -146,12 +139,6 @@ const handleRoleClick = (roleId: string) => {
 // 处理管理角色按钮点击
 const handleRoleManage = () => {
   router.push('/rp')
-  closeMobileMenu()
-}
-
-// 处理复制角色
-const handleCopyRole = (roleId: string) => {
-  emit('copy-role', roleId)
   closeMobileMenu()
 }
 
@@ -425,44 +412,6 @@ defineExpose({
 }
 
 .menu-btn i {
-  font-size: 16px;
-}
-
-/* 复制按钮相关样式 */
-.copy-btn-wrapper {
-  position: absolute; /* 绝对定位到 thread-item 右侧 */
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  opacity: 0; /* 默认隐藏 */
-  transition: opacity 0.2s ease;
-}
-
-.thread-item:hover .copy-btn-wrapper {
-  opacity: 1; /* 悬浮时显示 */
-}
-
-.copy-btn {
-  background: transparent;
-  border: none;
-  color: v-bind('theme.boxTextColorNoActive');
-  padding: 4px 6px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.copy-btn:hover {
-  color: v-bind('theme.boxTextColor');
-  background: v-bind('theme.boxAccentColorHover');
-}
-
-.copy-btn i {
   font-size: 16px;
 }
 
