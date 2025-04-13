@@ -11,126 +11,157 @@
     />
 
     <GlowDiv class="role-content" border="none">
-      <!-- 右侧内容 -->
-      <div class="role-detail-container">
-        <div v-if="!selectedRoleId" class="empty-detail">
-          <i class="bi bi-person-bounding-box"></i>
-          <p>请从左侧选择一个角色进行设计</p>
-        </div>
-        <div v-else class="role-detail">
-          <div class="role-detail-header">
-            <h2 class="role-detail-title">角色详情</h2>
-            <div class="role-actions">
-              <GlowButton @click="saveRoleChanges" :disabled="loading">保存</GlowButton>
-            </div>
-          </div>
-          
-          <div class="role-detail-form">
-            <div class="form-row">
-              <GlowInput
-                v-model="currentRoleDetails.name"
-                title="角色名称"
-                :maxLength="50"
-                showLength
-                notBlank
-              />
+      <div v-if="!selectedRoleId" class="empty-detail">
+        <i class="bi bi-person-bounding-box"></i>
+        <p>请从左侧选择一个角色进行设计</p>
+      </div>
+      
+      <GlowTab
+        v-else
+        :items="roleTabItems"
+        v-model:activeTab="currentTab"
+      >
+        <!-- 角色基本信息 -->
+        <div v-if="currentTab === 'base-info'" class="role-tab-panel">
+          <div class="role-panel">
+            <!-- 操作按钮区域（顶部） -->
+            <div class="action-buttons">
+              <GlowButton 
+                @click="removeModelRole(selectedRoleId)"
+                :disabled="loading"
+                class="action-button danger-button"
+              >
+                移除角色
+              </GlowButton>
+              <GlowButton 
+                @click="saveRoleChanges" 
+                :disabled="loading"
+                class="action-button"
+              >
+                保存角色
+              </GlowButton>
             </div>
             
-            <div class="form-row">
-              <div class="input-group">
+            <div class="role-detail-form">
+              <div class="form-row">
                 <GlowInput
-                  v-model="currentRoleDetails.tags"
-                  title="角色标签"
+                  v-model="currentRoleDetails.name"
+                  title="角色名称"
                   :maxLength="50"
                   showLength
-                  placeholder="使用逗号分隔多个标签"
+                  notBlank
                 />
               </div>
-              <div class="input-group status-group">
-                <div class="status-wrapper">
-                  <GlowCheckBox 
-                    v-model="roleEnabled"
-                    tip="被禁用的角色在聊天界面将不可见">
-                    启用角色
-                  </GlowCheckBox>
+              
+              <div class="form-row">
+                <div class="input-group">
+                  <GlowInput
+                    v-model="currentRoleDetails.tags"
+                    title="角色标签"
+                    :maxLength="50"
+                    showLength
+                    placeholder="使用逗号分隔多个标签"
+                  />
+                </div>
+                <div class="input-group status-group">
+                  <div class="status-wrapper">
+                    <GlowCheckBox 
+                      v-model="roleEnabled"
+                      tip="被禁用的角色在聊天界面将不可见">
+                      启用角色
+                    </GlowCheckBox>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div class="form-row">
-              <GlowInputArea
-                v-model="currentRoleDetails.description"
-                title="角色描述"
-                :maxLength="50000"
-                showLength
-                :rows="3"
-              />
-            </div>
-            
-            <div class="form-row">
-              <GlowInputArea
-                v-model="currentRoleDetails.roleSummary"
-                title="角色设定摘要"
-                :maxLength="50000"
-                showLength
-                :rows="4"
-              />
-            </div>
-            
-            <div class="form-row">
-              <GlowInputArea
-                v-model="currentRoleDetails.scenario"
-                title="情景"
-                :maxLength="50000"
-                showLength
-                :rows="4"
-              />
-            </div>
-            
-            <div class="form-row">
-              <GlowInputArea
-                v-model="currentRoleDetails.firstMessage"
-                title="首次对话内容"
-                :maxLength="50000"
-                showLength
-                :rows="4"
-              />
-            </div>
-            
-            <!-- 头像区域可以后续添加 -->
-            <div class="avatar-section">
-              <p class="section-title">角色头像</p>
-              <div class="avatar-container">
-                <img v-if="currentRoleDetails.avatarPath" :src="currentRoleDetails.avatarPath" class="avatar-preview" alt="角色头像" />
-                <div v-else class="avatar-placeholder">
-                  <i class="bi bi-person"></i>
-                </div>
-                <div class="avatar-upload">
-                  <input 
-                    type="file" 
-                    ref="fileInput" 
-                    style="display: none" 
-                    accept="image/jpeg,image/png" 
-                    @change="handleFileUpload"
-                  />
-                  <GlowButton 
-                    class="upload-btn" 
-                    @click="triggerFileUpload"
-                    :disabled="uploading"
-                  >
-                    {{ uploading ? '上传中...' : '上传头像' }}
-                  </GlowButton>
-                  <p class="upload-tip">支持JPG、PNG格式图片</p>
+              
+              <div class="form-row">
+                <GlowInputArea
+                  v-model="currentRoleDetails.description"
+                  title="角色描述"
+                  :maxLength="50000"
+                  showLength
+                  :rows="3"
+                />
+              </div>
+              
+              <div class="form-row">
+                <GlowInputArea
+                  v-model="currentRoleDetails.roleSummary"
+                  title="角色设定摘要"
+                  :maxLength="50000"
+                  showLength
+                  :rows="4"
+                />
+              </div>
+              
+              <div class="form-row">
+                <GlowInputArea
+                  v-model="currentRoleDetails.scenario"
+                  title="情景"
+                  :maxLength="50000"
+                  showLength
+                  :rows="4"
+                />
+              </div>
+              
+              <div class="form-row">
+                <GlowInputArea
+                  v-model="currentRoleDetails.firstMessage"
+                  title="首次对话内容"
+                  :maxLength="50000"
+                  showLength
+                  :rows="4"
+                />
+              </div>
+              
+              <!-- 头像区域 -->
+              <div class="avatar-section">
+                <p class="section-title">角色头像</p>
+                <div class="avatar-container">
+                  <img v-if="currentRoleDetails.avatarPath" :src="currentRoleDetails.avatarPath" class="avatar-preview" alt="角色头像" />
+                  <div v-else class="avatar-placeholder">
+                    <i class="bi bi-person"></i>
+                  </div>
+                  <div class="avatar-upload">
+                    <input 
+                      type="file" 
+                      ref="fileInput" 
+                      style="display: none" 
+                      accept="image/jpeg,image/png" 
+                      @change="handleFileUpload"
+                    />
+                    <GlowButton 
+                      class="upload-btn" 
+                      @click="triggerFileUpload"
+                      :disabled="uploading"
+                    >
+                      {{ uploading ? '上传中...' : '上传头像' }}
+                    </GlowButton>
+                    <p class="upload-tip">支持JPG、PNG格式图片</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+        
+        <!-- 对话示例 -->
+        <div v-if="currentTab === 'chat-examples'" class="role-tab-panel">
+          <div class="role-panel">
+            <div class="chat-examples-placeholder">
+              <i class="bi bi-chat-dots"></i>
+              <p>对话示例功能正在开发中...请使用旧版管理台</p>
+            </div>
+          </div>
+        </div>
+      </GlowTab>
     </GlowDiv>
     
     <!-- 添加提示组件 -->
     <GlowAlter ref="alterRef" />
+    
+    <!-- 添加确认对话框组件 -->
+    <GlowConfirm ref="confirmRef" />
   </div>
 </template>
 
@@ -150,6 +181,8 @@ import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowCheckBox from "@/components/glow-ui/GlowCheckBox.vue";
+import GlowTab from "@/components/glow-ui/GlowTab.vue";
+import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
@@ -157,13 +190,23 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
 // 角色列表引用
 const roleListRef = ref<any>(null);
 const alterRef = ref<any>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
+const uploading = ref(false);
+const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 
 // 角色列表数据
 const roleList = ref<GetModelRoleListVo[]>([]);
 const loading = ref(true);
 const selectedRoleId = ref<string>("");
-const fileInput = ref<HTMLInputElement | null>(null);
-const uploading = ref(false);
+
+// 定义标签项
+const roleTabItems = [
+  { title: '角色基本', action: 'base-info' },
+  { title: '对话示例', action: 'chat-examples' },
+];
+
+// 当前激活的标签
+const currentTab = ref('base-info');
 
 // 先初始化currentRoleDetails
 const currentRoleDetails = reactive<GetModelRoleDetailsVo>({
@@ -242,6 +285,19 @@ const loadModelRoleDetails = async () => {
 }
 
 const removeModelRole = async (roleId: string) => {
+  if (!confirmRef.value) return;
+  
+  // 显示确认对话框
+  const confirmed = await confirmRef.value.showConfirm({
+    title: '移除角色',
+    content: '确定要移除此角色吗？此操作不可恢复。',
+    confirmText: '移除',
+    cancelText: '取消'
+  });
+  
+  // 用户取消操作
+  if (!confirmed) return;
+  
   try {
     loading.value = true;
     const response = await http.postEntity<string>('/model/role/removeModelRole', {
@@ -465,10 +521,28 @@ const handleFileUpload = async (event: Event) => {
   overflow: hidden;
 }
 
-.role-detail-container {
-  flex: 1;
-  padding: 10px;
-  overflow: auto;
+.role-tab-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+.role-panel {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 135px);
+}
+
+.role-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.role-panel::-webkit-scrollbar-thumb {
+  background: v-bind('theme.boxBorderColor');
+}
+
+.role-panel::-webkit-scrollbar-track {
+  background: v-bind('theme.boxSecondColor');
 }
 
 .empty-detail {
@@ -489,34 +563,30 @@ const handleFileUpload = async (event: Event) => {
   font-size: 16px;
 }
 
-.role-detail {
-  padding: 10px;
-}
-
-.role-detail-header {
+/* 对话示例占位符样式 */
+.chat-examples-placeholder {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid v-bind('theme.boxBorderColor');
-  padding-bottom: 10px;
+  justify-content: center;
+  height: 300px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.role-detail-title {
-  font-size: 18px;
-  margin: 0;
-  color: v-bind('theme.boxTextColor');
+.chat-examples-placeholder i {
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
-.role-actions {
-  display: flex;
-  gap: 10px;
+.chat-examples-placeholder p {
+  font-size: 16px;
 }
 
 .role-detail-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  padding-bottom: 50px; /* 确保底部有足够的空间 */
 }
 
 .form-row {
@@ -602,6 +672,33 @@ const handleFileUpload = async (event: Event) => {
   font-size: 12px;
   color: v-bind('theme.boxTextColorNoActive');
   margin: 0;
+}
+
+/* 操作按钮容器 */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.action-button {
+  min-width: 80px;
+  padding: 2px 10px;
+  min-height: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.danger-button {
+  background-color: v-bind('theme.dangerColor');
+  border-color: v-bind('theme.dangerBorderColor');
+  color: v-bind('theme.dangerTextColor');
+}
+
+.danger-button:hover {
+  background-color: v-bind('theme.dangerColorHover');
+  border-color: v-bind('theme.dangerBorderColorHover');
 }
 
 @media (max-width: 768px) {
