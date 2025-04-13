@@ -7,6 +7,7 @@ import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import { ref } from 'vue';
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
+import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
 
 // 控制模态框显示状态
 const showModal = ref(false);
@@ -79,6 +80,9 @@ const inputValue = ref('');
 const maxInputLength = ref(20);
 const inputWithLimit = ref('');
 const seriesName = ref('');
+const textareaValue = ref('这是一个多行文本输入框示例，支持多行内容输入。');
+const autoResizeValue = ref('这是一个自动调整高度的文本域，当内容增加时会自动扩展高度。\n尝试添加更多行来查看效果。');
+const fixedTextareaValue = ref('这是一个固定大小的文本域，不允许用户手动调整大小。');
 </script>
 
 <template>
@@ -113,8 +117,51 @@ const seriesName = ref('');
             <p>带标题的输入框</p>
             <GlowInput 
               v-model="seriesName" 
-              title="这里填入输入框的标题" 
+              title="访问列表名称" 
               placeholder="请输入列表名称"
+            />
+          </div>
+        </div>
+
+        <h3>GlowInputArea 文本域组件</h3>
+        <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px;">
+          <div>
+            <p>基本文本域：</p>
+            <GlowInputArea
+              v-model="textareaValue"
+              :rows="4"
+              placeholder="请输入多行文本"
+            />
+          </div>
+          
+          <div>
+            <p>带字数限制的文本域：</p>
+            <GlowInputArea
+              v-model="inputWithLimit"
+              :max-length="maxInputLength"
+              :show-length="true"
+              title="限制字数的文本域"
+              placeholder="最多输入20个字符"
+            />
+          </div>
+          
+          <div>
+            <p>自动调整高度的文本域：</p>
+            <GlowInputArea
+              v-model="autoResizeValue"
+              :auto-resize="true"
+              title="自动调整高度"
+              placeholder="输入文本时会自动调整高度"
+            />
+          </div>
+          
+          <div>
+            <p>禁用调整大小的文本域：</p>
+            <GlowInputArea
+              v-model="fixedTextareaValue"
+              :no-resize="true"
+              title="禁用调整大小"
+              placeholder="不允许用户调整大小的文本域"
             />
           </div>
         </div>
