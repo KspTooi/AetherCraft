@@ -90,7 +90,7 @@
                   title="角色描述"
                   :maxLength="50000"
                   showLength
-                  :rows="3"
+                  :auto-resize="true"
                 />
               </div>
               
@@ -100,7 +100,7 @@
                   title="角色设定摘要"
                   :maxLength="50000"
                   showLength
-                  :rows="4"
+                  :auto-resize="true"
                 />
               </div>
               
@@ -110,7 +110,7 @@
                   title="情景"
                   :maxLength="50000"
                   showLength
-                  :rows="4"
+                  :auto-resize="true"
                 />
               </div>
               
@@ -120,7 +120,7 @@
                   title="首次对话内容"
                   :maxLength="50000"
                   showLength
-                  :rows="4"
+                  :auto-resize="true"
                 />
               </div>
               
