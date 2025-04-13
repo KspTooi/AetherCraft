@@ -1,5 +1,6 @@
 <template>
   <div class="glow-input-wrapper">
+    <div v-if="title" class="input-title">{{ title }}</div>
     <div class="input-container">
       <input 
         :value="modelValue"
@@ -48,6 +49,10 @@ const props = defineProps({
   modelValue: {
     type: [String, Number],
     default: ''
+  },
+  title: {
+    type: String,
+    default: ''
   }
 })
 
@@ -93,15 +98,25 @@ defineExpose({
   margin-bottom: 6px;
 }
 
+.input-title {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 12px;
+  color: v-bind('theme.boxTextColor');
+  margin-bottom: 4px;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
 .input-container {
   position: relative;
   width: 100%;
 }
 
 .glow-input {
+  font-family: 'Chakra Petch', sans-serif;
   width: 100%;
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: 13px;
   background-color: v-bind('theme.boxSecondColor');
   color: v-bind('theme.boxTextColor');
   border: 1px solid v-bind('theme.boxBorderColor');
@@ -111,6 +126,10 @@ defineExpose({
   box-sizing: border-box;
   backdrop-filter: blur(v-bind('theme.boxBlur') + 'px');
   line-height: 1.2;
+}
+
+.glow-input::placeholder {
+  font-family: 'Chakra Petch', sans-serif;
 }
 
 .glow-input:hover:not(:disabled) {
@@ -133,6 +152,7 @@ defineExpose({
 }
 
 .length-indicator {
+  font-family: 'Chakra Petch', sans-serif;
   position: absolute;
   right: 8px;
   top: 50%;

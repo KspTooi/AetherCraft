@@ -76,8 +76,9 @@ const handleColorChange = (color: string) => {
 
 // GlowInput测试
 const inputValue = ref('');
-const maxInputLength = ref(200);
+const maxInputLength = ref(20);
 const inputWithLimit = ref('');
+const seriesName = ref('');
 </script>
 
 <template>
@@ -106,6 +107,15 @@ const inputWithLimit = ref('');
           <div>
             <p>禁用状态的输入框</p>
             <GlowInput disabled placeholder="禁用状态" />
+          </div>
+          
+          <div>
+            <p>带标题的输入框</p>
+            <GlowInput 
+              v-model="seriesName" 
+              title="这里填入输入框的标题" 
+              placeholder="请输入列表名称"
+            />
           </div>
         </div>
 

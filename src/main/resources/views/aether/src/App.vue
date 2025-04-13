@@ -53,6 +53,9 @@ onMounted(()=>{
 
 <style>
 
+/* 导入Chakra Petch字体 */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&display=swap');
+
 /* 重置 body 边距 */
 body {
   margin: 0;
