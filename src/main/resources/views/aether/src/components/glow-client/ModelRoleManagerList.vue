@@ -56,6 +56,20 @@
         
         <!-- 会话列表 -->
         <div v-else class="thread-list">
+          <!-- 新增角色按钮 -->
+          <div 
+            class="thread-item new-role-item"
+            @click="handleCreateRole($event)"
+          >
+            <div class="role-avatar new-role-avatar">
+              <i class="bi bi-plus-lg"></i>
+            </div>
+            <div class="thread-content">
+              <div class="thread-title">创建新角色</div>
+            </div>
+          </div>
+          
+          <!-- 现有角色列表 -->
           <div 
             v-for="thread in threads" 
             :key="thread.id"
@@ -99,6 +113,7 @@ const router = useRouter()
 const emit = defineEmits<{
   (e: 'select-role', roleId: string): void;
   (e: 'copy-role', roleId: string): void;
+  (e: 'create-role'): void; // 添加创建角色事件
 }>()
 
 const props = defineProps<{
@@ -137,6 +152,13 @@ const handleRoleManage = () => {
 // 处理复制角色
 const handleCopyRole = (roleId: string) => {
   emit('copy-role', roleId)
+  closeMobileMenu()
+}
+
+// 处理创建角色点击
+const handleCreateRole = (event: Event) => {
+  event.stopPropagation()
+  emit('create-role')
   closeMobileMenu()
 }
 
@@ -480,5 +502,30 @@ defineExpose({
     transform: translateX(240px);
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   }
+}
+
+/* 新角色按钮样式 */
+.new-role-item {
+  border-left: 3px solid v-bind('theme.mainColor');
+  background-color: rgba(255, 255, 255, 0.05);
+  margin: 4px 0; /* 与其他角色项目保持一致的边距 */
+}
+
+.new-role-item:hover {
+  background-color: v-bind('theme.mainColorHover');
+}
+
+.new-role-avatar {
+  background: v-bind('theme.mainColor');
+  border-color: v-bind('theme.mainBorderColor');
+}
+
+.new-role-avatar i {
+  font-size: 18px; /* 调整图标大小与其他角色头像图标一致 */
+  color: v-bind('theme.mainTextColor');
+}
+
+.new-role-item .thread-title {
+  color: v-bind('theme.boxTextColor');
 }
 </style>

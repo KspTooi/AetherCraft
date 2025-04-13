@@ -8,13 +8,14 @@
       :loading="loading"
       @select-role="onSelectRole"
       @copy-role="onCopyRole"
+      @create-role="onCreateRole"
     />
 
     <GlowDiv class="role-content" border="none">
-      <div v-if="!selectedRoleId" class="empty-detail">
-        <i class="bi bi-person-bounding-box"></i>
-        <p>请从左侧选择一个角色进行设计</p>
-      </div>
+        <div v-if="!selectedRoleId" class="empty-detail">
+          <i class="bi bi-person-bounding-box"></i>
+          <p>请从左侧选择一个角色进行设计</p>
+        </div>
       
       <GlowTab
         v-else
@@ -152,8 +153,8 @@
               <i class="bi bi-chat-dots"></i>
               <p>对话示例功能正在开发中...请使用旧版管理台</p>
             </div>
-          </div>
         </div>
+      </div>
       </GlowTab>
     </GlowDiv>
     
@@ -162,6 +163,9 @@
     
     <!-- 添加确认对话框组件 -->
     <GlowConfirm ref="confirmRef" />
+    
+    <!-- 添加确认输入框组件 -->
+    <GlowConfirmInput ref="confirmInputRef" :close-on-click-overlay="false" />
   </div>
 </template>
 
@@ -183,6 +187,7 @@ import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowCheckBox from "@/components/glow-ui/GlowCheckBox.vue";
 import GlowTab from "@/components/glow-ui/GlowTab.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
+import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
@@ -193,6 +198,7 @@ const alterRef = ref<any>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
+const confirmInputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null);
 
 // 角色列表数据
 const roleList = ref<GetModelRoleListVo[]>([]);
@@ -383,6 +389,57 @@ const onSelectRole = async (roleId: string) => {
 // 复制角色 - 空实现
 const onCopyRole = (roleId: string) => {
   // 这里添加复制角色的实现逻辑
+};
+
+// 创建新角色
+const onCreateRole = async () => {
+  if (!confirmInputRef.value) return;
+  
+  // 弹出输入框让用户输入角色名称
+  const result = await confirmInputRef.value.showInput({
+    title: '创建新角色',
+    defaultValue: '新角色',
+    placeholder: '请输入角色名称',
+    message: '创建后可以继续编辑角色的其他信息',
+    confirmText: '创建',
+    cancelText: '取消'
+  });
+  
+  // 用户取消创建
+  if (!result.confirmed) return;
+  
+  // 用户确认创建且输入了角色名称
+  if (result.value.trim()) {
+    // 清空当前选中的角色ID
+    selectedRoleId.value = "";
+    
+    // 初始化一个新的角色详情对象
+    Object.assign(currentRoleDetails, {
+      id: "",
+      name: result.value.trim(), // 使用用户输入的角色名称
+      status: 1,
+      sortOrder: 0,
+      avatarPath: "",
+      description: "",
+      roleSummary: "",
+      scenario: "",
+      firstMessage: "",
+      tags: ""
+    });
+    
+    // 等待下一个事件循环，确保表单已重置
+    setTimeout(() => {
+      // 自动保存新角色
+      saveRoleChanges();
+    }, 0);
+  } else {
+    // 用户输入为空，显示提示
+    alterRef.value?.showConfirm({
+      title: '创建失败',
+      content: '角色名称不能为空',
+      closeText: '确定'
+    });
+  }
 };
 
 // 保存角色更改
