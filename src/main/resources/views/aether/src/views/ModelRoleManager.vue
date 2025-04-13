@@ -31,15 +31,17 @@
                 @click="removeModelRole(selectedRoleId)"
                 :disabled="loading"
                 class="action-button danger-button"
+                title="移除角色"
               >
-                移除角色
+                <i class="bi bi-person-x"></i>
               </GlowButton>
               <GlowButton 
                 @click="saveRoleChanges" 
                 :disabled="loading"
-                class="action-button"
+                class="action-button save-button"
+                title="保存角色"
               >
-                保存角色
+                <i class="bi bi-check-lg"></i>
               </GlowButton>
             </div>
             
@@ -741,14 +743,22 @@ const handleFileUpload = async (event: Event) => {
   gap: 8px;
 }
 
+/* 通用图标按钮样式 */
 .action-button {
-  min-width: 80px;
-  padding: 2px 10px;
+  min-width: 32px; /* 调整为正方形按钮 */
+  padding: 0; /* 移除内边距 */
   min-height: 28px;
   height: 28px;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.action-button i {
+  font-size: 20px; /* 统一图标大小 */
+}
+
+/* 危险按钮样式 */
 .danger-button {
   background-color: v-bind('theme.dangerColor');
   border-color: v-bind('theme.dangerBorderColor');
@@ -758,6 +768,18 @@ const handleFileUpload = async (event: Event) => {
 .danger-button:hover {
   background-color: v-bind('theme.dangerColorHover');
   border-color: v-bind('theme.dangerBorderColorHover');
+}
+
+/* 保存按钮样式 */
+.save-button {
+  background-color: v-bind('theme.mainColor');
+  border-color: v-bind('theme.mainBorderColor');
+  color: v-bind('theme.mainTextColor');
+}
+
+.save-button:hover {
+  background-color: v-bind('theme.mainColorHover');
+  border-color: v-bind('theme.mainBorderColorHover');
 }
 
 @media (max-width: 768px) {
