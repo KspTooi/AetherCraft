@@ -1,9 +1,11 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.po.ModelRoleChatExamplePo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 import static com.ksptool.entities.Entities.assign;
 
 @Service
@@ -31,6 +35,9 @@ public class ModelRoleService {
 
     @Autowired
     private ContentSecurityService css;
+
+    @Autowired
+    private ModelRoleChatExampleRepository chatExampleRepository;
 
 
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto){
@@ -102,6 +109,85 @@ public class ModelRoleService {
         return vo;
     }
 
+    public void copyModelRole(long sourceId) throws BizException{
 
+        // 查询要复制的角色
+        ModelRolePo query = new ModelRolePo();
+        query.setId(sourceId);
+        query.setUserId(AuthService.getCurrentUserId()); // 确保只能复制当前用户的角色
+        
+        // 创建Example查询
+        SimpleExample<ModelRolePo> example = SimpleExample.of(query);
+        
+        // 执行查询
+        ModelRolePo sourceRole = repository.findOne(example.get())
+                .orElseThrow(() -> new BizException("要复制的角色不存在或无权限访问"));
+        
+        // 创建新角色并复制属性
+        ModelRolePo newRole = new ModelRolePo();
+        assign(sourceRole, newRole);
+        
+        // 设置新角色的基本属性
+        newRole.setId(null); // 清空ID，让数据库自动生成
+        
+        // 生成不冲突的角色名称
+        String baseName = sourceRole.getName() + " 副本";
+        String newName = baseName;
+        int suffix = 1;
+        
+        // 检查名称是否存在，如果存在则添加数字后缀
+        while (isRoleNameExists(newName, AuthService.getCurrentUserId())) {
+            newName = baseName + " " + suffix;
+            suffix++;
+        }
+        
+        newRole.setName(newName);
+        newRole.setCreateTime(null); // 清空创建时间，让数据库自动设置
+        newRole.setUpdateTime(null); // 清空更新时间，让数据库自动设置
+        
+        // 保存新角色 (不需要再次加密，因为查询出的数据并没有解密)
+        ModelRolePo savedRole = repository.save(newRole);
+        
+        // 查询并复制对话示例
+        var chatExampleQuery = new ModelRoleChatExamplePo();
+        chatExampleQuery.setModelRoleId(sourceId);
+        
+        SimpleExample<ModelRoleChatExamplePo> chatExample = SimpleExample.of(chatExampleQuery);
+        List<ModelRoleChatExamplePo> examples = chatExampleRepository.findAll(chatExample.get());
+        
+        if (!examples.isEmpty()) {
+            for (ModelRoleChatExamplePo exampleItem : examples) {
+                // 创建新的对话示例并复制属性
+                ModelRoleChatExamplePo newExample = new ModelRoleChatExamplePo();
+                assign(exampleItem, newExample);
+                
+                // 设置新对话示例的基本属性
+                newExample.setId(null);
+                newExample.setModelRoleId(savedRole.getId());
+                newExample.setCreateTime(null);
+                newExample.setUpdateTime(null);
+                
+                // 保存新对话示例
+                chatExampleRepository.save(newExample);
+            }
+        }
+    }
+    
+    /**
+     * 检查角色名称是否已存在
+     * @param roleName 角色名称
+     * @param userId 用户ID
+     * @return 如果名称已存在返回true，否则返回false
+     */
+    private boolean isRoleNameExists(String roleName, Long userId) {
+        ModelRolePo query = new ModelRolePo();
+        query.setName(roleName);
+        query.setUserId(userId);
+        
+        SimpleExample<ModelRolePo> example = SimpleExample.of(query);
+        // 使用精确匹配，SimpleExample默认就是精确匹配
+        
+        return repository.exists(example.get());
+    }
 
 }

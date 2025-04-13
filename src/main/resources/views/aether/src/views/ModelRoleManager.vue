@@ -33,7 +33,15 @@
                 class="action-button danger-button"
                 title="移除角色"
               >
-                <i class="bi bi-person-x"></i>
+                移除
+              </GlowButton>
+              <GlowButton 
+                @click="copyCurrentRole"
+                :disabled="loading"
+                class="action-button"
+                title="复制角色"
+              >
+                复制
               </GlowButton>
               <GlowButton 
                 @click="saveRoleChanges" 
@@ -41,7 +49,7 @@
                 class="action-button save-button"
                 title="保存角色"
               >
-                <i class="bi bi-check-lg"></i>
+                保存
               </GlowButton>
             </div>
             
@@ -389,8 +397,40 @@ const onSelectRole = async (roleId: string) => {
 };
 
 // 复制角色 - 空实现
-const onCopyRole = (roleId: string) => {
-  // 这里添加复制角色的实现逻辑
+const onCopyRole = async (roleId: string) => {
+  try {
+    loading.value = true;
+    await http.postEntity<string>('/model/role/copyModelRole', {
+      id: roleId
+    });
+    
+    // 刷新角色列表
+    await loadRoleList();
+    loading.value = false;
+    
+    // 显示成功提示
+    alterRef.value?.showConfirm({
+      title: '复制成功',
+      content: '角色已成功复制',
+      closeText: '确定'
+    });
+  } catch (error) {
+    loading.value = false;
+    
+    // 显示错误提示
+    alterRef.value?.showConfirm({
+      title: '复制失败',
+      content: error instanceof Error ? error.message : '复制角色失败，请稍后重试',
+      closeText: '确定'
+    });
+  }
+};
+
+// 复制当前角色
+const copyCurrentRole = () => {
+  if (selectedRoleId.value) {
+    onCopyRole(selectedRoleId.value);
+  }
 };
 
 // 创建新角色
@@ -746,7 +786,6 @@ const handleFileUpload = async (event: Event) => {
 /* 通用图标按钮样式 */
 .action-button {
   min-width: 32px; /* 调整为正方形按钮 */
-  padding: 0; /* 移除内边距 */
   min-height: 28px;
   height: 28px;
   display: flex;

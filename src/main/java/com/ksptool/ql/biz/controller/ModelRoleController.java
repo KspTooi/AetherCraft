@@ -43,6 +43,18 @@ public class ModelRoleController {
         return Result.success(service.getModelRoleDetails(dto.getId()));
     }
 
+    @PostMapping("copyModelRole")
+    public Result<String> copyModelRole(@RequestBody @Valid CommonIdDto dto){
+
+        try{
+            service.copyModelRole(dto.getId());
+            return Result.success("success");
+        }catch (BizException ex){
+            return Result.error(ex.getMessage());
+        }
+    }
+
+
     @PostMapping("/saveModelRole")
     public Result<String> saveModelRole(@RequestBody @Valid SaveModelRoleDto dto){
         try{
