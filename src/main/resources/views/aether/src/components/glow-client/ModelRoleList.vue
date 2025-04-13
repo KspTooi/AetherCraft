@@ -30,7 +30,7 @@
           class="manage-role-btn"
           :corners="['bottom-right','bottom-left']"
         >
-          管理角色
+          角色设计器
         </GlowButton>
       </div>
       
