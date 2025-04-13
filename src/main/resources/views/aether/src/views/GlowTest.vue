@@ -4,6 +4,7 @@ import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowModal from "@/components/glow-ui/GlowModal.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
+import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import { ref } from 'vue';
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
@@ -15,6 +16,7 @@ const showDangerModal = ref(false);
 
 // 确认框引用
 const confirmRef = ref();
+const alterRef = ref();
 
 // 打开模态框
 const openModal = () => {
@@ -54,6 +56,24 @@ const openCustomConfirm = async () => {
   if (result) {
     alert('删除操作已确认');
   }
+};
+
+// 打开只有关闭按钮的提示框
+const openAlter = async () => {
+  await alterRef.value.showConfirm({
+    title: '操作提示',
+    content: '您的操作已完成！',
+    closeText: '关闭'
+  });
+};
+
+// 打开自定义提示框
+const openCustomAlter = async () => {
+  await alterRef.value.showConfirm({
+    title: '系统通知',
+    content: '系统升级完成，请刷新页面以获取最新功能。',
+    closeText: '我知道了'
+  });
 };
 
 // 确认操作
@@ -191,6 +211,14 @@ const fixedTextareaValue = ref('这是一个固定大小的文本域，不允许
       </div>
       
       <div class="component-section">
+        <h3>GlowAlter 提示框组件</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <GlowButton @click="openAlter">打开提示框</GlowButton>
+          <GlowButton @click="openCustomAlter" :corners="['bottom-left']">自定义提示框</GlowButton>
+        </div>
+      </div>
+      
+      <div class="component-section">
         <h3>LaserDiv 容器组件</h3>
         <GlowDiv style="padding: 20px; margin-bottom: 10px;">
           <p>这是一个基本的LaserDiv容器</p>
@@ -244,6 +272,9 @@ const fixedTextareaValue = ref('这是一个固定大小的文本域，不允许
       
       <!-- LaserConfirm组件 -->
       <GlowConfirm ref="confirmRef" />
+      
+      <!-- GlowAlter组件 -->
+      <GlowAlter ref="alterRef" />
     </div>
   </GlowTheme>
 </template>
