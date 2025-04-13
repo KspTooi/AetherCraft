@@ -97,11 +97,14 @@ import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 import type GetModelRoleListVo from '@/entity/GetModelRoleListVo'; // 导入 GetModelRoleListVo 类型
 import { useRouter } from 'vue-router' // 导入 router
+import { usePreferencesStore } from '@/stores/preferences' // 导入 preferences store
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 获取路由器
 const router = useRouter()
+// 获取偏好设置存储
+const preferencesStore = usePreferencesStore()
 
 // 事件定义
 const emit = defineEmits<{
@@ -137,7 +140,9 @@ const handleRoleClick = (roleId: string) => {
 }
 
 // 处理管理角色按钮点击
-const handleRoleManage = () => {
+const handleRoleManage = async () => {
+  // 在跳转前先将clientRpPath设置为/rp-main，防止循环重定向
+  await preferencesStore.saveClientRpPath('/rp')
   router.push('/rp')
   closeMobileMenu()
 }

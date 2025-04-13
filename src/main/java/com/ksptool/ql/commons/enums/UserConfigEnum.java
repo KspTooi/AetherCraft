@@ -25,6 +25,8 @@ public enum UserConfigEnum {
     USER_PREF_MRE_CURRENT_ID("user.pref.mre.current.id", null, "偏好:角色扮演-角色设计器-当前正在设计的角色ID"),
 
     USER_PREF_MRE_PATH_TAB("user.pref.mre.path.tab", null, "偏好:角色扮演-角色设计器-TAB"),
+
+    USER_PREF_CLIENT_RP_PATH("user.pref.client.rp.path", null, "偏好:角色扮演中的子路由路径"),
     ;
 
     /**

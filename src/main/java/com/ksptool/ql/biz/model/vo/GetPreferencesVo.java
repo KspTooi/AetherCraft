@@ -22,4 +22,7 @@ public class GetPreferencesVo {
 
     //角色设计器-TAB
     private String modelRoleEditPathTab;
+    
+    //角色扮演当前路径
+    private String clientRpPath;
 }

@@ -204,9 +204,13 @@ import GlowCheckBox from "@/components/glow-ui/GlowCheckBox.vue";
 import GlowTab from "@/components/glow-ui/GlowTab.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue";
+import { usePreferencesStore } from '@/stores/preferences';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
+
+// 获取偏好设置存储
+const preferencesStore = usePreferencesStore();
 
 // 角色列表引用
 const roleListRef = ref<any>(null);
@@ -229,6 +233,13 @@ const roleTabItems = [
 
 // 当前激活的标签
 const currentTab = ref('base-info');
+
+// 监听当前Tab变化并保存到偏好设置
+watch(currentTab, (newValue) => {
+  if (newValue) {
+    preferencesStore.saveModelRoleEditPathTab(newValue);
+  }
+});
 
 // 先初始化currentRoleDetails
 const currentRoleDetails = reactive<GetModelRoleDetailsVo>({
@@ -260,6 +271,23 @@ watch(() => currentRoleDetails.status, (newValue) => {
 // 生命周期钩子
 onMounted(async () => {
   await loadRoleList();
+  
+  // 从偏好设置中加载上次选择的角色ID和Tab
+  const savedRoleId = preferencesStore.getModelRoleEditCurrentId;
+  const savedTab = preferencesStore.getModelRoleEditPathTab;
+  
+  if (savedTab) {
+    currentTab.value = savedTab;
+  }
+  
+  if (savedRoleId) {
+    // 检查保存的角色ID是否在列表中存在
+    const roleExists = roleList.value.some(role => role.id === savedRoleId);
+    if (roleExists) {
+      selectedRoleId.value = savedRoleId;
+      await loadModelRoleDetails();
+    }
+  }
 });
 
 // 加载角色列表
@@ -401,6 +429,9 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
 // 选择角色
 const onSelectRole = async (roleId: string) => {
   selectedRoleId.value = roleId;
+  
+  // 保存选中的角色ID到偏好设置
+  preferencesStore.saveModelRoleEditCurrentId(roleId);
   
   // 加载选中角色的详情
   await loadModelRoleDetails();

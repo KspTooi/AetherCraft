@@ -46,6 +46,10 @@ public class ClientPreferencesController {
         if(StringUtils.isNotBlank(dto.getModelRoleEditPathTab())) {
             userConfigService.setValue(UserConfigEnum.USER_PREF_MRE_PATH_TAB.key(), dto.getModelRoleEditPathTab());
         }
+        
+        if(StringUtils.isNotBlank(dto.getClientRpPath())) {
+            userConfigService.setValue(UserConfigEnum.USER_PREF_CLIENT_RP_PATH.key(), dto.getClientRpPath());
+        }
 
         return Result.success("success");
     }
@@ -60,6 +64,7 @@ public class ClientPreferencesController {
         String customizePathTabTheme = userConfigService.getValue(UserConfigEnum.USER_PREF_CUSTOMIZE_PATH_TAB_THEME.key());
         String modelRoleEditCurrentId = userConfigService.getValue(UserConfigEnum.USER_PREF_MRE_CURRENT_ID.key());
         String modelRoleEditPathTab = userConfigService.getValue(UserConfigEnum.USER_PREF_MRE_PATH_TAB.key());
+        String clientRpPath = userConfigService.getValue(UserConfigEnum.USER_PREF_CLIENT_RP_PATH.key());
 
         if(StringUtils.isNotBlank(clientPath)) {
             ret.setClientPath(clientPath);
@@ -83,6 +88,10 @@ public class ClientPreferencesController {
 
         if(StringUtils.isNotBlank(modelRoleEditPathTab)) {
             ret.setModelRoleEditPathTab(modelRoleEditPathTab);
+        }
+        
+        if(StringUtils.isNotBlank(clientRpPath)) {
+            ret.setClientRpPath(clientRpPath);
         }
 
         return Result.success(ret);

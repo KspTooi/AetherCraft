@@ -30,11 +30,32 @@ const router = createRouter({
       path: '/rp',
       name: 'model-rp',
       component: () => import('../views/ModelRolePlay.vue'),
+      beforeEnter: async (to, from, next) => {
+        const preferences = usePreferencesStore()
+        await preferences.loadPreferences()
+        const {clientRpPath } = storeToRefs(preferences)
+        
+        // 检查上次访问的是否为角色设计器页面
+        if (clientRpPath.value === '/model-role-manager') {
+          next('/model-role-manager')
+          return
+        }
+        
+        // 保存当前路径到角色扮演路径
+        preferences.saveClientRpPath('/rp')
+        next()
+      }
     },
     {
       path: '/model-role-manager',
       name: 'model-role-manager',
       component: () => import('../views/ModelRoleManager.vue'),
+      beforeEnter: async (to, from, next) => {
+        const preferences = usePreferencesStore()
+        // 当进入角色设计器页面时，更新角色扮演路径为角色设计器
+        preferences.saveClientRpPath('/model-role-manager')
+        next()
+      }
     },
     {
       path: '/agent',
