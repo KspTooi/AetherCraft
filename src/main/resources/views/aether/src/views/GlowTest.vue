@@ -9,6 +9,7 @@ import { ref } from 'vue';
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
+import GlowCheckBox from "@/components/glow-ui/GlowCheckBox.vue";
 
 // 控制模态框显示状态
 const showModal = ref(false);
@@ -103,12 +104,43 @@ const seriesName = ref('');
 const textareaValue = ref('这是一个多行文本输入框示例，支持多行内容输入。');
 const autoResizeValue = ref('这是一个自动调整高度的文本域，当内容增加时会自动扩展高度。\n尝试添加更多行来查看效果。');
 const fixedTextareaValue = ref('这是一个固定大小的文本域，不允许用户手动调整大小。');
+
+// GlowCheckBox测试
+const checkValue1 = ref(false);
+const checkValue2 = ref(true);
+const checkValue3 = ref(false);
+const checkValue4 = ref(false);
 </script>
 
 <template>
   <GlowTheme>
     <div class="test-container">
       <h2>Laser UI 组件测试</h2>
+
+      <div class="component-section">
+        <h3>GlowCheckBox 复选框组件</h3>
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+          <div>
+            <GlowCheckBox v-model="checkValue1">未选中状态的复选框</GlowCheckBox>
+            <p style="margin-top: 5px; font-size: 14px;">当前值: {{ checkValue1 }}</p>
+          </div>
+          
+          <div>
+            <GlowCheckBox v-model="checkValue2">已选中状态的复选框</GlowCheckBox>
+            <p style="margin-top: 5px; font-size: 14px;">当前值: {{ checkValue2 }}</p>
+          </div>
+          
+          <div>
+            <GlowCheckBox v-model="checkValue3">点击切换选中状态</GlowCheckBox>
+            <p style="margin-top: 5px; font-size: 14px;">当前值: {{ checkValue3 }}</p>
+          </div>
+          
+          <div>
+            <GlowCheckBox v-model="checkValue4" tip="这是一个带有提示信息的复选框，鼠标悬停时会显示此提示">带提示信息的复选框</GlowCheckBox>
+            <p style="margin-top: 5px; font-size: 14px;">当前值: {{ checkValue4 }}</p>
+          </div>
+        </div>
+      </div>
 
       <div class="component-section">
         <h3>GlowInput 输入框组件</h3>
