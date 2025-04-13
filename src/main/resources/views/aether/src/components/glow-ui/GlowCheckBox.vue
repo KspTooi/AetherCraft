@@ -79,11 +79,11 @@ const toggleCheck = () => {
 
 .glow-check-box i {
   color: v-bind('theme.boxGlowColor');
-  font-size: 15px;
+  font-size: 18px;
   font-weight: bold;
   line-height: 1;
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
