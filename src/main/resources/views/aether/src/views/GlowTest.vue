@@ -6,6 +6,7 @@ import GlowModal from "@/components/glow-ui/GlowModal.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import { ref } from 'vue';
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
+import GlowInput from "@/components/glow-ui/GlowInput.vue";
 
 // 控制模态框显示状态
 const showModal = ref(false);
@@ -72,6 +73,11 @@ const handleColorChange = (color: string) => {
   selectedColor.value = color;
   console.log('选择的颜色:', color);
 };
+
+// GlowInput测试
+const inputValue = ref('');
+const maxInputLength = ref(200);
+const inputWithLimit = ref('');
 </script>
 
 <template>
@@ -80,6 +86,29 @@ const handleColorChange = (color: string) => {
       <h2>Laser UI 组件测试</h2>
 
       <div class="component-section">
+        <h3>GlowInput 输入框组件</h3>
+        <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px;">
+          <div>
+            <p>基本输入框：{{ inputValue }}</p>
+            <GlowInput v-model="inputValue" placeholder="请输入内容" />
+          </div>
+          
+          <div>
+            <p>带字数限制的输入框：{{ inputWithLimit.length }}/{{ maxInputLength }}</p>
+            <GlowInput 
+              v-model="inputWithLimit" 
+              :max-length="maxInputLength" 
+              :show-length="true"
+              placeholder="最多输入20个字符" 
+            />
+          </div>
+          
+          <div>
+            <p>禁用状态的输入框</p>
+            <GlowInput disabled placeholder="禁用状态" />
+          </div>
+        </div>
+
         <h3>LaserButton 按钮组件</h3>
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
           <GlowButton :corners="['top-right','top-left']">普通按钮</GlowButton>
