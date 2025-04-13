@@ -1,12 +1,17 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
+import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.web.SimpleExample;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,6 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class ModelRoleService {
@@ -61,8 +69,39 @@ public class ModelRoleService {
         return pageableView;
     }
 
-
-
+    public GetModelRoleDetailsVo getModelRoleDetails(long id) throws BizException {
+        
+        // 创建查询条件
+        ModelRolePo query = new ModelRolePo();
+        query.setId(id);
+        query.setUserId(AuthService.getCurrentUserId()); // 确保只能查询当前用户的角色
+        
+        // 创建Example查询
+        SimpleExample<ModelRolePo> example = SimpleExample.of(query);
+        
+        // 执行查询
+        ModelRolePo modelRole = repository.findOne(example.get())
+                .orElseThrow(() -> new BizException("角色不存在或无权限访问"));
+        
+        // 创建VO对象并映射属性
+        GetModelRoleDetailsVo vo = new GetModelRoleDetailsVo();
+        assign(modelRole, vo);
+        
+        // 解密需要解密的字段
+        vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+        vo.setDescription(css.decryptForCurUser(vo.getDescription()));
+        vo.setRoleSummary(css.decryptForCurUser(vo.getRoleSummary()));
+        vo.setScenario(css.decryptForCurUser(vo.getScenario()));
+        vo.setFirstMessage(css.decryptForCurUser(vo.getFirstMessage()));
+        vo.setTags(css.decryptForCurUser(vo.getTags()));
+        
+        // 处理头像路径
+        if (StringUtils.isNotBlank(vo.getAvatarPath())) {
+            vo.setAvatarPath("/res/" + vo.getAvatarPath());
+        }
+        
+        return vo;
+    }
 
 
 

@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.service.ModelRoleService;
 import com.ksptool.ql.biz.service.UserFileService;
@@ -32,9 +33,14 @@ public class ModelRoleController {
     private PanelModelRoleService panelModelRoleService;
 
 
-    @PostMapping("/getRoleList")
+    @PostMapping("/getModelRoleList")
     public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto dto){
         return Result.success(service.getModelRoleList(dto));
+    }
+
+    @PostMapping("getModelRoleDetails")
+    public Result<GetModelRoleDetailsVo> getModelRoleDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        return Result.success(service.getModelRoleDetails(dto.getId()));
     }
 
     @PostMapping("/saveModelRole")
