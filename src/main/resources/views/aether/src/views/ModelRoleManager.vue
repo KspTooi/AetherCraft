@@ -264,7 +264,7 @@ const loadRoleList = async () => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '加载失败',
-      content: '无法加载角色列表，请稍后重试',
+      content: error instanceof Error ? error.message : '无法加载角色列表，请稍后重试',
       closeText: '确定'
     });
   }
@@ -284,7 +284,7 @@ const loadModelRoleDetails = async () => {
   } catch (error) {
     alterRef.value?.showConfirm({
       title: '加载失败',
-      content: '无法加载角色详情，请稍后重试',
+      content: error instanceof Error ? error.message : '无法加载角色详情，请稍后重试',
       closeText: '确定'
     });
   }
@@ -322,7 +322,7 @@ const removeModelRole = async (roleId: string) => {
       // 使用GlowAlter显示错误提示
       alterRef.value?.showConfirm({
         title: '操作失败',
-        content: '删除角色失败，请稍后重试',
+        content: '删除角色失败：' + (response || '未知错误'),
         closeText: '确定'
       });
     }
@@ -334,7 +334,7 @@ const removeModelRole = async (roleId: string) => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '操作失败',
-      content: '删除角色出错，请稍后重试',
+      content: error instanceof Error ? error.message : '删除角色出错，请稍后重试',
       closeText: '确定'
     });
   }
@@ -360,7 +360,7 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
       // 使用GlowAlter显示错误提示
       alterRef.value?.showConfirm({
         title: '保存失败',
-        content: '保存角色信息失败，请稍后重试',
+        content: '保存角色信息失败：未获取有效响应',
         closeText: '确定'
       });
     }
@@ -372,7 +372,7 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '保存失败',
-      content: '保存角色信息出错，请稍后重试',
+      content: error instanceof Error ? error.message : '保存角色信息出错，请稍后重试',
       closeText: '确定'
     });
   }
@@ -529,7 +529,7 @@ const handleFileUpload = async (event: Event) => {
     });
     
     if (!response.ok) {
-      throw new Error('上传失败');
+      throw new Error('上传失败：' + response.statusText);
     }
     
     const data = await response.json();
@@ -537,6 +537,8 @@ const handleFileUpload = async (event: Event) => {
     // 更新头像路径 (假设响应格式为 { data: 文件路径 })
     if (data && data.data) {
       currentRoleDetails.avatarPath = '/res/' + data.data;
+    } else {
+      throw new Error('上传失败：服务器返回数据格式不正确');
     }
     
     uploading.value = false;
@@ -548,7 +550,7 @@ const handleFileUpload = async (event: Event) => {
     
     alterRef.value?.showConfirm({
       title: '上传失败',
-      content: '头像上传失败，请稍后重试',
+      content: error instanceof Error ? error.message : '头像上传失败，请稍后重试',
       closeText: '确定'
     });
     
