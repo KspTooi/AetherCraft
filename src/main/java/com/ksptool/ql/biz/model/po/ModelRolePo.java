@@ -11,7 +11,9 @@ import java.util.List;
  * 用于管理AI模型的角色信息和对话设置
  */
 @Entity
-@Table(name = "model_roles")
+@Table(name = "model_roles", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "name"}, name = "uk_user_role_name")
+})
 @Data
 public class ModelRolePo {
 
