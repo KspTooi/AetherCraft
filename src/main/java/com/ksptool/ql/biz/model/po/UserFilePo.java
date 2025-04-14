@@ -15,7 +15,7 @@ public class UserFilePo {
     @Comment("文件ID")
     private Long id;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 500, unique = true)
     @Comment("存储的文件名")
     private String filepath;
 
