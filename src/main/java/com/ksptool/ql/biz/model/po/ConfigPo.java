@@ -7,7 +7,9 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "config")
+@Table(name = "config", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "config_key"}, name = "uk_user_config")
+})
 public class ConfigPo {
     
     @Id
