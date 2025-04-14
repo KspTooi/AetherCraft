@@ -12,7 +12,9 @@ import java.util.Date;
  * 用于管理用户的角色信息
  */
 @Entity
-@Table(name = "model_user_roles")
+@Table(name = "model_user_roles", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "name"}, name = "uk_user_role_name")
+})
 @Data
 @DynamicUpdate
 public class ModelUserRolePo {
