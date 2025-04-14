@@ -45,7 +45,7 @@
         <!-- 空列表状态 -->
         <div v-else-if="threads.length === 0" class="empty-list">
           <i class="bi bi-person-plus"></i>
-          <div class="empty-text">您还没有创建角色</div>
+          <div class="empty-text">您可以通过角色设计器创建您的第一个角色</div>
           <GlowButton
             @click="handleRoleManage" 
             class="empty-create-btn"
