@@ -11,6 +11,7 @@ import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,15 @@ public class Router {
     @Autowired
     private PanelInstallWizardService installWizardService;
 
+    @Value("${spring.profiles.active}")
+    private String profile;
+
+    @Value("${vite-dev-server.host}")
+    private String viteDevServerHost;
+
+    @Value("${vite-dev-server.port}")
+    private String viteDevServerPort;
+
     @GetMapping("/")
     public String index(HttpServletRequest hsr) {
         // 如果启用向导模式，跳转到向导
@@ -49,20 +59,70 @@ public class Router {
         return "redirect:/welcome";
     }
 
+    public String getViteDevServerURL(HttpServletRequest hsr){
+        var scheme = hsr.getScheme();
+        var serverName = hsr.getServerName();
+        if(!viteDevServerHost.equals("auto")){
+            serverName = viteDevServerHost;
+        }
+        var serverPort = viteDevServerPort;
+        return scheme + "://" + serverName + ":" + serverPort;
+    }
+
     @GetMapping("/client-ui")
-    public String clientUI(HttpServletRequest hsr) {
+    public ModelAndView clientUI(HttpServletRequest hsr) {
+
+        var mav = new ModelAndView("client-ui-entry");
+
         // 如果启用向导模式，跳转到向导
         if(installWizardService.hasInstallWizardMode()){
-            return "redirect:/install-wizard/";
+            mav.setViewName("redirect:/install-wizard/");
+            return mav;
         }
 
         // 当前登录用户有效，跳转到客户端SPA页面
         if(authService.verifyUser(hsr) != null){
-            return "client-ui-entry";
+
+            //如果是开发模式 需要动态注入代理主机(VITE开发服务器)
+            if(profile.equals("dev")){
+                String host = getViteDevServerURL(hsr);
+                mav.addObject("host", host);
+            }
+
+            return mav;
         }
 
         // 未登录用户跳转到欢迎页
-        return "redirect:/welcome";
+        mav.setViewName("redirect:/welcome");
+        return mav;
+    }
+
+    @GetMapping("/admin-ui")
+    public ModelAndView adminUI(HttpServletRequest hsr) {
+
+        var mav = new ModelAndView("admin-ui-entry");
+
+        // 如果启用向导模式，跳转到向导
+        if(installWizardService.hasInstallWizardMode()){
+            mav.setViewName("redirect:/install-wizard/");
+            return mav;
+        }
+
+        // 当前登录用户有效，跳转到客户端SPA页面
+        if(authService.verifyUser(hsr) != null){
+
+            //如果是开发模式 需要动态注入代理主机(VITE开发服务器)
+            if(profile.equals("dev")){
+                String host = getViteDevServerURL(hsr);
+                mav.addObject("host", host);
+            }
+
+            return mav;
+        }
+
+        // 未登录用户跳转到欢迎页
+        mav.setViewName("redirect:/welcome");
+        return mav;
     }
 
 

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'} ? '[开发环境] 客户端UI' : '客户端UI'">客户端UI</title>
+    <title th:text="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'} ? '[开发环境] 管理控制台' : '管理控制台'">管理控制台</title>
     <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" crossorigin th:unless="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" href="/assets/client.css">
+    <link rel="stylesheet" crossorigin th:unless="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" href="/assets/admin.css">
 </head>
 
 <body>
@@ -17,7 +17,7 @@
 
 <script type="module" th:if="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" th:src="${host != null ? host : 'http://127.0.0.1:30002'} + '/@id/virtual:vue-devtools-path:overlay.js'"></script>
 <script type="module" th:if="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" th:src="${host != null ? host : 'http://127.0.0.1:30002'} + '/@id/virtual:vue-inspector-path:load.js'"></script>
-<script type="module" th:if="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" th:src="${host != null ? host : 'http://127.0.0.1:30002'} + '/src/ClientMain.ts'"></script>
-<script type="module" crossorigin th:unless="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" src="/assets/client.js"></script>
+<script type="module" th:if="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" th:src="${host != null ? host : 'http://127.0.0.1:30002'} + '/src/AdminMain.ts'"></script>
+<script type="module" crossorigin th:unless="${@environment.getActiveProfiles().length > 0 && @environment.getActiveProfiles()[0] == 'dev'}" src="/assets/admin.js"></script>
 
 </html> 

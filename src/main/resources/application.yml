@@ -1,6 +1,10 @@
 server:
   port: 30000  # 设置应用端口号
-  
+
+vite-dev-server:
+  host: auto #VITE开发服务器地址(AUTO为自动获取)
+  port: 30002 #VITE开发服务器端口号
+
 spring:
   profiles:
     active: dev  # 设置活动配置文件为开发环境

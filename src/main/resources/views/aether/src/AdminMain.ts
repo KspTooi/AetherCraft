@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import App from './App.vue'
-import router from './router'
+import Admin from './Admin.vue'
+import router from './router/admin'  // 使用admin专用路由
 
 // 导入 Bootstrap Icons 样式
 import 'bootstrap-icons/font/bootstrap-icons.css'
@@ -9,7 +9,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import 'bootstrap-icons/font/fonts/bootstrap-icons.woff'
 import 'bootstrap-icons/font/fonts/bootstrap-icons.woff2'
 
-const app = createApp(App)
+const app = createApp(Admin)
 
 app.use(createPinia())
 app.use(router)
