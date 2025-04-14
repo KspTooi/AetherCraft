@@ -37,7 +37,7 @@ public class GroupPo {
     @Comment("组标识，如：admin、developer等")
     private String code;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     @Comment("组名称，如：管理员组、开发者组等")
     private String name;
 
