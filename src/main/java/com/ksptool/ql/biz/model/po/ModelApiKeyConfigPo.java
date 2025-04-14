@@ -10,7 +10,9 @@ import java.util.Date;
  * 用于配置模型与API密钥的关联关系，指定调用特定模型时使用的API密钥
  */
 @Entity
-@Table(name = "model_api_key_configs")
+@Table(name = "model_api_key_configs", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "model_code", "api_key_id"}, name = "uk_user_model_apikey")
+})
 @Data
 public class ModelApiKeyConfigPo {
 
