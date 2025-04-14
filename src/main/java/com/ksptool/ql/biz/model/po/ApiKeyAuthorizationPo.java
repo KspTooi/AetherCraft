@@ -11,7 +11,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "api_key_authorizations", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"api_key_id", "authorized_user_id"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"api_key_id", "authorized_user_id"},name = "uk_api_authorized"))
 @Data
 public class ApiKeyAuthorizationPo {
 

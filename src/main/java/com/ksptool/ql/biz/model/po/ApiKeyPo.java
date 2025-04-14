@@ -11,7 +11,9 @@ import java.util.Date;
  * 用于存储用户的API密钥信息
  */
 @Entity
-@Table(name = "api_keys")
+@Table(name = "api_keys",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "keyName"},name = "uk_user_key_name")
+)
 @Data
 public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
 
