@@ -29,7 +29,7 @@ public class PermissionPo {
     @Comment("权限标识，如：system:user:view")
     private String code;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     @Comment("权限名称，如：查看用户")
     private String name;
 
