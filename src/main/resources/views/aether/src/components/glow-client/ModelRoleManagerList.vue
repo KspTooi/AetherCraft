@@ -45,12 +45,12 @@
         <!-- 空列表状态 -->
         <div v-else-if="threads.length === 0" class="empty-list">
           <i class="bi bi-person-plus"></i>
-          <div class="empty-text">您还没有创建角色</div>
+          <div class="empty-text">您还未拥有模型角色</div>
           <GlowButton
-            @click="handleRoleManage" 
+            @click="handleCreateRole($event)" 
             class="empty-create-btn"
           >
-            返回
+            创建新角色
           </GlowButton>
         </div>
         

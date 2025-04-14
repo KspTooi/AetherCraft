@@ -50,7 +50,7 @@
             @click="handleRoleManage" 
             class="empty-create-btn"
           >
-            创建角色
+            进入角色设计器
           </GlowButton>
         </div>
         
