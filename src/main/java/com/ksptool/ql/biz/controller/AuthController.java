@@ -4,9 +4,11 @@ import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.model.dto.LoginDto;
 import com.ksptool.ql.biz.model.dto.RegisterDto;
 import com.ksptool.ql.biz.model.vo.LoginVo;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
+import com.ksptool.ql.biz.user.model.vo.UserPermissionVo;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
@@ -21,6 +23,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Set;
 
 @Controller
 public class AuthController {
@@ -119,4 +123,18 @@ public class AuthController {
             return mav;
         }
     }
+
+    @PostMapping("/getPermissions")
+    @ResponseBody
+    public Result<Set<String>> getPermissions() {
+
+        UserSessionVo session = AuthService.getCurrentUserSession();
+
+        if(session == null){
+            return Result.error("获取权限节点失败.");
+        }
+
+        return Result.success(session.getPermissions());
+    }
+
 }

@@ -8,9 +8,11 @@
         <el-form-item>
           <el-button type="primary" @click="loadUserList">查询</el-button>
           <el-button @click="resetQuery">重置</el-button>
-          <el-button type="success" @click="handleAdd">新增用户</el-button>
         </el-form-item>
       </el-form>
+      <div class="add-button-container">
+        <el-button type="success" @click="handleAdd">新增用户</el-button>
+      </div>
     </div>
 
     <div class="user-table">
@@ -367,6 +369,11 @@ onMounted(() => {
 }
 
 .query-form {
+  margin-bottom: 20px;
+}
+
+.add-button-container {
+  margin-top: 10px;
   margin-bottom: 20px;
 }
 
