@@ -30,7 +30,11 @@ public class AdminGroupController {
 
     @PostMapping("getGroupDetails")
     public Result<GetGroupDetailsVo> getGroupDetails(@RequestBody @Valid CommonIdDto dto){
-        return Result.success(service.getGroupDetails(dto.getId()));
+        try{
+            return Result.success(service.getGroupDetails(dto.getId()));
+        }catch (Exception e){
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("saveGroup")

@@ -22,7 +22,7 @@ public class AdminGroupService {
         return null;
     }
 
-    public GetGroupDetailsVo getGroupDetails(long id) {
+    public GetGroupDetailsVo getGroupDetails(long id) throws BizException {
         return null;
     }
 
