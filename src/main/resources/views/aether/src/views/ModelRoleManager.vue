@@ -191,7 +191,7 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme';
 import { inject } from 'vue';
 import http from '@/commons/Http';
-import type GetModelRoleListVo from '@/entity/GetModelRoleListVo';
+import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
 import type PageableView from '@/entity/PageableView';
 import ModelRoleManagerList from '@/components/glow-client/ModelRoleManagerList.vue';
 import type GetModelRoleDetailsVo from "@/entity/model-role/vo/GetModelRoleDetailsVo";

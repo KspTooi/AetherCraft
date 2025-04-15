@@ -29,4 +29,19 @@ public class GetGroupListVo {
 
     // 创建时间
     private Date createTime;
+
+    public GetGroupListVo() {
+    }
+
+    public GetGroupListVo(Long id, String code, String name, Integer memberCount, Integer permissionCount, 
+                         Boolean isSystem, Integer status, Date createTime) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.memberCount = memberCount;
+        this.permissionCount = permissionCount;
+        this.isSystem = isSystem;
+        this.status = status;
+        this.createTime = createTime;
+    }
 }

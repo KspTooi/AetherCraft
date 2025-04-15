@@ -154,12 +154,13 @@
 import { ref, reactive, onMounted, markRaw, computed } from 'vue';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import Http from '@/commons/Http';
-import type GetUserListDto from '@/entity/user/dto/GetUserListDto';
-import type GetUserListVo from '@/entity/user/vo/GetUserListVo';
-import type SaveUserDto from '@/entity/user/dto/SaveUserDto';
+import type GetUserListDto from '@/entity/dto/GetUserListDto.ts';
+import type GetUserListVo from '@/entity/vo/GetUserListVo.ts';
+import type SaveUserDto from '@/entity/dto/SaveUserDto.ts';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
+import UserApi from "@/commons/api/UserApi.ts";
 
 // 使用markRaw包装图标组件，防止被Vue响应式系统处理
 const EditIcon = markRaw(Edit);
@@ -223,18 +224,14 @@ const groupOptions = ref([
 
 // 加载用户列表数据
 const loadUserList = async () => {
-  loading.value = true;
-  try {
-    const res = await Http.postEntity<{
-      rows: GetUserListVo[],
-      count: number,
-      currentPage: number,
-      pageSize: number
-    }>('/admin/user/getUserList', queryForm);
-    
-    userList.value = res.rows;
-    // 确保total是数字类型
-    total.value = Number(res.count);
+
+  try{
+
+    loading.value = true;
+    let vos = await UserApi.getUserList(queryForm);
+    userList.value = vos.rows;
+    total.value = Number(vos.count);
+
   } catch (error) {
     ElMessage.error('加载用户列表失败');
     console.error('加载用户列表失败', error);

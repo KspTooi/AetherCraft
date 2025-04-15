@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.user.controller;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.user.model.dto.GetGroupListDto;
 import com.ksptool.ql.biz.user.model.dto.SaveGroupDto;
+import com.ksptool.ql.biz.user.model.vo.GetGroupDefinitionsVo;
 import com.ksptool.ql.biz.user.model.vo.GetGroupDetailsVo;
 import com.ksptool.ql.biz.user.model.vo.GetGroupListVo;
 import com.ksptool.ql.biz.user.service.AdminGroupService;
@@ -16,12 +17,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/group")
 public class AdminGroupController {
 
     @Autowired
     private AdminGroupService service;
+
+    @PostMapping("getGroupDefinitions")
+    public Result<List<GetGroupDefinitionsVo>> getGroupDefinitions(){
+        return Result.success(service.getGroupDefinitions());
+    }
 
     @PostMapping("getGroupList")
     public Result<RestPageableView<GetGroupListVo>> getGroupList(@RequestBody @Valid GetGroupListDto dto){

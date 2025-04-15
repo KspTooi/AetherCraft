@@ -1,5 +1,5 @@
-import UserGroupVo from './UserGroupVo';
-import UserPermissionVo from './UserPermissionVo';
+import UserGroupVo from './UserGroupVo.ts';
+import UserPermissionVo from './UserPermissionVo.ts';
 
 /**
  * 用户详情数据

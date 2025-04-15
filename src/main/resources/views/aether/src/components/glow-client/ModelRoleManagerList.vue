@@ -95,7 +95,7 @@ import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
-import type GetModelRoleListVo from '@/entity/GetModelRoleListVo'; // 导入 GetModelRoleListVo 类型
+import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts'; // 导入 GetModelRoleListVo 类型
 import { useRouter } from 'vue-router' // 导入 router
 import { usePreferencesStore } from '@/stores/preferences' // 导入 preferences store
 
