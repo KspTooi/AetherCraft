@@ -75,7 +75,7 @@ export default {
         
         // 如果 code 不是 0，postRaw 内部已经处理或拦截器已处理 401
         // 这里只需要处理 code 为 0 但 data 为 null 的情况或其他业务错误
-        if (result.code === 0 && result.data !== null) {
+        if (result.code === 0) {
             return result.data;
         }
         
