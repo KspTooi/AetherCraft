@@ -6,28 +6,43 @@ const router = createRouter({
     {
       path: '/',
       name: 'admin-home',
-      component: () => import('../views/admin/Dashboard.vue'),
+      redirect: '/admin/user',
     },
     {
-      path: '/user-manage',
-      name: 'user-manage',
-      component: () => import('../views/admin/UserManage.vue'),
+      path: '/admin/user',
+      name: 'user-manager',
+      component: () => import('@/views/admin/UserManager.vue'),
     },
     {
-      path: '/system-config',
-      name: 'system-config',
-      component: () => import('../views/admin/SystemConfig.vue'),
+      path: '/admin/group',
+      name: 'user-group-manager',
+      component: () => import('@/views/admin/UserGroupManager.vue'),
     },
     {
-      path: '/log-viewer',
-      name: 'log-viewer',
-      component: () => import('../views/admin/LogViewer.vue'),
+      path: '/admin/permission',
+      name: 'permission-manager',
+      component: () => import('@/views/admin/PermissionManager.vue'),
     },
     {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('../views/admin/NotFound.vue'),
+      path: '/admin/config',
+      name: 'config-manager',
+      component: () => import('@/views/admin/ConfigManager.vue'),
     },
+    {
+      path: '/admin/model',
+      name: 'ai-model-manager',
+      component: () => import('@/views/admin/AiModelManager.vue'),
+    },
+    {
+      path: '/admin/model/apikey',
+      name: 'api-key-manager',
+      component: () => import('@/views/admin/ApiKeyManager.vue'),
+    },
+    {
+      path: '/admin/maintain',
+      name: 'application-maintain',
+      component: () => import('@/views/admin/ApplicationMaintain.vue'),
+    }
   ],
 })
 
