@@ -22,30 +22,30 @@ public class RestPageableView<T> {
     /**
      * 总记录数
      */
-    private long count;
+    private Integer count;
 
 
     public RestPageableView() {
     }
 
-    public RestPageableView(List<T> rows, long count) {
+    public RestPageableView(List<T> rows, Long count) {
         this.rows = rows;
-        this.count = count;
+        this.count = Math.toIntExact(count);
     }
 
     public RestPageableView(Page<?> page, List<T> rows) {
         this.rows = rows;
-        this.count = page.getTotalElements();
+        this.count = Math.toIntExact(page.getTotalElements());
     }
 
     public RestPageableView(Page<T> page) {
         this.rows = page.getContent();
-        this.count = page.getTotalElements();
+        this.count = Math.toIntExact(page.getTotalElements());
     }
 
     public RestPageableView(Page<?> page, Class<T> targetClass) {
         this.rows = as(page.getContent(), targetClass);
-        this.count = page.getTotalElements();
+        this.count = Math.toIntExact(page.getTotalElements());
     }
 
 
