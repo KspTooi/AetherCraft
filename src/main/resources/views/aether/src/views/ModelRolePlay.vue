@@ -182,6 +182,11 @@ const onMessageSend = async (message: string) => {
       // 发送失败处理 (现在没有本地用户消息需要移除了)
       console.error('发送消息失败或未收到有效的用户消息数据:', '返回数据无效');
       // 可选：显示错误提示给用户
+      alterRef.value?.showConfirm({
+        title: "回复消息时发生错误",
+        content: "发送消息失败或未收到有效的用户消息数据",
+        closeText: "好的",
+      })
       isGenerating.value = false; // 重置加载状态
     }
 
@@ -189,6 +194,12 @@ const onMessageSend = async (message: string) => {
     console.error('发送消息请求失败:', error);
     // 网络或其他错误处理
     // 可选：显示错误提示给用户
+    alterRef.value?.showConfirm({
+      title: "发送消息请求失败",
+      content: `${error}`,
+      closeText: "好的",
+    })
+
     isGenerating.value = false; // 重置加载状态
   }
 };
