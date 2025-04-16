@@ -13,12 +13,10 @@ public enum AIModelEnum {
 
     /*正式模型*/
     GEMINI_2_FLASH("gemini-2.0-flash", "Gemini 2.0 Flash", "Gemini"),
-    GEMINI_2_5_EXP_0325("gemini-2.5-pro-exp-03-25", "gemini-2.5-pro-exp-03-25", "Gemini"),
 
+    GEMINI_2_5_PRO_PREVIEW_0325("gemini-2.5-pro-preview-03-25", "Gemini 2.5 Pro Preview 2025-03-25", "Gemini"),
 
-
-
-
+    GEMINI_2_5_EXP_0325("gemini-2.5-pro-exp-03-25", "Gemini 2.5 Pro Exp 2025-03-25", "Gemini"),
 
     GEMINI_2_FLASH_LITE("gemini-2.0-flash-lite", "Gemini 2.0 Flash-Lite", "Gemini"),
     GEMINI_15_FLASH("gemini-1.5-flash", "Gemini 1.5 Flash", "Gemini"),
