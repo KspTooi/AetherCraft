@@ -43,6 +43,8 @@
     <!-- 确认框组件 -->
     <GlowConfirm ref="confirmRef" />
 
+    <GlowAlter ref="alterRef" />
+
     <!-- 输入框组件 -->
     <GlowConfirmInput ref="inputRef" />
 
@@ -73,6 +75,7 @@ import type RecoverRpChatHistoryVo from '@/entity/RecoverRpChatHistoryVo';
 import type GetRpLastStatusVo from '@/entity/GetRpLastStatusVo';
 import type RpSegmentVo from '@/entity/RpSegmentVo';
 import RoleThreadsModal from "@/components/glow-client/RoleThreadsModal.vue";
+import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -106,6 +109,7 @@ const roleList = ref<GetModelRoleListVo[]>([])
 // 使用 MessageBoxItem 类型定义 messages
 const messages = ref<MessageBoxItem[]>([]);
 
+const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用
@@ -256,6 +260,12 @@ const pollMessage = async () => {
       } else if (segment.type === 10) { // 错误片段
         console.error('AI生成错误:', segment.content);
         // 可选: 显示错误给用户
+        alterRef.value?.showConfirm({
+          title: "回复消息时发生错误",
+          content: segment.content,
+          closeText: "好的",
+        })
+
         removeTempMsg(); // 移除临时消息 (调用新函数)
         isGenerating.value = false; // 结束加载状态
         break; // 结束轮询
