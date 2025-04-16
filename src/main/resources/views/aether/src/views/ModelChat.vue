@@ -43,6 +43,9 @@
     <!-- 确认框组件 -->
     <GlowConfirm ref="confirmRef" />
 
+    <!-- 错误提示框组件 -->
+    <GlowAlter ref="alterRef" />
+
     <!-- 输入框组件 -->
     <GlowConfirmInput ref="inputRef" />
 
@@ -59,6 +62,7 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
+import GlowAlter from "@/components/glow-ui/GlowAlter.vue"
 import type Result from '@/entity/Result';
 import type ChatSegmentVo from '@/entity/ChatSegmentVo';
 import Http from "@/commons/Http";
@@ -96,6 +100,8 @@ const messages = ref<Array<{
 
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
+// 错误提示框引用
+const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
 // 输入框引用
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
@@ -152,10 +158,20 @@ const onMessageSend = async (message: string) => {
       await pollMessage();
     } else {
       console.error('发送消息失败: 未收到有效的用户消息数据');
+      alterRef.value?.showConfirm({
+        title: "回复消息时发生错误",
+        content: "发送消息失败或未收到有效的用户消息数据",
+        closeText: "好的",
+      });
       isGenerating.value = false;
     }
   } catch (error) {
     console.error('发送消息请求失败:', error);
+    alterRef.value?.showConfirm({
+      title: "发送消息请求失败",
+      content: `${error}`,
+      closeText: "好的",
+    });
     isGenerating.value = false;
   }
 };
@@ -204,12 +220,22 @@ const pollMessage = async () => {
         break;
       } else if (segment.type === 10) {
         console.error('AI生成错误:', segment.content);
+        alterRef.value?.showConfirm({
+          title: "回复消息时发生错误",
+          content: segment.content,
+          closeText: "好的",
+        });
         removeTempMsg();
         isGenerating.value = false;
         break;
       }
     } catch (error) {
       console.error('轮询AI响应请求失败:', error);
+      alterRef.value?.showConfirm({
+        title: "轮询AI响应失败",
+        content: `${error}`,
+        closeText: "好的",
+      });
       removeTempMsg();
       isGenerating.value = false;
       break;
@@ -233,6 +259,11 @@ const onBatchAbort = async () => {
     console.log('已中止AI响应');
   } catch (error) {
     console.error('中止AI响应请求失败:', error);
+    alterRef.value?.showConfirm({
+      title: "中止AI响应失败",
+      content: `${error}`,
+      closeText: "好的",
+    });
   } finally {
     isGenerating.value = false;
     removeTempMsg();
