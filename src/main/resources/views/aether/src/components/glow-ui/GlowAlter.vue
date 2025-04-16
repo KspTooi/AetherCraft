@@ -9,6 +9,8 @@ import type { GlowThemeColors } from './GlowTheme.ts'
 // 当组件单独运行时，如果没有注入主题，则使用默认主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
+console.log(theme.boxBorderColor)
+
 // 状态
 const visible = ref(false)
 const title = ref('确认操作')
@@ -130,8 +132,31 @@ defineExpose({
   word-wrap: break-word;
   overflow-wrap: break-word;
   padding-left: 10px; /* 与图标对齐 */
-  max-height: none;
-  overflow: visible;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 自定义滚动条样式 - Chrome, Edge, Safari */
+.laser-confirm-content::-webkit-scrollbar {
+  width: 3px;
+}
+
+.laser-confirm-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.laser-confirm-content::-webkit-scrollbar-thumb {
+  background-color: v-bind('theme.boxBorderColor');
+}
+
+.laser-confirm-content::-webkit-scrollbar-thumb:hover {
+  background-color: v-bind('theme.boxBorderColorHover');
+}
+
+/* 自定义滚动条样式 - Firefox */
+.laser-confirm-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .laser-confirm-buttons {
