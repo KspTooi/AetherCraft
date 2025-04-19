@@ -61,16 +61,6 @@ public class AdminPermissionService {
         
         GetPermissionDetailsVo vo = new GetPermissionDetailsVo();
         assign(permission, vo);
-        
-        // 获取关联的用户组
-        List<UserGroupVo> groupVos = new ArrayList<>();
-        for (GroupPo group : permission.getGroups()) {
-            UserGroupVo groupVo = new UserGroupVo();
-            assign(group, groupVo);
-            groupVos.add(groupVo);
-        }
-        vo.setGroups(groupVos);
-        
         return vo;
     }
 

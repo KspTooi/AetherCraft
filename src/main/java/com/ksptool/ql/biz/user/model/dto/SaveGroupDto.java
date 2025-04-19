@@ -3,6 +3,8 @@ import lombok.Data;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
 
+import java.util.List;
+
 @Data
 public class SaveGroupDto {
 
@@ -34,4 +36,7 @@ public class SaveGroupDto {
     @NotNull(message = "排序号不能为空")
     @Min(value = 0, message = "排序号必须大于等于0")
     private Integer sortOrder;
+
+    //权限ID列表
+    private List<Long> permissionIds;
 }

@@ -15,25 +15,25 @@ export default interface GetUserListVo {
   /**
    * 用户昵称
    */
-  nickname?: string;
+  nickname: string;
   
   /**
    * 用户邮箱
    */
-  email?: string;
+  email: string;
   
   /**
    * 创建时间
    */
-  createTime?: string;
+  createTime: string;
   
   /**
    * 最后登录时间
    */
-  lastLoginTime?: string;
+  lastLoginTime: string;
   
   /**
    * 用户状态
    */
-  status?: number;
+  status: number;
 } 

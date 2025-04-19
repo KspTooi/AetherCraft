@@ -1,5 +1,5 @@
-import UserGroupVo from './UserGroupVo.ts';
-import UserPermissionVo from './UserPermissionVo.ts';
+import type UserGroupVo from '@/entity/vo/UserGroupVo';
+import type UserPermissionVo from '@/entity/vo/UserPermissionVo';
 
 /**
  * 用户详情数据
@@ -18,35 +18,35 @@ export default interface GetUserDetailsVo {
   /**
    * 用户昵称
    */
-  nickname?: string;
+  nickname: string;
   
   /**
    * 用户邮箱
    */
-  email?: string;
+  email: string;
   
   /**
    * 用户状态
    */
-  status?: number;
+  status: number;
   
   /**
    * 创建时间
    */
-  createTime?: string;
+  createTime: string;
   
   /**
    * 最后登录时间
    */
-  lastLoginTime?: string;
+  lastLoginTime: string;
   
   /**
    * 用户组列表
    */
-  groups?: UserGroupVo[];
+  groups: UserGroupVo[];
   
   /**
    * 用户权限列表
    */
-  permissions?: UserPermissionVo[];
+  permissions: UserPermissionVo[];
 } 

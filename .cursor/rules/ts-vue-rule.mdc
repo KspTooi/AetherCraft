@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1.所有导入使用@导入
+2.ts中的vo与dto定义为export default interface

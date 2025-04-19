@@ -1,10 +1,10 @@
 import type PageableView from "@/entity/PageableView.ts";
 import Http from "@/commons/Http.ts";
 import type GetUserListDto from "@/entity/dto/GetUserListDto.ts";
-import type GetUserListVo from "@/entity/vo/GetUserListVo.ts";
 import type CommonIdDto from "@/entity/dto/CommonIdDto.ts";
-import type GetUserDetailsVo from "@/entity/vo/GetUserDetailsVo.ts";
 import type SaveUserDto from "@/entity/dto/SaveUserDto.ts";
+import type GetUserListVo from "@/entity/vo/GetUserListVo.ts";
+import type GetUserDetailsVo from "@/entity/vo/GetUserDetailsVo.ts";
 
 export default {
     /**

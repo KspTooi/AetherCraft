@@ -1,16 +1,10 @@
+import type PageQuery from "@/entity/PageQuery.ts";
+
+
 /**
  * 用户列表查询参数
  */
-export default interface GetUserListDto {
-  /**
-   * 当前页码
-   */
-  page: number;
-
-  /**
-   * 每页数量
-   */
-  pageSize: number;
+export default interface GetUserListDto extends PageQuery{
 
   /**
    * 用户名查询

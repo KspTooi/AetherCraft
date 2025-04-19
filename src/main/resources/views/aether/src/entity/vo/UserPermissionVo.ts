@@ -20,10 +20,10 @@ export default interface UserPermissionVo {
   /**
    * 权限描述
    */
-  description?: string;
+  description: string;
   
   /**
    * 是否为系统内置权限
    */
-  isSystem?: boolean;
+  isSystem: boolean;
 } 

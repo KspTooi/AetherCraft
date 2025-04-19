@@ -2,6 +2,8 @@ package com.ksptool.ql.biz.user.model.vo;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class GetGroupDetailsVo {
     
@@ -25,4 +27,7 @@ public class GetGroupDetailsVo {
 
     // 排序号
     private Integer sortOrder;
+
+    // 权限节点列表
+    private List<GroupPermissionDefinitionVo> permissions;
 }

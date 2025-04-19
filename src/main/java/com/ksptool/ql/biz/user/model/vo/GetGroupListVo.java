@@ -30,8 +30,6 @@ public class GetGroupListVo {
     // 创建时间
     private Date createTime;
 
-    public GetGroupListVo() {
-    }
 
     public GetGroupListVo(Long id, String code, String name, Integer memberCount, Integer permissionCount, 
                          Boolean isSystem, Integer status, Date createTime) {
