@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 public enum AIModelEnum {
 
     /*正式模型*/
+    GEMINI_2_5_FLASH_PREVIEW_0417("gemini-2.5-flash-preview-04-17", "Gemini 2.5 Flash Preview 2025-04-17", "Gemini"),
+
     GEMINI_2_FLASH("gemini-2.0-flash", "Gemini 2.0 Flash", "Gemini"),
 
     GEMINI_2_5_PRO_PREVIEW_0325("gemini-2.5-pro-preview-03-25", "Gemini 2.5 Pro Preview 2025-03-25", "Gemini"),
