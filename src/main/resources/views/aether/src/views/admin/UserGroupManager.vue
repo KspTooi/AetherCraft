@@ -201,12 +201,13 @@ import { ref, reactive, onMounted, markRaw, computed } from 'vue';
 import { Edit, Delete, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
-import GroupApi from "@/commons/api/GroupApi";
-import type GetGroupListDto from "@/entity/dto/GetGroupListDto";
-import type GetGroupListVo from "@/entity/vo/GetGroupListVo";
-import type SaveGroupDto from "@/entity/dto/SaveGroupDto";
+import GroupApi, {
+  type GetGroupListDto,
+  type GetGroupListVo,
+  type GroupPermissionDefinitionVo,
+  type SaveGroupDto
+} from "@/commons/api/GroupApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
-import type GroupPermissionDefinitionVo from '@/entity/vo/GroupPermissionDefinitionVo';
 
 const EditIcon = markRaw(Edit);
 const DeleteIcon = markRaw(Delete);

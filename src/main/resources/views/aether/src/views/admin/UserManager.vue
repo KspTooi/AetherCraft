@@ -154,13 +154,10 @@
 import { ref, reactive, onMounted, markRaw, computed } from 'vue';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import Http from '@/commons/Http';
-import type GetUserListDto from '@/entity/dto/GetUserListDto.ts';
-import type GetUserListVo from '@/entity/vo/GetUserListVo.ts';
-import type SaveUserDto from '@/entity/dto/SaveUserDto.ts';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
-import UserApi from "@/commons/api/UserApi.ts";
+import UserApi, {type GetUserListDto, type GetUserListVo, type SaveUserDto} from "@/commons/api/UserApi.ts";
 
 // 使用markRaw包装图标组件，防止被Vue响应式系统处理
 const EditIcon = markRaw(Edit);
