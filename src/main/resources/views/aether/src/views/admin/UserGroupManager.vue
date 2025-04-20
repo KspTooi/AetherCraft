@@ -207,6 +207,7 @@ import GroupApi, {
   type GroupPermissionDefinitionVo,
   type SaveGroupDto
 } from "@/commons/api/GroupApi";
+import PermissionApi, { type GetPermissionDefinitionVo } from "@/commons/api/PermissionApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
 
 const EditIcon = markRaw(Edit);
@@ -335,12 +336,24 @@ const resetForm = () => {
 };
 
 // 处理新增用户组
-const handleAdd = () => {
+const handleAdd = async () => {
   formType.value = 'add';
   isSystemGroup.value = false;
   resetForm();
-  // 重置权限列表
-  permissionList.value = [];
+  
+  try {
+    // 获取所有权限节点
+    const permissions = await PermissionApi.getPermissionDefinition();
+    permissionList.value = permissions.map(p => ({
+      id: p.id,
+      code: p.code,
+      name: p.name,
+      has: 0
+    }));
+  } catch (error) {
+    ElMessage.error('获取权限节点列表失败');
+  }
+  
   dialogVisible.value = true;
 };
 
