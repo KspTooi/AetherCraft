@@ -99,7 +99,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="formType === 'add' ? '新增用户组' : '编辑用户组'"
-      width="500px"
+      width="800px"
       :close-on-click-modal="false"
     >
       <el-form
@@ -109,73 +109,80 @@
         label-width="100px"
         :validate-on-rule-change="false"
       >
-        <el-form-item label="组标识" prop="code" label-for="group-code">
-          <el-input 
-            v-model="groupForm.code" 
-            :disabled="formType === 'edit' && isSystemGroup"
-            :placeholder="formType === 'edit' && isSystemGroup ? '系统组不可修改标识' : '请输入组标识'"
-            id="group-code"
-          />
-        </el-form-item>
-        <el-form-item label="组名称" prop="name" label-for="group-name">
-          <el-input 
-            v-model="groupForm.name" 
-            :disabled="formType === 'edit' && isSystemGroup"
-            :placeholder="formType === 'edit' && isSystemGroup ? '系统组不可修改名称' : '请输入组名称'"
-            id="group-name"
-          />
-        </el-form-item>
-        <el-form-item label="描述" prop="description" label-for="group-description">
-          <el-input 
-            v-model="groupForm.description" 
-            type="textarea" 
-            :rows="3"
-            id="group-description" 
-          />
-        </el-form-item>
-        <el-form-item label="状态" prop="status" label-for="group-status">
-          <el-radio-group v-model="groupForm.status" id="group-status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="权限节点" prop="permissionIds" label-for="permission-search">
-          <div class="permission-container">
-            <div class="permission-search">
-              <el-input
-                v-model="permissionSearch"
-                placeholder="搜索权限节点"
-                clearable
-                id="permission-search"
-              >
-                <template #prefix>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
-            </div>
-            <div class="permission-list">
-              <el-checkbox-group v-model="groupForm.permissionIds" id="permission-group">
-                <div 
-                  v-for="permission in filteredPermissions" 
-                  :key="permission.id" 
-                  class="permission-item"
-                >
-                  <el-checkbox 
-                    :value="Number(permission.id)"
-                  >
-                    <div class="permission-info">
-                      <span class="permission-name">{{ permission.name }}</span>
-                      <span class="permission-code">{{ permission.code }}</span>
-                    </div>
-                  </el-checkbox>
-                </div>
-              </el-checkbox-group>
-              <div v-if="filteredPermissions.length === 0" class="no-permission">
-                <el-empty description="未找到匹配的权限节点" />
-              </div>
-            </div>
+        <div class="form-two-columns">
+          <div class="form-left-column">
+            <el-form-item label="组标识" prop="code" label-for="group-code">
+              <el-input 
+                v-model="groupForm.code" 
+                :disabled="formType === 'edit' && isSystemGroup"
+                :placeholder="formType === 'edit' && isSystemGroup ? '系统组不可修改标识' : '请输入组标识'"
+                id="group-code"
+              />
+            </el-form-item>
+            <el-form-item label="组名称" prop="name" label-for="group-name">
+              <el-input 
+                v-model="groupForm.name" 
+                :disabled="formType === 'edit' && isSystemGroup"
+                :placeholder="formType === 'edit' && isSystemGroup ? '系统组不可修改名称' : '请输入组名称'"
+                id="group-name"
+              />
+            </el-form-item>
+            <el-form-item label="描述" prop="description" label-for="group-description">
+              <el-input 
+                v-model="groupForm.description" 
+                type="textarea" 
+                :rows="3"
+                id="group-description" 
+              />
+            </el-form-item>
+            <el-form-item label="状态" prop="status" label-for="group-status">
+              <el-radio-group v-model="groupForm.status" id="group-status">
+                <el-radio :value="1">启用</el-radio>
+                <el-radio :value="0">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
           </div>
-        </el-form-item>
+          
+          <div class="form-right-column">
+            <el-form-item label="权限节点" prop="permissionIds" label-for="permission-search" class="permission-form-item">
+              <div class="permission-container">
+                <div class="permission-search">
+                  <el-input
+                    v-model="permissionSearch"
+                    placeholder="搜索权限节点"
+                    clearable
+                    id="permission-search"
+                  >
+                    <template #prefix>
+                      <el-icon><Search /></el-icon>
+                    </template>
+                  </el-input>
+                </div>
+                <div class="permission-list">
+                  <el-checkbox-group v-model="groupForm.permissionIds" id="permission-group">
+                    <div 
+                      v-for="permission in filteredPermissions" 
+                      :key="permission.id" 
+                      class="permission-item"
+                    >
+                      <el-checkbox 
+                        :value="Number(permission.id)"
+                      >
+                        <div class="permission-info">
+                          <span class="permission-name">{{ permission.name }}</span>
+                          <span class="permission-code">{{ permission.code }}</span>
+                        </div>
+                      </el-checkbox>
+                    </div>
+                  </el-checkbox-group>
+                  <div v-if="filteredPermissions.length === 0" class="no-permission">
+                    <el-empty description="未找到匹配的权限节点" />
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+          </div>
+        </div>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -314,8 +321,10 @@ const handleCurrentChange = (val: number) => {
 const resetForm = () => {
   groupForm.id = undefined;
   groupForm.name = '';
+  groupForm.code = '';
   groupForm.description = '';
   groupForm.status = 1;
+  groupForm.sortOrder = 0;
   groupForm.permissionIds = [];
   permissionSearch.value = '';
   
@@ -327,8 +336,10 @@ const resetForm = () => {
 // 处理新增用户组
 const handleAdd = () => {
   formType.value = 'add';
-  resetForm();
   isSystemGroup.value = false;
+  resetForm();
+  // 重置权限列表
+  permissionList.value = [];
   dialogVisible.value = true;
 };
 
@@ -476,10 +487,33 @@ onMounted(() => {
   width: 100%;
 }
 
+/* 两列布局样式 */
+.form-two-columns {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  width: 100%;
+}
+
+.form-left-column {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-right-column {
+  flex: 1;
+  min-width: 200px;
+}
+
+.permission-form-item {
+  height: 100%;
+}
+
 .permission-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 100%;
 }
 
 .permission-search {
@@ -524,5 +558,21 @@ onMounted(() => {
 :deep(.el-checkbox__label) {
   display: flex;
   align-items: flex-start;
+}
+
+/* 响应式处理 */
+@media (max-width: 768px) {
+  .form-two-columns {
+    flex-direction: column;
+  }
+  
+  .form-left-column,
+  .form-right-column {
+    width: 100%;
+  }
+  
+  .permission-list {
+    max-height: 200px;
+  }
 }
 </style>

@@ -3,8 +3,10 @@ package com.ksptool.ql.biz.user.controller;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
 import com.ksptool.ql.biz.user.model.dto.GetPermissionDetailsDto;
+import com.ksptool.ql.biz.user.model.vo.GetPermissionDefinitionVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionDetailsVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionListVo;
+import com.ksptool.ql.biz.user.model.vo.GroupPermissionDefinitionVo;
 import com.ksptool.ql.biz.user.service.AdminPermissionService;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -16,12 +18,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/permission")
 public class AdminPermissionController {
 
     @Autowired
     private AdminPermissionService service;
+
+
+    @PostMapping("getPermissionDefinition")
+    public Result<List<GetPermissionDefinitionVo>> getPermissionDefinition(){
+        return Result.success(service.getPermissionDefinition());
+    }
 
     @PostMapping("getPermissionList")
     public Result<RestPageableView<GetPermissionListVo>> getPermissionList(@RequestBody @Valid GetPermissionListDto dto){

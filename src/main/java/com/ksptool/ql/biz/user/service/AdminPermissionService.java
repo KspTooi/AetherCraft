@@ -6,11 +6,13 @@ import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.user.model.dto.GetPermissionDetailsDto;
 import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
+import com.ksptool.ql.biz.user.model.vo.GetPermissionDefinitionVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionDetailsVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionListVo;
 import com.ksptool.ql.biz.user.model.vo.UserGroupVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
+import com.ksptool.ql.commons.web.Result;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -29,9 +31,12 @@ public class AdminPermissionService {
 
     @Autowired
     private PermissionRepository repository;
-    
-    @Autowired
-    private GroupRepository groupRepository;
+
+
+    public List<GetPermissionDefinitionVo> getPermissionDefinition(){
+        List<PermissionPo> pos = repository.findAll();
+        return as(pos,GetPermissionDefinitionVo.class);
+    }
 
     /**
      * 获取权限列表
@@ -46,7 +51,6 @@ public class AdminPermissionService {
         // 将PO转换为VO
         List<GetPermissionListVo> vos = as(pagePos.getContent(), GetPermissionListVo.class);
 
-        
         // 返回结果
         return new RestPageableView<>(vos, pagePos.getTotalElements());
     }
