@@ -7,6 +7,7 @@
           :items="menuItems"
           :active-item-id="activeMenuId"
           :is-collapse="isCollapse"
+          title="管理控制台"
           @item-click="handleMenuClick"
           @action="handleMenuAction"
         />
@@ -25,6 +26,7 @@
           :items="menuItems"
           :active-item-id="activeMenuId"
           :is-collapse="false"
+          title="管理控制台"
           @item-click="handleMenuClick"
           @action="handleMenuAction"
         />
@@ -41,10 +43,7 @@
               <Fold v-else />
             </el-icon>
             
-            <div class="logo-wrapper">
-              <img v-if="logo" :src="logo" class="logo-image" />
-              <span class="logo-text">{{ title }}</span>
-            </div>
+
           </div>
           <div class="header-right">
             <!-- 系统导航按钮区域 -->
