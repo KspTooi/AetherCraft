@@ -8,6 +8,7 @@
             placeholder="输入组名称查询" 
             clearable 
             id="query-keyword"
+            style="width: 200px"
           />
         </el-form-item>
         <el-form-item>

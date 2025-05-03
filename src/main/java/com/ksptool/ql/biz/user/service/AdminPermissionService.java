@@ -1,25 +1,20 @@
 package com.ksptool.ql.biz.user.service;
 
-import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
-import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.user.model.dto.GetPermissionDetailsDto;
+import com.ksptool.ql.biz.user.model.dto.SavePermissionDto;
 import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionDefinitionVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionDetailsVo;
 import com.ksptool.ql.biz.user.model.vo.GetPermissionListVo;
-import com.ksptool.ql.biz.user.model.vo.UserGroupVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
-import com.ksptool.ql.commons.web.Result;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -72,7 +67,7 @@ public class AdminPermissionService {
      * 保存权限
      */
     @Transactional(rollbackFor = Exception.class)
-    public void savePermission(GetPermissionDetailsDto dto) throws BizException {
+    public void savePermission(SavePermissionDto dto) throws BizException {
         if (StringUtils.isBlank(dto.getCode())) {
             throw new BizException("权限标识不能为空");
         }

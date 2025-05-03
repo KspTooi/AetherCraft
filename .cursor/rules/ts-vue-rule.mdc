@@ -1,7 +1,8 @@
 ---
 description: 
-globs: 
-alwaysApply: true
+globs: *.ts,*.vue
+alwaysApply: false
 ---
 1.所有导入使用@导入
-2.ts中的vo与dto定义为export default interface
+2.ts中的dto、vo定义使用单行注释 且注释跟在字段之后
+3.ts中的dto、vo定义 所有JavaLong都需使用string表示、id也使用string表示

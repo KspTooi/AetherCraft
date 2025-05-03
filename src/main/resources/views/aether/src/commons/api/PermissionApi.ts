@@ -11,34 +11,36 @@ export interface GetPermissionDefinitionVo {
 }
 
 export interface GetPermissionListDto extends PageQuery {
-    keyword?: string;  // 关键字
-    status?: number;   // 状态
+    code?: string | null;        // 权限代码
+    name?: string | null;        // 权限名称
 }
 
 export interface GetPermissionListVo {
     id: string;           // 权限ID
-    code: string;         // 权限标识
+    code: string;         // 权限代码
     name: string;         // 权限名称
-    description: string;  // 描述
-    sortOrder: number;    // 排序值
-    parentId: string;     // 父级ID
-    status: number;       // 状态 (0:禁用, 1:启用)
-    createTime: string;   // 创建时间
+    description: string;  // 权限描述
+    isSystem: number;     // 是否为系统权限（1-是，0-否）
 }
 
 export interface GetPermissionDetailsVo {
     id: string;           // 权限ID
-    code: string;         // 权限标识
+    code: string;         // 权限代码
     name: string;         // 权限名称
-    description: string;  // 描述
-    sortOrder: number;    // 排序值
-    parentId: string;     // 父级ID
-    status: number;       // 状态 (0:禁用, 1:启用)
+    description: string;  // 权限描述
+    sortOrder: number;    // 排序顺序
+    isSystem: number;     // 是否为系统权限（1-是，0-否）
     createTime: string;   // 创建时间
+    updateTime: string;   // 修改时间
 }
 
-
-
+export interface SavePermissionDto {
+    id?: string | null;           // 权限ID，创建时为空
+    code: string;                 // 权限代码
+    name: string;                 // 权限名称
+    description?: string | null;  // 权限描述
+    sortOrder?: number | null;    // 排序顺序
+}
 
 export default {
     /**
@@ -65,7 +67,7 @@ export default {
     /**
      * 保存权限（新增或更新）
      */
-    savePermission: async (dto: CommonIdDto): Promise<string> => {
+    savePermission: async (dto: SavePermissionDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/permission/savePermission', dto);
     },
 

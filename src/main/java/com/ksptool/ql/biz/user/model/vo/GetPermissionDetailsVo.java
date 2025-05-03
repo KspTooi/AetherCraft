@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.user.model.vo;
 
 import lombok.Data;
+
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -34,5 +36,11 @@ public class GetPermissionDetailsVo {
      * 是否为系统权限（1-是，0-否）
      */
     private Integer isSystem;
+
+    //创建时间
+    private String createTime;
+
+    //修改时间
+    private String updateTime;
 
 }

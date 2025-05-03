@@ -14,14 +14,5 @@ public class GetPermissionListDto extends PageQuery {
      * 权限名称
      */
     private String name;
-    
-    /**
-     * 权限描述
-     */
-    private String description;
-    
-    /**
-     * 是否只查询系统权限（1-是，0-否）
-     */
-    private Integer isSystem;
+
 }

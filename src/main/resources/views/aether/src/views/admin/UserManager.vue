@@ -5,7 +5,12 @@
     <div class="query-form">
       <el-form :model="queryForm" inline>
         <el-form-item label="用户名">
-          <el-input v-model="queryForm.username" placeholder="输入用户名查询" clearable />
+          <el-input 
+            v-model="queryForm.username" 
+            placeholder="输入用户名查询" 
+            clearable 
+            style="width: 200px"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadUserList">查询</el-button>

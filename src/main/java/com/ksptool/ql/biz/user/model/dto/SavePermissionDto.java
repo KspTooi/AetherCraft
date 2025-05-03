@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class GetPermissionDetailsDto {
+public class SavePermissionDto {
     /**
      * 权限ID，创建时为空
      */

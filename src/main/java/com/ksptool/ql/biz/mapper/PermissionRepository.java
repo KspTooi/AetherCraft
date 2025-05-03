@@ -40,12 +40,10 @@ public interface PermissionRepository extends JpaRepository<PermissionPo, Long> 
      * @return 权限PO对象分页
      */
     @Query("""
-           SELECT p 
-           FROM PermissionPo p 
+           SELECT p
+           FROM PermissionPo p
            WHERE (:#{#dto.code} IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :#{#dto.code}, '%')))
            AND (:#{#dto.name} IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :#{#dto.name}, '%')))
-           AND (:#{#dto.description} IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :#{#dto.description}, '%')))
-           AND (:#{#dto.isSystem} IS NULL OR p.isSystem = :#{#dto.isSystem})
            ORDER BY p.sortOrder ASC
            """)
     Page<PermissionPo> getPermissionList(
