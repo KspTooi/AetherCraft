@@ -62,7 +62,7 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
             )
             AND (:username IS NULL OR u.username LIKE %:username%)
             AND (:userId IS NULL OR c.userId = :userId)
-            ORDER BY c.updateTime DESC
+            ORDER BY c.configKey ASC,c.updateTime DESC
             """)
     Page<GetConfigListVo> getConfigList(@Param("keyword") String keyword,
                                         @Param("username") String username,

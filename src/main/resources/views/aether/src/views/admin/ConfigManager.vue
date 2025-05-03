@@ -39,7 +39,7 @@
         <el-table-column 
           prop="configKey" 
           label="配置键" 
-          min-width="150" 
+          min-width="220" 
           show-overflow-tooltip
           :show-overflow-tooltip-props="{
             effect: 'dark',
