@@ -18,7 +18,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="API Key" prop="currentApiKeyId" required>
+            <el-form-item label="API Key" prop="currentApiKeyId">
               <el-select v-model="curModelConfig.currentApiKeyId" class="w-full" placeholder="请选择API Key">
                 <el-option
                   v-for="key in curModelConfig.apiKeys"
