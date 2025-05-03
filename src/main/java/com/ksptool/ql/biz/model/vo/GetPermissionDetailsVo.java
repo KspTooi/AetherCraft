@@ -1,9 +1,6 @@
-package com.ksptool.ql.biz.user.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
-
-import java.util.Date;
-import java.util.List;
 
 @Data
 public class GetPermissionDetailsVo {

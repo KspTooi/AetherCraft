@@ -1,11 +1,11 @@
-package com.ksptool.ql.biz.user.controller;
+package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.user.model.dto.GetUserListDto;
-import com.ksptool.ql.biz.user.model.dto.SaveUserDto;
-import com.ksptool.ql.biz.user.model.vo.GetUserDetailsVo;
-import com.ksptool.ql.biz.user.model.vo.GetUserListVo;
-import com.ksptool.ql.biz.user.service.AdminUserService;
+import com.ksptool.ql.biz.model.dto.GetUserListDto;
+import com.ksptool.ql.biz.model.dto.SaveUserDto;
+import com.ksptool.ql.biz.model.vo.GetUserDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetUserListVo;
+import com.ksptool.ql.biz.service.admin.AdminUserService;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;

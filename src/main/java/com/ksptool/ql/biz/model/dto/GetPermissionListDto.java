@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.user.model.dto;
+package com.ksptool.ql.biz.model.dto;
 
 import com.ksptool.ql.commons.web.PageQuery;
 import lombok.Data;

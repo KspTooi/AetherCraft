@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.user.model.dto;
+package com.ksptool.ql.biz.model.dto;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;

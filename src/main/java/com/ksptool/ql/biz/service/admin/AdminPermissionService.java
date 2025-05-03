@@ -1,12 +1,12 @@
-package com.ksptool.ql.biz.user.service;
+package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.user.model.dto.SavePermissionDto;
-import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionDefinitionVo;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionDetailsVo;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionListVo;
+import com.ksptool.ql.biz.model.dto.SavePermissionDto;
+import com.ksptool.ql.biz.model.dto.GetPermissionListDto;
+import com.ksptool.ql.biz.model.vo.GetPermissionDefinitionVo;
+import com.ksptool.ql.biz.model.vo.GetPermissionDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetPermissionListVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.apache.commons.lang3.StringUtils;

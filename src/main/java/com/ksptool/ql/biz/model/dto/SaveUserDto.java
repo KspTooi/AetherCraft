@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.user.model.dto;
+package com.ksptool.ql.biz.model.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;

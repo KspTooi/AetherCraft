@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
+import com.ksptool.ql.biz.model.dto.GetPermissionListDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

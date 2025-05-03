@@ -3,8 +3,8 @@ package com.ksptool.ql.biz.mapper;
 import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.vo.ListPanelGroupVo;
-import com.ksptool.ql.biz.user.model.dto.GetGroupListDto;
-import com.ksptool.ql.biz.user.model.vo.GetGroupListVo;
+import com.ksptool.ql.biz.model.dto.GetGroupListDto;
+import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -13,8 +13,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecificationExecutor<GroupPo> {

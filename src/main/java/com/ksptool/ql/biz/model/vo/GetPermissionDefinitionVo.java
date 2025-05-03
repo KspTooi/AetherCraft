@@ -1,9 +1,9 @@
-package com.ksptool.ql.biz.user.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
 
 @Data
-public class GroupPermissionDefinitionVo {
+public class GetPermissionDefinitionVo {
 
     //权限节点ID
     private Long id;
@@ -14,6 +14,4 @@ public class GroupPermissionDefinitionVo {
     //权限节点名称
     private String name;
 
-    //当前组是否拥有 0:拥有 1:不拥有
-    private Integer has;
 }

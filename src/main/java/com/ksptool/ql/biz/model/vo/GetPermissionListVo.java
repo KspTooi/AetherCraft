@@ -1,34 +1,32 @@
-package com.ksptool.ql.biz.user.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
 
-/**
- * 用户权限VO
- */
 @Data
-public class UserPermissionVo {
+public class GetPermissionListVo {
     /**
      * 权限ID
      */
     private Long id;
     
     /**
-     * 权限键
+     * 权限代码
      */
-    private String permKey;
+    private String code;
     
     /**
      * 权限名称
      */
     private String name;
-    
+
     /**
      * 权限描述
      */
     private String description;
     
     /**
-     * 是否为系统内置权限
+     * 是否为系统权限（1-是，0-否）
      */
-    private Boolean isSystem;
-} 
+    private Integer isSystem;
+
+}

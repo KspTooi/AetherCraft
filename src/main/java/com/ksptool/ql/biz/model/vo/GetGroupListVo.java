@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.user.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
 import java.util.Date;
 import lombok.Data;

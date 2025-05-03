@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.user.service;
+package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
@@ -8,12 +8,12 @@ import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.biz.user.model.dto.GetGroupListDto;
-import com.ksptool.ql.biz.user.model.dto.SaveGroupDto;
-import com.ksptool.ql.biz.user.model.vo.GetGroupDefinitionsVo;
-import com.ksptool.ql.biz.user.model.vo.GetGroupDetailsVo;
-import com.ksptool.ql.biz.user.model.vo.GetGroupListVo;
-import com.ksptool.ql.biz.user.model.vo.GroupPermissionDefinitionVo;
+import com.ksptool.ql.biz.model.dto.GetGroupListDto;
+import com.ksptool.ql.biz.model.dto.SaveGroupDto;
+import com.ksptool.ql.biz.model.vo.GetGroupDefinitionsVo;
+import com.ksptool.ql.biz.model.vo.GetGroupDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetGroupListVo;
+import com.ksptool.ql.biz.model.vo.GroupPermissionDefinitionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,6 @@
-package com.ksptool.ql.biz.user.model.dto;
+package com.ksptool.ql.biz.model.dto;
 
 import com.ksptool.ql.commons.web.PageQuery;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data

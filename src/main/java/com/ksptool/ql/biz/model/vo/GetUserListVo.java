@@ -1,10 +1,9 @@
-package com.ksptool.ql.biz.user.model.vo;
+package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
-import java.util.List;
 
 @Data
-public class GetUserDetailsVo {
+public class GetUserListVo {
     /**
      * 用户ID
      */
@@ -26,11 +25,6 @@ public class GetUserDetailsVo {
     private String email;
     
     /**
-     * 用户状态
-     */
-    private Integer status;
-    
-    /**
      * 创建时间
      */
     private String createTime;
@@ -41,12 +35,7 @@ public class GetUserDetailsVo {
     private String lastLoginTime;
     
     /**
-     * 用户组列表
+     * 用户状态
      */
-    private List<UserGroupVo> groups;
-    
-    /**
-     * 用户权限列表
-     */
-    private List<UserPermissionVo> permissions;
+    private Integer status;
 }

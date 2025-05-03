@@ -1,12 +1,12 @@
-package com.ksptool.ql.biz.user.controller;
+package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.user.model.dto.GetPermissionListDto;
-import com.ksptool.ql.biz.user.model.dto.SavePermissionDto;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionDefinitionVo;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionDetailsVo;
-import com.ksptool.ql.biz.user.model.vo.GetPermissionListVo;
-import com.ksptool.ql.biz.user.service.AdminPermissionService;
+import com.ksptool.ql.biz.model.dto.GetPermissionListDto;
+import com.ksptool.ql.biz.model.dto.SavePermissionDto;
+import com.ksptool.ql.biz.model.vo.GetPermissionDefinitionVo;
+import com.ksptool.ql.biz.model.vo.GetPermissionDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetPermissionListVo;
+import com.ksptool.ql.biz.service.admin.AdminPermissionService;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;

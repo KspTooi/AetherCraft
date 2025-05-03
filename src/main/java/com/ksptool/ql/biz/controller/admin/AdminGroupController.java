@@ -1,13 +1,12 @@
-package com.ksptool.ql.biz.user.controller;
+package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.user.model.dto.GetGroupListDto;
-import com.ksptool.ql.biz.user.model.dto.SaveGroupDto;
-import com.ksptool.ql.biz.user.model.vo.GetGroupDefinitionsVo;
-import com.ksptool.ql.biz.user.model.vo.GetGroupDetailsVo;
-import com.ksptool.ql.biz.user.model.vo.GetGroupListVo;
-import com.ksptool.ql.biz.user.service.AdminGroupService;
-import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.biz.model.dto.GetGroupListDto;
+import com.ksptool.ql.biz.model.dto.SaveGroupDto;
+import com.ksptool.ql.biz.model.vo.GetGroupDefinitionsVo;
+import com.ksptool.ql.biz.model.vo.GetGroupDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetGroupListVo;
+import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
