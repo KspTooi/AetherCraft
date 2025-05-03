@@ -5,7 +5,6 @@ import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.dto.TestModelConnectionDto;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.model.vo.GetAvailableModelVo;
-import com.ksptool.ql.biz.model.vo.GetModelConfigVo;
 import com.ksptool.ql.biz.service.admin.AdminModelConfigService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.ArrayList;
 import java.util.List;
 
