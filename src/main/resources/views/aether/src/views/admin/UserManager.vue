@@ -1,5 +1,7 @@
 <template>
   <div class="user-manager-container">
+
+
     <div class="query-form">
       <el-form :model="queryForm" inline>
         <el-form-item label="用户名">
@@ -11,18 +13,16 @@
         </el-form-item>
       </el-form>
       <div class="add-button-container">
-        <el-button type="success" @click="handleAdd">新增用户</el-button>
+        <el-button type="success" @click="handleAdd">创建用户</el-button>
       </div>
     </div>
 
     <div class="user-table">
-      <el-table 
-        :data="userList" 
-        border 
-        stripe
-        v-loading="loading"
+      <el-table
+          :data="userList"
+          stripe
+          v-loading="loading"
       >
-        <el-table-column prop="id" label="ID" min-width="80" />
         <el-table-column prop="username" label="用户名" min-width="150" />
         <el-table-column prop="nickname" label="昵称" min-width="150" />
         <el-table-column prop="email" label="邮箱" min-width="160" />
@@ -30,14 +30,15 @@
         <el-table-column prop="lastLoginTime" label="最后登录时间" min-width="180" />
         <el-table-column label="状态" min-width="100">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-              {{ scope.row.status === 1 ? '启用' : '禁用' }}
+            <el-tag :type="scope.row.status === 0 ? 'success' : 'danger'">
+              {{ scope.row.status === 0 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" fixed="right" min-width="180">
           <template #default="scope">
             <el-button 
+              link
               type="primary" 
               size="small" 
               @click="handleEdit(scope.row)"
@@ -46,6 +47,7 @@
               编辑
             </el-button>
             <el-button 
+              link
               type="danger" 
               size="small" 
               @click="handleDelete(scope.row)"

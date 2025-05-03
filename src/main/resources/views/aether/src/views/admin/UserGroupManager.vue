@@ -16,26 +16,25 @@
         </el-form-item>
       </el-form>
       <div class="add-button-container">
-        <el-button type="success" @click="handleAdd">新增用户组</el-button>
+        <el-button type="success" @click="handleAdd">创建用户组</el-button>
       </div>
     </div>
 
     <div class="group-table">
       <el-table 
-        :data="groupList" 
-        border 
+        :data="groupList"
         stripe
         v-loading="loading"
       >
-        <el-table-column prop="id" label="ID" min-width="80" />
         <el-table-column prop="code" label="组标识" min-width="120" />
         <el-table-column prop="name" label="组名称" min-width="120" />
-        <el-table-column prop="memberCount" label="成员数量" min-width="100" />
-        <el-table-column prop="permissionCount" label="权限数量" min-width="100" />
+        <el-table-column prop="memberCount" label="成员数量" min-width="100"/>
+        <el-table-column prop="permissionCount" label="权限数量" min-width="100"/>
         <el-table-column label="系统组" min-width="80">
           <template #default="scope">
-            <el-tag v-if="scope.row.isSystem" type="info">是</el-tag>
-            <el-tag v-else>否</el-tag>
+            <el-tag :type="scope.row.isSystem ? 'info' : ''">
+              {{ scope.row.isSystem ? '是' : '否' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="状态" min-width="80">
@@ -49,6 +48,7 @@
         <el-table-column label="操作" fixed="right" min-width="180">
           <template #default="scope">
             <el-button 
+              link
               type="primary" 
               size="small" 
               @click="handleEdit(scope.row)"
@@ -57,6 +57,7 @@
               编辑
             </el-button>
             <el-button 
+              link
               type="danger" 
               size="small" 
               @click="handleDelete(scope.row)"
@@ -103,6 +104,7 @@
       :close-on-click-modal="false"
     >
       <el-form
+        v-if="dialogVisible"
         ref="groupFormRef"
         :model="groupForm"
         :rules="groupFormRules"
@@ -321,6 +323,7 @@ const handleCurrentChange = (val: number) => {
 
 // 重置表单
 const resetForm = () => {
+  // 重置表单数据
   groupForm.id = undefined;
   groupForm.name = '';
   groupForm.code = '';
@@ -328,8 +331,14 @@ const resetForm = () => {
   groupForm.status = 1;
   groupForm.sortOrder = 0;
   groupForm.permissionIds = [];
+
+  // 重置权限搜索
   permissionSearch.value = '';
-  
+
+  // 重置权限列表
+  permissionList.value = [];
+
+  // 重置表单验证状态
   if (groupFormRef.value) {
     groupFormRef.value.resetFields();
   }
@@ -400,8 +409,9 @@ const submitForm = async () => {
       await GroupApi.saveGroup(groupForm);
       ElMessage.success(formType.value === 'add' ? '新增用户组成功' : '更新用户组成功');
       dialogVisible.value = false;
-      loadGroupList();
+      await loadGroupList();
     } catch (error) {
+
       const errorMsg = error instanceof Error ? error.message : '操作失败';
       ElMessage.error(errorMsg);
     } finally {

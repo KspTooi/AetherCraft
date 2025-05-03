@@ -38,6 +38,14 @@ axiosInstance.interceptors.response.use(
                  }
              }
         }
+        // 新增对HTTP 400的处理
+        if (error.response?.status === 400) {
+            const data = error.response.data;
+            if (data && typeof data === 'object' && data.code === 1 && typeof data.message === 'string') {
+                // 使用多行字符串特性
+                throw new Error(`参数校验失败: \n${data.message}`);
+            }
+        }
         return Promise.reject(error);
     }
 );

@@ -6,6 +6,7 @@ vite-dev-server:
   port: 30002 #VITE开发服务器端口号
 
 spring:
+
   profiles:
     active: dev  # 设置活动配置文件为开发环境
   main:
