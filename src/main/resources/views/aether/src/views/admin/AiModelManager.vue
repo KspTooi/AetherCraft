@@ -1,16 +1,11 @@
 <template>
   <div class="container">
     <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <span class="font-bold">AI模型配置</span>
-        </div>
-      </template>
       
       <el-form :model="curModelConfig" label-position="top" :rules="rules" ref="formRef">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="模型选择" prop="modelCode">
+            <el-form-item label="模型选择" prop="modelCode" required>
               <el-select v-model="curModelCode" class="w-full" placeholder="请选择模型" @change="loadModelConfig">
                 <el-option 
                   v-for="model in modelList" 
@@ -23,7 +18,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="API Key" prop="currentApiKeyId">
+            <el-form-item label="API Key" prop="currentApiKeyId" required>
               <el-select v-model="curModelConfig.currentApiKeyId" class="w-full" placeholder="请选择API Key">
                 <el-option
                   v-for="key in curModelConfig.apiKeys"
@@ -36,7 +31,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="温度值" prop="temperature">
+            <el-form-item label="温度值" prop="temperature" required>
               <el-input-number 
                 v-model="curModelConfig.temperature"
                 :min="0"
@@ -52,14 +47,14 @@
                 :step="0.1"
                 class="mt-2"
               />
-              <div class="text-gray-500 text-sm mt-1">
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">
                 控制响应的随机性和创造性。值越高，回答越多样化但可能偏离主题；值越低，回答越保守和确定。建议范围0.1-1.0，默认0.7
               </div>
             </el-form-item>
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="Top P" prop="topP">
+            <el-form-item label="Top P" prop="topP" required>
               <el-input-number
                 v-model="curModelConfig.topP"
                 :min="0"
@@ -75,14 +70,14 @@
                 :step="0.1"
                 class="mt-2"
               />
-              <div class="text-gray-500 text-sm mt-1">
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">
                 核采样阈值，控制词汇选择的累积概率。较高的值(如0.9)会产生更多样的输出，较低的值(如0.1)会产生更保守的输出。建议配合温度值使用，默认1.0
               </div>
             </el-form-item>
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="Top K" prop="topK">
+            <el-form-item label="Top K" prop="topK" required>
               <el-input-number
                 v-model="curModelConfig.topK"
                 :min="1"
@@ -97,14 +92,14 @@
                 :step="1"
                 class="mt-2"
               />
-              <div class="text-gray-500 text-sm mt-1">
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">
                 限制每次选词时考虑的候选词数量。较高的值会增加词汇的丰富度，较低的值会使输出更加集中。建议范围20-60，默认40
               </div>
             </el-form-item>
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="最大输出长度" prop="maxOutputTokens">
+            <el-form-item label="最大输出长度" prop="maxOutputTokens" required>
               <el-input-number
                 v-model="curModelConfig.maxOutputTokens"
                 :min="1"
@@ -119,7 +114,7 @@
                 :step="100"
                 class="mt-2"
               />
-              <div class="text-gray-500 text-sm mt-1">
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">
                 控制响应的最大长度，范围1-8192000，默认800，单次响应超过将自动截断
               </div>
             </el-form-item>
@@ -131,7 +126,7 @@
                 v-model="curModelConfig.globalProxyConfig"
                 placeholder="http://global-proxy:7890"
               />
-              <div class="text-gray-500 text-sm mt-1">全局代理配置，适用于所有用户</div>
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">全局代理配置，适用于所有用户</div>
             </el-form-item>
           </el-col>
           
@@ -141,7 +136,7 @@
                 v-model="curModelConfig.userProxyConfig"
                 placeholder="http://user-proxy:7890"
               />
-              <div class="text-gray-500 text-sm mt-1">用户专属代理配置，仅对当前用户生效</div>
+              <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; line-height: 1.25;">用户专属代理配置，仅对当前用户生效</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -164,7 +159,7 @@ import { onMounted, reactive, ref } from "vue";
 import type { GetAdminModelConfigVo, GetAvailableModelVo } from "@/commons/api/ModelConfigApi.ts";
 import ModelConfigApi from "@/commons/api/ModelConfigApi";
 import { ElMessage, type FormInstance } from "element-plus";
-import { Lightning, Check } from '@element-plus/icons-vue'
+import { Lightning, Check, InfoFilled } from '@element-plus/icons-vue'
 
 //全部模型列表
 const modelList = reactive<GetAvailableModelVo[]>([])
