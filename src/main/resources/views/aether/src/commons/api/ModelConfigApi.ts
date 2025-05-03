@@ -12,12 +12,10 @@ export interface GetModelConfigDto {
 }
 
 export interface AvailableApiKeyVo {
-    id: string;          // API密钥ID
-    apiKey: string;      // API密钥
-    apiHost: string;     // API地址
-    proxyHost: string;   // 代理地址
-    createTime: string;  // 创建时间
-    updateTime: string;  // 更新时间
+    apiKeyId: number;     // API密钥ID
+    keyName: string;      // 密钥名称
+    keySeries: string;    // 密钥系列
+    ownerUsername: string; // 所属用户名
 }
 
 export interface GetAdminModelConfigVo {
@@ -30,22 +28,22 @@ export interface GetAdminModelConfigVo {
     topK: number;               // Top K值
     maxOutputTokens: number;    // 最大输出长度
     apiKeys: AvailableApiKeyVo[]; // 可用的API密钥列表
-    currentApiKeyId: string;    // 当前使用的API密钥ID
+    currentApiKeyId: number;    // 当前使用的API密钥ID
 }
 
 export interface SaveModelConfigDto {
-    id?: string;         // 配置ID
-    modelCode: string;   // 模型代码
-    apiKey: string;      // API密钥
-    apiHost?: string;    // API地址
-    proxyHost?: string;  // 代理地址
+    modelCode: string;          // 模型代码
+    apiKeyId?: number;          // API密钥ID
+    globalProxyConfig?: string; // 全局代理配置
+    userProxyConfig?: string;   // 用户代理配置
+    temperature: number;        // 温度值
+    topP: number;              // 采样值
+    topK: number;              // Top K值
+    maxOutputTokens: number;    // 最大输出长度
 }
 
 export interface TestModelConnectionDto {
     modelCode: string;   // 模型代码
-    apiKey: string;      // API密钥
-    apiHost?: string;    // API地址
-    proxyHost?: string;  // 代理地址
 }
 
 export default {

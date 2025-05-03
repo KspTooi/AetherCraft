@@ -3,10 +3,7 @@ package com.ksptool.ql.biz.service.admin;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
-import com.ksptool.ql.biz.model.dto.GetModelConfigDto;
-import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
-import com.ksptool.ql.biz.model.dto.TestModelConnectionDto;
+import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
@@ -62,8 +59,8 @@ public class AdminModelConfigService {
         }
 
         GetAdminModelConfigVo vo = new GetAdminModelConfigVo();
-        vo.setModelCode(vo.getModelCode());
-        vo.setModelName(vo.getModelName());
+        vo.setModelCode(byCode.getCode());
+        vo.setModelName(byCode.getName());
 
         Long userId = AuthService.getCurrentUserId();
         // 从配置服务加载配置
@@ -103,10 +100,10 @@ public class AdminModelConfigService {
         return vo;
     }
 
-    public void saveModelConfig(SaveModelConfigDto dto) throws BizException{
+    public void saveModelConfig(SaveAdminModelConfigDto dto) throws BizException{
 
         // 验证模型是否存在
-        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
+        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModelCode());
         if (modelEnum == null) {
             throw new IllegalArgumentException("无效的模型代码");
         }
@@ -135,7 +132,7 @@ public class AdminModelConfigService {
             }
 
             config.setUserId(userId);
-            config.setModelCode(dto.getModel());
+            config.setModelCode(dto.getModelCode());
             config.setApiKeyId(dto.getApiKeyId());
             modelApiKeyConfigRepository.save(config);
         }
