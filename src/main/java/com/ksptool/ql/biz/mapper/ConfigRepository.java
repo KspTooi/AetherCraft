@@ -55,12 +55,17 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
             )
             FROM ConfigPo c
             LEFT JOIN UserPo u ON c.userId = u.id
-            WHERE (TRIM(COALESCE(:keyOrValue, '')) = '' OR c.configKey LIKE %:keyOrValue% OR c.configValue LIKE %:keyOrValue%)
-            AND (TRIM(COALESCE(:description, '')) = '' OR c.description LIKE %:description%)
+            WHERE (:keyword IS NULL
+                OR c.configKey LIKE %:keyword%
+                OR c.configValue LIKE %:keyword%
+                OR c.description LIKE %:keyword%
+            )
+            AND (:username IS NULL OR u.username LIKE %:username%)
             AND (:userId IS NULL OR c.userId = :userId)
+            ORDER BY c.updateTime DESC
             """)
-    Page<GetConfigListVo> getConfigList(@Param("keyOrValue") String keyOrValue,
-                                        @Param("description") String description,
+    Page<GetConfigListVo> getConfigList(@Param("keyword") String keyword,
+                                        @Param("username") String username,
                                         @Param("userId") Long userId,
                                         Pageable pageable);
 

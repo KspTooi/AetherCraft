@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 public class GetConfigListDto extends PageQuery {
 
-    // 配置键或值
-    private String keyOrValue;
-    
-    // 描述
-    private String description;
+    // 配置键/值/描述
+    private String keyword;
+
+    // 所有者
+    private String username;
 
 } 

@@ -14,7 +14,7 @@ public class GetConfigDetailsVo {
     private Long userId;
 
     // 用户名
-    private String userName;
+    private String username;
 
     // 配置键
     private String configKey;

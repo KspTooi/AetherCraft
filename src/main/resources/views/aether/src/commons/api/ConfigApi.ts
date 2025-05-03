@@ -4,8 +4,8 @@ import type PageQuery from "@/entity/PageQuery.ts";
 import type CommonIdDto from "@/entity/dto/CommonIdDto.ts";
 
 export interface GetConfigListDto extends PageQuery {
-    keyOrValue?: string;    // 模糊匹配 配置键或配置值
-    description?: string;   // 模糊匹配 配置描述
+    keyword: string | null;     // 配置键/值/描述
+    username: string | null;    // 所有者
 }
 
 export interface GetConfigListVo {

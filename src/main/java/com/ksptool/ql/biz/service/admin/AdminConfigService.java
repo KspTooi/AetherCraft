@@ -1,9 +1,11 @@
 package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.ql.biz.mapper.ConfigRepository;
+import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.GetConfigListDto;
 import com.ksptool.ql.biz.model.dto.SaveConfigDto;
 import com.ksptool.ql.biz.model.po.ConfigPo;
+import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.GetConfigDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetConfigListVo;
 import com.ksptool.ql.biz.service.AuthService;
@@ -17,6 +19,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
@@ -25,6 +31,8 @@ public class AdminConfigService {
 
     @Autowired
     private ConfigRepository repository;
+    @Autowired
+    private UserRepository userRepository;
 
     public RestPageableView<GetConfigListVo> getConfigList(GetConfigListDto dto) {
         Long userId = AuthService.getCurrentUserId();
@@ -34,8 +42,17 @@ public class AdminConfigService {
         }
 
         Pageable pageQuery = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), Sort.Direction.DESC, "updateTime");
-        Page<GetConfigListVo> pPos = repository.getConfigList(dto.getKeyOrValue(), dto.getDescription(), userId, pageQuery);
-        return new RestPageableView<>(pPos,GetConfigListVo.class);
+        Page<GetConfigListVo> pPos = repository.getConfigList(dto.getKeyword(),dto.getUsername(), userId, pageQuery);
+
+        List<GetConfigListVo> vos = as(pPos.getContent(),GetConfigListVo.class);
+
+        for(GetConfigListVo vo:vos){
+            if(vo.getUserId() == -1){
+                vo.setUsername("全局");
+            }
+        }
+
+        return new RestPageableView<>(vos, pPos.getTotalElements());
     }
 
     public GetConfigDetailsVo getConfigDetails(Long id) throws BizException {
@@ -49,7 +66,19 @@ public class AdminConfigService {
         ConfigPo po = repository.getByIdAndUserId(id, userId)
                 .orElseThrow(()->new BizException("配置项不存在或无权访问"));
 
-        return as(po,GetConfigDetailsVo.class);
+        GetConfigDetailsVo vo = as(po, GetConfigDetailsVo.class);
+
+        if(po.getUserId() == -1){
+            vo.setUsername("全局");
+        }
+        if(po.getUserId() != null && po.getUserId() != -1){
+            UserPo userPo = userRepository.findById(po.getUserId()).orElse(null);
+            if(userPo != null){
+                vo.setUsername(userPo.getUsername());
+            }
+        }
+
+        return vo;
     }
 
     @Transactional
@@ -61,8 +90,8 @@ public class AdminConfigService {
                 throw new RuntimeException("配置键已存在");
             }
             ConfigPo config = new ConfigPo();
-            config.setUserId(AuthService.getCurrentUserId());
             assign(dto, config);
+            config.setUserId(AuthService.getCurrentUserId());
             repository.save(config);
             return;
         }

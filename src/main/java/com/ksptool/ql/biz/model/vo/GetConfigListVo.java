@@ -13,7 +13,7 @@ public class GetConfigListVo {
     private Long userId;
 
     // 用户名
-    private String userName;
+    private String username;
 
     // 配置键
     private String configKey;
@@ -35,10 +35,10 @@ public class GetConfigListVo {
     }
 
 
-    public GetConfigListVo(Long id, Long userId, String userName, String configKey, String configValue, String description, Date createTime, Date updateTime) {
+    public GetConfigListVo(Long id, Long userId, String username, String configKey, String configValue, String description, Date createTime, Date updateTime) {
         this.id = id;
         this.userId = userId;
-        this.userName = userName;
+        this.username = username;
         this.configKey = configKey;
         this.configValue = configValue;
         this.description = description;
