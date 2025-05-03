@@ -67,9 +67,9 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
     @Query("""
-            SELECT new com.ksptool.ql.biz.user.model.vo.GetGroupListVo(
-                g.id, 
-                g.code, 
+            SELECT new com.ksptool.ql.biz.model.vo.GetGroupListVo(
+                g.id,
+                g.code,
                 g.name,
                 SIZE(g.users),
                 SIZE(g.permissions),

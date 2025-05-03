@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.mapper;
 
+import com.ksptool.ql.biz.model.dto.GetConfigListDto;
 import com.ksptool.ql.biz.model.po.ConfigPo;
+import com.ksptool.ql.biz.model.vo.GetConfigListVo;
 import com.ksptool.ql.biz.model.vo.ListPanelConfigVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +11,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
+
+    @Query("""
+            SELECT c
+            FROM ConfigPo c
+            WHERE c.id = :id
+            AND (:userId IS NULL OR c.userId = :userId)
+            """)
+    Optional<ConfigPo> getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
     
     ConfigPo findByConfigKey(String configKey);
     
@@ -35,6 +47,22 @@ public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
                                        @Param("description") String description,
                                        @Param("userId") Long userId,
                                        Pageable pageable);
+
+    @Query("""
+            SELECT new com.ksptool.ql.biz.model.vo.GetConfigListVo(
+                c.id, c.userId, u.username, c.configKey,
+                c.configValue, c.description, c.createTime, c.updateTime
+            )
+            FROM ConfigPo c
+            LEFT JOIN UserPo u ON c.userId = u.id
+            WHERE (TRIM(COALESCE(:keyOrValue, '')) = '' OR c.configKey LIKE %:keyOrValue% OR c.configValue LIKE %:keyOrValue%)
+            AND (TRIM(COALESCE(:description, '')) = '' OR c.description LIKE %:description%)
+            AND (:userId IS NULL OR c.userId = :userId)
+            """)
+    Page<GetConfigListVo> getConfigList(@Param("keyOrValue") String keyOrValue,
+                                        @Param("description") String description,
+                                        @Param("userId") Long userId,
+                                        Pageable pageable);
 
     void removeByConfigKeyAndUserId(String configKey, Long userId);
 }
