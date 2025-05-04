@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RestController;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.enums.AIModelEnum;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/apikey")
@@ -25,7 +28,10 @@ public class AdminApiKeyController {
     @Autowired
     private AdminApiKeyService service;
 
-    
+    @PostMapping("getSeriesList")
+    public Result<List<String>> getSeriesList(){
+        return Result.success(AIModelEnum.getSeriesList());
+    }
 
     @PostMapping("getApiKeyList")
     public Result<RestPageableView<GetApiKeyListVo>> getApiKeyList(@RequestBody @Valid GetApiKeyListDto dto){
