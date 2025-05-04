@@ -1,11 +1,8 @@
 package com.ksptool.ql.biz.controller.admin;
 
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.GetApiKeyListDto;
-import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthorizationDto;
-import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
+import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationDetailsVo;
-import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationVo;
+import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationListVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
 import com.ksptool.ql.biz.service.admin.AdminApiKeyService;
@@ -77,23 +74,45 @@ public class AdminApiKeyController {
     }
 
     //获取某个Apikey的授权列表
-    public Result<RestPageableView<GetApiKeyAuthorizationVo>> getAuthorizationList(CommonIdDto dto){
-        return null;
+    @PostMapping("getAuthorizationList")
+    public Result<RestPageableView<GetApiKeyAuthorizationListVo>> getAuthorizationList(@RequestBody @Valid GetApiKeyAuthorizationListDto dto){
+        try{
+            return Result.success(service.getAuthorizationList(dto));
+        }catch (BizException e){
+            return Result.error(e.getMessage());
+        }
     }
 
     //查询授权详情
-    public Result<GetApiKeyAuthorizationDetailsVo> getApiKeyAuthorizationDetails(CommonIdDto dto){
-        return null;
+    @PostMapping("getApiKeyAuthorizationDetails")
+    public Result<GetApiKeyAuthorizationDetailsVo> getApiKeyAuthorizationDetails(@RequestBody @Valid CommonIdDto dto){
+        try {
+            return Result.success(service.getApiKeyAuthorizationDetails(dto));
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     //创建Apikey的授权
-    public Result<String> saveAuth(SaveApiKeyAuthorizationDto dto){
-        return null;
+    @PostMapping("saveAuth")
+    public Result<String> saveAuth(@RequestBody @Valid SaveApiKeyAuthorizationDto dto){
+        try {
+            service.saveAuth(dto);
+            return Result.success("success");
+        } catch (BizException ex) {
+            return Result.error(ex.getMessage());
+        }
     }
 
     //移除授权关系
-    public Result<String> removeAuthorization(CommonIdDto dto){
-        return null;
+    @PostMapping("removeAuthorization")
+    public Result<String> removeAuthorization(@RequestBody @Valid CommonIdDto dto){
+        try {
+            service.removeAuthorization(dto);
+            return Result.success("success");
+        } catch (BizException ex) {
+            return Result.error(ex.getMessage());
+        }
     }
 
 

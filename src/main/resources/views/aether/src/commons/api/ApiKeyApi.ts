@@ -40,6 +40,39 @@ export interface SaveApiKeyDto {
     status: number;         // 状态：0-禁用，1-启用
 }
 
+export interface GetApiKeyAuthorizationListDto extends PageQuery {
+    apiKeyId: string;          // 对应的ApiKey ID
+    authorizedUserName: string | null; // 被授权用户名
+}
+
+export interface GetApiKeyAuthorizationListVo {
+    id: string;             // 授权记录ID
+    authorizedUserName: string; // 被授权用户名
+    usageCount: string;     // 已使用次数
+    usageLimit: string | null; // 使用次数限制 (null表示无限制)
+    expireTime: string | null; // 过期时间 (null表示永不 किंवा)
+    status: number;         // 状态：0-禁用，1-启用
+}
+
+export interface GetApiKeyAuthorizationDetailsVo {
+    id: string;             // 授权记录ID
+    authorizedUserName: string; // 被授权用户名
+    usageLimit: string | null; // 使用次数限制 (null表示无限制)
+    expireTime: string | null; // 过期时间 (null表示永不 किंवा)
+    status: number;         // 状态：0-禁用，1-启用
+    usageCount: string;     // 已使用次数
+    createTime: string;     // 创建时间
+}
+
+export interface SaveApiKeyAuthorizationDto {
+    id?: string | null;        // 授权记录ID (新增时为null)
+    apiKeyId: string;          // 对应的ApiKey ID
+    authorizedUserName: string; // 被授权用户名
+    usageLimit: string | null; // 使用次数限制 (null表示无限制)
+    expireTime: string | null; // 过期时间 (null表示永不 किंवा)
+    status: number;         // 状态：0-禁用，1-启用
+}
+
 export default {
     /**
      * 获取密钥系列列表
@@ -74,5 +107,33 @@ export default {
      */
     removeApiKey: async (dto: CommonIdDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/apikey/removeApiKey', dto);
+    },
+
+    /**
+     * 获取某个Apikey的授权列表
+     */
+    getAuthorizationList: async (dto: GetApiKeyAuthorizationListDto): Promise<RestPageableView<GetApiKeyAuthorizationListVo>> => {
+        return await Http.postEntity<RestPageableView<GetApiKeyAuthorizationListVo>>('/admin/apikey/getAuthorizationList', dto);
+    },
+
+    /**
+     * 查询授权详情
+     */
+    getApiKeyAuthorizationDetails: async (dto: CommonIdDto): Promise<GetApiKeyAuthorizationDetailsVo> => {
+        return await Http.postEntity<GetApiKeyAuthorizationDetailsVo>('/admin/apikey/getApiKeyAuthorizationDetails', dto);
+    },
+
+    /**
+     * 保存Apikey的授权
+     */
+    saveAuth: async (dto: SaveApiKeyAuthorizationDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/apikey/saveAuth', dto);
+    },
+
+    /**
+     * 移除授权关系
+     */
+    removeAuthorization: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/apikey/removeAuthorization', dto);
     }
 }

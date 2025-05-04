@@ -8,9 +8,9 @@ import java.util.Date;
  * API密钥授权列表视图对象
  */
 @Data
-public class GetApiKeyAuthorizationVo {
+public class GetApiKeyAuthorizationListVo {
 
-    public GetApiKeyAuthorizationVo(Long id, String authorizedUserName, Long usageLimit, Long usageCount, Date expireTime, Integer status) {
+    public GetApiKeyAuthorizationListVo(Long id, String authorizedUserName, Long usageLimit, Long usageCount, Date expireTime, Integer status) {
         this.id = id;
         this.authorizedUserName = authorizedUserName;
         this.usageLimit = usageLimit;
