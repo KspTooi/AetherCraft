@@ -37,6 +37,12 @@ const router = createRouter({
       path: '/admin/model/apikey',
       name: 'api-key-manager',
       component: () => import('@/views/admin/ApiKeyManager.vue'),
+      meta: { keepAlive: true }
+    },
+    {
+      path: '/admin/model/apikey/authorization',
+      name: 'api-key-authorization-manager',
+      component: () => import('@/views/admin/ApiKeyAuthorizationManager.vue'),
     },
     {
       path: '/admin/maintain',

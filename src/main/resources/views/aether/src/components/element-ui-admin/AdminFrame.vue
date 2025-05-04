@@ -102,9 +102,14 @@
         <el-main class="admin-content">
           <div class="content-wrapper">
             <!-- 路由视图 -->
-            <router-view v-slot="{ Component }">
+            <router-view v-slot="{ Component, route }">
               <transition name="fade" mode="out-in">
-                <component :is="Component" />
+                <div :key="route.fullPath"> 
+                  <keep-alive v-if="route.meta.keepAlive">
+                    <component :is="Component" />
+                  </keep-alive>
+                  <component :is="Component" v-if="!route.meta.keepAlive" />
+                </div>
               </transition>
             </router-view>
           </div>

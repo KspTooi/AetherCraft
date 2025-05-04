@@ -10,13 +10,18 @@ import java.util.Date;
 @Data
 public class GetApiKeyAuthorizationListVo {
 
-    public GetApiKeyAuthorizationListVo(Long id, String authorizedUserName, Long usageLimit, Long usageCount, Date expireTime, Integer status) {
+    public GetApiKeyAuthorizationListVo(Long id, String authorizedUserName, Long usageLimit, Long usageCount, Date expireTime, Integer status, Date createTime) {
         this.id = id;
         this.authorizedUserName = authorizedUserName;
         this.usageLimit = usageLimit;
         this.usageCount = usageCount;
         this.expireTime = expireTime;
         this.status = status;
+        this.createTime = createTime;
+    }
+
+    public GetApiKeyAuthorizationListVo() {
+
     }
 
     // 授权ID
@@ -36,4 +41,7 @@ public class GetApiKeyAuthorizationListVo {
     
     // 状态：0-禁用，1-启用
     private Integer status;
-} 
+
+    //创建时间
+    private Date createTime;
+}

@@ -155,13 +155,13 @@ public class AdminApiKeyService {
                 .orElseThrow(() -> new BizException("API密钥不存在或无权访问"));
 
         // 查询授权列表
-        Page<ListApiKeyAuthVo> page = authRepository.findAuthList(
+        Page<GetApiKeyAuthorizationListVo> page = authRepository.getApiKeyAuthorizationList(
                 dto.getApiKeyId(),
                 dto.getAuthorizedUserName(),
                 dto.pageRequest()
         );
 
-        return new RestPageableView<>(page, GetApiKeyAuthorizationListVo.class);
+        return new RestPageableView<>(page);
     }
 
     /**

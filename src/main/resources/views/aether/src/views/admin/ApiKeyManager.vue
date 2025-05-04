@@ -227,6 +227,7 @@
 <script setup lang="ts">
 
 import {markRaw, onMounted, reactive, ref} from "vue";
+import { useRouter, useRoute } from 'vue-router';
 import type {GetApiKeyDetailsVo, GetApiKeyListDto, GetApiKeyListVo} from "@/commons/api/ApiKeyApi.ts";
 import ApiKeyApi from "@/commons/api/ApiKeyApi.ts";
 import type {FormInstance} from 'element-plus';
@@ -274,6 +275,9 @@ const KeyIcon = markRaw(Key);
 const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
 const submitLoading = ref(false)
+
+const router = useRouter();
+const route = useRoute();
 
 // 表单校验规则
 const rules = {
@@ -439,15 +443,34 @@ const handleCommand = (command: string, row: GetApiKeyListVo) => {
 
 // 管理授权
 const openAuthorizationModal = (row: GetApiKeyListVo) => {
-  ElMessage.info(`暂未实现对 ${row.keyName} 的授权管理功能`);
-  // 这里可以实现管理授权的功能，例如打开授权管理对话框等
+  router.push({
+    name: 'api-key-authorization-manager',
+    query: {
+      apiKeyId: row.id,
+      keyName: query.keyName || undefined,
+      keySeries: query.keySeries || undefined,
+      status: query.status || undefined,
+      page: query.page || 1,
+      pageSize: query.pageSize || 10
+    }
+  });
 }
 
 //页面加载时自动加载数据
 onMounted(() => {
-  loadSeriesList()
-  loadApiKeyList()
-})
+  // 从路由参数中恢复查询条件
+  const routeQuery = route.query;
+  
+  // 恢复查询参数
+  query.keyName = routeQuery.keyName as string || null;
+  query.keySeries = routeQuery.keySeries as string || null;
+  query.status = routeQuery.status ? Number(routeQuery.status) : null;
+  query.page = routeQuery.page ? Number(routeQuery.page) : 1;
+  query.pageSize = routeQuery.pageSize ? Number(routeQuery.pageSize) : 10;
+  
+  loadSeriesList();
+  loadApiKeyList();
+});
 
 </script>
 
