@@ -7,6 +7,8 @@ import com.ksptool.ql.biz.model.dto.GetPermissionListDto;
 import com.ksptool.ql.biz.model.vo.GetPermissionDefinitionVo;
 import com.ksptool.ql.biz.model.vo.GetPermissionDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetPermissionListVo;
+import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
+import com.ksptool.ql.commons.enums.PermissionEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +29,6 @@ public class AdminPermissionService {
 
     @Autowired
     private PermissionRepository repository;
-
 
     public List<GetPermissionDefinitionVo> getPermissionDefinition(){
         List<PermissionPo> pos = repository.findAll();
@@ -147,5 +149,54 @@ public class AdminPermissionService {
             .filter(Objects::nonNull)
             .max(Integer::compareTo)
             .orElse(0) + 1;
+    }
+
+    /**
+     * 校验系统内置权限节点
+     * 检查数据库中是否存在所有系统内置权限，如果不存在则自动创建
+     * @return 校验结果，包含新增的权限数量和已存在的权限数量
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ValidateSystemPermissionsVo validateSystemPermissions() {
+        ValidateSystemPermissionsVo result = new ValidateSystemPermissionsVo();
+
+        // 获取所有系统内置权限枚举
+        PermissionEnum[] permissionEnums = PermissionEnum.values();
+
+        // 记录已存在和新增的权限数量
+        int existCount = 0;
+        int addedCount = 0;
+        List<String> addedPermissions = new ArrayList<>();
+
+        // 遍历所有系统内置权限
+        for (PermissionEnum permEnum : permissionEnums) {
+            String code = permEnum.getCode();
+
+            // 检查权限是否已存在
+            if (repository.existsByCode(code)) {
+                existCount++;
+            } else {
+                // 创建新的权限
+                PermissionPo permission = new PermissionPo();
+                permission.setCode(code);
+                permission.setName(permEnum.getDescription());
+                permission.setDescription(permEnum.getDescription());
+                permission.setIsSystem(1); // 标记为系统权限
+                permission.setSortOrder(getNextSortOrder());
+
+                // 保存权限
+                repository.save(permission);
+
+                addedCount++;
+                addedPermissions.add(code);
+            }
+        }
+
+        // 设置结果
+        result.setExistCount(existCount);
+        result.setAddedCount(addedCount);
+        result.setAddedPermissions(addedPermissions);
+
+        return result;
     }
 }

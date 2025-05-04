@@ -3,18 +3,15 @@ package com.ksptool.ql.biz.controller.admin;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
-import com.ksptool.ql.biz.service.panel.PanelGroupService;
-import com.ksptool.ql.biz.service.panel.PanelPermissionService;
-import com.ksptool.ql.commons.annotation.RequirePermission;
+import com.ksptool.ql.biz.service.admin.AdminGroupService;
+import com.ksptool.ql.biz.service.admin.AdminPermissionService;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 
 /**
  * 维护工具控制器
@@ -24,10 +21,10 @@ import org.springframework.web.servlet.ModelAndView;
 public class AdminMaintainController {
 
     @Autowired
-    private PanelPermissionService panelPermissionService;
+    private AdminGroupService adminGroupService;
 
     @Autowired
-    private PanelGroupService panelGroupService;
+    private AdminPermissionService adminPermissionService;
 
     @Autowired
     private UserService userService;
@@ -44,7 +41,7 @@ public class AdminMaintainController {
     @RequirePermissionRest("panel:maintain:permission")
     public Result<ValidateSystemPermissionsVo> validateSystemPermissions() {
         try {
-            ValidateSystemPermissionsVo result = panelPermissionService.validateSystemPermissions();
+            ValidateSystemPermissionsVo result = adminPermissionService.validateSystemPermissions();
             
             String message;
             if (result.getAddedCount() > 0) {
@@ -69,7 +66,7 @@ public class AdminMaintainController {
     @RequirePermissionRest("panel:maintain:permission")
     public Result<String> validateSystemGroups() {
         try {
-            String result = panelGroupService.validateSystemGroups();
+            String result = adminGroupService.validateSystemGroups();
             return Result.success(result,null);
         } catch (Exception e) {
             return Result.error("校验用户组失败：" + e.getMessage());

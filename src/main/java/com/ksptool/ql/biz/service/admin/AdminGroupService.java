@@ -14,6 +14,7 @@ import com.ksptool.ql.biz.model.vo.GetGroupDefinitionsVo;
 import com.ksptool.ql.biz.model.vo.GetGroupDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import com.ksptool.ql.biz.model.vo.GroupPermissionDefinitionVo;
+import com.ksptool.ql.commons.enums.GroupEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,6 @@ public class AdminGroupService {
 
     @Autowired
     private AuthService authService;
-
 
     public List<GetGroupDefinitionsVo> getGroupDefinitions(){
         List<GroupPo> pos = repository.findAll();
@@ -173,8 +173,66 @@ public class AdminGroupService {
         // 保存更改并刷新
         repository.save(group);
         repository.flush();
-
-        String groupName = group.getName();
         repository.delete(group);
     }
+
+    /**
+     * 校验系统内置组
+     * 检查数据库中是否存在所有系统内置组，如果不存在则自动创建
+     * 对于管理员组，会赋予所有现有权限
+     * @return 校验结果消息
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public String validateSystemGroups() {
+        // 获取所有系统内置组枚举
+        GroupEnum[] groupEnums = GroupEnum.values();
+
+        // 记录已存在和新增的组数量
+        int existCount = 0;
+        int addedCount = 0;
+        List<String> addedGroups = new ArrayList<>();
+
+        // 获取所有权限（用于管理员组）
+        List<PermissionPo> allPermissions = permissionRepository.findAll();
+
+        // 遍历所有系统内置组
+        for (GroupEnum groupEnum : groupEnums) {
+            String code = groupEnum.getCode();
+
+            // 检查组是否已存在
+            if (repository.existsByCode(code)) {
+                existCount++;
+                continue;
+            }
+
+            // 创建新的组
+            GroupPo group = new GroupPo();
+            group.setCode(code);
+            group.setName(groupEnum.getName());
+            group.setDescription(groupEnum.getName());
+            group.setIsSystem(true);
+            group.setSortOrder(repository.findMaxSortOrder() + 1);
+            group.setStatus(1); // 启用状态
+
+            // 如果是管理员组，赋予所有权限
+            if (groupEnum == GroupEnum.ADMIN) {
+                group.getPermissions().addAll(allPermissions);
+            }
+
+            // 保存组
+            repository.save(group);
+
+            addedCount++;
+            addedGroups.add(code);
+        }
+
+        // 返回结果消息
+        if (addedCount > 0) {
+            return String.format("校验完成，已添加 %d 个缺失的用户组（%s），已存在 %d 个用户组",
+                    addedCount, String.join("、", addedGroups), existCount);
+        }
+
+        return String.format("校验完成，所有 %d 个系统用户组均已存在", existCount);
+    }
+
 }
