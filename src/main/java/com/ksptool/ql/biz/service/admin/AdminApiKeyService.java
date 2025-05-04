@@ -11,6 +11,7 @@ import com.ksptool.ql.biz.model.vo.ListApiKeyVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -105,6 +106,12 @@ public class AdminApiKeyService {
 
         ApiKeyPo po = repository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("Api密钥不存在"));
+
+        //留空不修改密钥值
+        if(StringUtils.isBlank(dto.getKeyValue())){
+            dto.setKeyValue(po.getKeyValue());
+        }
+
         assign(dto, po);
         repository.save(po);
     }

@@ -2,15 +2,17 @@ package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetApiKeyListDto;
+import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthorizationDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyDto;
+import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
 import com.ksptool.ql.biz.service.admin.AdminApiKeyService;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
-import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +52,13 @@ public class AdminApiKeyController {
     @PostMapping("saveApiKey")
     public Result<String> saveApiKey(@RequestBody @Valid SaveApiKeyDto dto){
         try {
+
+            if(dto.getId() == null){
+                if(StringUtils.isBlank(dto.getKeyValue())){
+                    return Result.error("创建密钥时密钥值不可为空");
+                }
+            }
+
             service.saveApiKey(dto);
             return Result.success("success");
         } catch (BizException ex) {
@@ -67,6 +76,25 @@ public class AdminApiKeyController {
         }
     }
 
+    //获取某个Apikey的授权列表
+    public Result<RestPageableView<GetApiKeyAuthorizationVo>> getAuthorizationList(CommonIdDto dto){
+        return null;
+    }
+
+    //查询授权详情
+    public Result<GetApiKeyAuthorizationDetailsVo> getApiKeyAuthorizationDetails(CommonIdDto dto){
+        return null;
+    }
+
+    //创建Apikey的授权
+    public Result<String> saveAuth(SaveApiKeyAuthorizationDto dto){
+        return null;
+    }
+
+    //移除授权关系
+    public Result<String> removeAuthorization(CommonIdDto dto){
+        return null;
+    }
 
 
 

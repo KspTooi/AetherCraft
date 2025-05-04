@@ -88,26 +88,30 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="140">
+        <el-table-column label="操作" fixed="right" min-width="120">
           <template #default="scope">
-            <el-button 
-              link
-              type="primary" 
-              size="small" 
-              @click="openUpdateModal(scope.row)"
-              :icon="EditIcon"
-            >
-              编辑
-            </el-button>
-            <el-button 
-              link
-              type="danger" 
-              size="small" 
-              @click="removeApiKey(scope.row)"
-              :icon="DeleteIcon"
-            >
-              删除
-            </el-button>
+            <div class="action-buttons" style="display: flex; align-items: center; gap: 8px;">
+              <el-dropdown trigger="hover" @command="handleCommand($event, scope.row)">
+                <el-button link type="primary" size="small">
+                  管理<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="edit" :icon="EditIcon">编辑</el-dropdown-item>
+                    <el-dropdown-item command="authorization" :icon="KeyIcon">管理授权</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-button 
+                link
+                type="danger" 
+                size="small" 
+                @click="removeApiKey(scope.row)"
+                :icon="DeleteIcon"
+              >
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -150,7 +154,7 @@
       >
         <!-- 编辑时显示的只读信息 -->
         <template v-if="mode === 'update'">
-          <el-form-item label="创建时间">
+<!--          <el-form-item label="创建时间">
             <el-input v-model="details.createTime" disabled />
           </el-form-item>
           <el-form-item label="使用次数">
@@ -158,7 +162,7 @@
           </el-form-item>
           <el-form-item label="最后使用">
             <el-input v-model="details.lastUsedTime" disabled />
-          </el-form-item>
+          </el-form-item>-->
         </template>
 
         <!-- 可编辑字段 -->
@@ -189,17 +193,21 @@
             type="password"
             placeholder="请输入密钥值"
           />
+          <div class="form-tip" v-show="mode == 'update'">
+            <i class="bi bi-info-circle"></i>
+            留空则保持原密钥值不变
+          </div>
         </el-form-item>
         <el-form-item label="是否公开" prop="isShared">
           <el-radio-group v-model="details.isShared">
-            <el-radio :label="0">私有</el-radio>
-            <el-radio :label="1">公开</el-radio>
+            <el-radio :value="0">私有</el-radio>
+            <el-radio :value="1">公开</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="details.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -223,7 +231,7 @@ import type {GetApiKeyDetailsVo, GetApiKeyListDto, GetApiKeyListVo} from "@/comm
 import ApiKeyApi from "@/commons/api/ApiKeyApi.ts";
 import type {FormInstance} from 'element-plus';
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit} from '@element-plus/icons-vue';
+import {Delete, Edit, Key, ArrowDown} from '@element-plus/icons-vue';
 
 
 const mode = ref<"insert" | "update">("insert")
@@ -260,6 +268,7 @@ const loading = ref(false)
 // 使用markRaw包装图标组件
 const EditIcon = markRaw(Edit);
 const DeleteIcon = markRaw(Delete);
+const KeyIcon = markRaw(Key);
 
 // 模态框相关
 const dialogVisible = ref(false)
@@ -277,7 +286,19 @@ const rules = {
     { min: 2, max: 30, message: '长度在 2 到 30 个字符', trigger: 'blur' }
   ],
   keyValue: [
-    { required: true, message: '请输入密钥值', trigger: 'blur' },
+    { 
+      required: true, 
+      message: '请输入密钥值', 
+      trigger: 'blur',
+      // 仅在新增模式下必填
+      validator: (rule: any, value: string, callback: Function) => {
+        if (mode.value === 'insert' && !value) {
+          callback(new Error('请输入密钥值'))
+        } else {
+          callback()
+        }
+      }
+    },
     { min: 2, max: 500, message: '长度在 2 到 500 个字符', trigger: 'blur' }
   ],
   isShared: [
@@ -407,6 +428,21 @@ const removeApiKey = async (row: GetApiKeyListVo) => {
   }
 }
 
+// 处理下拉菜单命令
+const handleCommand = (command: string, row: GetApiKeyListVo) => {
+  if (command === 'edit') {
+    openUpdateModal(row);
+  } else if (command === 'authorization') {
+    openAuthorizationModal(row);
+  }
+}
+
+// 管理授权
+const openAuthorizationModal = (row: GetApiKeyListVo) => {
+  ElMessage.info(`暂未实现对 ${row.keyName} 的授权管理功能`);
+  // 这里可以实现管理授权的功能，例如打开授权管理对话框等
+}
+
 //页面加载时自动加载数据
 onMounted(() => {
   loadSeriesList()
@@ -442,5 +478,18 @@ onMounted(() => {
   justify-content: flex-end;
   margin-top: 20px;
   width: 100%;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-tip i {
+  font-size: 14px;
 }
 </style>

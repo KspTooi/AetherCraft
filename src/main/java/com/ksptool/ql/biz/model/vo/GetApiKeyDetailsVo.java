@@ -17,7 +17,7 @@ public class GetApiKeyDetailsVo {
     private String keySeries;
 
     //密钥值(不回传给前端)
-    private String keyValue;
+    //private String keyValue;
 
     //是否公开 0:私有 1:公开
     private Integer isShared;
