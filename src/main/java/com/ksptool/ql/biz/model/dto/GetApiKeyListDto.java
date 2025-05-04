@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ListApiKeyDto extends PageQuery {
+public class GetApiKeyListDto extends PageQuery {
     
     // 密钥名称
     private String keyName;

@@ -65,7 +65,7 @@ public class PlayerPo {
     private Date removalRequestTime;
 
     @Column(name = "removedTime")
-    @Comment("删除时间")
+    @Comment("角色移除时间")
     private Date removedTime;
 
     @Column(name = "create_time", nullable = false, updatable = false)
