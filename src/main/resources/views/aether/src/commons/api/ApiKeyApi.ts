@@ -23,15 +23,16 @@ export interface GetApiKeyDetailsVo {
     id: string;             // 密钥ID
     keyName: string;        // 密钥名称
     keySeries: string;      // 密钥系列
-    keyValue: string;       // 密钥值(编辑不回显)
-    isShared: number;       // 是否公开 0:私有 1:公开
+    keyValue: string;       // 密钥值
+    isShared: number;       // 是否公开：0-私有，1-公开
     usageCount: string;     // 使用次数
     lastUsedTime: string;   // 最后使用时间
     createTime: string;     // 创建时间
+    status: number;         // 状态：0-禁用，1-启用
 }
 
 export interface SaveApiKeyDto {
-    id?: string;            // 密钥ID（新增时为null）
+    id?: string | null;            // 密钥ID（新增时为null）
     keyName: string;        // 密钥名称
     keySeries: string;      // 密钥系列，如OpenAI、Azure等
     keyValue: string;       // 密钥值
