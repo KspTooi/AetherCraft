@@ -35,7 +35,7 @@ public class GetUserListVo {
     private String lastLoginTime;
     
     /**
-     * 用户状态
+     * 用户状态 0:正常 1:封禁
      */
     private Integer status;
 }

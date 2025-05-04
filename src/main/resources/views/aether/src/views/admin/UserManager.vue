@@ -12,6 +12,12 @@
             style="width: 200px"
           />
         </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="queryForm.status" placeholder="选择状态" clearable style="width: 150px">
+            <el-option label="正常" :value="0" />
+            <el-option label="封禁" :value="1" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadUserList">查询</el-button>
           <el-button @click="resetQuery">重置</el-button>
@@ -36,7 +42,7 @@
         <el-table-column label="状态" min-width="100">
           <template #default="scope">
             <el-tag :type="scope.row.status === 0 ? 'success' : 'danger'">
-              {{ scope.row.status === 0 ? '启用' : '禁用' }}
+              {{ scope.row.status === 0 ? '正常' : '封禁' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -100,6 +106,7 @@
       :close-on-click-modal="false"
     >
       <el-form
+          v-if="dialogVisible"
         ref="userFormRef"
         :model="userForm"
         :rules="userFormRules"
@@ -125,8 +132,8 @@
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="userForm.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="0">正常</el-radio>
+            <el-radio :label="1">封禁</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="所属用户组" prop="groupIds">
@@ -164,7 +171,7 @@ import Http from '@/commons/Http';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
-import UserApi, {type GetUserListDto, type GetUserListVo, type SaveUserDto} from "@/commons/api/UserApi.ts";
+import UserApi, {type GetUserListDto, type GetUserListVo, type SaveUserDto, type GetUserDetailsVo, type UserGroupVo} from "@/commons/api/UserApi.ts";
 
 // 使用markRaw包装图标组件，防止被Vue响应式系统处理
 const EditIcon = markRaw(Edit);
@@ -180,7 +187,8 @@ const checkMobile = () => {
 const queryForm = reactive<GetUserListDto>({
   page: 1,
   pageSize: 10,
-  username: ''
+  username: '',
+  status: null
 });
 
 // 用户列表
@@ -194,13 +202,16 @@ const formType = ref<'add' | 'edit'>('add');
 const submitLoading = ref(false);
 const userFormRef = ref<FormInstance>();
 
+// 用户组选项，将从 API 获取
+const groupOptions = ref<UserGroupVo[]>([]);
+
 // 表单数据
 const userForm = reactive<SaveUserDto>({
   username: '',
   password: '',
   nickname: '',
   email: '',
-  status: 1,
+  status: 0,
   groupIds: []
 });
 
@@ -211,20 +222,25 @@ const userFormRules = {
     { pattern: /^[a-zA-Z0-9_]{4,20}$/, message: '用户名只能包含4-20位字母、数字和下划线', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { 
+      required: true,
+      message: '请输入密码', 
+      trigger: 'blur',
+      validator: (rule: any, value: string, callback: Function) => {
+        if (formType.value === 'add' && !value) {
+          callback(new Error('请输入密码'));
+        } else if (value && value.length < 6) {
+           callback(new Error('密码长度不能少于6位'));
+        } else {
+          callback();
+        }
+      }
+    }
   ],
   email: [
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ]
 };
-
-// 模拟的用户组数据，实际应该从接口获取
-const groupOptions = ref([
-  { id: '1', name: '管理员组' },
-  { id: '2', name: '普通用户组' },
-  { id: '3', name: '访客组' }
-]);
 
 // 加载用户列表数据
 const loadUserList = async () => {
@@ -247,6 +263,7 @@ const loadUserList = async () => {
 // 重置查询条件
 const resetQuery = () => {
   queryForm.username = '';
+  queryForm.status = null;
   queryForm.page = 1;
   loadUserList();
 };
@@ -270,7 +287,7 @@ const resetForm = () => {
   userForm.password = '';
   userForm.nickname = '';
   userForm.email = '';
-  userForm.status = 1;
+  userForm.status = 0;
   userForm.groupIds = [];
   
   if (userFormRef.value) {
@@ -286,22 +303,32 @@ const handleAdd = () => {
 };
 
 // 处理编辑用户
-const handleEdit = (row: GetUserListVo) => {
+const handleEdit = async (row: GetUserListVo) => {
   formType.value = 'edit';
   resetForm();
+  loading.value = true;
   
-  // 填充表单
-  userForm.id = row.id;
-  userForm.username = row.username;
-  userForm.nickname = row.nickname || '';
-  userForm.email = row.email || '';
-  userForm.status = row.status || 1;
-  
-  // 这里应该从后端获取用户的分组信息
-  // 模拟数据
-  userForm.groupIds = ['1'];
-  
-  dialogVisible.value = true;
+  try {
+    const userDetails: GetUserDetailsVo = await UserApi.getUserDetails({ id: row.id });
+    
+    userForm.id = userDetails.id;
+    userForm.username = userDetails.username;
+    userForm.nickname = userDetails.nickname || '';
+    userForm.email = userDetails.email || '';
+    userForm.status = userDetails.status;
+
+    groupOptions.value = userDetails.groups || [];
+    userForm.groupIds = userDetails.groups 
+      ? userDetails.groups.filter(group => group.hasGroup).map(group => group.id) 
+      : [];
+
+    dialogVisible.value = true;
+  } catch (error) {
+    ElMessage.error('获取用户详情失败');
+    console.error('获取用户详情失败', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 提交表单
@@ -313,7 +340,11 @@ const submitForm = async () => {
     
     submitLoading.value = true;
     try {
-      await Http.postEntity<string>('/admin/user/saveUser', userForm);
+      const submitData = { ...userForm };
+      if (formType.value === 'edit' && !submitData.password) {
+        delete submitData.password;
+      }
+      await Http.postEntity<string>('/admin/user/saveUser', submitData);
       ElMessage.success(formType.value === 'add' ? '新增用户成功' : '更新用户成功');
       dialogVisible.value = false;
       loadUserList(); // 重新加载列表
@@ -357,8 +388,8 @@ onMounted(() => {
   window.addEventListener('resize', checkMobile);
   loadUserList();
   
-  // TODO: 加载用户组数据
-  // loadGroupOptions();
+  // 不再需要模拟数据，用户组选项将在编辑时从详情接口获取
+  // TODO: 如果需要在新增时也能选择用户组，需要独立获取用户组列表的逻辑
 });
 </script>
 

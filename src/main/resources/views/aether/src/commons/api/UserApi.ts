@@ -22,6 +22,7 @@ export interface UserPermissionVo {
 
 export interface GetUserListDto extends PageQuery {
     username?: string;    // 用户名查询
+    status?: number | null; // 用户状态查询: 0-正常, 1-封禁
 }
 
 export interface GetUserListVo {

@@ -42,9 +42,6 @@ public class AdminUserService {
     private GroupRepository groupRepository;
     
     @Autowired
-    private PermissionRepository permissionRepository;
-    
-    @Autowired
     private AuthService authService;
     
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -57,6 +54,9 @@ public class AdminUserService {
         UserPo query = new UserPo();
         if (StringUtils.isNotBlank(dto.getUsername())) {
             query.setUsername(dto.getUsername());
+        }
+        if(dto.getStatus() != null){
+            query.setStatus(dto.getStatus());
         }
 
         // 创建Example查询对象
