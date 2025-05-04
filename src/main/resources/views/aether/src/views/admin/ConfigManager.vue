@@ -39,7 +39,7 @@
         <el-table-column 
           prop="configKey" 
           label="配置键" 
-          min-width="220" 
+          min-width="210"
           show-overflow-tooltip
           :show-overflow-tooltip-props="{
             effect: 'dark',
@@ -61,7 +61,7 @@
         <el-table-column 
           prop="description" 
           label="配置描述" 
-          min-width="200" 
+          min-width="180"
           show-overflow-tooltip
           :show-overflow-tooltip-props="{
             effect: 'dark',
@@ -74,7 +74,7 @@
           label="所有者"
           min-width="120"
         />
-        <el-table-column label="操作" fixed="right" min-width="180">
+        <el-table-column label="操作" fixed="right" min-width="140">
           <template #default="scope">
             <el-button 
               link

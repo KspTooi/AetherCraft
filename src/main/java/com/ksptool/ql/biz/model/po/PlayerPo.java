@@ -6,6 +6,7 @@ import lombok.Data;
 import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -18,7 +19,7 @@ public class PlayerPo {
     @Comment("主键ID")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",nullable = false,foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("关联用户ID")
     private UserPo user;
@@ -55,9 +56,17 @@ public class PlayerPo {
     @Comment("内容过滤等级 0:不过滤 1:普通 2:严格")
     private Integer contentFilterLevel;
 
-    @Column(name = "active", nullable = false)
-    @Comment("是否激活 0:是 1:否")
-    private Integer active;
+    @Column(name = "status", nullable = false)
+    @Comment("状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除")
+    private Integer status;
+
+    @Column(name = "removal_request_time")
+    @Comment("移除申请提交时间(为空则未提交删除)")
+    private Date removalRequestTime;
+
+    @Column(name = "removedTime")
+    @Comment("删除时间")
+    private Date removedTime;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
