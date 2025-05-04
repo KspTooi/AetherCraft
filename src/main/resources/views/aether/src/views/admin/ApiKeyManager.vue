@@ -169,10 +169,19 @@
           />
         </el-form-item>
         <el-form-item label="密钥系列" prop="keySeries">
-          <el-input 
+          <el-select 
             v-model="details.keySeries" 
-            placeholder="如OpenAI、Azure等"
-          />
+            placeholder="选择密钥系列" 
+            style="width: 200px"
+            filterable
+          >
+            <el-option 
+              v-for="series in seriesList" 
+              :key="series" 
+              :label="series" 
+              :value="series"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="密钥值" prop="keyValue">
           <el-input 
@@ -209,13 +218,13 @@
 
 <script setup lang="ts">
 
-import {reactive, ref, onMounted} from "vue";
+import {markRaw, onMounted, reactive, ref} from "vue";
 import type {GetApiKeyDetailsVo, GetApiKeyListDto, GetApiKeyListVo} from "@/commons/api/ApiKeyApi.ts";
 import ApiKeyApi from "@/commons/api/ApiKeyApi.ts";
+import type {FormInstance} from 'element-plus';
 import {ElMessage, ElMessageBox} from "element-plus";
-import { Edit, Delete } from '@element-plus/icons-vue';
-import { markRaw } from 'vue';
-import type { FormInstance } from 'element-plus';
+import {Delete, Edit} from '@element-plus/icons-vue';
+
 
 const mode = ref<"insert" | "update">("insert")
 
@@ -229,6 +238,8 @@ const query = reactive<GetApiKeyListDto>({
 
 const list = ref<GetApiKeyListVo[]>([])
 const total = ref(0)
+
+const seriesList = ref<string[]>([])
 
 //表单数据
 const details = reactive<GetApiKeyDetailsVo>({
@@ -277,6 +288,15 @@ const rules = {
   ]
 }
 
+const loadSeriesList = async () => {
+  try {
+    seriesList.value = await ApiKeyApi.getSeriesList();
+  } catch (e) {
+    ElMessage.error('加载密钥系列列表失败');
+    seriesList.value = [];
+  }
+}
+
 const loadApiKeyList = async () => {
   loading.value = true
   try {
@@ -302,7 +322,7 @@ const resetQuery = () => {
 const resetForm = () => {
   details.id = ""
   details.keyName = ""
-  details.keySeries = ""
+  details.keySeries = seriesList.value[0] || "" // 设置为第一个系列，如果没有则为空字符串
   details.keyValue = ""
   details.isShared = 0
   details.status = 1
@@ -389,6 +409,7 @@ const removeApiKey = async (row: GetApiKeyListVo) => {
 
 //页面加载时自动加载数据
 onMounted(() => {
+  loadSeriesList()
   loadApiKeyList()
 })
 

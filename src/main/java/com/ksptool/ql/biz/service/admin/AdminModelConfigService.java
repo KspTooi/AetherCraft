@@ -17,6 +17,7 @@ import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 
@@ -100,6 +101,7 @@ public class AdminModelConfigService {
         return vo;
     }
 
+    @Transactional
     public void saveModelConfig(SaveAdminModelConfigDto dto) throws BizException{
 
         // 验证模型是否存在

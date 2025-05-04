@@ -22,6 +22,7 @@ import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyDetailsVo;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.exception.BizException;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
@@ -79,6 +80,7 @@ public class AdminApiKeyService {
     /**
      * 保存API密钥
      */
+    @Transactional
     public void saveApiKey(SaveApiKeyDto dto) throws BizException {
 
         var createMode = dto.getId() == null;
@@ -110,6 +112,7 @@ public class AdminApiKeyService {
     /**
      * 删除API密钥
      */
+    @Transactional
     public void removeApiKey(CommonIdDto dto) throws BizException {
 
         var query = new ApiKeyPo();

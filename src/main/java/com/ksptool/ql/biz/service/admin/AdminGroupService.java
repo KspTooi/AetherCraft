@@ -19,6 +19,7 @@ import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -81,6 +82,7 @@ public class AdminGroupService {
         return vo;
     }
 
+    @Transactional
     public void saveGroup(SaveGroupDto dto) throws BizException {
 
         GroupPo group = null;
@@ -142,6 +144,7 @@ public class AdminGroupService {
 
     }
 
+    @Transactional
     public void removeGroup(long id) throws BizException {
 
         GroupPo group = repository.getGroupWithUserAndPermission(id);

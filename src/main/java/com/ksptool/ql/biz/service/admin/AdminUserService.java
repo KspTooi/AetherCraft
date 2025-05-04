@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -120,6 +121,7 @@ public class AdminUserService {
         return vo;
     }
 
+    @Transactional
     public void saveUser(SaveUserDto dto) throws BizException {
         // 检查用户名是否已存在
         if (StringUtils.isBlank(dto.getUsername())) {
@@ -164,6 +166,7 @@ public class AdminUserService {
         authService.refreshUserSession(user.getId());
     }
 
+    @Transactional
     public void removeUser(long id) throws BizException {
         if (!repository.existsById(id)) {
             throw new BizException("用户不存在");

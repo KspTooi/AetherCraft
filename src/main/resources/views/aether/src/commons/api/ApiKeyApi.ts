@@ -42,6 +42,13 @@ export interface SaveApiKeyDto {
 
 export default {
     /**
+     * 获取密钥系列列表
+     */
+    getSeriesList: async (): Promise<string[]> => {
+        return await Http.postEntity<string[]>('/admin/apikey/getSeriesList', {});
+    },
+
+    /**
      * 获取API密钥列表
      */
     getApiKeyList: async (dto: GetApiKeyListDto): Promise<RestPageableView<GetApiKeyListVo>> => {
