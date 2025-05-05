@@ -100,9 +100,16 @@ const router = createRouter({
   ],
 })
 
+// Define routes that should not be saved as the last accessed path
+const savePathBlacklist = [
+    '/playLobby',
+    '/player/create'
+];
+
 router.afterEach((to) => {
   const preferences = usePreferencesStore()
-  if (to.fullPath !== '/') {
+  // Check if the route is not the root and not in the blacklist
+  if (to.fullPath !== '/' && !savePathBlacklist.includes(to.path)) {
     preferences.saveCurrentPath(to.fullPath).catch(error => {
       console.warn('保存当前路由失败:', error)
     })

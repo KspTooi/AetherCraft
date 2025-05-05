@@ -88,8 +88,10 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import PlayerApi, { type GetPlayerListVo } from "@/commons/api/PlayerApi";
+import { usePlayerStore } from "@/stores/player";
 
 const router = useRouter();
+const playerStore = usePlayerStore();
 
 // 状态
 const loading = ref(true);
@@ -161,8 +163,11 @@ const selectPlayer = async (player: GetPlayerListVo) => {
     // Call the backend API to attach the player
     await PlayerApi.attachPlayer({ id: player.id });
 
+    // Refresh player info in the store AFTER successful attachment
+    await playerStore.updatePlayerInfo();
+
     // 跳转到主界面
-    router.push('/model/chat');
+    router.push('/');
   } catch (error) {
     console.error('选择并激活人物失败:', error);
     selectedPlayer.value = null; // 激活失败时取消选中状态

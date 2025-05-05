@@ -31,22 +31,22 @@
           <!-- Player Info Item & Dropdown Trigger -->
           <li
             class="nav-item player-info-container"
-            v-if="!loadingPlayer"
+            v-if="!playerStore.isLoading"
             v-click-outside="closePlayerDropdown"
             @mouseenter="openPlayerDropdown" 
             @mouseleave="closePlayerDropdown" 
           >
             <div
               class="player-info-item"
-              :class="{ 'disconnected-info': !currentPlayer }"
+              :class="{ 'disconnected-info': !playerStore.currentPlayer }"
             >
               <!-- Avatar/Icon -->
-              <div class="player-avatar" :class="{ 'disconnected-icon': !currentPlayer }">
-                <img v-if="currentPlayer" :src="getAvatarUrl(currentPlayer.avatarUrl)" alt="Player Avatar">
+              <div class="player-avatar" :class="{ 'disconnected-icon': !playerStore.currentPlayer }">
+                <img v-if="playerStore.currentPlayer" :src="getAvatarUrl(playerStore.currentPlayer.avatarUrl)" alt="Player Avatar">
                 <i v-else class="bi bi-person"></i>
               </div>
               <!-- Name/Status -->
-              <span class="player-name nav-link-like">{{ currentPlayer?.name || '未连接' }}</span>
+              <span class="player-name nav-link-like">{{ playerStore.currentPlayer?.name || '未连接' }}</span>
                <!-- Dropdown Arrow -->
               <div class="select-arrow player-dropdown-arrow">
                  <i class="bi bi-chevron-down" :class="{ 'rotated': isPlayerDropdownOpen }"></i>
@@ -87,12 +87,12 @@
 
   <glow-div border="none" class="mobile-menu" :class="{ 'menu-expanded': isExpanded }" @click.stop>
     <!-- Mobile Player Info Header -->
-    <div class="mobile-player-header" v-if="!loadingPlayer">
-        <div v-if="currentPlayer" class="player-info-item">
+    <div class="mobile-player-header" v-if="!playerStore.isLoading">
+        <div v-if="playerStore.currentPlayer" class="player-info-item">
             <div class="player-avatar">
-                <img :src="getAvatarUrl(currentPlayer.avatarUrl)" alt="Player Avatar">
+                <img :src="getAvatarUrl(playerStore.currentPlayer.avatarUrl)" alt="Player Avatar">
             </div>
-            <span class="player-name">{{ currentPlayer.name }}</span>
+            <span class="player-name">{{ playerStore.currentPlayer.name }}</span>
         </div>
         <div v-else class="player-info-item disconnected-info">
             <div class="player-avatar disconnected-icon">
@@ -121,7 +121,7 @@
       </li>
     </ul>
     <!-- Mobile Player Context Actions -->
-    <ul class="mobile-nav-context" v-if="currentPlayer">
+    <ul class="mobile-nav-context" v-if="playerStore.currentPlayer">
         <li class="mobile-nav-item context-divider"></li> <!-- Optional Divider -->
         <li class="mobile-nav-item" v-for="(item, index) in playerContextItems" :key="'mobile-ctx-' + index">
              <a v-if="item.action" class="mobile-nav-link cursor-pointer" @click="handlePlayerAction(item.action)">{{ item.name }}</a>
@@ -137,6 +137,7 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '..
 import { inject } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import PlayerApi, { type GetCurrentPlayerVo } from "@/commons/api/PlayerApi.ts"; // Import Player API
+import { usePlayerStore } from "@/stores/player"; // Import the player store
 
 // 定义组件props
 const props = defineProps<{
@@ -173,10 +174,11 @@ const navbarHeight = ref(56) // 默认导航栏高度
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
+// Instantiate the player store
+const playerStore = usePlayerStore();
+
 // 记录当前激活的导航项索引
 const activeNavIndex = ref(-1)
-const currentPlayer = ref<GetCurrentPlayerVo | null>(null); // Store current player info
-const loadingPlayer = ref(true); // Loading state for player info
 const defaultAvatarUrl = '/imgs/default-avatar.png'; // Default avatar path
 const isPlayerDropdownOpen = ref(false); // State for player dropdown
 
@@ -195,20 +197,6 @@ const getAvatarUrl = (url: string | undefined | null): string => {
     return url;
   }
   return `/res/${url}`; // Add /res/ prefix for relative paths
-};
-
-// 加载当前登录的人物信息
-const loadCurrentPlayer = async () => {
-  loadingPlayer.value = true;
-  try {
-    currentPlayer.value = await PlayerApi.getCurrentPlayer();
-  } catch (error) {
-    // If getCurrentPlayer fails (e.g., no player logged in), currentPlayer remains null
-    currentPlayer.value = null;
-    console.warn('Failed to load current player:', error instanceof Error ? error.message : error);
-  } finally {
-    loadingPlayer.value = false;
-  }
 };
 
 // 更新高亮线位置
@@ -353,7 +341,9 @@ onMounted(() => {
   // 计算导航栏高度
   updateNavbarHeight()
   window.addEventListener('resize', updateNavbarHeight)
-  loadCurrentPlayer(); // Load player info on mount
+  
+  // Load player info using the store action
+  playerStore.updatePlayerInfo();
 })
 
 // 组件卸载时清理事件监听

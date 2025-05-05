@@ -7,11 +7,13 @@ import axios from 'axios'
 import ClientTopNav from './ClientTopNav.vue'
 import PlayerApi from "@/commons/api/PlayerApi"
 import { useRouter } from 'vue-router'
+import { usePlayerStore } from '@/stores/player'
 
 const brandName = ref('AetherCraft')
 const logoutModal = ref<InstanceType<typeof GlowConfirm> | null>(null)
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
 const router = useRouter()
+const playerStore = usePlayerStore()
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -103,6 +105,7 @@ const handleSelectCharacter = async () => {
 
     try {
         await PlayerApi.detachPlayer(); // Call detach API
+        playerStore.clearPlayerInfo(); // Clear player data in the store
         router.push('/playLobby'); // Navigate to lobby
     } catch (error) {
         console.error("Failed to detach player:", error);
