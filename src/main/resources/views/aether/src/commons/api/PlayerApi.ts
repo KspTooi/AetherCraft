@@ -34,6 +34,30 @@ export interface CheckPlayerNameDto {
     name: string; // 人物角色名称
 }
 
+export interface EditAttachPlayerDetailsDto {
+    id: string;                 // 人物ID (根据Java @NotNull，设为必须)
+    publicInfo?: string;       // (明文)个人信息
+    description?: string;      // (密文)人物角色描述
+    language?: string;          // 语言 (Java非NotNull, 设为可选)
+    era?: string;              // 年代 (Java非NotNull, 设为可选)
+    contentFilterLevel?: number; // 内容过滤等级 (Java非NotNull, 设为可选)
+    avatarUrl?: string;        // 头像路径 (Java非NotNull, 设为可选)
+}
+
+export interface GetAttachPlayerDetailsVo {
+    id: string;                 // 玩家ID
+    name: string;               // (明文)人物角色名称
+    publicInfo?: string;       // (明文)个人信息
+    description?: string;      // (密文)人物角色描述
+    language: string;          // 语言
+    era?: string;              // 年代
+    contentFilterLevel: number; // 内容过滤等级
+    avatarUrl?: string;        // 头像路径
+    balance: string;            // 钱包余额(CU)
+    status: number;            // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
+    createTime: string;         // 诞生日期 (Date -> string)
+}
+
 export default {
 
     /**
@@ -82,5 +106,19 @@ export default {
      */
     detachPlayer: async (): Promise<string> => {
         return await Http.postEntity<string>('/player/detachPlayer', {});
+    },
+
+    /**
+     * 获取当前登录的人物详细信息
+     */
+    getAttachPlayerDetails: async (): Promise<GetAttachPlayerDetailsVo> => {
+        return await Http.postEntity<GetAttachPlayerDetailsVo>('/player/getAttachPlayerDetails', {});
+    },
+
+    /**
+     * 编辑当前登录的人物详细信息
+     */
+    editAttachPlayerDetails: async (dto: EditAttachPlayerDetailsDto): Promise<string> => {
+        return await Http.postEntity<string>('/player/editAttachPlayerDetails', dto);
     }
 }
