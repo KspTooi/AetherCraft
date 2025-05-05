@@ -3,10 +3,7 @@ package com.ksptool.ql.biz.service.admin;
 import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.mapper.UserSessionRepository;
-import com.ksptool.ql.biz.model.po.GroupPo;
-import com.ksptool.ql.biz.model.po.PermissionPo;
-import com.ksptool.ql.biz.model.po.UserPo;
-import com.ksptool.ql.biz.model.po.UserSessionPo;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.model.dto.GetGroupListDto;
 import com.ksptool.ql.biz.model.dto.SaveGroupDto;
@@ -163,6 +160,14 @@ public class AdminGroupService {
                 user.getGroups().remove(group);
             }
             group.getUsers().clear();
+        }
+
+        //清空用户组与玩家的关联关系
+        if(!group.getPlayers().isEmpty()){
+            for (PlayerPo player : new HashSet<>(group.getPlayers())) {
+                player.getGroups().remove(group);
+            }
+            group.getPlayers().clear();
         }
 
         // 清空用户组与权限的关联关系

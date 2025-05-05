@@ -90,6 +90,12 @@ public class GroupPo {
     @Comment("用户组中的用户")
     private Set<UserPo> users = new HashSet<>();
 
+    @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户组中的玩家")
+    private Set<PlayerPo> players = new HashSet<>();
+
     @PrePersist
     public void prePersist() {
         if (status == null) {
