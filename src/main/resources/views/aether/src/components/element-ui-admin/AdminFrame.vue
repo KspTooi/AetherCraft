@@ -175,9 +175,15 @@ const menuItems = ref([
   },
   {
     id: 'player',
-    title: '玩家人物管理',
+    title: '玩家管理',
     icon: User,
     routerLink: '/admin/player'
+  },
+  {
+    id: 'player_default_group',
+    title: '玩家默认访问组',
+    icon: Lock,
+    routerLink: '/admin/player/default/group'
   },
   {
     id: 'group',

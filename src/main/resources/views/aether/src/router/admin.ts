@@ -34,12 +34,22 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/player/default/group',
+      name: 'player-default-group-manager',
+      component: () => import('@/views/admin/PlayerDefaultGroupManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: '玩家默认访问组'
+        }
+      }
+    },
+    {
       path: '/admin/group',
       name: 'user-group-manager',
       component: () => import('@/views/admin/UserGroupManager.vue'),
       meta: {
         breadcrumb: {
-          title: '用户组管理'  
+          title: '访问组管理'
         }
       }
     },
