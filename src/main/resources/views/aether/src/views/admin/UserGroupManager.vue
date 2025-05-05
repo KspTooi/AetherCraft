@@ -17,7 +17,7 @@
         </el-form-item>
       </el-form>
       <div class="add-button-container">
-        <el-button type="success" @click="handleAdd">创建用户组</el-button>
+        <el-button type="success" @click="handleAdd">创建访问组</el-button>
       </div>
     </div>
 
@@ -100,7 +100,7 @@
     <!-- 用户组编辑/新增模态框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="formType === 'add' ? '新增用户组' : '编辑用户组'"
+      :title="formType === 'add' ? '新增访问组' : '编辑访问组'"
       width="800px"
       :close-on-click-modal="false"
     >
@@ -295,8 +295,8 @@ const loadGroupList = async () => {
     groupList.value = vos.rows;
     total.value = Number(vos.count);
   } catch (error) {
-    ElMessage.error('加载用户组列表失败');
-    console.error('加载用户组列表失败', error);
+    ElMessage.error('加载访问组列表失败');
+    console.error('加载访问组列表失败', error);
   } finally {
     loading.value = false;
   }
@@ -390,7 +390,7 @@ const handleEdit = async (row: GetGroupListVo) => {
     
     dialogVisible.value = true;
   } catch (error) {
-    ElMessage.error('获取用户组详情失败');
+    ElMessage.error('获取访问组详情失败');
   }
 };
 
@@ -408,7 +408,7 @@ const submitForm = async () => {
     submitLoading.value = true;
     try {
       await GroupApi.saveGroup(groupForm);
-      ElMessage.success(formType.value === 'add' ? '新增用户组成功' : '更新用户组成功');
+      ElMessage.success(formType.value === 'add' ? '新增访问组成功' : '更新访问组成功');
       dialogVisible.value = false;
       await loadGroupList();
     } catch (error) {
@@ -424,7 +424,7 @@ const submitForm = async () => {
 // 处理删除用户组
 const handleDelete = (row: GetGroupListVo) => {
   ElMessageBox.confirm(
-    `确定要删除用户组 ${row.name} 吗？`,
+    `确定要删除访问组 ${row.name} 吗？`,
     '警告',
     {
       confirmButtonText: '确定',
@@ -435,7 +435,7 @@ const handleDelete = (row: GetGroupListVo) => {
     try {
       const params: CommonIdDto = { id: row.id };
       await GroupApi.removeGroup(params);
-      ElMessage.success('删除用户组成功');
+      ElMessage.success('删除访问组成功');
       loadGroupList();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '删除失败';
