@@ -175,11 +175,6 @@ public class Router {
         return mav;
     }
 
-    @GetMapping("/appCenter")
-    public String appCenter() {
-        return "forward:/ssr/appCenter";
-    }
-
     @RequirePermission("panel:access")
     @GetMapping("/dashboard")
     public ModelAndView dashboard(HttpServletRequest request) {
