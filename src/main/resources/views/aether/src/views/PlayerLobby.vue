@@ -155,13 +155,11 @@ const selectPlayer = async (player: GetPlayerListVo) => {
   }
   actionLoading.value = true;
 
-  try {
-    // 存储选择的人物信息
-    localStorage.setItem('activePlayerId', player.id);
-    localStorage.setItem('activePlayerName', player.name);
+  console.log('selectPlayer', player);
 
-    // 可选：添加短暂延迟或视觉反馈
-    // await new Promise(resolve => setTimeout(resolve, 150));
+  try {
+    // Call the backend API to attach the player
+    await PlayerApi.attachPlayer({ id: player.id });
 
     // 跳转到主界面
     router.push('/model/chat');
@@ -170,7 +168,7 @@ const selectPlayer = async (player: GetPlayerListVo) => {
     selectedPlayer.value = null; // 激活失败时取消选中状态
     alterRef.value?.showConfirm({
       title: "操作失败",
-      content: "无法选择该人物，请稍后重试",
+      content: error instanceof Error ? error.message : "无法选择该人物，请稍后重试",
       closeText: "确定",
     });
     actionLoading.value = false; // 确保在 catch 中重置 loading

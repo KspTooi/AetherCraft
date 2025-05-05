@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 @Data
 public class GetPlayerListVo{
 
+    //人物ID
+    private Long id;
+
     //头像路径
     private String avatarUrl;
 
