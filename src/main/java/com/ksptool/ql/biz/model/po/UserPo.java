@@ -78,6 +78,12 @@ public class UserPo {
     @Comment("用户主题列表")
     private List<UserThemePo> themes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("用户的人物列表")
+    private List<PlayerPo> player = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         createTime = new Date();

@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<UserPo, Long> {
 
     // 获取用户的所有权限（通过用户组）
     @Query("""
-            SELECT DISTINCT p 
+            SELECT DISTINCT p
             FROM UserPo u
             JOIN u.groups g
             JOIN g.permissions p

@@ -245,7 +245,6 @@ public class AuthService {
         UserSessionPo newSession = new UserSessionPo();
         newSession.setUserId(userId);
         newSession.setToken(token);
-        newSession.setPermissions(gson.toJson(permissionCodes));
         newSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
 
         //更新用户当前人物
@@ -256,8 +255,16 @@ public class AuthService {
             newSession.setPlayerId(playerPo.getId());
             newSession.setPlayerName(playerPo.getName());
             newSession.setPlayerAvatarUrl(playerPo.getAvatarUrl());
+
+            //获取人物关联的权限
+            List<PermissionPo> playerPermissions = playerRepository.getPermissionByPlayerId(playerPo.getId());
+            for (PermissionPo permission : playerPermissions) {
+                permissionCodes.add(permission.getCode());
+            }
         }
 
+        //序列化权限
+        newSession.setPermissions(gson.toJson(permissionCodes));
         userSessionRepository.save(newSession);
         return new UserSessionVo(newSession);
     }
@@ -281,14 +288,11 @@ public class AuthService {
 
         // 获取用户的所有权限
         List<PermissionPo> permissions = userRepository.findUserPermissions(userId);
+
         Set<String> permissionCodes = new HashSet<>();
         for (PermissionPo permission : permissions) {
             permissionCodes.add(permission.getCode());
         }
-
-        // 更新会话信息
-        existingSession.setPermissions(gson.toJson(permissionCodes));
-        existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
 
         //更新用户当前人物
         PlayerPo playerPo = getActivePlayerByUserId(userId);
@@ -298,12 +302,23 @@ public class AuthService {
             existingSession.setPlayerId(playerPo.getId());
             existingSession.setPlayerName(playerPo.getName());
             existingSession.setPlayerAvatarUrl(playerPo.getAvatarUrl());
+
+            //获取人物关联的权限
+            List<PermissionPo> playerPermissions = playerRepository.getPermissionByPlayerId(playerPo.getId());
+            for (PermissionPo permission : playerPermissions) {
+                permissionCodes.add(permission.getCode());
+            }
         }
         if (playerPo == null){
             existingSession.setPlayerId(null);
             existingSession.setPlayerName(null);
             existingSession.setPlayerAvatarUrl(null);
         }
+
+        // 更新会话信息
+        existingSession.setPermissions(gson.toJson(permissionCodes));
+        existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
+
         userSessionRepository.save(existingSession);
         return new UserSessionVo(existingSession);
     }

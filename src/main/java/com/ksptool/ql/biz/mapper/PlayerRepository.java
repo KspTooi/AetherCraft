@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.mapper;
 
+import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpecificationExecutor<PlayerPo> {
@@ -65,5 +68,15 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpec
             @Param("status") Integer status,
             Pageable pageable
     );
+
+    // 获取人物的所有权限
+    @Query("""
+            SELECT DISTINCT p
+            FROM PlayerPo pl
+            JOIN pl.groups g
+            JOIN g.permissions p
+            WHERE pl.id = :playerId
+            """)
+    List<PermissionPo> getPermissionByPlayerId(@Param("playerId") Long playerId);
 
 }
