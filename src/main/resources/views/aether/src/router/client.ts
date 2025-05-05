@@ -14,7 +14,7 @@ const router = createRouter({
         const preferences = usePreferencesStore()
         await preferences.loadPreferences()
         const { clientPath } = storeToRefs(preferences)
-        
+
         if (clientPath.value && clientPath.value !== '/') {
           next(clientPath.value)
           return
@@ -121,14 +121,20 @@ const savePathBlacklist = [
 // 全局前置守卫：检查玩家是否已选择
 router.beforeEach(async (to, from, next) => {
   const playerStore = usePlayerStore();
-  const { currentPlayer, isLoading } = storeToRefs(playerStore);
 
-  // 如果 currentPlayer 为 null 并且 player store 没有在加载中，尝试获取玩家信息
-  if (!currentPlayer.value && !isLoading.value) {
-      await playerStore.updatePlayerInfo(); // 等待玩家信息加载完成
+  // --- 始终在导航前更新玩家信息 ---
+  try {
+    await playerStore.updatePlayerInfo(); // 等待玩家信息加载或刷新完成
+  } catch (error) {
+    // 即使更新失败，也允许导航继续，后续的检查会处理 currentPlayer 为 null 的情况
+    console.warn("路由守卫：更新玩家信息失败", error);
   }
+  // --- 结束更新 ---
 
-  // 再次检查玩家信息是否已加载
+  // 从 store 重新获取最新的状态 (经过 updatePlayerInfo 更新后)
+  const { currentPlayer } = storeToRefs(playerStore);
+
+  // 检查玩家信息是否已加载 (使用更新后的值)
   // 如果目标路径不在白名单中，并且没有当前玩家信息，则重定向到大厅
   if (!playerCheckWhitelist.includes(to.path) && !currentPlayer.value) {
     console.log(`路由守卫: 未选择玩家，目标路径 ${to.path} 不在白名单中，重定向到 /playLobby`);

@@ -32,7 +32,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2T-126-M5 # 应用版本号
+  version: 1.2T-127-M5 # 应用版本号
 
 # 加密配置
 encrypt:
