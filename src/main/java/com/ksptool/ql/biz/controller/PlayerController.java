@@ -48,7 +48,6 @@ public class PlayerController {
         return Result.success(vo);
     }
 
-
     //获取当前登录人物详细信息
     @PostMapping("/getAttachPlayerDetails")
     public Result<GetAttachPlayerDetailsVo> getAttachPlayerDetails() {
@@ -69,7 +68,6 @@ public class PlayerController {
             return Result.error(ex.getMessage());
         }
     }
-
 
     //用户从人物选择界面选择一个人物
     @PostMapping("/attachPlayer")
