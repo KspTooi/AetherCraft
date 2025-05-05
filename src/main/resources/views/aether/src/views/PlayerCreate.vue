@@ -23,6 +23,7 @@
                 class="upload-btn"
                 @click="triggerFileUpload"
                 :disabled="uploading || loading"
+                :corners="['bottom-right']"
               >
                 {{ uploading ? '上传中...' : '上传头像' }}
               </GlowButton>
@@ -102,6 +103,7 @@
           <GlowButton
             @click="goBack"
             title="返回人物选择"
+            :corners="['bottom-left']"
           >
             返回人物选择
           </GlowButton>
@@ -110,6 +112,7 @@
             :disabled="loading || uploading || !isNameAvailable || !isFormValid"
             class="create-button"
             title="创建人物"
+            :corners="['bottom-right']"
           >
             下一步
           </GlowButton>
