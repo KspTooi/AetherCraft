@@ -43,7 +43,12 @@
               <Fold v-else />
             </el-icon>
             
-
+            <!-- 面包屑导航，放在头部区域 -->
+            <el-breadcrumb v-if="autoBreadcrumbs.length && !isMobile" separator="/" class="admin-breadcrumb">
+              <el-breadcrumb-item v-for="(item, index) in autoBreadcrumbs" :key="index" :to="item.to">
+                {{ item.text }}
+              </el-breadcrumb-item>
+            </el-breadcrumb>
           </div>
           <div class="header-right">
             <!-- 系统导航按钮区域 -->
@@ -88,15 +93,6 @@
             </el-dropdown>
           </div>
         </el-header>
-        
-        <!-- 面包屑导航，独立于内容区域 -->
-        <div v-if="autoBreadcrumbs.length && !isMobile" class="breadcrumb-container">
-          <el-breadcrumb separator="/" class="admin-breadcrumb">
-            <el-breadcrumb-item v-for="(item, index) in autoBreadcrumbs" :key="index" :to="item.to">
-              {{ item.text }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-        </div>
         
         <!-- 内容区域 -->
         <el-main class="admin-content">
@@ -311,24 +307,63 @@ const handleLogout = () => {
 
 // 自动生成面包屑导航
 const autoBreadcrumbs = computed(() => {
-  if (props.breadcrumbs?.length) return props.breadcrumbs
+  // 如果 props 中提供了 breadcrumbs，则优先使用
+  if (props.breadcrumbs?.length) return props.breadcrumbs;
 
-  const paths = route.path.split('/').filter(Boolean)
-  if (paths.length <= 1) return []
+  const revisedBreadcrumbs: Array<{ text: string; to?: string | object }> = [];
   
-  const items = [{ text: '首页', to: '/admin' }]
-  let currentPath = ''
-  
-  for (const path of paths.slice(1)) {
-    currentPath += `/${path}`
-    // 简化演示，直接使用路径名
-    items.push({
-      text: path.charAt(0).toUpperCase() + path.slice(1),
-      to: currentPath
-    })
+  // 尝试添加首页/根路径面包屑
+  const homeRouteConfig = router.options.routes.find(r => r.path === '/');
+  // Use optional chaining and type checking for safer access
+  const homeBreadcrumbMeta = homeRouteConfig?.meta?.breadcrumb as { title?: string, hidden?: boolean } | undefined;
+  if (homeBreadcrumbMeta?.title && route.path !== '/') {
+      revisedBreadcrumbs.push({
+          text: homeBreadcrumbMeta.title,
+          to: '/'
+      });
   }
-  
-  return items
+
+  // 遍历匹配的路由记录
+  route.matched.forEach((record, index) => {
+      // 如果已经添加了首页，并且当前记录是根路径，则跳过
+      if (record.path === '/' && revisedBreadcrumbs.length > 0 && revisedBreadcrumbs[0].to === '/') return;
+
+      const meta = record.meta;
+      let title = '';
+      let hidden = false;
+      const path = record.path; // 使用匹配路由的路径
+
+      // 检查 meta.breadcrumb 配置
+      // Use type assertion for breadcrumb meta structure
+      const breadcrumbMeta = meta?.breadcrumb as { title?: string, hidden?: boolean } | undefined;
+      if (breadcrumbMeta) {
+          if (breadcrumbMeta.title) {
+              title = breadcrumbMeta.title;
+          }
+          hidden = breadcrumbMeta.hidden === true;
+      }
+
+      // 如果 breadcrumb 中没有 title，尝试使用 meta.title
+      // Check if meta.title exists and is a string
+      if (!title && meta?.title && typeof meta.title === 'string') {
+          title = meta.title;
+      }
+
+      // 如果有标题且不隐藏，则添加到面包屑数组中
+      if (title && !hidden) {
+           // 检查是否已存在（基于路径）
+           const alreadyExists = revisedBreadcrumbs.some(b => b.to === path);
+           if(!alreadyExists){
+                revisedBreadcrumbs.push({
+                    text: title,
+                    // 最后一个面包屑（当前页面）不设置链接
+                    to: index === route.matched.length - 1 ? undefined : path
+                });
+           }
+      }
+  });
+
+  return revisedBreadcrumbs;
 })
 </script>
 
@@ -418,17 +453,10 @@ const autoBreadcrumbs = computed(() => {
   overflow: hidden;
 }
 
-/* 面包屑容器样式 */
-.breadcrumb-container {
-  background-color: #fff;
-  border-bottom: 1px solid var(--el-border-color-light);
-  padding: 8px 20px;
-  flex-shrink: 0;
-}
-
 .admin-breadcrumb {
   font-size: 13px;
   line-height: 1;
+  margin-left: 15px;
 }
 
 .admin-content {
@@ -481,6 +509,10 @@ const autoBreadcrumbs = computed(() => {
   
   .header-right {
     gap: 8px;
+  }
+  
+  .admin-breadcrumb {
+    display: none; /* 在移动端隐藏面包屑 */
   }
   
   .breadcrumb-container {
