@@ -202,6 +202,14 @@ public class AdminGroupService {
             // 检查组是否已存在
             if (repository.existsByCode(code)) {
                 existCount++;
+
+                //管理员组重新赋予所有权限
+                if(code.equals(GroupEnum.ADMIN.getCode())){
+                    GroupPo byCode = repository.findByCode(code);
+                    byCode.getPermissions().addAll(allPermissions);
+                    repository.save(byCode);
+                }
+
                 continue;
             }
 
