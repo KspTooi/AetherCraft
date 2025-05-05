@@ -179,6 +179,12 @@ public class AdminGroupService {
             group.getPermissions().clear();
         }
 
+        // 清空用户组与玩家默认分组的关联关系
+        if (group.getPlayerDefaultGroup() != null) {
+            group.getPlayerDefaultGroup().setGroup(null);
+        }
+
+
         // 保存更改并刷新
         repository.save(group);
         repository.flush();

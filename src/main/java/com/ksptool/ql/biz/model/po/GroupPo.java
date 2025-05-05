@@ -96,6 +96,12 @@ public class GroupPo {
     @Comment("用户组中的玩家")
     private Set<PlayerPo> players = new HashSet<>();
 
+    @OneToOne(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("关联玩家默认访问组")
+    private PlayerDefaultGroupPo playerDefaultGroup;
+
     @PrePersist
     public void prePersist() {
         if (status == null) {
