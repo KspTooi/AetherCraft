@@ -24,8 +24,7 @@ import java.util.stream.Collectors;
 public class FileExplorerService {
     @Autowired
     private UserConfigService userConfigService;
-    @Autowired
-    private WindowsNativeService windowsNativeService;
+
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final String DEFAULT_EXPLORER_CMD = "explorer";

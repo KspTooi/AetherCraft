@@ -125,8 +125,6 @@ public class Router {
         return mav;
     }
 
-
-
     @GetMapping("/welcome")
     public ModelAndView welcome() {
         // 获取是否允许用户注册的配置
@@ -182,24 +180,13 @@ public class Router {
         return "forward:/ssr/appCenter";
     }
 
-    @RequirePermission("task:mgr:view")
-    @GetMapping("/taskManager")
-    public ModelAndView taskManager() {
-        return new ModelAndView("task-manager");
-    }
-
-    @GetMapping("/ssr/demo")
-    public String demo() {
-        return "demo";
-    }
-
     @RequirePermission("panel:access")
     @GetMapping("/dashboard")
     public ModelAndView dashboard(HttpServletRequest request) {
         // 获取重定向参数
         String redirectView = request.getParameter("redirect");
         
-        ModelAndView mav = new ModelAndView("demo-control-panel");
+        ModelAndView mav = new ModelAndView("redirect:/panel/model/user-role/list");
         mav.addObject("title", "管理台");
 
         // 如果指定了视图参数，则重定向到指定视图
