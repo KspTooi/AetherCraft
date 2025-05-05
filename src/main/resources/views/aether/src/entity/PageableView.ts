@@ -12,7 +12,7 @@ export default class PageableView<T> {
     /**
      * 总记录数
      */
-    private _count: number | string;
+    private _count?: number | string;
 
     /**
      * 当前页码
@@ -40,7 +40,7 @@ export default class PageableView<T> {
      * 获取总记录数
      * 当后端返回字符串时自动转换为数字
      */
-    get count(): number {
+    get count(): number | undefined {
         return typeof this._count === 'string' ? parseInt(this._count, 10) : this._count;
     }
 
