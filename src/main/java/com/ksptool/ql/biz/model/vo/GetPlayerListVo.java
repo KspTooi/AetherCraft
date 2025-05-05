@@ -20,4 +20,10 @@ public class GetPlayerListVo{
     //钱包余额(CU)
     private BigDecimal balance;
 
+    //状态 0:正在使用 1:不活跃 2:等待删除
+    private Integer status;
+
+    //剩余删除等待期
+    private Integer remainingRemoveTime;
+
 }

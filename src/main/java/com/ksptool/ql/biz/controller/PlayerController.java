@@ -139,8 +139,6 @@ public class PlayerController {
             return Result.success("删除请求已提交，请在 " + waitingHours + " 小时后在人物管理界面确认删除。");
         } catch (BizException e) {
             return Result.error(e.getMessage());
-        } catch (Exception e) {
-            return Result.error("提交删除请求时发生未知错误");
         }
     }
 
@@ -149,11 +147,9 @@ public class PlayerController {
     public Result<String> removePlayer(@RequestBody @Valid CommonIdDto dto){
         try {
             service.removePlayer(dto.getId());
-            return Result.success("人物已成功删除");
+            return Result.success("操作成功");
         } catch (BizException e) {
             return Result.error(e.getMessage());
-        } catch (Exception e) {
-            return Result.error("删除人物时发生未知错误");
         }
     }
 
@@ -162,11 +158,9 @@ public class PlayerController {
     public Result<String> cancelRemovePlayer(@RequestBody @Valid CommonIdDto dto){
         try {
             service.cancelRemovePlayer(dto.getId());
-            return Result.success("人物已成功删除");
+            return Result.success("操作成功");
         } catch (BizException e) {
             return Result.error(e.getMessage());
-        } catch (Exception e) {
-            return Result.error("删除人物时发生未知错误");
         }
     }
 

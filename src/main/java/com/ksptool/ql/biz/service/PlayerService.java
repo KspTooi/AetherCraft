@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
@@ -132,7 +134,42 @@ public class PlayerService {
      */
     public RestPageableView<GetPlayerListVo> getPlayerList(GetPlayerListDto dto) throws BizException{
         Page<PlayerPo> playerList = repository.getPlayerList(dto.getKeyword(), AuthService.getCurrentUserId(), dto.pageRequest());
-        return new RestPageableView<>(playerList,GetPlayerListVo.class);
+        
+        // 获取配置的等待时间（小时）
+        long waitingHours = globalConfigService.getLong(
+                GlobalConfigEnum.PLAYER_REMOVE_WAITING_PERIOD_HOURS.getKey(),
+                Long.parseLong(GlobalConfigEnum.PLAYER_REMOVE_WAITING_PERIOD_HOURS.getDefaultValue()) // 使用枚举中的默认值
+        );
+        long waitingMillis = waitingHours * 60 * 60 * 1000;
+        Date now = new Date();
+        long nowMillis = now.getTime();
+
+        List<GetPlayerListVo> vos = new ArrayList<>();
+        for (PlayerPo po : playerList.getContent()) {
+            GetPlayerListVo vo = as(po, GetPlayerListVo.class); // 先进行基础映射
+            vo.setRemainingRemoveTime(-1); // 初始化为 -1
+
+            if (po.getStatus() == 2) { // 检查 PO 的状态
+                Date removalRequestTime = po.getRemovalRequestTime(); // 从 PO 获取时间
+                if (removalRequestTime != null) {
+                    long removalRequestMillis = removalRequestTime.getTime();
+                    long earliestRemovalTimeMillis = removalRequestMillis + waitingMillis;
+                    long remainingMillis = earliestRemovalTimeMillis - nowMillis;
+
+                    if (remainingMillis > 0) {
+                        long remainingHours = remainingMillis / (60 * 60 * 1000);
+                        // 转换为 int 并处理可能的溢出（虽然小时数不太可能溢出int）
+                        vo.setRemainingRemoveTime((int) remainingHours);
+                    } else {
+                        vo.setRemainingRemoveTime(0); // 时间已到
+                    }
+                }
+                 // 如果 removalRequestTime 为 null 但状态为 2，保持 -1
+            }
+            vos.add(vo);
+        }
+
+        return new RestPageableView<>(vos, playerList.getTotalElements());
     }
     
     /**

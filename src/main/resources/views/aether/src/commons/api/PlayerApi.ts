@@ -12,6 +12,8 @@ export interface GetPlayerListVo {
     avatarUrl?: string; // 头像路径
     name: string;       // (明文)人物角色名称
     balance: string;    // 钱包余额(CU) (注意：根据ts-vue-rule，后端BigDecimal类型映射为string)
+    status: number;    // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
+    remainingRemoveTime: number; // 剩余删除时间(小时), -1表示非等待删除状态或无请求时间, 0表示已可删除
 }
 
 export interface CreatePlayerDto {
@@ -120,5 +122,28 @@ export default {
      */
     editAttachPlayerDetails: async (dto: EditAttachPlayerDetailsDto): Promise<string> => {
         return await Http.postEntity<string>('/player/editAttachPlayerDetails', dto);
-    }
+    },
+
+    /**
+     * 发送删除人物请求
+     */
+    sendRemoveRequest: async (dto: CommonIdDto): Promise<string> => {
+        // 后端返回 Result<String>, Http.postEntity 应该处理解包或直接返回 message
+        // 假设 Http.postEntity 在成功时返回 data (即 string), 失败时抛出异常
+        return await Http.postEntity<string>('/player/sendRemoveRequest', dto);
+    },
+
+    /**
+     * 确认删除人物
+     */
+    removePlayer: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/player/removePlayer', dto);
+    },
+
+    /**
+     * 取消删除人物请求
+     */
+    cancelRemovePlayer: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/player/cancelRemovePlayer', dto);
+    },
 }
