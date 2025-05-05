@@ -312,7 +312,7 @@
                     success: function(response) {
                         if (response.code === 0) {
                             // 跳转到系统首页
-                            window.location.href = '/panel';
+                            window.location.href = '/admin-ui';
                         } else {
                             alert('完成安装失败：' + (response.message || '未知错误'));
                         }
