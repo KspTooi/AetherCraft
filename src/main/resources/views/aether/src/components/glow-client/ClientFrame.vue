@@ -34,7 +34,7 @@ const leftNavItems = [
 // 右侧导航项
 const rightNavItems = [
   { name: '经典UI', href: '/model/chat/view' },
-  { name: '管理台', href: '/dashboard' },
+  { name: '管理台', href: '/admin-ui' },
   { name: '注销', action: 'logout' }
 ]
 
