@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.controller.panel;
+package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
@@ -22,7 +22,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/install-wizard")
-public class PanelInstallWizardController {
+public class AdminInstallWizardController {
 
     @Autowired
     private GlobalConfigService globalConfigService;

@@ -3,7 +3,6 @@ package com.ksptool.ac.test;
 import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.dto.ServiceQueryDto;
 import com.ksptool.ql.biz.model.vo.WindowsServiceVo;
-import com.ksptool.ql.biz.service.WindowsNativeService;
 import com.ksptool.ql.commons.exception.BizException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
