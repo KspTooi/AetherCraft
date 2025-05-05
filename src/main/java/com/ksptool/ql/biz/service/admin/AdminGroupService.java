@@ -16,6 +16,7 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ public class AdminGroupService {
     private AuthService authService;
 
     public List<GetGroupDefinitionsVo> getGroupDefinitions(){
-        List<GroupPo> pos = repository.findAll();
+        List<GroupPo> pos = repository.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
         return as(pos,GetGroupDefinitionsVo.class);
     }
 

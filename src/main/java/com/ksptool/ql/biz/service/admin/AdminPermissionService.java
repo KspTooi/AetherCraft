@@ -14,6 +14,7 @@ import com.ksptool.ql.commons.web.RestPageableView;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,7 @@ public class AdminPermissionService {
     private PermissionRepository repository;
 
     public List<GetPermissionDefinitionVo> getPermissionDefinition(){
-        List<PermissionPo> pos = repository.findAll();
+        List<PermissionPo> pos = repository.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
         return as(pos,GetPermissionDefinitionVo.class);
     }
 
