@@ -41,6 +41,7 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpec
             WHERE (:playerName IS NULL OR p.name LIKE CONCAT('%', :playerName, '%'))
             AND (:username IS NULL OR u.username LIKE CONCAT('%', :username, '%'))
             AND (:status IS NULL OR p.status = :status)
+            ORDER BY p.createTime DESC
             """,
             countQuery = """
             SELECT COUNT(p) FROM PlayerPo p JOIN p.user u

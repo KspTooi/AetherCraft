@@ -24,6 +24,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/player',
+      name: 'player-manager',
+      component: () => import('@/views/admin/PlayerManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: '玩家管理'
+        }
+      }
+    },
+    {
       path: '/admin/group',
       name: 'user-group-manager',
       component: () => import('@/views/admin/UserGroupManager.vue'),

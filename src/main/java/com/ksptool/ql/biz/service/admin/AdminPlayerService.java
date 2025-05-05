@@ -77,6 +77,8 @@ public class AdminPlayerService {
         PlayerPo playerPo = repository.findById(dto.getId())
                 .orElseThrow(() -> new BizException("要编辑的玩家不存在"));
 
+        var oldStatus = playerPo.getStatus();
+
         // 先使用 assign 更新所有 DTO 中存在的字段
         assign(dto, playerPo);
 
@@ -92,6 +94,10 @@ public class AdminPlayerService {
                  throw new BizException("不能将状态直接设置为 0 (正在使用) 或 2 (等待删除)");
             }
             playerPo.setStatus(dto.getStatus()); // 强制使用 DTO 的值
+        }
+
+        if (dto.getStatus() == null){
+            playerPo.setStatus(oldStatus);
         }
 
         // 注意：不应通过此方法修改余额(balance)或所属用户(user)

@@ -174,6 +174,12 @@ const menuItems = ref([
     routerLink: '/admin/user'
   },
   {
+    id: 'player',
+    title: '玩家管理',
+    icon: User,
+    routerLink: '/admin/player'
+  },
+  {
     id: 'group',
     title: '用户组管理',
     icon: Lock,
