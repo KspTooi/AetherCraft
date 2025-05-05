@@ -4,20 +4,28 @@ import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
+import com.ksptool.ql.biz.model.dto.EditAttachPlayerDetailsDto;
 import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.vo.GetAttachPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
+import com.ksptool.ql.commons.web.Result;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
+
+import static com.ksptool.entities.Entities.as;
+import static com.ksptool.entities.Entities.assign;
 
 @Service
 public class PlayerService {
@@ -33,6 +41,46 @@ public class PlayerService {
 
     @Autowired
     private AuthService authService;
+
+    public GetAttachPlayerDetailsVo getAttachPlayerDetails() throws BizException {
+
+        Long playerId = AuthService.getCurrentPlayerId();
+
+        if(playerId == null){
+            throw new BizException("Player is not logged in");
+        }
+
+        PlayerPo query = new PlayerPo();
+        query.setId(playerId);
+        query.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+
+        PlayerPo playerPo = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("未能找到指定的人物或该人物不属于您"));
+
+        GetAttachPlayerDetailsVo vo = as(playerPo, GetAttachPlayerDetailsVo.class);
+        vo.setDescription(css.decryptForCurUser(playerPo.getDescription()));
+        return vo;
+    }
+
+    public void editAttachPlayerDetails(EditAttachPlayerDetailsDto dto) throws BizException {
+
+        if(!AuthService.isLoginPlayer()){
+            throw new BizException("状态异常：当前没有活跃会话，无法执行修改操作。");
+        }
+
+        PlayerPo query = new PlayerPo();
+        query.setId(dto.getId());
+        query.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setStatus(0);
+
+        PlayerPo playerPo = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("未能找到指定的人物或该人物不属于您"));
+
+        assign(dto,playerPo);
+        css.encryptEntity(playerPo);
+        repository.save(playerPo);
+    }
+
 
     @Transactional
     public void attachPlayer(Long id) throws BizException{

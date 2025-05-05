@@ -1,9 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
-import com.ksptool.ql.biz.model.dto.CheckPlayerNameDto;
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
-import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
+import com.ksptool.ql.biz.model.dto.*;
+import com.ksptool.ql.biz.model.vo.GetAttachPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetCurrentPlayerVo;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
 import com.ksptool.ql.biz.service.AuthService;
@@ -23,9 +21,11 @@ public class PlayerController {
 
     @Autowired
     private PlayerService service;
+
     @Autowired
     private UserFileService userFileService;
 
+    //获取当前登录人物快照
     @PostMapping("/getCurrentPlayer")
     public Result<GetCurrentPlayerVo> getCurrentPlayer() {
 
@@ -42,6 +42,29 @@ public class PlayerController {
         vo.setAvatarUrl(AuthService.getCurrentUserSession().getPlayerAvatarUrl());
         return Result.success(vo);
     }
+
+
+    //获取当前登录人物详细信息
+    @PostMapping("/getAttachPlayerDetails")
+    public Result<GetAttachPlayerDetailsVo> getAttachPlayerDetails() {
+        try{
+            return Result.success(service.getAttachPlayerDetails());
+        }catch (BizException ex){
+            return Result.error(ex.getMessage());
+        }
+    }
+
+    //编辑当前登录人物详细信息
+    @PostMapping("/editAttachPlayerDetails")
+    public Result<String> editAttachPlayerDetails(@RequestBody @Valid EditAttachPlayerDetailsDto dto){
+        try{
+            service.editAttachPlayerDetails(dto);
+            return Result.success("success");
+        }catch (BizException ex){
+            return Result.error(ex.getMessage());
+        }
+    }
+
 
     //用户从人物选择界面选择一个人物
     @PostMapping("/attachPlayer")
