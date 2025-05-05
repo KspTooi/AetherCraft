@@ -55,8 +55,12 @@ public class PlayerController {
     //取消激活全部人物并退回到人物选择界面
     @PostMapping("/detachPlayer")
     public Result<String> detachPlayer() {
-        service.detachPlayer();
-        return Result.success("success");
+        try {
+            service.detachPlayer();
+            return Result.success("success");
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     //获取用户的人物列表

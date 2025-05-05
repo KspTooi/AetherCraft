@@ -37,9 +37,11 @@ public class PlayerService {
     @Transactional
     public void attachPlayer(Long id) throws BizException{
 
-        var userId = AuthService.getCurrentUserId();
+        if(AuthService.isLoginPlayer()){
+            throw new BizException("状态异常：您正试图建立第二个锚点，这通常是不被允许的。");
+        }
 
-        detachPlayer();
+        var userId = AuthService.getCurrentUserId();
 
         PlayerPo query = new PlayerPo();
         query.setId(id);
@@ -56,14 +58,15 @@ public class PlayerService {
     }
 
     @Transactional
-    public void detachPlayer(){
+    public void detachPlayer() throws BizException{
+        if(!AuthService.isLoginPlayer()){
+            throw new BizException("状态异常：您似乎尚未建立任何意识连接，无法执行断开操作。");
+        }
         Long userId = AuthService.getCurrentUserId();
         repository.detachAllActivePlayersByUserId(userId);
         //刷新用户会话
         authService.refreshUserSession(userId);
     }
-
-
 
     /**
      * 获取玩家列表
