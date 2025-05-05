@@ -1,12 +1,16 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
+import com.ksptool.ql.biz.mapper.GroupRepository;
+import com.ksptool.ql.biz.mapper.PlayerDefaultGroupRepository;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
 import com.ksptool.ql.biz.model.dto.EditAttachPlayerDetailsDto;
 import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
+import com.ksptool.ql.biz.model.po.GroupPo;
+import com.ksptool.ql.biz.model.po.PlayerDefaultGroupPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.GetAttachPlayerDetailsVo;
@@ -29,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
@@ -50,6 +55,10 @@ public class PlayerService {
 
     @Autowired
     private GlobalConfigService globalConfigService;
+    @Autowired
+    private GroupRepository groupRepository;
+    @Autowired
+    private PlayerDefaultGroupRepository playerDefaultGroupRepository;
 
     public GetAttachPlayerDetailsVo getAttachPlayerDetails() throws BizException {
 
@@ -217,8 +226,16 @@ public class PlayerService {
         create.setStatus(1); //初始状态为不活跃
         css.encryptEntity(create);
 
+        // 获取默认访问组
+        Set<GroupPo> defaultGroupList = playerDefaultGroupRepository.getDefaultGroupList();
+
+        // 将默认访问组关联到新玩家
+        create.setGroups(defaultGroupList);
+
         //保存新玩家
         repository.save(create);
+
+
         return create.getId() + "";
     }
 

@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.mapper;
 
+import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PlayerDefaultGroupPo;
 import com.ksptool.ql.biz.model.vo.GetPlayerDefaultGroupListVo;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface PlayerDefaultGroupRepository extends JpaRepository<PlayerDefaultGroupPo, Long> {
@@ -32,5 +34,8 @@ public interface PlayerDefaultGroupRepository extends JpaRepository<PlayerDefaul
     Page<GetPlayerDefaultGroupListVo> getPlayerDefaultGroupList(Pageable pageable);
 
     List<PlayerDefaultGroupPo> findByGroup_IdIn(List<Long> groupIds);
+
+    @Query("SELECT DISTINCT pdg.group FROM PlayerDefaultGroupPo pdg")
+    Set<GroupPo> getDefaultGroupList();
 
 }
