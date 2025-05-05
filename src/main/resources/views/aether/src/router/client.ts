@@ -86,6 +86,11 @@ const router = createRouter({
       path: '/modelChat',
       name: 'modelChat',
       component: () => import('../views/ModelChat.vue'),
+    },
+    {
+      path: '/playLobby',
+      name: 'playLobby',
+      component: () => import('../views/PlayerLobby.vue'),
     }
   ],
 })
