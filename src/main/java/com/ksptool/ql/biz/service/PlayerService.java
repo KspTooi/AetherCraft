@@ -38,7 +38,7 @@ public class PlayerService {
     public void attachPlayer(Long id) throws BizException{
 
         if(AuthService.isLoginPlayer()){
-            throw new BizException("状态异常：您正试图建立第二个锚点，这通常是不被允许的。");
+            throw new BizException("状态异常：当前已存在一个活跃会话，您无法再继续激活");
         }
 
         var userId = AuthService.getCurrentUserId();
@@ -60,7 +60,7 @@ public class PlayerService {
     @Transactional
     public void detachPlayer() throws BizException{
         if(!AuthService.isLoginPlayer()){
-            throw new BizException("状态异常：您似乎尚未建立任何意识连接，无法执行断开操作。");
+            throw new BizException("状态异常：当前没有活跃会话，无法执行断开操作。");
         }
         Long userId = AuthService.getCurrentUserId();
         repository.detachAllActivePlayersByUserId(userId);
@@ -85,6 +85,10 @@ public class PlayerService {
      */
     @Transactional
     public String createPlayer(CreatePlayerDto dto) throws BizException {
+        
+        if(AuthService.isLoginPlayer()){
+            throw new BizException("状态异常：当前存在一个到活跃会话，无法启动新的实体创建进程。");
+        }
 
         //检查名称是否可用
         if(!this.checkPlayerName(dto.getName())){

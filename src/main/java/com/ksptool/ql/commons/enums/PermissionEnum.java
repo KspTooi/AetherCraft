@@ -15,7 +15,7 @@ public enum PermissionEnum {
     PANEL_USER_ADD("panel:user:add", "管理台:添加用户"),
     PANEL_USER_EDIT("panel:user:edit", "管理台:编辑用户"),
     PANEL_USER_DELETE("panel:user:delete", "管理台:删除用户"),
-    
+
     // 用户组管理权限
     PANEL_GROUP_VIEW("panel:group:view", "管理台:查看用户组"),
     PANEL_GROUP_ADD("panel:group:add", "管理台:添加用户组"),
@@ -120,7 +120,6 @@ public enum PermissionEnum {
     //其他
     CUSTOMIZE("customize:view", "允许访问个性化"),
     DESKTOP("desktop:view", "允许访问桌面"),
-
     ;
 
 

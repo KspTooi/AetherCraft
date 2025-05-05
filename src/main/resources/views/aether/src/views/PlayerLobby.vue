@@ -2,29 +2,29 @@
   <GlowDiv class="player-lobby-outer" border="none">
     <div class="player-lobby-container">
       <div class="lobby-header">
-        <h1>选择或创建角色</h1>
-        <p>从下方选择已有角色继续您的冒险，或点击加号(+)创建一位新角色。</p>
+        <h1>选择或创建人物</h1>
+        <p>从下方选择已有人物继续您的冒险，或点击加号(+)创建一位新人物。</p>
       </div>
 
       <div class="lobby-content">
 
         <div v-if="loading" class="loading-container">
           <div class="loading-spinner"></div>
-          <p>正在加载角色列表...</p>
+          <p>正在加载人物列表...</p>
         </div>
 
         <template v-else>
-          <!-- 角色列表区域 -->
+          <!-- 人物列表区域 -->
           <div class="player-grid" v-if="playerList.length > 0">
-            <!-- 创建新角色卡片 -->
+            <!-- 创建新人物卡片 -->
             <GlowDiv class="player-card create-player-card" @click="createNewPlayer">
               <div class="create-player-content">
                 <div class="create-icon">+</div>
-                <div class="create-text">创建新角色</div>
+                <div class="create-text">创建新人物</div>
               </div>
             </GlowDiv>
             
-            <!-- 现有角色卡片 -->
+            <!-- 现有人物卡片 -->
             <GlowDiv
                 v-for="player in playerList"
                 :key="player.id"
@@ -54,10 +54,10 @@
             </GlowDiv>
           </div>
 
-          <!-- 无角色提示 -->
+          <!-- 无人物提示 -->
           <GlowDiv v-else class="no-players">
-            <p>您还没有创建任何角色</p>
-            <p>创建一个新角色开始您的旅程吧！</p>
+            <p>您还没有创建任何人物</p>
+            <p>创建一个新人物开始您的旅程吧！</p>
           </GlowDiv>
         </template>
 
@@ -69,7 +69,7 @@
               :corners="['top-right', 'bottom-left']"
               :loading="actionLoading"
           >
-            创建新角色
+            创建新人物
           </GlowButton>
           -->
         </div>
@@ -124,7 +124,7 @@ const loadPlayerList = async () => {
     });
     playerList.value = response.rows || [];
     
-    // 如果有已激活角色，默认选中
+    // 如果有已激活人物，默认选中
     const activePlayerId = localStorage.getItem('activePlayerId');
     if (activePlayerId) {
       const activePlayer = playerList.value.find(player => player.id === activePlayerId);
@@ -133,10 +133,10 @@ const loadPlayerList = async () => {
       }
     }
   } catch (error) {
-    console.error('获取玩家列表失败:', error);
+    console.error('获取人物列表失败:', error);
     alterRef.value?.showConfirm({
       title: "获取数据失败",
-      content: "无法加载角色列表，请稍后重试",
+      content: "无法加载人物列表，请稍后重试",
       closeText: "确定",
     });
   } finally {
@@ -144,7 +144,7 @@ const loadPlayerList = async () => {
   }
 };
 
-// 选择玩家并直接激活
+// 选择人物并直接激活
 const selectPlayer = async (player: GetPlayerListVo) => {
   // 立即高亮选中项
   selectedPlayer.value = player;
@@ -156,7 +156,7 @@ const selectPlayer = async (player: GetPlayerListVo) => {
   actionLoading.value = true;
 
   try {
-    // 存储选择的角色信息
+    // 存储选择的人物信息
     localStorage.setItem('activePlayerId', player.id);
     localStorage.setItem('activePlayerName', player.name);
 
@@ -166,11 +166,11 @@ const selectPlayer = async (player: GetPlayerListVo) => {
     // 跳转到主界面
     router.push('/model/chat');
   } catch (error) {
-    console.error('选择并激活角色失败:', error);
+    console.error('选择并激活人物失败:', error);
     selectedPlayer.value = null; // 激活失败时取消选中状态
     alterRef.value?.showConfirm({
       title: "操作失败",
-      content: "无法选择该角色，请稍后重试",
+      content: "无法选择该人物，请稍后重试",
       closeText: "确定",
     });
     actionLoading.value = false; // 确保在 catch 中重置 loading
@@ -178,7 +178,7 @@ const selectPlayer = async (player: GetPlayerListVo) => {
   // finally块不再需要设置 actionLoading = false, 因为成功时已跳转，失败时在catch中处理
 };
 
-// 创建新角色（跳转到创建页面）
+// 创建新人物（跳转到创建页面）
 const createNewPlayer = () => {
   if (actionLoading.value) {
     return;
@@ -193,7 +193,7 @@ const createNewPlayer = () => {
   }
 };
 
-// 组件挂载时加载玩家列表
+// 组件挂载时加载人物列表
 onMounted(() => {
   loadPlayerList();
 });

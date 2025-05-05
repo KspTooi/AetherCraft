@@ -53,11 +53,13 @@ export default {
     /**
      * 检查人物名字是否可用
      */
-    checkPlayerName: async (dto: CheckPlayerNameDto): Promise<string> => {
-        // 注意：后端成功时返回 Result<String>("该名字可用")，失败时返回 Result.error("该名字不可用")
-        // Http 工具类会自动处理 Result 包装，业务逻辑只需关注成功时的数据或失败时的错误信息
-        // 这里我们直接返回后端 Result 中的 data 字段 (即 "该名字可用" 或 由Http抛出的错误中的 message "该名字不可用")
-        return await Http.postEntity<string>('/player/checkName', dto);
+    checkPlayerName: async (dto: CheckPlayerNameDto): Promise<boolean> => {
+        try{
+            await Http.postEntity<string>('/player/checkName', dto);
+            return true;
+        }catch (Exception) {
+            return false;
+        }
     },
 
     /**

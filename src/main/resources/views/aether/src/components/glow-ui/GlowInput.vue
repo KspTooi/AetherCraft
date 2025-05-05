@@ -10,7 +10,7 @@
         :maxlength="maxLength > 0 ? maxLength : undefined"
         :class="{ 
           'glow-input-active': isFocused,
-          'glow-input-error': notBlank && isEmpty 
+          'glow-input-error': (notBlank && isEmpty) || isInvalid 
         }"
         @focus="isFocused = true"
         @blur="handleBlur"
@@ -64,6 +64,10 @@ const props = defineProps({
   typingDelay: {
     type: Number,
     default: 500 // 停止输入后500ms触发onTypeDone
+  },
+  isInvalid: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -218,5 +222,14 @@ defineExpose({
 
 .glow-input-error {
   border-color: v-bind('theme.dangerBorderColor') !important;
+}
+
+.glow-input-error-message {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px;
+    color: v-bind('theme.dangerColor');
+    padding-left: 2px;
+    margin-top: 2px;
+    min-height: 14px;
 }
 </style>

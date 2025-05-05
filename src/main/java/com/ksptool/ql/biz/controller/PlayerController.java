@@ -8,15 +8,14 @@ import com.ksptool.ql.biz.model.vo.GetCurrentPlayerVo;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.PlayerService;
+import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/player")
@@ -24,6 +23,8 @@ public class PlayerController {
 
     @Autowired
     private PlayerService service;
+    @Autowired
+    private UserFileService userFileService;
 
     @PostMapping("/getCurrentPlayer")
     public Result<GetCurrentPlayerVo> getCurrentPlayer() {
@@ -98,4 +99,15 @@ public class PlayerController {
         return Result.error("该名字不可用");
     }
 
+
+    @PostMapping("/uploadAvatar")
+    public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file){
+        try {
+            // 使用统一文件服务保存头像
+            var userFile = userFileService.receive(file);
+            return Result.success(userFile.getFilepath());
+        } catch (Exception e) {
+            return Result.error("头像上传失败：" + e.getMessage());
+        }
+    }
 }
