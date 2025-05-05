@@ -154,6 +154,9 @@ public class AdminGroupService {
             throw new BizException("系统用户组不能删除");
         }
 
+        // 获取该用户组下所有在线用户的会话
+        List<UserSessionPo> activeSessions = userSessionRepository.getUserSessionByGroupId(group.getId());
+
         // 清空用户组与用户的关联关系
         if (!group.getUsers().isEmpty()) {
             for (UserPo user : new HashSet<>(group.getUsers())) {
@@ -179,6 +182,11 @@ public class AdminGroupService {
         repository.save(group);
         repository.flush();
         repository.delete(group);
+
+        // 刷新每个用户的会话
+        for (UserSessionPo session : activeSessions) {
+            authService.refreshUserSession(session.getUserId());
+        }
     }
 
     /**

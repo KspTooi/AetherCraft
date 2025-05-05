@@ -26,13 +26,17 @@ public interface UserSessionRepository extends JpaRepository<UserSessionPo, Long
      * @return 在线用户的会话信息列表
      */
     @Query("""
-           SELECT DISTINCT us FROM UserSessionPo us
-           JOIN UserPo u ON us.userId = u.id
-           JOIN PlayerPo p ON us.playerId = p.id
-           JOIN u.groups g
-           WHERE g.id = :groupId
-           AND us.expiresAt > CURRENT_TIMESTAMP
-           ORDER BY us.userId
-           """)
+          SELECT DISTINCT us FROM UserSessionPo us
+          JOIN UserPo u ON us.userId = u.id
+          JOIN u.groups ug
+          JOIN PlayerPo pl ON us.playerId = pl.id
+          JOIN pl.groups pg
+          WHERE ug.id = :groupId OR pg.id = :groupId
+          AND us.expiresAt > CURRENT_TIMESTAMP
+          ORDER BY us.userId
+          """)
     List<UserSessionPo> getUserSessionByGroupId(@Param("groupId") Long groupId);
+
+
+
 }

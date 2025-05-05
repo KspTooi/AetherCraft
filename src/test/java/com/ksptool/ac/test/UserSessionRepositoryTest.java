@@ -155,4 +155,12 @@ public class UserSessionRepositoryTest {
         assertNotNull(sessions);
         assertTrue(sessions.isEmpty());
     }
+
+    @Test
+    public void getPlayer(){
+
+
+        List<UserSessionPo> userSessionByGroupId = userSessionRepository.getUserSessionByGroupId(132L);
+
+    }
 } 
