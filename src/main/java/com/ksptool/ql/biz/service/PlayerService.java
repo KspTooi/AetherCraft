@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
@@ -12,10 +13,12 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 public class PlayerService {
@@ -28,6 +31,15 @@ public class PlayerService {
 
     @Autowired
     private ContentSecurityService css;
+
+    //获取用户当前正在使用的人物
+    public PlayerPo getActivePlayerByUserId(Long uid){
+        var query = new PlayerPo();
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setStatus(0); //0:正在使用 1:不活跃 2:等待删除 3:已删除
+        return repository.findOne(Example.of(query)).orElse(null);
+    }
+
 
     /**
      * 获取玩家列表

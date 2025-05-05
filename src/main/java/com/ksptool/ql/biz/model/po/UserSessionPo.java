@@ -20,6 +20,14 @@ public class UserSessionPo {
     @Comment("用户ID")
     private Long userId;
 
+    @Column(name = "player_id")
+    @Comment("当前激活的人物ID")
+    private Long playerId;
+
+    @Column(name = "player_name")
+    @Comment("当前激活的人物名称")
+    private String playerName;
+
     @Column(nullable = false, unique = true, length = 100)
     @Comment("Token")
     private String token;

@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CheckPlayerNameDto;
+import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
 import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
@@ -21,6 +22,19 @@ public class PlayerController {
 
     @Autowired
     private PlayerService service;
+
+    //从人物选择界面选择一个人物
+    @PostMapping("/activePlayer")
+    public Result<String> activePlayer(@RequestBody @Valid CommonIdDto dto) {
+
+        return null;
+    }
+
+    //取消激活全部人物并退回到人物选择界面
+    @PostMapping("/detachPlayer")
+    public Result<String> detachPlayer() {
+        return null;
+    }
 
     //获取用户的人物列表
     @PostMapping("/getPlayerList")

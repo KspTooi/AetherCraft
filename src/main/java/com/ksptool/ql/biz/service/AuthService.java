@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.service;
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.mapper.UserSessionRepository;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
@@ -39,8 +40,12 @@ public class AuthService {
 
     @Value("${session.expires}")
     private long expiresInSeconds;
+
     @Autowired
     private ModelUserRoleService modelUserRoleService;
+
+    @Autowired
+    private PlayerService playerService;
 
     /**
      * 用户使用用户名与密码登录系统
@@ -89,6 +94,15 @@ public class AuthService {
     public static UserSessionVo getCurrentUserSession() {
         return (UserSessionVo) RequestContextHolder.currentRequestAttributes()
             .getAttribute(SESSION_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+    }
+
+    public static Long getCurrentPlayerId(){
+        UserSessionVo session = getCurrentUserSession();
+        return session != null ? session.getPlayerId() : null;
+    }
+    public static String getCurrentPlayerName(){
+        UserSessionVo session = getCurrentUserSession();
+        return session != null ? session.getPlayerName() : null;
     }
 
     /**
@@ -260,6 +274,16 @@ public class AuthService {
         existingSession.setPermissions(gson.toJson(permissionCodes));
         existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
         userSessionRepository.save(existingSession);
+
+        //更新用户当前人物
+        PlayerPo playerPo = playerService.getActivePlayerByUserId(userId);
+
+        //用户已激活至少一个人物
+        if(playerPo != null){
+            existingSession.setPlayerId(playerPo.getId());
+            existingSession.setPlayerName(playerPo.getName());
+        }
+
         return new UserSessionVo(existingSession);
     }
 
