@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,11 +32,13 @@ public class AdminGroupController {
     }
 
     @PostMapping("getGroupList")
+    @RequirePermissionRest("admin:group:view")
     public Result<RestPageableView<GetGroupListVo>> getGroupList(@RequestBody @Valid GetGroupListDto dto){
         return Result.success(service.getGroupList(dto));
     }
 
     @PostMapping("getGroupDetails")
+    @RequirePermissionRest("admin:group:save")
     public Result<GetGroupDetailsVo> getGroupDetails(@RequestBody @Valid CommonIdDto dto){
         try{
             return Result.success(service.getGroupDetails(dto.getId()));
@@ -45,6 +48,7 @@ public class AdminGroupController {
     }
 
     @PostMapping("saveGroup")
+    @RequirePermissionRest("admin:group:save")
     public Result<String> saveGroup(@RequestBody @Valid SaveGroupDto dto){
         try{
             service.saveGroup(dto);
@@ -55,6 +59,7 @@ public class AdminGroupController {
     }
 
     @PostMapping("removeGroup")
+    @RequirePermissionRest("admin:group:delete")
     public Result<String> removeGroup(@RequestBody @Valid CommonIdDto dto){
         try{
             service.removeGroup(dto.getId());

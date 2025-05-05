@@ -38,7 +38,7 @@ public class AdminMaintainController {
      */
     @PostMapping("/validSystemPermission")
     @ResponseBody
-    @RequirePermissionRest("panel:maintain:permission")
+    @RequirePermissionRest("admin:maintain:permission")
     public Result<ValidateSystemPermissionsVo> validateSystemPermissions() {
         try {
             ValidateSystemPermissionsVo result = adminPermissionService.validateSystemPermissions();
@@ -63,7 +63,7 @@ public class AdminMaintainController {
      */
     @PostMapping("/validSystemGroup")
     @ResponseBody
-    @RequirePermissionRest("panel:maintain:permission")
+    @RequirePermissionRest("admin:maintain:group")
     public Result<String> validateSystemGroups() {
         try {
             String result = adminGroupService.validateSystemGroups();
@@ -79,7 +79,7 @@ public class AdminMaintainController {
      */
     @PostMapping("/validSystemUsers")
     @ResponseBody
-    @RequirePermissionRest("panel:maintain:permission")
+    @RequirePermissionRest("admin:maintain:user")
     public Result<String> validateSystemUsers() {
         try {
             String result = userService.validateSystemUsers();
@@ -95,7 +95,7 @@ public class AdminMaintainController {
      */
     @PostMapping("/validSystemConfigs")
     @ResponseBody
-    @RequirePermissionRest("panel:maintain:permission")
+    @RequirePermissionRest("admin:maintain:config")
     public Result<String> validateSystemConfigs() {
         try {
             String result = globalConfigService.validateSystemConfigs();

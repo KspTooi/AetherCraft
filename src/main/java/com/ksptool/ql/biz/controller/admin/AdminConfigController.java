@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.service.admin.AdminConfigService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,11 +25,13 @@ public class AdminConfigController {
     private AdminConfigService service;
 
     @PostMapping("getConfigList")
+    @RequirePermissionRest("admin:config:view")
     public Result<RestPageableView<GetConfigListVo>> getConfigList(@RequestBody @Valid GetConfigListDto dto){
         return Result.success(service.getConfigList(dto));
     }
 
     @PostMapping("getConfigDetails")
+    @RequirePermissionRest("admin:config:save")
     public Result<GetConfigDetailsVo> getConfigDetails(@RequestBody @Valid CommonIdDto dto){
         try {
             return Result.success(service.getConfigDetails(dto.getId()));
@@ -38,6 +41,7 @@ public class AdminConfigController {
     }
 
     @PostMapping("saveConfig")
+    @RequirePermissionRest("admin:config:save")
     public Result<String> saveConfig(@RequestBody @Valid SaveConfigDto dto){
         try {
             service.saveConfig(dto);
@@ -48,6 +52,7 @@ public class AdminConfigController {
     }
 
     @PostMapping("removeConfig")
+    @RequirePermissionRest("admin:config:remove")
     public Result<String> removeConfig(@RequestBody @Valid CommonIdDto dto){
         try {
             service.removeConfig(dto.getId());

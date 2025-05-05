@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.service.admin.AdminModelConfigService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +42,7 @@ public class AdminModelConfigController {
     }
 
     @PostMapping("getModelConfig")
+    @RequirePermissionRest("admin:model:view")
     public Result<GetAdminModelConfigVo> getModelConfig(@RequestBody @Valid GetModelConfigDto dto) {
         try {
             return Result.success(service.getModelConfig(dto));
@@ -50,6 +52,7 @@ public class AdminModelConfigController {
     }
 
     @PostMapping("saveModelConfig")
+    @RequirePermissionRest("admin:model:edit")
     public Result<String> saveModelConfig(@RequestBody @Valid SaveAdminModelConfigDto dto) {
         try {
             service.saveModelConfig(dto);
@@ -60,6 +63,7 @@ public class AdminModelConfigController {
     }
 
     @PostMapping("testModelConnection")
+    @RequirePermissionRest("admin:model:test")
     public Result<String> testModelConnection(@RequestBody @Valid TestModelConnectionDto dto) {
         try {
             return Result.success(service.testModelConnection(dto));
