@@ -6,12 +6,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PlayerRepository extends JpaRepository<PlayerPo, Long> {
+public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpecificationExecutor<PlayerPo> {
     boolean existsByName(String name);
+
+
+
+
+
 
     @Query("""
            SELECT p FROM PlayerPo p
@@ -29,5 +35,24 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long> {
            WHERE p.user.id = :userId AND p.status = 0
            """)
     void detachAllActivePlayersByUserId(@Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT p FROM PlayerPo p JOIN FETCH p.user u
+            WHERE (:playerName IS NULL OR p.name LIKE CONCAT('%', :playerName, '%'))
+            AND (:username IS NULL OR u.username LIKE CONCAT('%', :username, '%'))
+            AND (:status IS NULL OR p.status = :status)
+            """,
+            countQuery = """
+            SELECT COUNT(p) FROM PlayerPo p JOIN p.user u
+            WHERE (:playerName IS NULL OR p.name LIKE CONCAT('%', :playerName, '%'))
+            AND (:username IS NULL OR u.username LIKE CONCAT('%', :username, '%'))
+            AND (:status IS NULL OR p.status = :status)
+            """)
+    Page<PlayerPo> getAdminPlayerList(
+            @Param("playerName") String playerName,
+            @Param("username") String username,
+            @Param("status") Integer status,
+            Pageable pageable
+    );
 
 }
