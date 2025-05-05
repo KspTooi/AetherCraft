@@ -1,6 +1,7 @@
 import type RestPageableView from "@/entity/RestPageableView.ts";
 import Http from "@/commons/Http.ts";
 import type PageQuery from "@/entity/PageQuery.ts";
+import type CommonIdDto from "@/entity/dto/CommonIdDto.ts";
 
 export interface GetPlayerListDto extends PageQuery {
     keyword?: string; // 关键字查询
@@ -23,11 +24,17 @@ export interface CreatePlayerDto {
     avatarUrl?: string;        // 头像路径
 }
 
+export interface GetCurrentPlayerVo {
+    id: string;   // 当前玩家ID
+    name: string; // 当前玩家名称
+}
+
 export interface CheckPlayerNameDto {
     name: string; // 人物角色名称
 }
 
 export default {
+
     /**
      * 获取用户的人物列表
      */
@@ -51,5 +58,26 @@ export default {
         // Http 工具类会自动处理 Result 包装，业务逻辑只需关注成功时的数据或失败时的错误信息
         // 这里我们直接返回后端 Result 中的 data 字段 (即 "该名字可用" 或 由Http抛出的错误中的 message "该名字不可用")
         return await Http.postEntity<string>('/player/checkName', dto);
+    },
+
+    /**
+     * 获取当前登录的人物信息
+     */
+    getCurrentPlayer: async (): Promise<GetCurrentPlayerVo> => {
+        return await Http.postEntity<GetCurrentPlayerVo>('/player/getCurrentPlayer', {});
+    },
+
+    /**
+     * 用户选择一个人物进行登录
+     */
+    attachPlayer: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/player/attachPlayer', dto);
+    },
+
+    /**
+     * 用户取消激活所有人物，退回到人物选择界面
+     */
+    detachPlayer: async (): Promise<string> => {
+        return await Http.postEntity<string>('/player/detachPlayer', {});
     }
 }
