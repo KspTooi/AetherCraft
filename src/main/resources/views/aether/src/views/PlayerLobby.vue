@@ -153,6 +153,14 @@ const loadPlayerList = async () => {
   try {
     const response = await PlayerApi.getPlayerList({ page: 1, pageSize: 200 });
     playerList.value = response.rows || [];
+
+    // --- 新增逻辑：如果列表为空，直接跳转 ---
+    if (playerList.value.length === 0) {
+      router.push({ path: '/player/create', query: { init: 'true' } });
+      return; 
+    }
+    // --- 结束新增逻辑 ---
+
   } catch (error) {
     console.error('获取人物列表失败:', error);
     alterRef.value?.showConfirm({ title: "获取数据失败", content: "无法加载人物列表，请稍后重试", closeText: "确定" });

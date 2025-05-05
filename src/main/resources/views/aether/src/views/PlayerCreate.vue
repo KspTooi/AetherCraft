@@ -101,6 +101,7 @@
         
         <div class="action-buttons">
           <GlowButton
+            v-if="showBackButton"
             @click="goBack"
             title="返回人物选择"
             :corners="['bottom-left']"
@@ -128,7 +129,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, inject } from "vue";
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
@@ -144,12 +145,16 @@ import Http from "@/commons/Http";
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
 const router = useRouter();
+const route = useRoute();
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const loading = ref(false);
 const isNameAvailable = ref(true); // Track name availability
+
+// Computed property to control back button visibility
+const showBackButton = computed(() => route.query.init !== 'true');
 
 const details = reactive<CreatePlayerDto>({
   avatarUrl: "",
