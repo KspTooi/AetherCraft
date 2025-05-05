@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,7 +38,16 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpec
     void detachAllActivePlayersByUserId(@Param("userId") Long userId);
 
     @Query(value = """
-            SELECT p FROM PlayerPo p JOIN FETCH p.user u
+            SELECT new com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo(
+                p.id,
+                p.name,
+                p.user.username,
+                p.balance,
+                p.status,
+                p.createTime,
+                SIZE(p.groups)
+            )
+            FROM PlayerPo p JOIN p.user u
             WHERE (:playerName IS NULL OR p.name LIKE CONCAT('%', :playerName, '%'))
             AND (:username IS NULL OR u.username LIKE CONCAT('%', :username, '%'))
             AND (:status IS NULL OR p.status = :status)
@@ -49,7 +59,7 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpec
             AND (:username IS NULL OR u.username LIKE CONCAT('%', :username, '%'))
             AND (:status IS NULL OR p.status = :status)
             """)
-    Page<PlayerPo> getAdminPlayerList(
+    Page<GetAdminPlayerListVo> getAdminPlayerList(
             @Param("playerName") String playerName,
             @Param("username") String username,
             @Param("status") Integer status,

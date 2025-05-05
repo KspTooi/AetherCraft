@@ -9,6 +9,20 @@ import java.util.Date;
 @Data
 public class GetAdminPlayerListVo {
 
+    public GetAdminPlayerListVo(Long id, String name, String username, BigDecimal balance, Integer status, Date createTime, Integer groupCount) {
+        this.id = id;
+        this.name = name;
+        this.username = username;
+        this.balance = balance;
+        this.status = status;
+        this.createTime = createTime;
+        this.groupCount = groupCount;
+    }
+
+    public GetAdminPlayerListVo() {
+
+    }
+
     //主键ID
     private Long id;
 
@@ -26,4 +40,7 @@ public class GetAdminPlayerListVo {
 
     //诞生日期
     private Date createTime;
+
+    //访问组数量
+    private Integer groupCount;
 }

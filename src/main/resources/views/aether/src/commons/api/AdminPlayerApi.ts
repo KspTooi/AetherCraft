@@ -19,6 +19,7 @@ export interface EditAdminPlayerDto {
     era?: string;              // 年代
     contentFilterLevel?: number; // 内容过滤等级
     status?: number;           // 状态: 1:不活跃 3:已删除 (后台仅允许设置这两个状态)
+    groupIds?: string[];       // 访问组IDS (Long[] -> string[])
 }
 
 
@@ -31,6 +32,7 @@ export interface GetAdminPlayerListVo {
     balance: string;    // 余额 (BigDecimal -> string)
     status: number;    // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
     createTime: string; // 诞生日期 (Date -> string)
+    groupCount: number; // 访问组数量
 }
 
 export interface GetAdminPlayerDetailsVo {
@@ -48,6 +50,7 @@ export interface GetAdminPlayerDetailsVo {
     removedTime: string;      // 角色移除时间 (Date -> string)
     lastActiveTime: string;   // 最后激活时间 (Date -> string)
     createTime: string;         // 诞生日期 (Date -> string)
+    groupIds: string[];       // 拥有的访问组ID (Long[] -> string[])
 }
 
 

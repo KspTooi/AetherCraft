@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class GetAdminPlayerDetailsVo {
@@ -50,5 +51,7 @@ public class GetAdminPlayerDetailsVo {
     //诞生日期
     private Date createTime;
 
+    //拥有的访问组ID
+    private List<Long> groupIds;
 
 }

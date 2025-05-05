@@ -3,11 +3,15 @@ package com.ksptool.ql.biz.model.po;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -79,6 +83,18 @@ public class PlayerPo {
     @Column(name = "last_active_time")
     @Comment("最后激活时间")
     private Date lastActiveTime;
+
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "player_group",
+            joinColumns = @JoinColumn(name = "player_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)),
+            inverseJoinColumns = @JoinColumn(name = "group_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Comment("玩家所属的访问组")
+    private Set<GroupPo> groups = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

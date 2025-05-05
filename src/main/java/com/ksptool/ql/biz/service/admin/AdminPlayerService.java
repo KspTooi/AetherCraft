@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.service.admin;
 
+import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.model.dto.GetAdminPlayerListDto;
 import com.ksptool.ql.biz.model.dto.EditAdminPlayerDto;
+import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.assign;
@@ -30,29 +33,21 @@ public class AdminPlayerService {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private GroupRepository groupRepository;
 
     public RestPageableView<GetAdminPlayerListVo> getPlayerList(GetAdminPlayerListDto dto) {
 
-        Pageable pageQuery = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), Sort.Direction.DESC, "updateTime");
+        Pageable pageQuery = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), Sort.Direction.DESC, "createTime");
 
-        Page<PlayerPo> pPos = repository.getAdminPlayerList(
+        Page<GetAdminPlayerListVo> pVos = repository.getAdminPlayerList(
                 dto.getPlayerName(),
                 dto.getUsername(),
                 dto.getStatus(),
                 pageQuery
         );
 
-        List<GetAdminPlayerListVo> vos = new ArrayList<>();
-        for (PlayerPo po : pPos.getContent()) {
-            GetAdminPlayerListVo vo = new GetAdminPlayerListVo();
-            assign(po, vo); // 映射 PlayerPo 的同名属性
-            if (po.getUser() != null) {
-                vo.setUsername(po.getUser().getUsername()); // 设置用户名
-            }
-            vos.add(vo);
-        }
-
-        return new RestPageableView<>(vos, pPos.getTotalElements());
+        return new RestPageableView<>(pVos.getContent(), pVos.getTotalElements());
     }
 
     public GetAdminPlayerDetailsVo getPlayerDetails(Long id) throws BizException {
@@ -66,7 +61,15 @@ public class AdminPlayerService {
         if (playerPo.getUser() != null) {
             vo.setUsername(playerPo.getUser().getUsername());
         }
-        
+
+        List<Long> groupIds = new ArrayList<>();
+
+        //查询访问组
+        playerPo.getGroups().forEach(group -> {
+            groupIds.add(group.getId());
+        });
+
+        vo.setGroupIds(groupIds);
         return vo;
     }
 
@@ -83,22 +86,25 @@ public class AdminPlayerService {
         assign(dto, playerPo);
 
         // 然后，如果 DTO 中传入了 status，则进行覆盖和校验
-        if (dto.getStatus() != null) {
-            // 校验状态值是否为 1 或 3
-            if (dto.getStatus() != 1 && dto.getStatus() != 3) {
-                throw new BizException("无效的状态值，只允许设置为 1 (不活跃) 或 3 (已删除)");
+
+        if(dto.getStatus() != oldStatus){
+            if (dto.getStatus() != null) {
+                // 校验状态值是否为 1 或 3
+                if (dto.getStatus() != 1 && dto.getStatus() != 3) {
+                    throw new BizException("无效的状态值，只允许设置为 1 (不活跃) 或 3 (已删除)");
+                }
+                // 状态 0 (正在使用) 和 2 (等待删除) 不能通过此接口直接设置
+                // (虽然 assign 可能已经设置了，但这里再次强制覆盖为 DTO 的值，并做最终校验)
+                playerPo.setStatus(dto.getStatus()); // 强制使用 DTO 的值
             }
-            // 状态 0 (正在使用) 和 2 (等待删除) 不能通过此接口直接设置
-            // (虽然 assign 可能已经设置了，但这里再次强制覆盖为 DTO 的值，并做最终校验)
-            if (dto.getStatus() == 0 || dto.getStatus() == 2) {
-                 throw new BizException("不能将状态直接设置为 0 (正在使用) 或 2 (等待删除)");
-            }
-            playerPo.setStatus(dto.getStatus()); // 强制使用 DTO 的值
         }
 
         if (dto.getStatus() == null){
             playerPo.setStatus(oldStatus);
         }
+
+        //处理访问组
+        playerPo.setGroups(getGroupSet(dto.getGroupIds()));
 
         // 注意：不应通过此方法修改余额(balance)或所属用户(user)
         // 这些字段通常有独立的业务逻辑或管理接口
@@ -106,5 +112,12 @@ public class AdminPlayerService {
 
         // 如果玩家状态发生改变，刷新所属用户的会话信息
         authService.refreshUserSession(playerPo.getUser().getId());
+    }
+
+    private HashSet<GroupPo> getGroupSet(List<Long> groupIds) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(groupRepository.findAllById(groupIds));
     }
 }

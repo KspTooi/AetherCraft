@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class EditAdminPlayerDto {
 
@@ -28,8 +30,9 @@ public class EditAdminPlayerDto {
     private Integer contentFilterLevel;
 
     //状态: 1:不活跃 3:已删除 (后台仅允许设置这两个状态)
-    @Min(value = 1, message = "状态值无效")
-    @Max(value = 3, message = "状态值无效")
     private Integer status;
+
+    //访问组IDS
+    private List<Long> groupIds;
 
 }
