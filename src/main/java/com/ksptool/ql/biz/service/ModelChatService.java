@@ -1,10 +1,8 @@
 package com.ksptool.ql.biz.service;
 
-import com.google.gson.Gson;
 import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
 import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
-import com.ksptool.ql.biz.model.po.ModelRpHistoryPo;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
@@ -17,7 +15,6 @@ import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.utils.ThreadStatusTrack;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -39,7 +36,6 @@ import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 
-import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
 
@@ -87,7 +83,7 @@ public class ModelChatService {
     private ModelGrokService modelGrokService;
 
     @Autowired
-    private PanelApiKeyService panelApiKeyService;
+    private ApiKeyService apiKeyService;
 
     @Autowired
     private ContentSecurityService css;
@@ -198,7 +194,7 @@ public class ModelChatService {
             // 获取当前用户ID
             Long userId = AuthService.getCurrentUserId();
 
-            String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+            String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), userId);
 
             if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
@@ -648,7 +644,7 @@ public class ModelChatService {
             // 获取代理配置
             String proxyUrl = getProxyConfig(userId);
             
-            String apiKey = panelApiKeyService.getApiKey(model, userId);
+            String apiKey = apiKeyService.getApiKey(model, userId);
             
             if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");

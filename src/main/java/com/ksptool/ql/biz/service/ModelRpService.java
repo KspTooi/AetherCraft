@@ -10,7 +10,6 @@ import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
-import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -71,7 +69,7 @@ public class ModelRpService {
     private UserConfigService userConfigService;
     
     @Autowired
-    private PanelApiKeyService panelApiKeyService;
+    private ApiKeyService apiKeyService;
 
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -255,7 +253,7 @@ public class ModelRpService {
             throw new BizException("会话不存在或不可用");
         }
 
-        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), threadCt.getUserId());
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), threadCt.getUserId());
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key");
         }

@@ -7,9 +7,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.ModelConfigVo;
-import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.biz.service.UserConfigService;
-import com.ksptool.ql.biz.service.GlobalConfigService;
+import com.ksptool.ql.biz.service.*;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import org.apache.commons.lang3.StringUtils;
@@ -19,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.service.ModelGeminiService;
-import com.ksptool.ql.biz.service.ModelGrokService;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import okhttp3.OkHttpClient;
 
@@ -45,7 +41,7 @@ public class PanelModelConfigService {
     private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
     
     @Autowired
-    private PanelApiKeyService panelApiKeyService;
+    private ApiKeyService apiKeyService;
     
     @Autowired
     private ModelGeminiService modelGeminiService;
@@ -111,7 +107,7 @@ public class PanelModelConfigService {
         config.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 4096);
         
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
-        config.setApiKeys(panelApiKeyService.getCurrentUserAvailableApiKey(modelEnum.getSeries()));
+        config.setApiKeys(apiKeyService.getCurrentUserAvailableApiKey(modelEnum.getSeries()));
         
         // 获取当前使用的API密钥ID
         ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelEnum.getCode(),userId);
@@ -209,7 +205,7 @@ public class PanelModelConfigService {
         Long userId = AuthService.getCurrentUserId();
         
         // 获取API密钥
-        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), userId);
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key，请先选择API Key并保存配置");
         }

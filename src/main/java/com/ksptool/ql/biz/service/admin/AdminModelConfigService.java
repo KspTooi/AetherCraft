@@ -7,9 +7,8 @@ import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
-import com.ksptool.ql.biz.model.vo.GetModelConfigVo;
 import com.ksptool.ql.biz.service.*;
-import com.ksptool.ql.biz.service.panel.PanelApiKeyService;
+import com.ksptool.ql.biz.service.ApiKeyService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
@@ -34,7 +33,7 @@ public class AdminModelConfigService {
     private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
 
     @Autowired
-    private PanelApiKeyService panelApiKeyService;
+    private ApiKeyService apiKeyService;
 
     @Autowired
     private ApiKeyRepository apiKeyRepository;
@@ -89,7 +88,7 @@ public class AdminModelConfigService {
         vo.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 4096);
 
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
-        vo.setApiKeys(panelApiKeyService.getCurrentUserAvailableApiKey(byCode.getSeries()));
+        vo.setApiKeys(apiKeyService.getCurrentUserAvailableApiKey(byCode.getSeries()));
 
         // 获取当前使用的API密钥ID
         ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByUserIdAnyModeCode(byCode.getCode(),userId);
@@ -176,7 +175,7 @@ public class AdminModelConfigService {
         Long userId = AuthService.getCurrentUserId();
 
         // 获取API密钥
-        String apiKey = panelApiKeyService.getApiKey(modelEnum.getCode(), userId);
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), userId);
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key，请先选择API Key并保存配置");
         }
