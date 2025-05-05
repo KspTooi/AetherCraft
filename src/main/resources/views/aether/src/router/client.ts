@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { usePreferencesStore } from '@/stores/preferences'
 import { storeToRefs } from 'pinia'
+import { usePlayerStore } from '@/stores/player'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -105,11 +106,39 @@ const router = createRouter({
   ],
 })
 
+// 路由白名单，这些路径不需要玩家信息
+const playerCheckWhitelist = [
+    '/playLobby',
+    '/player/create'
+];
+
 // Define routes that should not be saved as the last accessed path
 const savePathBlacklist = [
     '/playLobby',
     '/player/create'
 ];
+
+// 全局前置守卫：检查玩家是否已选择
+router.beforeEach(async (to, from, next) => {
+  const playerStore = usePlayerStore();
+  const { currentPlayer, isLoading } = storeToRefs(playerStore);
+
+  // 如果 currentPlayer 为 null 并且 player store 没有在加载中，尝试获取玩家信息
+  if (!currentPlayer.value && !isLoading.value) {
+      await playerStore.updatePlayerInfo(); // 等待玩家信息加载完成
+  }
+
+  // 再次检查玩家信息是否已加载
+  // 如果目标路径不在白名单中，并且没有当前玩家信息，则重定向到大厅
+  if (!playerCheckWhitelist.includes(to.path) && !currentPlayer.value) {
+    console.log(`路由守卫: 未选择玩家，目标路径 ${to.path} 不在白名单中，重定向到 /playLobby`);
+    next({ path: '/playLobby' });
+    return; // 确保重定向后不再执行 next()
+  }
+
+  // 允许导航
+  next();
+});
 
 router.afterEach((to) => {
   const preferences = usePreferencesStore()

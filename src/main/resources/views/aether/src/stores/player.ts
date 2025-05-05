@@ -13,15 +13,9 @@ export const usePlayerStore = defineStore('player', () => {
         try {
             const playerInfo = await PlayerApi.getCurrentPlayer();
             currentPlayer.value = playerInfo;
-            // Optionally store basic info in localStorage if needed elsewhere immediately
-            // localStorage.setItem('activePlayerId', playerInfo.id);
-            // localStorage.setItem('activePlayerName', playerInfo.name);
         } catch (error) {
             console.warn('Failed to fetch current player info:', error);
             currentPlayer.value = null; // Reset on error
-            // Optionally clear localStorage
-            // localStorage.removeItem('activePlayerId');
-            // localStorage.removeItem('activePlayerName');
         } finally {
             isLoading.value = false;
         }
