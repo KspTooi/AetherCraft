@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
         
         String friendlyErrorMessage = errorMessageBuilder.toString();
 
-        return new ResponseEntity<>(Result.internalError(friendlyErrorMessage), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(Result.error(friendlyErrorMessage), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

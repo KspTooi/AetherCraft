@@ -68,12 +68,12 @@ import http from '@/commons/Http';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import ModelRoleList from "@/components/glow-client/ModelRoleList.vue";
-import type GetModelRoleListVo from '@/entity/GetModelRoleListVo';
+import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
 import type PageableView from '@/entity/PageableView';
-import type RecoverRpChatVo from '@/entity/RecoverRpChatVo';
-import type RecoverRpChatHistoryVo from '@/entity/RecoverRpChatHistoryVo';
-import type GetRpLastStatusVo from '@/entity/GetRpLastStatusVo';
-import type RpSegmentVo from '@/entity/RpSegmentVo';
+import type RecoverRpChatVo from '@/entity/vo/RecoverRpChatVo.ts';
+import type RecoverRpChatHistoryVo from '@/entity/vo/RecoverRpChatHistoryVo.ts';
+import type GetRpLastStatusVo from '@/entity/vo/GetRpLastStatusVo.ts';
+import type RpSegmentVo from '@/entity/vo/RpSegmentVo.ts';
 import RoleThreadsModal from "@/components/glow-client/RoleThreadsModal.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 

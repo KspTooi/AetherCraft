@@ -50,7 +50,7 @@ public class UserPo {
     private Integer loginCount;
 
     @Column(name = "status", nullable = false)
-    @Comment("用户状态 0:正常 1:被封禁")
+    @Comment("用户状态 0:正常 1:封禁")
     private Integer status;
 
     @Column(name = "encrypted_dek", length = 512)

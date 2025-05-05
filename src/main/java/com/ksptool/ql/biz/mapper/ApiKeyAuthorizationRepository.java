@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
+import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationListVo;
 import com.ksptool.ql.biz.model.vo.ListApiKeyAuthVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,30 @@ public interface ApiKeyAuthorizationRepository extends JpaRepository<ApiKeyAutho
         @Param("authorizedUserName") String authorizedUserName,
         Pageable pageable
     );
+
+    @Query("""
+        SELECT new com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationListVo(
+            a.id,
+            u.username,
+            a.usageLimit,
+            a.usageCount,
+            a.expireTime,
+            a.status,
+            a.createTime
+        )
+        FROM ApiKeyAuthorizationPo a
+        JOIN UserPo u ON u.id = a.authorizedUserId
+        WHERE a.apiKey.id = :apiKeyId
+        AND (:authorizedUserName IS NULL OR u.username LIKE %:authorizedUserName%)
+        ORDER BY a.updateTime DESC
+    """)
+    Page<GetApiKeyAuthorizationListVo> getApiKeyAuthorizationList(
+            @Param("apiKeyId") Long apiKeyId,
+            @Param("authorizedUserName") String authorizedUserName,
+            Pageable pageable
+    );
+
+
 
     /**
      * 检查是否已存在授权记录

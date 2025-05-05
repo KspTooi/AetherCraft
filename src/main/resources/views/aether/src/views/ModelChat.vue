@@ -64,7 +64,7 @@ import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue"
 import type Result from '@/entity/Result';
-import type ChatSegmentVo from '@/entity/ChatSegmentVo';
+import type ChatSegmentVo from '@/entity/vo/ChatSegmentVo.ts';
 import Http from "@/commons/Http";
 
 // 获取主题

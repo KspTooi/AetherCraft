@@ -1,4 +1,4 @@
-import type PageQuery from '@/entity/PageQuery';
+import type PageQuery from '@/entity/PageQuery.ts';
 
 export default interface GetModelRoleListDto extends PageQuery {
     /**

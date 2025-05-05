@@ -53,35 +53,54 @@ public enum PermissionEnum {
     PANEL_MAINTAIN_PERMISSION("panel:maintain:permission", "管理台:校验系统权限"),
 
     /**
+     * 管理台权限(Admin)
+     */
+    ADMIN_ACCESS("admin:access", "允许访问管理台(admin)"),
+
+    //权限管理
+    ADMIN_PERMISSION_VIEW("admin:permission:view", "查看权限列表"),
+    ADMIN_PERMISSION_SAVE("admin:permission:save", "新增/编辑权限"),
+    ADMIN_PERMISSION_REMOVE("admin:permission:remove", "移除权限"),
+
+    //用户管理
+    ADMIN_USER_VIEW("admin:user:view", "查看用户列表"),
+    ADMIN_USER_SAVE("admin:user:save", "新增/编辑用户"), 
+    ADMIN_USER_DELETE("admin:user:delete", "删除用户"),
+
+    //用户组管理  
+    ADMIN_GROUP_VIEW("admin:group:view", "查看用户组"),
+    ADMIN_GROUP_SAVE("admin:group:save", "新增/编辑用户组"), 
+    ADMIN_GROUP_DELETE("admin:group:delete", "删除用户组"),
+    ADMIN_GROUP_ASSIGN("admin:group:assign", "为用户组分配权限"),
+
+    //配置管理
+    ADMIN_CONFIG_VIEW("admin:config:view", "查看配置项"),
+    ADMIN_CONFIG_SAVE("admin:config:save", "新增/编辑配置项"), 
+    ADMIN_CONFIG_REMOVE("admin:config:remove", "移除配置项"),
+
+    //模型配置管理
+    ADMIN_MODEL_VIEW("admin:model:view", "查看模型配置"),
+    ADMIN_MODEL_EDIT("admin:model:edit", "编辑模型配置"),
+    ADMIN_MODEL_TEST("admin:model:test", "测试模型连接"),
+
+    //系统维护  
+    ADMIN_MAINTAIN_PERMISSION("admin:maintain:permission", "校验系统权限"),
+    ADMIN_MAINTAIN_GROUP("admin:maintain:group", "校验系统用户组"),
+    ADMIN_MAINTAIN_USER("admin:maintain:user", "校验系统用户"),
+    ADMIN_MAINTAIN_CONFIG("admin:maintain:config", "校验系统配置"),
+
+    //API密钥管理
+    ADMIN_APIKEY_VIEW("admin:apikey:view", "查看API密钥"),
+    ADMIN_APIKEY_SAVE("admin:apikey:save", "新增/编辑API密钥"),
+    ADMIN_APIKEY_DELETE("admin:apikey:delete", "删除API密钥"),
+    ADMIN_APIKEY_AUTH_VIEW("admin:apikey:auth:view", "查看API密钥授权"),
+    ADMIN_APIKEY_AUTH_SAVE("admin:apikey:auth:save", "新增/编辑API密钥授权"),
+    ADMIN_APIKEY_AUTH_REMOVE("admin:apikey:auth:remove", "移除API密钥授权"),
+
+    /**
      * 客户端权限
      */
-    //应用中心
-    APP_VIEW("app:view", "查看应用"),
-    APP_ADD("app:add", "添加应用"),
-    APP_LAUNCH("app:launch", "启动应用"),
-    APP_KILL("app:kill", "终止应用"),
-    APP_EDIT("app:edit", "配置应用"),
-    APP_REMOVE("app:remove", "移除应用"),
-
-    //任务管理器
-    TASK_MGR_VIEW("task:mgr:view", "访问任务管理器"),
-    TASK_MGR_SEARCH("task:mgr:search", "任务管理器关键字搜索"),
-    TASK_MGR_KILL("task:mgr:kill", "终止任务"),
-
-    //文件资源管理器权限
-    EXPLORER_VIEW("explorer:view", "访问文件资源管理器"),
-    EXPLORER_UPLOAD("explorer:upload", "上传文件"),
-    EXPLORER_DOWNLOAD("explorer:download", "下载文件"),
-    EXPLORER_OPEN("explorer:open", "打开文件"),
-    EXPLORER_RENAME("explorer:rename", "重命名文件"),
-    EXPLORER_DELETE("explorer:delete", "删除文件"),
-
-    //服务权限
-    SERVICE_VIEW("service:view", "访问服务管理器"),
-    SERVICE_START("service:start", "启动服务"),
-    SERVICE_KILL("service:kill", "停止服务"),
-
-    //AI聊天功能
+    //AI聊天AGENT功能
     MODEL_CHAT_VIEW("model:chat:view", "访问AI助手"),
     MODEL_CHAT_EDIT_THREAD("model:chat:edit:thread", "编辑对话标题"),
     MODEL_CHAT_CREATE_THREAD("model:chat:create:thread", "创建新对话"),

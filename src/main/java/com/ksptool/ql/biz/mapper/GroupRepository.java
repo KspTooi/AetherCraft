@@ -3,6 +3,8 @@ package com.ksptool.ql.biz.mapper;
 import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.vo.ListPanelGroupVo;
+import com.ksptool.ql.biz.model.dto.GetGroupListDto;
+import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -66,4 +68,25 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
             """)
     Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
+    @Query("""
+            SELECT new com.ksptool.ql.biz.model.vo.GetGroupListVo(
+                g.id,
+                g.code,
+                g.name,
+                SIZE(g.users),
+                SIZE(g.permissions),
+                g.isSystem,
+                g.status,
+                g.createTime
+            )
+            FROM GroupPo g
+            WHERE (:#{#dto.keyword} IS NULL OR g.code LIKE %:#{#dto.keyword}%
+                OR g.name LIKE %:#{#dto.keyword}%
+                OR g.description LIKE %:#{#dto.keyword}%)
+            AND (:#{#dto.status} IS NULL OR g.status = :#{#dto.status})
+            ORDER BY g.sortOrder ASC, g.id DESC
+            """)
+    Page<GetGroupListVo> getGroupList(@Param("dto") GetGroupListDto dto, Pageable pageable);
+
+    GroupPo findByCode(String code);
 }

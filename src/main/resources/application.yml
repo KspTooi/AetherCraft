@@ -6,6 +6,7 @@ vite-dev-server:
   port: 30002 #VITE开发服务器端口号
 
 spring:
+
   profiles:
     active: dev  # 设置活动配置文件为开发环境
   main:
@@ -31,7 +32,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2Q-26-M5 # 应用版本号
+  version: 1.2R-10-M5 # 应用版本号
 
 # 加密配置
 encrypt:

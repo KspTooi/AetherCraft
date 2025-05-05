@@ -32,7 +32,7 @@ public class SaveApiKeyDto {
     /**
      * 密钥值
      */
-    @NotBlank(message = "密钥值不能为空")
+    //@NotBlank(message = "密钥值不能为空")
     private String keyValue;
     
     /**

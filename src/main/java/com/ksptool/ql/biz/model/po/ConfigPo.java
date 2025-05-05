@@ -33,11 +33,17 @@ public class ConfigPo {
     @Comment("配置描述")
     private String description;
 
-    @Column(name = "create_time")
+    @Column(name = "create_time",nullable = false)
     @Comment("创建时间")
     private Date createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "update_time",nullable = false)
     @Comment("更新时间")
     private Date updateTime;
+
+    @PrePersist
+    public void prePersist() {
+        createTime = new Date();
+        updateTime = new Date();
+    }
 } 

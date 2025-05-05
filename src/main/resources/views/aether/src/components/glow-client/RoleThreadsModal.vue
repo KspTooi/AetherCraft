@@ -70,7 +70,7 @@ import http from '@/commons/Http'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../glow-ui/GlowTheme'
 import type { GlowThemeColors } from '../glow-ui/GlowTheme'
-import type { ModelRoleThreadListVo } from '../../entity/ModelRoleThreadListVo'
+import type { ModelRoleThreadListVo } from '../../entity/vo/ModelRoleThreadListVo.ts'
 import type Result from '../../entity/Result'
 
 // 当组件单独运行时，如果没有注入主题，则使用默认主题

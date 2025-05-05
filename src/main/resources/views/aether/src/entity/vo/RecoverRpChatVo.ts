@@ -1,4 +1,4 @@
-import type RecoverRpChatHistoryVo from './RecoverRpChatHistoryVo';
+import type RecoverRpChatHistoryVo from './RecoverRpChatHistoryVo.ts';
 
 /**
  * 恢复角色扮演聊天响应 VO
