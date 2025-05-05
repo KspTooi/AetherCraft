@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import MaintainApi from '@/commons/api/MaintainApi'
+import MaintainApi from '@/commons/api/AdminMaintainApi.ts'
 import { ElMessage } from 'element-plus'
 import { 
     Lock, 

@@ -171,7 +171,7 @@ import Http from '@/commons/Http';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
-import UserApi, {type GetUserListDto, type GetUserListVo, type SaveUserDto, type GetUserDetailsVo, type UserGroupVo} from "@/commons/api/UserApi.ts";
+import UserApi, {type GetUserListDto, type GetUserListVo, type SaveUserDto, type GetUserDetailsVo, type UserGroupVo} from "@/commons/api/AdminUserApi.ts";
 
 // 使用markRaw包装图标组件，防止被Vue响应式系统处理
 const EditIcon = markRaw(Edit);

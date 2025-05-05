@@ -191,8 +191,8 @@ import type {
   GetApiKeyAuthorizationListDto, 
   GetApiKeyAuthorizationListVo,
   SaveApiKeyAuthorizationDto
-} from "@/commons/api/ApiKeyApi.ts";
-import ApiKeyApi from "@/commons/api/ApiKeyApi.ts";
+} from "@/commons/api/AdminApiKeyApi.ts";
+import ApiKeyApi from "@/commons/api/AdminApiKeyApi.ts";
 import type { FormInstance } from 'element-plus';
 import { ElMessage, ElMessageBox } from "element-plus";
 

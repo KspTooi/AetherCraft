@@ -209,8 +209,8 @@ import GroupApi, {
   type GetGroupListVo,
   type GroupPermissionDefinitionVo,
   type SaveGroupDto
-} from "@/commons/api/GroupApi";
-import PermissionApi, { type GetPermissionDefinitionVo } from "@/commons/api/PermissionApi";
+} from "@/commons/api/AdminGroupApi.ts";
+import PermissionApi, { type GetPermissionDefinitionVo } from "@/commons/api/AdminPermissionApi.ts";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
 
 const EditIcon = markRaw(Edit);

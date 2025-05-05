@@ -198,8 +198,8 @@
 <script setup lang="ts">
 
 import {reactive, ref, onMounted} from "vue";
-import type {GetPermissionDetailsVo, GetPermissionListDto, GetPermissionListVo} from "@/commons/api/PermissionApi.ts";
-import PermissionApi from "@/commons/api/PermissionApi";
+import type {GetPermissionDetailsVo, GetPermissionListDto, GetPermissionListVo} from "@/commons/api/AdminPermissionApi.ts";
+import PermissionApi from "@/commons/api/AdminPermissionApi.ts";
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import { markRaw } from 'vue';

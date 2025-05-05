@@ -156,8 +156,8 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import type { GetAdminModelConfigVo, GetAvailableModelVo } from "@/commons/api/ModelConfigApi.ts";
-import ModelConfigApi from "@/commons/api/ModelConfigApi";
+import type { GetAdminModelConfigVo, GetAvailableModelVo } from "@/commons/api/AdminModelConfigApi.ts";
+import ModelConfigApi from "@/commons/api/AdminModelConfigApi.ts";
 import { ElMessage, type FormInstance } from "element-plus";
 import { Lightning, Check, InfoFilled } from '@element-plus/icons-vue'
 

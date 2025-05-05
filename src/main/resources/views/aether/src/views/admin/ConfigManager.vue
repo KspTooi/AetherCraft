@@ -189,8 +189,8 @@
 
 <script setup lang="ts">
 import {reactive, ref, onMounted} from "vue";
-import type {GetConfigDetailsVo, GetConfigListDto, GetConfigListVo, SaveConfigDto} from "@/commons/api/ConfigApi.ts";
-import ConfigApi from "@/commons/api/ConfigApi";
+import type {GetConfigDetailsVo, GetConfigListDto, GetConfigListVo, SaveConfigDto} from "@/commons/api/AdminConfigApi.ts";
+import ConfigApi from "@/commons/api/AdminConfigApi.ts";
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import { markRaw } from 'vue';

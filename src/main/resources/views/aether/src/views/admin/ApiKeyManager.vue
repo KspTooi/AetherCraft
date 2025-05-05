@@ -228,8 +228,8 @@
 
 import {markRaw, onMounted, reactive, ref} from "vue";
 import { useRouter, useRoute } from 'vue-router';
-import type {GetApiKeyDetailsVo, GetApiKeyListDto, GetApiKeyListVo} from "@/commons/api/ApiKeyApi.ts";
-import ApiKeyApi from "@/commons/api/ApiKeyApi.ts";
+import type {GetApiKeyDetailsVo, GetApiKeyListDto, GetApiKeyListVo} from "@/commons/api/AdminApiKeyApi.ts";
+import ApiKeyApi from "@/commons/api/AdminApiKeyApi.ts";
 import type {FormInstance} from 'element-plus';
 import {ElMessage, ElMessageBox} from "element-plus";
 import {Delete, Edit, Key, ArrowDown} from '@element-plus/icons-vue';
