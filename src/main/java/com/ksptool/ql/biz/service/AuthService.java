@@ -255,6 +255,7 @@ public class AuthService {
         if(playerPo != null){
             newSession.setPlayerId(playerPo.getId());
             newSession.setPlayerName(playerPo.getName());
+            newSession.setPlayerAvatarUrl(playerPo.getAvatarUrl());
         }
 
         userSessionRepository.save(newSession);
@@ -296,10 +297,12 @@ public class AuthService {
         if(playerPo != null){
             existingSession.setPlayerId(playerPo.getId());
             existingSession.setPlayerName(playerPo.getName());
+            existingSession.setPlayerAvatarUrl(playerPo.getAvatarUrl());
         }
         if (playerPo == null){
             existingSession.setPlayerId(null);
             existingSession.setPlayerName(null);
+            existingSession.setPlayerAvatarUrl(null);
         }
         userSessionRepository.save(existingSession);
         return new UserSessionVo(existingSession);

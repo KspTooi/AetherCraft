@@ -16,6 +16,7 @@ public class UserSessionVo {
     private Long userId;
     private Long playerId;
     private String playerName;
+    private String playerAvatarUrl;
     private String token;
     private Set<String> permissions;
     private Date expiresAt;

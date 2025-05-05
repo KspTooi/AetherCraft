@@ -39,6 +39,7 @@ public class PlayerController {
         GetCurrentPlayerVo vo = new GetCurrentPlayerVo();
         vo.setId(playerId);
         vo.setName(playerName);
+        vo.setAvatarUrl(AuthService.getCurrentUserSession().getPlayerAvatarUrl());
         return Result.success(vo);
     }
 

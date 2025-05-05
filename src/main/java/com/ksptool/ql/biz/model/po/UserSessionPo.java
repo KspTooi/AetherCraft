@@ -28,6 +28,10 @@ public class UserSessionPo {
     @Comment("当前激活的人物名称")
     private String playerName;
 
+    @Column(name = "player_avatar_url")
+    @Comment("当前激活的人物头像路径")
+    private String playerAvatarUrl;
+
     @Column(nullable = false, unique = true, length = 100)
     @Comment("Token")
     private String token;

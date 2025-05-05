@@ -9,4 +9,6 @@ public class GetCurrentPlayerVo {
 
     private String name;
 
+    private String avatarUrl;
+
 }
