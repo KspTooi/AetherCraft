@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 
 /**
@@ -37,6 +38,18 @@ public class JacksonConfig {
         }
     }
 
+    /**
+     * BigDecimal类型序列化为字符串
+     */
+    public static class BigDecimalToStringSerializer extends JsonSerializer<BigDecimal> {
+        @Override
+        public void serialize(BigDecimal value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            if (value != null) {
+                gen.writeString(value.toPlainString());
+            }
+        }
+    }
+
     @Bean
     @Primary
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
@@ -55,6 +68,7 @@ public class JacksonConfig {
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addSerializer(Long.class, new LongToStringSerializer());
         simpleModule.addSerializer(Long.TYPE, new LongToStringSerializer());
+        simpleModule.addSerializer(BigDecimal.class, new BigDecimalToStringSerializer());
         objectMapper.registerModule(simpleModule);
         
         return objectMapper;
