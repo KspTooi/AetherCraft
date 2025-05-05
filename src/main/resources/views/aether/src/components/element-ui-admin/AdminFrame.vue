@@ -446,11 +446,14 @@ const autoBreadcrumbs = computed(() => {
 }
 
 .admin-sidebar {
-  transition: width 0.3s;
-  background-color: #fff;
-  border-right: 1px solid var(--el-border-color-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(to bottom, #f0f2f5, #ffffff);
+  border-right: none;
   height: 100%;
   overflow: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 10;
 }
 
 .admin-breadcrumb {
@@ -475,14 +478,95 @@ const autoBreadcrumbs = computed(() => {
   padding: 0;
 }
 
+/* 侧边栏内部元素样式增强 */
+:deep(.el-menu) {
+  border-right: none;
+  padding: 4px;
+}
+
+:deep(.el-menu-item), :deep(.el-sub-menu__title) {
+  border-radius: 4px;
+  margin: 1px 0;
+  height: 44px;
+  line-height: 44px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.el-menu-item.is-active) {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+:deep(.el-menu-item.is-active)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: var(--el-color-primary);
+  transition: opacity 0.3s;
+  border-radius: 0 2px 2px 0;
+}
+
+:deep(.el-menu-item:hover), :deep(.el-sub-menu__title:hover) {
+  background-color: rgba(64, 158, 255, 0.08);
+}
+
+:deep(.el-menu--collapse .el-menu-item), :deep(.el-menu--collapse .el-sub-menu__title) {
+  height: 44px;
+  line-height: 44px;
+}
+
+:deep(.el-sub-menu .el-menu-item) {
+  min-width: auto;
+  height: 40px;
+  line-height: 40px;
+}
+
+:deep(.el-menu-item .el-icon), :deep(.el-sub-menu__title .el-icon) {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+:deep(.el-menu--collapse .el-menu-item .el-icon), 
+:deep(.el-menu--collapse .el-sub-menu__title .el-icon) {
+  margin: 0;
+}
+
 /* 移动端样式适配 */
 .mobile-sidebar-drawer :deep(.el-drawer__body) {
   padding: 0;
   overflow: hidden;
+  background: linear-gradient(to bottom, #f0f2f5, #ffffff);
 }
 
 .mobile-sidebar-drawer {
-  --el-drawer-bg-color: var(--el-bg-color);
+  --el-drawer-bg-color: transparent;
+}
+
+/* 移动端侧边栏滚动区域优化 */
+.mobile-sidebar-drawer :deep(.admin-side-panel) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-sidebar-drawer :deep(.el-menu) {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.mobile-sidebar-drawer :deep(.el-menu::-webkit-scrollbar) {
+  width: 4px;
+}
+
+.mobile-sidebar-drawer :deep(.el-menu::-webkit-scrollbar-thumb) {
+  background: rgba(144, 147, 153, 0.3);
+  border-radius: 10px;
 }
 
 /* 响应式布局 */
