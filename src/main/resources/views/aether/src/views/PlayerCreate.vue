@@ -37,7 +37,7 @@
           <div class="input-with-error">
             <GlowInput
               v-model="details.name"
-              title="人物名称"
+              title="人物名称(不可更改)"
               :maxLength="24"
               showLength
               notBlank
