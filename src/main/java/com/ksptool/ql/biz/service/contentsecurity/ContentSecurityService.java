@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,6 +58,14 @@ public class ContentSecurityService {
         }
         String dek = getPlainUserDek(po.getUserId());
         po.setContent(encrypt(po.getContent(), dek));
+    }
+
+    public void encryptEntity(PlayerPo po) throws BizException{
+        if(po == null) {
+            return;
+        }
+        String dek = getPlainUserDek(po.getUser().getId());
+        po.setDescription(encrypt(po.getDescription(), dek));
     }
 
     public void encryptEntity(ModelRpHistoryPo po) throws BizException{
@@ -268,6 +278,22 @@ public class ContentSecurityService {
                 po.setContent(decrypt(po.getContent(), dek));
             }
         }
+    }
+
+    /**
+     * 检查给定的路径是否为内部路径（非绝对URL）.
+     * @param path 待检查的路径字符串
+     * @return 如果是内部路径（不以 http://, https://, // 开头），则返回 true，否则返回 false。
+     */
+    public boolean isInternalPath(String path) {
+        if (StringUtils.isBlank(path)) {
+            return true; // null 或空字符串视为内部路径或无效路径
+        }
+        String lowerCasePath = path.trim().toLowerCase();
+        if (lowerCasePath.startsWith("http://") || lowerCasePath.startsWith("https://") || lowerCasePath.startsWith("//")) {
+            return false; // 以协议或协议相对路径开头的视为外部路径
+        }
+        return true; // 其他情况视为内部路径
     }
 
     public String decryptForCurUser(String content) {

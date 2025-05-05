@@ -76,8 +76,22 @@ public class PlayerPo {
     @Comment("修改时间")
     private Date updateTime;
 
-    @Column(name = "last_active_time", nullable = false)
+    @Column(name = "last_active_time")
     @Comment("最后激活时间")
     private Date lastActiveTime;
+
+    @PrePersist
+    protected void onCreate() {
+        Date now = new Date();
+        createTime = now;
+        updateTime = now;
+        // lastActiveTime 在 Service 中设置初始值，这里不再处理
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateTime = new Date();
+        // lastActiveTime 的更新通常与具体业务操作相关，不在 PreUpdate 中处理
+    }
 
 }
