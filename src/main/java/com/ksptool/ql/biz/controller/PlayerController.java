@@ -4,7 +4,9 @@ import com.ksptool.ql.biz.model.dto.CheckPlayerNameDto;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
 import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
+import com.ksptool.ql.biz.model.vo.GetCurrentPlayerVo;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.PlayerService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -23,17 +25,38 @@ public class PlayerController {
     @Autowired
     private PlayerService service;
 
-    //从人物选择界面选择一个人物
-    @PostMapping("/activePlayer")
-    public Result<String> activePlayer(@RequestBody @Valid CommonIdDto dto) {
+    @PostMapping("/getCurrentPlayer")
+    public Result<GetCurrentPlayerVo> getCurrentPlayer() {
 
-        return null;
+        Long playerId = AuthService.getCurrentPlayerId();
+        String playerName = AuthService.getCurrentPlayerName();
+
+        if(playerId == null){
+            return Result.error("Player is not logged in");
+        }
+
+        GetCurrentPlayerVo vo = new GetCurrentPlayerVo();
+        vo.setId(playerId);
+        vo.setName(playerName);
+        return Result.success(vo);
+    }
+
+    //用户从人物选择界面选择一个人物
+    @PostMapping("/attachPlayer")
+    public Result<String> attachPlayer(@RequestBody @Valid CommonIdDto dto) {
+        try {
+            service.attachPlayer(dto.getId());
+            return Result.success("success");
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     //取消激活全部人物并退回到人物选择界面
     @PostMapping("/detachPlayer")
     public Result<String> detachPlayer() {
-        return null;
+        service.detachPlayer();
+        return Result.success("success");
     }
 
     //获取用户的人物列表

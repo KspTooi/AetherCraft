@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.po.PlayerPo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,5 +21,13 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long> {
     Page<PlayerPo> getPlayerList(@Param("keyword")String keyword,
                                  @Param("userId")Long userId,
                                  Pageable page);
+
+    @Modifying
+    @Query("""
+           UPDATE PlayerPo p
+           SET p.status = 1
+           WHERE p.user.id = :userId AND p.status = 0
+           """)
+    void detachAllActivePlayersByUserId(@Param("userId") Long userId);
 
 }

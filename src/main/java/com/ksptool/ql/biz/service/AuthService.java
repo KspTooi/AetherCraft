@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
+import com.ksptool.entities.Any;
+import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.mapper.UserSessionRepository;
 import com.ksptool.ql.biz.model.po.PlayerPo;
@@ -45,7 +47,7 @@ public class AuthService {
     private ModelUserRoleService modelUserRoleService;
 
     @Autowired
-    private PlayerService playerService;
+    private PlayerRepository playerRepository;
 
     /**
      * 用户使用用户名与密码登录系统
@@ -103,6 +105,9 @@ public class AuthService {
     public static String getCurrentPlayerName(){
         UserSessionVo session = getCurrentUserSession();
         return session != null ? session.getPlayerName() : null;
+    }
+    public static boolean isLoginPlayer(){
+        return getCurrentPlayerId() != null;
     }
 
     /**
@@ -242,6 +247,16 @@ public class AuthService {
         newSession.setToken(token);
         newSession.setPermissions(gson.toJson(permissionCodes));
         newSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
+
+        //更新用户当前人物
+        PlayerPo playerPo = getActivePlayerByUserId(userId);
+
+        //用户已激活至少一个人物
+        if(playerPo != null){
+            newSession.setPlayerId(playerPo.getId());
+            newSession.setPlayerName(playerPo.getName());
+        }
+
         userSessionRepository.save(newSession);
         return new UserSessionVo(newSession);
     }
@@ -273,20 +288,30 @@ public class AuthService {
         // 更新会话信息
         existingSession.setPermissions(gson.toJson(permissionCodes));
         existingSession.setExpiresAt(new Date(System.currentTimeMillis() + expiresInSeconds * 1000));
-        userSessionRepository.save(existingSession);
 
         //更新用户当前人物
-        PlayerPo playerPo = playerService.getActivePlayerByUserId(userId);
+        PlayerPo playerPo = getActivePlayerByUserId(userId);
 
         //用户已激活至少一个人物
         if(playerPo != null){
             existingSession.setPlayerId(playerPo.getId());
             existingSession.setPlayerName(playerPo.getName());
         }
-
+        if (playerPo == null){
+            existingSession.setPlayerId(null);
+            existingSession.setPlayerName(null);
+        }
+        userSessionRepository.save(existingSession);
         return new UserSessionVo(existingSession);
     }
 
+    //获取用户当前正在使用的人物
+    private PlayerPo getActivePlayerByUserId(Long uid){
+        var query = new PlayerPo();
+        query.setUser(Any.of().val("id",uid).as(UserPo.class));
+        query.setStatus(0); //0:正在使用 1:不活跃 2:等待删除 3:已删除
+        return playerRepository.findOne(Example.of(query)).orElse(null);
+    }
 
 
 }

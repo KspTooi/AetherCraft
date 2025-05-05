@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Service
 public class PlayerService {
@@ -32,13 +31,38 @@ public class PlayerService {
     @Autowired
     private ContentSecurityService css;
 
-    //获取用户当前正在使用的人物
-    public PlayerPo getActivePlayerByUserId(Long uid){
-        var query = new PlayerPo();
-        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
-        query.setStatus(0); //0:正在使用 1:不活跃 2:等待删除 3:已删除
-        return repository.findOne(Example.of(query)).orElse(null);
+    @Autowired
+    private AuthService authService;
+
+    @Transactional
+    public void attachPlayer(Long id) throws BizException{
+
+        var userId = AuthService.getCurrentUserId();
+
+        detachPlayer();
+
+        PlayerPo query = new PlayerPo();
+        query.setId(id);
+        query.setUser(Any.of().val("id", userId).as(UserPo.class));
+
+        PlayerPo player = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("未能找到指定的人物或该人物不属于您"));
+
+        player.setStatus(0); // 0:正在使用
+        repository.save(player);
+
+        //刷新用户会话
+        authService.refreshUserSession(userId);
     }
+
+    @Transactional
+    public void detachPlayer(){
+        Long userId = AuthService.getCurrentUserId();
+        repository.detachAllActivePlayersByUserId(userId);
+        //刷新用户会话
+        authService.refreshUserSession(userId);
+    }
+
 
 
     /**
