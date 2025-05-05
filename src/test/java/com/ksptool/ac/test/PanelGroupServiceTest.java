@@ -3,7 +3,6 @@ package com.ksptool.ac.test;
 import com.ksptool.ql.AetherLauncher;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
-import com.ksptool.ql.biz.service.panel.PanelGroupService;
 import com.ksptool.ql.commons.exception.BizException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

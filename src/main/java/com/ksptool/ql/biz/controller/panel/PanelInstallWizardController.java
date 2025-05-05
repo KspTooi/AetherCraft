@@ -1,16 +1,15 @@
 package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.AetherLauncher;
+import com.ksptool.ql.biz.controller.admin.AdminGroupController;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
-import com.ksptool.ql.biz.service.panel.PanelGroupService;
+import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.biz.service.panel.PanelInstallWizardService;
 import com.ksptool.ql.biz.service.panel.PanelPermissionService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.web.Result;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,14 +32,14 @@ public class PanelInstallWizardController {
     private PanelPermissionService panelPermissionService;
     
     @Autowired
-    private PanelGroupService panelGroupService;
-    
-    @Autowired
     private UserService userService;
 
     @Autowired
     private PanelInstallWizardService service;
-    
+
+    @Autowired
+    private AdminGroupService adminGroupService;
+
     /**
      * 检查是否需要显示安装向导
      * 如果allow.install.wizard配置为true，则显示安装向导
@@ -135,7 +134,7 @@ public class PanelInstallWizardController {
             results.add(permissionMessage);
             
             // 2. 校验系统内置用户组
-            String groupResult = panelGroupService.validateSystemGroups();
+            String groupResult = adminGroupService.validateSystemGroups();
             results.add(groupResult);
             
             // 3. 校验系统内置用户
