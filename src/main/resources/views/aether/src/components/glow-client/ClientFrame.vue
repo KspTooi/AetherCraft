@@ -2,11 +2,16 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useThemeStore } from '../../stores/theme'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
+import GlowAlter from '../glow-ui/GlowAlter.vue'
 import axios from 'axios'
 import ClientTopNav from './ClientTopNav.vue'
+import PlayerApi from "@/commons/api/PlayerApi"
+import { useRouter } from 'vue-router'
 
 const brandName = ref('AetherCraft')
 const logoutModal = ref<InstanceType<typeof GlowConfirm> | null>(null)
+const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
+const router = useRouter()
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -35,13 +40,21 @@ const leftNavItems = [
 const rightNavItems = [
   /*{ name: '经典UI', href: '/model/chat/view' },*/
   { name: '管理台', href: '/admin-ui' },
-  { name: '注销', action: 'logout' }
+  // { name: '注销', action: 'logout' } // Moved to player context menu
 ]
 
-// 处理导航栏动作
+// Player context menu items
+const playerContextItems = [
+    { name: '注销当前人物', action: 'selectCharacter' },
+    { name: '退出登录', action: 'logout' }
+]
+
+// Handle actions from main nav and player context menu
 const handleNavAction = (action: string) => {
   if (action === 'logout') {
     showLogoutConfirm()
+  } else if (action === 'selectCharacter') {
+    handleSelectCharacter();
   }
 }
 
@@ -75,6 +88,32 @@ const handleLogout = async () => {
   }
 }
 
+// Handle returning to character selection
+const handleSelectCharacter = async () => {
+    if (!logoutModal.value) return; // Use the existing confirm modal ref
+
+    const confirmed = await logoutModal.value.showConfirm({
+        title: "注销当前人物",
+        content: "此操作将注销您当前活动的人物并返回人物选择界面。确定要继续吗？",
+        confirmText: "确认返回",
+        cancelText: "取消"
+    });
+
+    if (!confirmed) return; // Exit if user cancels
+
+    try {
+        await PlayerApi.detachPlayer(); // Call detach API
+        router.push('/playLobby'); // Navigate to lobby
+    } catch (error) {
+        console.error("Failed to detach player:", error);
+        alterRef.value?.showConfirm({
+            title: "操作失败",
+            content: error instanceof Error ? error.message : "返回人物选择界面失败，请稍后重试。",
+            closeText: "确定"
+        });
+    }
+}
+
 // 挂载时初始化
 onMounted(() => {
   // 计算内容高度
@@ -97,8 +136,10 @@ onUnmounted(() => {
       <client-top-nav 
         :left-items="leftNavItems"
         :right-items="rightNavItems"
+        :player-context-items="playerContextItems" 
         :brand="brandName"
-        @action="handleNavAction"
+        @action="handleNavAction" 
+        @player-action="handleNavAction" 
       />
       
       <!-- 主内容区 -->
@@ -108,6 +149,7 @@ onUnmounted(() => {
     </div>
     
     <GlowConfirm ref="logoutModal" />
+    <GlowAlter ref="alterRef" /> 
   </div>
 </template>
 

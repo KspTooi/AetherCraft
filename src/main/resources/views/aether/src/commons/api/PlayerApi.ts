@@ -27,6 +27,7 @@ export interface CreatePlayerDto {
 export interface GetCurrentPlayerVo {
     id: string;   // 当前玩家ID
     name: string; // 当前玩家名称
+    avatarUrl: string | null; // 当前玩家头像路径
 }
 
 export interface CheckPlayerNameDto {

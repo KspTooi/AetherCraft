@@ -23,10 +23,56 @@
         
         <!-- 右侧导航项 -->
         <ul class="navbar-nav nav-right">
-          <li class="nav-item" v-for="(item, index) in rightItems" :key="index">
+          <li class="nav-item" v-for="(item, index) in rightItems" :key="'right-' + index">
             <router-link v-if="item.routerLink" class="nav-link" :to="item.routerLink" @click="handleNavItemClick">{{ item.name }}</router-link>
             <a v-else-if="item.href" class="nav-link" :href="item.href" @click="handleNavItemClick">{{ item.name }}</a>
             <a v-else-if="item.action" class="nav-link cursor-pointer" @click="handleAction(item.action)">{{ item.name }}</a>
+          </li>
+          <!-- Player Info Item & Dropdown Trigger -->
+          <li
+            class="nav-item player-info-container"
+            v-if="!loadingPlayer"
+            v-click-outside="closePlayerDropdown"
+            @mouseenter="openPlayerDropdown" 
+            @mouseleave="closePlayerDropdown" 
+          >
+            <div
+              class="player-info-item"
+              :class="{ 'disconnected-info': !currentPlayer }"
+            >
+              <!-- Avatar/Icon -->
+              <div class="player-avatar" :class="{ 'disconnected-icon': !currentPlayer }">
+                <img v-if="currentPlayer" :src="getAvatarUrl(currentPlayer.avatarUrl)" alt="Player Avatar">
+                <i v-else class="bi bi-person"></i>
+              </div>
+              <!-- Name/Status -->
+              <span class="player-name nav-link-like">{{ currentPlayer?.name || '未连接' }}</span>
+               <!-- Dropdown Arrow -->
+              <div class="select-arrow player-dropdown-arrow">
+                 <i class="bi bi-chevron-down" :class="{ 'rotated': isPlayerDropdownOpen }"></i>
+              </div>
+            </div>
+
+            <!-- Player Context Dropdown Menu -->
+            <transition name="dropdown">
+              <div class="dropdown-menu player-dropdown-menu" v-show="isPlayerDropdownOpen">
+                 <div
+                   class="dropdown-item"
+                   v-for="(item, index) in playerContextItems"
+                   :key="'ctx-' + index"
+                   @click="handlePlayerAction(item.action)"
+                 >
+                   {{ item.name }}
+                 </div>
+                 <div v-if="!playerContextItems || playerContextItems.length === 0" class="dropdown-item disabled">
+                   (无选项)
+                 </div>
+              </div>
+            </transition>
+          </li>
+          <!-- Loading Placeholder -->
+          <li class="nav-item player-info-item loading-placeholder" v-else>
+            <span>...</span>
           </li>
         </ul>
       </div>
@@ -40,7 +86,26 @@
 
 
   <glow-div border="none" class="mobile-menu" :class="{ 'menu-expanded': isExpanded }" @click.stop>
-    <!-- 移动端菜单内容 -->
+    <!-- Mobile Player Info Header -->
+    <div class="mobile-player-header" v-if="!loadingPlayer">
+        <div v-if="currentPlayer" class="player-info-item">
+            <div class="player-avatar">
+                <img :src="getAvatarUrl(currentPlayer.avatarUrl)" alt="Player Avatar">
+            </div>
+            <span class="player-name">{{ currentPlayer.name }}</span>
+        </div>
+        <div v-else class="player-info-item disconnected-info">
+            <div class="player-avatar disconnected-icon">
+                <i class="bi bi-person"></i>
+            </div>
+            <span class="player-name">未连接</span>
+        </div>
+    </div>
+    <div class="mobile-player-header loading-placeholder" v-else>
+        <span>加载中...</span>
+    </div>
+
+    <!-- Mobile Navigation Items -->
     <ul class="mobile-nav-left">
       <li class="mobile-nav-item" v-for="(item, index) in leftItems" :key="index">
         <router-link v-if="item.routerLink" class="mobile-nav-link" :to="item.routerLink" @click="handleNavItemClick">{{ item.name }}</router-link>
@@ -48,13 +113,19 @@
         <a v-else-if="item.action" class="mobile-nav-link cursor-pointer" @click="handleAction(item.action)">{{ item.name }}</a>
       </li>
     </ul>
-    
     <ul class="mobile-nav-right">
       <li class="mobile-nav-item" v-for="(item, index) in rightItems" :key="index">
         <router-link v-if="item.routerLink" class="mobile-nav-link" :to="item.routerLink" @click="handleNavItemClick">{{ item.name }}</router-link>
         <a v-else-if="item.href" class="mobile-nav-link" :href="item.href" @click="handleNavItemClick">{{ item.name }}</a>
         <a v-else-if="item.action" class="mobile-nav-link cursor-pointer" @click="handleAction(item.action)">{{ item.name }}</a>
       </li>
+    </ul>
+    <!-- Mobile Player Context Actions -->
+    <ul class="mobile-nav-context" v-if="currentPlayer">
+        <li class="mobile-nav-item context-divider"></li> <!-- Optional Divider -->
+        <li class="mobile-nav-item" v-for="(item, index) in playerContextItems" :key="'mobile-ctx-' + index">
+             <a v-if="item.action" class="mobile-nav-link cursor-pointer" @click="handlePlayerAction(item.action)">{{ item.name }}</a>
+        </li>
     </ul>
   </glow-div>
 </template>
@@ -65,6 +136,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 import { inject } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
+import PlayerApi, { type GetCurrentPlayerVo } from "@/commons/api/PlayerApi.ts"; // Import Player API
 
 // 定义组件props
 const props = defineProps<{
@@ -80,12 +152,17 @@ const props = defineProps<{
     href?: string,
     action?: string
   }>,
+  playerContextItems?: Array<{
+    name: string,
+    action?: string
+  }>,
   brand: string
 }>()
 
 // 定义事件
 const emit = defineEmits<{
   (e: 'action', action: string): void
+  (e: 'player-action', action: string): void
 }>()
 
 const router = useRouter()
@@ -98,12 +175,41 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
 // 记录当前激活的导航项索引
 const activeNavIndex = ref(-1)
+const currentPlayer = ref<GetCurrentPlayerVo | null>(null); // Store current player info
+const loadingPlayer = ref(true); // Loading state for player info
+const defaultAvatarUrl = '/imgs/default-avatar.png'; // Default avatar path
+const isPlayerDropdownOpen = ref(false); // State for player dropdown
 
 // 路由映射表 - 将一些特殊路由映射到导航项
 const routeMapping: Record<string, string> = {
   '/model-role-manager': '/rp', // 将角色管理页面映射到角色扮演导航项
   // 可以根据需要添加更多映射
 }
+
+// 获取头像URL，处理null或相对路径
+const getAvatarUrl = (url: string | undefined | null): string => {
+  if (!url) {
+    return defaultAvatarUrl;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+    return url;
+  }
+  return `/res/${url}`; // Add /res/ prefix for relative paths
+};
+
+// 加载当前登录的人物信息
+const loadCurrentPlayer = async () => {
+  loadingPlayer.value = true;
+  try {
+    currentPlayer.value = await PlayerApi.getCurrentPlayer();
+  } catch (error) {
+    // If getCurrentPlayer fails (e.g., no player logged in), currentPlayer remains null
+    currentPlayer.value = null;
+    console.warn('Failed to load current player:', error instanceof Error ? error.message : error);
+  } finally {
+    loadingPlayer.value = false;
+  }
+};
 
 // 更新高亮线位置
 const updateHighlightPosition = () => {
@@ -196,7 +302,7 @@ const handleNavItemClick = () => {
 // 处理动作点击
 const handleAction = (action: string) => {
   emit('action', action)
-  handleNavItemClick() // 关闭导航栏
+  handleNavItemClick() // Close mobile nav if open
 }
 
 // 处理点击外部 - 关闭导航栏
@@ -210,6 +316,25 @@ const handleClickOutside = (event: MouseEvent) => {
       isExpanded.value = false
     }
   }
+}
+
+// Open player dropdown on hover
+const openPlayerDropdown = () => {
+  isPlayerDropdownOpen.value = true;
+};
+
+// Close player dropdown (used by mouseleave and click-outside)
+const closePlayerDropdown = () => {
+  isPlayerDropdownOpen.value = false;
+};
+
+// Handle actions from the player context menu
+const handlePlayerAction = (action: string | undefined) => {
+  if (action) {
+    emit('player-action', action);
+  }
+  closePlayerDropdown(); // Close dropdown after action
+  handleNavItemClick(); // Close mobile nav if open
 }
 
 // 挂载时初始化
@@ -228,6 +353,7 @@ onMounted(() => {
   // 计算导航栏高度
   updateNavbarHeight()
   window.addEventListener('resize', updateNavbarHeight)
+  loadCurrentPlayer(); // Load player info on mount
 })
 
 // 组件卸载时清理事件监听
@@ -481,6 +607,242 @@ const updateNavbarHeight = () => {
   .mobile-menu {
     display: block;
   }
+  /* Hide player info in mobile header (can be added to mobile menu if needed) */
+  .player-info-item {
+      display: none;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Player Info Styles */
+.player-info-container {
+  position: relative; /* Needed for dropdown positioning */
+  padding: 0; /* Remove default nav-item padding */
+}
+
+.player-info-item {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem; /* Space from previous item */
+  padding: 6px 8px; /* Add some padding for click area */
+  cursor: pointer;
+  border-radius: 3px; /* Optional: slight rounding */
+  transition: background-color 0.2s ease;
+}
+
+.player-info-item:hover {
+  background-color: v-bind('theme.boxSecondColorHover');
+}
+
+.player-avatar {
+  width: 26px;
+  height: 26px;
+  overflow: hidden;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  background-color: v-bind('theme.boxSecondColor');
+  display: flex; /* Center icon */
+  align-items: center;
+  justify-content: center;
+}
+
+.player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-name {
+  /* color: v-bind('theme.boxTextColor'); Removed explicit color here, handled by nav-link-like */
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px; /* Adjust max-width */
+  font-weight: 500;
+  margin-right: 0.3rem; /* Space before arrow */
+}
+
+.player-dropdown-arrow {
+  color: v-bind('theme.boxTextColorNoActive');
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.player-dropdown-arrow i {
+  font-size: 14px;
+  display: block;
+}
+
+.player-dropdown-arrow i.rotated {
+  transform: rotate(180deg);
+}
+
+.player-info-item:hover .player-dropdown-arrow {
+  color: v-bind('theme.boxTextColor');
+}
+
+/* Player Dropdown Menu Styles */
+.player-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px); /* Position below the trigger */
+  right: 0; /* Align to the right */
+  min-width: 100px; /* Minimum width */
+  background: v-bind('theme.boxSecondColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  z-index: 1010; /* Ensure it's above other content */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  padding: 5px 0;
+  backdrop-filter: blur(v-bind('theme.boxBlur + "px"'));
+}
+
+.dropdown-item {
+  padding: 8px 15px;
+  color: v-bind('theme.boxTextColor');
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: v-bind('theme.boxSecondColorHover');
+}
+
+.dropdown-item.disabled {
+  color: v-bind('theme.boxTextColorNoActive');
+  cursor: default;
+  opacity: 0.6;
+  background: transparent !important;
+}
+
+/* Dropdown animation (copied from ModelSelector) */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top right;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(-5px);
+}
+
+/* Apply nav-link like color behavior */
+.nav-link-like {
+    color: v-bind('theme.boxTextColorNoActive');
+    transition: color 0.2s ease;
+    /* Inherit other relevant styles if needed, like padding, but likely not needed here */
+}
+
+/* Hover effect for player info item */
+.player-info-item:hover .nav-link-like {
+    color: v-bind('theme.boxTextColor');
+}
+
+/* Adjust right nav alignment if needed */
+.nav-right {
+  align-items: center; /* Vertically align items including player info */
+}
+
+/* Disconnected State Styles */
+.disconnected-info .player-avatar {
+    /* Style placeholder icon container like the avatar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disconnected-icon i {
+    font-size: 18px; /* Adjust icon size */
+    color: v-bind('theme.boxTextColorNoActive');
+}
+
+/* Mobile Styles Adjustments */
+@media (max-width: 767.98px) {
+  /* Hide player info in the main top bar on mobile */
+  .player-info-container {
+      display: none;
+  }
+}
+
+/* --- Mobile Menu Specific Styles --- */
+
+.mobile-menu {
+  /* ... (existing mobile-menu styles) ... */
+  display: flex; /* Use flex for better layout */
+  flex-direction: column;
+}
+
+.mobile-player-header {
+    padding: 10px 1.5rem; /* Consistent padding with nav links */
+    border-bottom: 1px solid v-bind('theme.boxBorderColor');
+    background-color: rgba(0, 0, 0, 0.1); /* Slight background difference */
+}
+
+.mobile-player-header .player-info-item {
+    margin-left: 0; /* Reset margin */
+    padding: 0; /* Reset padding */
+    cursor: default; /* Not clickable */
+}
+
+.mobile-player-header .player-info-item:hover {
+    background-color: transparent; /* No hover background */
+}
+
+.mobile-player-header .player-avatar {
+    width: 32px; /* Slightly larger avatar */
+    height: 32px;
+}
+
+.mobile-player-header .player-name {
+    max-width: none; /* Allow full name display */
+    font-size: 1rem;
+    color: v-bind('theme.boxTextColor'); /* Ensure name is visible */
+}
+
+.mobile-player-header.loading-placeholder {
+    text-align: center;
+    color: v-bind('theme.boxTextColorNoActive');
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* Ensure nav lists take up remaining space if needed, and enable scrolling within */
+.mobile-nav-left,
+.mobile-nav-right,
+.mobile-nav-context {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Remove flex: 1 if causing issues, manage height via max-height on .mobile-menu */
+}
+
+/* Optional divider style */
+.context-divider {
+    height: 1px;
+    background-color: v-bind('theme.boxBorderColor');
+    margin: 5px 0;
+    padding: 0 !important; /* Override item padding */
+}
+
+.menu-expanded .mobile-nav-left,
+.menu-expanded .mobile-nav-right,
+.menu-expanded .mobile-nav-context { /* Apply transitions to context menu too */
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.1s;
+}
+
+.mobile-nav-context .mobile-nav-link {
+    /* Add specific styling if needed, e.g., different color */
+    /* color: v-bind('theme.mainColor'); */
 }
 
 .cursor-pointer {
