@@ -50,9 +50,9 @@ public class Router {
             return "redirect:/install-wizard/";
         }
 
-        // 当前登录用户有效，跳转到应用中心(旧版)
+        // 当前登录用户有效，跳转客户端UI
         if(authService.verifyUser(hsr) != null){
-            return "redirect:/model/chat/view";
+            return "redirect:/client-ui";
         }
         
         // 未登录用户跳转到欢迎页
@@ -129,7 +129,6 @@ public class Router {
     public ModelAndView welcome() {
         // 获取是否允许用户注册的配置
         String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
-        
         ModelAndView mav = new ModelAndView("welcome");
         mav.addObject("allowRegister", StringUtils.isNotBlank(allowRegister) && "true".equals(allowRegister));
         return mav;
@@ -143,8 +142,9 @@ public class Router {
             return new ModelAndView("redirect:/install-wizard/");
         }
 
+        //用户已登录则不再响应视图
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/model/chat/view");
+            return new ModelAndView("redirect:/client-ui");
         }
 
         String loginBrand = globalConfigService.getValue(GlobalConfigEnum.PAGE_LOGIN_BRAND.getKey());
@@ -160,7 +160,7 @@ public class Router {
     public ModelAndView register(HttpServletRequest hsr, RedirectAttributes ra) {
 
         if (authService.verifyUser(hsr) != null) {
-            return new ModelAndView("redirect:/model/chat/view");
+            return new ModelAndView("redirect:/client-ui");
         }
         String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
 
@@ -206,7 +206,7 @@ public class Router {
                 userConfigService.setValue("path.referer.dashboard", path, AuthService.getCurrentUserId());
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                userConfigService.setValue("path.referer.dashboard", "/model/chat/view", AuthService.getCurrentUserId());
+                userConfigService.setValue("path.referer.dashboard", "/client-ui", AuthService.getCurrentUserId());
             }
         }
         
@@ -215,7 +215,7 @@ public class Router {
 
     @GetMapping("/leaveDashboard")
     public String leaveDashboard() {
-        String referer = userConfigService.get("path.referer.dashboard", "/model/chat/view");
+        String referer = userConfigService.get("path.referer.dashboard", "/client-ui");
         return "redirect:" + referer;
     }
     

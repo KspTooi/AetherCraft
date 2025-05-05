@@ -46,8 +46,8 @@ public class AuthController {
             cookie.setMaxAge(7 * 24 * 60 * 60);  // 7天有效期
             response.addCookie(cookie);
             
-            // 登录成功，重定向到AI聊天
-            return "redirect:/model/chat/view";
+            // 登录成功，重定向到客户端UI
+            return "redirect:/client-ui";
         } catch (BizException e) {
             // 登录失败，添加错误消息并重定向回登录页
             ra.addFlashAttribute("error", e.getMessage());
