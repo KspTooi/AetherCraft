@@ -48,6 +48,11 @@ const router = createRouter({
       path: '/admin/maintain',
       name: 'application-maintain',
       component: () => import('@/views/admin/ApplicationMaintain.vue'),
+    },
+    {
+      path: '/admin/no-permission',
+      name: 'no-permission',
+      component: () => import('@/views/admin/NoPermission.vue'),
     }
   ],
 })
