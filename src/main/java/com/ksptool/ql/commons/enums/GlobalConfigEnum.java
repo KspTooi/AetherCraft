@@ -40,6 +40,8 @@ public enum GlobalConfigEnum {
 
     MODEL_RP_PROMPT_EXAMPLE_CHAT_FINISH("model.rp.prompt.example.chat.finish","#示例对话结束#","RP-角色示例对话-结束 提示词"),
 
+    PLAYER_REMOVE_WAITING_PERIOD_HOURS("player.remove.waiting.period.hours","24","移除人物等待期(小时) 在最终移除人物前需要等待的时间"),
+
     ;
 
 

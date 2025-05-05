@@ -15,7 +15,7 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long> {
 
     @Query("""
            SELECT p FROM PlayerPo p
-           WHERE p.user.id = :userId
+           WHERE p.user.id = :userId AND p.status != 3
            AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.publicInfo) LIKE LOWER(CONCAT('%', :keyword, '%')))
            """)
     Page<PlayerPo> getPlayerList(@Param("keyword")String keyword,

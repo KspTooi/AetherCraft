@@ -5,8 +5,10 @@ import com.ksptool.ql.biz.model.vo.GetAttachPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetCurrentPlayerVo;
 import com.ksptool.ql.biz.model.vo.GetPlayerListVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.PlayerService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -24,6 +26,9 @@ public class PlayerController {
 
     @Autowired
     private UserFileService userFileService;
+
+    @Autowired
+    private GlobalConfigService globalConfigService;
 
     //获取当前登录人物快照
     @PostMapping("/getCurrentPlayer")
@@ -121,6 +126,48 @@ public class PlayerController {
         }
 
         return Result.error("该名字不可用");
+    }
+
+    //发送删除请求
+    @PostMapping("/sendRemoveRequest")
+    public Result<String> sendRemoveRequest(@RequestBody @Valid CommonIdDto dto){
+        try {
+            service.sendRemoveRequest(dto.getId());
+            String defaultHoursStr = GlobalConfigEnum.PLAYER_REMOVE_WAITING_PERIOD_HOURS.getDefaultValue();
+            int defaultHours = Integer.parseInt(defaultHoursStr);
+            int waitingHours = globalConfigService.getInt(GlobalConfigEnum.PLAYER_REMOVE_WAITING_PERIOD_HOURS.getKey(), defaultHours);
+            return Result.success("删除请求已提交，请在 " + waitingHours + " 小时后在人物管理界面确认删除。");
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            return Result.error("提交删除请求时发生未知错误");
+        }
+    }
+
+    //删除人物
+    @PostMapping("/removePlayer")
+    public Result<String> removePlayer(@RequestBody @Valid CommonIdDto dto){
+        try {
+            service.removePlayer(dto.getId());
+            return Result.success("人物已成功删除");
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            return Result.error("删除人物时发生未知错误");
+        }
+    }
+
+    //取消删除人物
+    @PostMapping("/cancelRemovePlayer")
+    public Result<String> cancelRemovePlayer(@RequestBody @Valid CommonIdDto dto){
+        try {
+            service.cancelRemovePlayer(dto.getId());
+            return Result.success("人物已成功删除");
+        } catch (BizException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            return Result.error("删除人物时发生未知错误");
+        }
     }
 
 
