@@ -384,7 +384,10 @@ const reloadMessageList = async (roleId: string, threadId?: string) => {
 const reloadRoleList = async () => {
   try {
     // 更新接口地址和期望的响应类型，并添加空的JSON对象作为请求体
-    const data = await http.postEntity<PageableView<GetModelRoleListVo>>('/model/rp/getRoleList', {}); 
+    const data = await http.postEntity<PageableView<GetModelRoleListVo>>('/model/rp/getRoleList', {
+      page: 1,
+      pageSize: 1000
+    });
     // 从 PageableView 中提取 rows
     roleList.value = data.rows || []; 
   } catch (error) {
