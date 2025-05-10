@@ -63,6 +63,28 @@
         </div>
 
         <div class="form-row">
+          <GlowSelector
+            v-model="editableDetails.gender"
+            title="性别"
+            :options="genderOptions"
+            value-key="value"
+            label-key="label"
+            :disabled="saving"
+            notBlank
+          />
+          <GlowInput
+            v-if="isCustomGender"
+            v-model="editableDetails.genderData"
+            title="自定义性别"
+            :maxLength="20"
+            showLength
+            :disabled="saving"
+            notBlank
+            placeholder="请输入自定义性别"
+          />
+        </div>
+
+        <div class="form-row">
           <GlowInput
             v-model="editableDetails.language"
             title="语言"
@@ -70,6 +92,7 @@
             showLength
             placeholder="如：中文, English, zh-CN, en-US"
             :disabled="saving"
+            notBlank
           />
           <GlowInput
             v-model="editableDetails.era"
@@ -126,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, inject, onMounted } from "vue";
+import { reactive, ref, computed, inject, onMounted, watch } from "vue";
 import { useRouter } from 'vue-router';
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
@@ -153,14 +176,16 @@ const saving = ref(false);
 const uploading = ref(false);
 const playerDetails = ref<GetAttachPlayerDetailsVo | null>(null);
 // Separate state for editable fields to easily construct the DTO
-const editableDetails = reactive<Partial<EditAttachPlayerDetailsDto>>({
-    id: undefined, // Will be populated after fetch
+const editableDetails = reactive<EditAttachPlayerDetailsDto>({
+    id: "", // Will be populated after fetch
     avatarUrl: "",
     contentFilterLevel: 1,
     description: "",
     era: "",
     language: "",
-    publicInfo: ""
+    publicInfo: "",
+    gender: 0,
+    genderData: ""
 });
 
 const filterLevelOptions = [
@@ -168,6 +193,26 @@ const filterLevelOptions = [
   { label: "普通", value: 1 },
   { label: "严格", value: 2 },
 ];
+
+const genderOptions = [
+  { label: "男", value: 0 },
+  { label: "女", value: 1 },
+  { label: "不愿透露", value: 2 },
+  { label: "自定义(男性)", value: 4 },
+  { label: "自定义(女性)", value: 5 },
+  { label: "自定义(其他)", value: 6 },
+];
+
+const isCustomGender = computed(() => {
+  return [4, 5, 6].includes(editableDetails.gender);
+});
+
+// Watch for changes in gender and clear genderData if not custom
+watch(() => editableDetails.gender, (newGender) => {
+  if (![4, 5, 6].includes(newGender)) {
+    editableDetails.genderData = "";
+  }
+});
 
 // --- Data Fetching ---
 onMounted(async () => {
@@ -183,6 +228,8 @@ onMounted(async () => {
     editableDetails.era = details.era ?? "";
     editableDetails.language = details.language;
     editableDetails.publicInfo = details.publicInfo ?? "";
+    editableDetails.gender = details.gender;
+    editableDetails.genderData = details.genderData ?? "";
   } catch (error) {
     console.error("Failed to fetch player details:", error);
     playerDetails.value = null; // Indicate error
@@ -199,7 +246,12 @@ onMounted(async () => {
 // --- Form Validation ---
 const isFormValid = computed(() => {
   // Basic validation: language is required
-  return !!editableDetails.language?.trim();
+  if (!editableDetails.language?.trim()) return false;
+  // Check if custom gender is selected and genderData is empty
+  if (isCustomGender.value && editableDetails.genderData?.trim() === "") {
+    return false;
+  }
+  return true;
 });
 
 // --- Formatters ---
@@ -270,24 +322,16 @@ const handleFileUpload = async (event: Event) => {
 
 // --- Save Changes Logic ---
 const saveChanges = async () => {
-  if (!isFormValid.value || !editableDetails.id) {
-    alterRef.value?.showConfirm({ title: '提示', content: '请确保语言字段不为空。', closeText: '确定' });
+  if (!isFormValid.value) { // id is already checked by type in editableDetails
+    alterRef.value?.showConfirm({ title: '提示', content: '请确保所有必填项（如语言、自定义性别）已正确填写。', closeText: '确定' });
     return;
   }
 
   saving.value = true;
   try {
     // Construct the DTO for saving
-    const payload: EditAttachPlayerDetailsDto = {
-        id: editableDetails.id, // id is required
-        language: editableDetails.language, // language is required
-        // Include other fields if they have values or default if needed
-        avatarUrl: editableDetails.avatarUrl || undefined,
-        contentFilterLevel: editableDetails.contentFilterLevel,
-        description: editableDetails.description || undefined,
-        era: editableDetails.era || undefined,
-        publicInfo: editableDetails.publicInfo || undefined,
-    };
+    // editableDetails is already of type EditAttachPlayerDetailsDto due to reactive initialization
+    const payload: EditAttachPlayerDetailsDto = { ...editableDetails }; 
     
     // Remove /res/ prefix if it exists before sending
     if (payload.avatarUrl && payload.avatarUrl.startsWith('/res/')) {
@@ -304,9 +348,18 @@ const saveChanges = async () => {
 
     // Optionally refetch data to ensure consistency, or update playerDetails ref locally
     // For simplicity, we'll just show success message here. Refetch might be better.
-    // const updatedDetails = await PlayerApi.getAttachPlayerDetails();
-    // playerDetails.value = updatedDetails;
-
+    const updatedDetails = await PlayerApi.getAttachPlayerDetails();
+    playerDetails.value = updatedDetails;
+    // Re-populate editable details in case some fields were transformed or to sync with latest db state
+    editableDetails.id = updatedDetails.id;
+    editableDetails.avatarUrl = updatedDetails.avatarUrl ?? "";
+    editableDetails.contentFilterLevel = updatedDetails.contentFilterLevel;
+    editableDetails.description = updatedDetails.description ?? "";
+    editableDetails.era = updatedDetails.era ?? "";
+    editableDetails.language = updatedDetails.language;
+    editableDetails.publicInfo = updatedDetails.publicInfo ?? "";
+    editableDetails.gender = updatedDetails.gender;
+    editableDetails.genderData = updatedDetails.genderData ?? "";
 
   } catch (error) {
     alterRef.value?.showConfirm({

@@ -53,13 +53,15 @@ export interface EditAttachPlayerDetailsDto {
 export interface GetAttachPlayerDetailsVo {
     id: string;                 // 玩家ID
     name: string;               // (明文)人物角色名称
+    avatarUrl?: string;        // 头像路径
+    gender: number;            // 性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
+    genderData?: string;       // (密文)自定义性别种类 gender为4 5 6时必填
     publicInfo?: string;       // (明文)个人信息
     description?: string;      // (密文)人物角色描述
+    balance: string;            // 钱包余额(CU)
     language: string;          // 语言
     era?: string;              // 年代
     contentFilterLevel: number; // 内容过滤等级
-    avatarUrl?: string;        // 头像路径
-    balance: string;            // 钱包余额(CU)
     status: number;            // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
     createTime: string;         // 诞生日期 (Date -> string)
 }
