@@ -42,18 +42,9 @@ public class AdminApiKeyService {
      * 获取API密钥分页列表
      */
     public RestPageableView<GetApiKeyListVo> getApiKeyList(GetApiKeyListDto dto) {
-
-        var probe = new ApiKeyPo();
-        probe.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        // 构建查询条件
-        var query = SimpleExample.of(probe)
-                .assign(dto)
-                .like("keyName", "keyType")
-                .orderByDesc("updateTime");
-
-        Page<ApiKeyPo> pPos = repository.findAll(query.get(), dto.pageRequest().withSort(query.getSort()));
-        return new RestPageableView<>(pPos, GetApiKeyListVo.class);
+        Long currentPlayerId = AuthService.getCurrentPlayerId();
+        Page<GetApiKeyListVo> pVos = repository.getApiKeyList(dto, currentPlayerId, dto.pageRequest());
+        return new RestPageableView<>(pVos);
     }
 
     /**

@@ -68,6 +68,11 @@
           </template>
         </el-table-column>
         <el-table-column 
+          prop="authorizedCount" 
+          label="已授权数" 
+          min-width="100"
+        />
+        <el-table-column 
           prop="usageCount" 
           label="使用次数" 
           min-width="100"

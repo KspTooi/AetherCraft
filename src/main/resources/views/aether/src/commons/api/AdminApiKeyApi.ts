@@ -14,6 +14,7 @@ export interface GetApiKeyListVo {
     keyName: string;        // 密钥名称
     keySeries: string;      // 密钥系列
     isShared: number;       // 是否共享：0-不共享，1-共享
+    authorizedCount: string; // 授权人数
     usageCount: string;     // 使用次数
     lastUsedTime: string;   // 最后使用时间
     status: number;         // 状态：0-禁用，1-启用

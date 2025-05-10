@@ -1,11 +1,37 @@
 package com.ksptool.ql.biz.mapper;
 
+import com.ksptool.ql.biz.model.dto.GetApiKeyListDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
+import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ApiKeyRepository extends JpaRepository<ApiKeyPo, Long> {
+
+    @Query(value = """
+            SELECT new com.ksptool.ql.biz.model.vo.GetApiKeyListVo(
+                k.id,
+                k.keyName,
+                k.keySeries,
+                k.isShared,
+                COUNT(DISTINCT auth.id),
+                k.usageCount,
+                k.lastUsedTime,
+                k.status
+            )
+            FROM ApiKeyPo k
+            LEFT JOIN ApiKeyAuthorizationPo auth ON auth.apiKey.id = k.id
+            WHERE k.player.id = :playerId
+            AND (:#{#dto.keyName} IS NULL OR k.keyName LIKE CONCAT('%', :#{#dto.keyName}, '%'))
+            AND (:#{#dto.keySeries} IS NULL OR k.keySeries LIKE CONCAT('%', :#{#dto.keySeries}, '%'))
+            AND (:#{#dto.status} IS NULL OR k.status = :#{#dto.status})
+            GROUP BY k.id, k.keyName, k.keySeries, k.isShared, k.usageCount, k.lastUsedTime, k.status, k.updateTime
+            ORDER BY k.updateTime DESC
+            """)
+    Page<GetApiKeyListVo> getApiKeyList(@Param("dto") GetApiKeyListDto dto, @Param("playerId") Long playerId, Pageable pageable);
 
     /**
      * 检查密钥名称在指定用户下是否重复
