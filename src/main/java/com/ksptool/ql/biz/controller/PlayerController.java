@@ -13,6 +13,7 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -61,6 +62,14 @@ public class PlayerController {
     //编辑当前登录人物详细信息
     @PostMapping("/editAttachPlayerDetails")
     public Result<String> editAttachPlayerDetails(@RequestBody @Valid EditAttachPlayerDetailsDto dto){
+
+        //自定义性别种类 gender为4 5 6时必填
+        if(dto.getGender() == 4 || dto.getGender() == 5 || dto.getGender() == 6){
+            if(StringUtils.isBlank(dto.getGenderData())){
+                return Result.error("需填写自定义性别类型");
+            }
+        }
+
         try{
             service.editAttachPlayerDetails(dto);
             return Result.success("success");
@@ -105,6 +114,14 @@ public class PlayerController {
     //创建人物
     @PostMapping("/createPlayer")
     public Result<String> createPlayer(@RequestBody @Valid CreatePlayerDto dto) {
+
+        //自定义性别种类 gender为4 5 6时必填
+        if(dto.getGender() == 4 || dto.getGender() == 5 || dto.getGender() == 6){
+            if(StringUtils.isBlank(dto.getGenderData())){
+                return Result.error("需填写自定义性别类型");
+            }
+        }
+
         try {
             String result = service.createPlayer(dto);
             return Result.success(result);

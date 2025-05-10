@@ -36,12 +36,12 @@ public class PlayerPo {
     @Comment("(明文)人物角色名称")
     private String name;
 
-    @Column(name = "gender", nullable = true)
-    @Comment("性别 0:自定义 1:男 2:女 3:不透露")
+    @Column(name = "gender")
+    @Comment("性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)")
     private Integer gender;
 
     @Column(name = "gender_data",nullable = true)
-    @Comment("(密文)自定义性别 gender为0时选填")
+    @Comment("(密文)自定义性别种类 gender为4 5 6时必填")
     private String genderData;
 
     @Column(length = 40000)
