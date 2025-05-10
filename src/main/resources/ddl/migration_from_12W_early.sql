@@ -108,3 +108,62 @@ WHERE c.player_id = -1;
 
 ALTER TABLE IF EXISTS config DROP COLUMN user_id;
 --迁移配置项 结束
+
+--迁移ChatThread
+ALTER TABLE IF EXISTS model_chat_thread ADD COLUMN player_id bigint;
+
+UPDATE model_chat_thread
+SET player_id = -1
+WHERE player_id IS NULL;
+
+ALTER TABLE IF EXISTS model_chat_thread ALTER COLUMN player_id bigint NOT NULL;
+
+--已有CHAT-THREAD变更到用户下第一个人物
+UPDATE model_chat_thread c
+SET player_id = (
+    SELECT p.id
+    FROM player p
+    WHERE p.user_id = c.user_id
+    ORDER BY p.create_time ASC
+    LIMIT 1
+    )
+WHERE c.player_id = -1;
+
+ALTER TABLE IF EXISTS model_chat_thread DROP COLUMN user_id;
+--迁移ChatThread 结束
+
+--迁移ChatHistory
+BEGIN;
+ALTER TABLE IF EXISTS model_chat_history ADD COLUMN player_id bigint;
+
+UPDATE model_chat_history
+SET player_id = -1
+WHERE player_id IS NULL;
+
+ALTER TABLE IF EXISTS model_chat_history ALTER COLUMN player_id bigint NOT NULL;
+
+--已有ChatHistory变更到用户下第一个人物
+UPDATE model_chat_history c
+SET player_id = (
+    SELECT p.id
+    FROM player p
+    WHERE p.user_id = c.user_id
+    ORDER BY p.create_time ASC
+    LIMIT 1
+    )
+WHERE c.player_id = -1;
+
+ALTER TABLE IF EXISTS model_chat_history DROP COLUMN user_id;
+COMMIT;
+--迁移ChatHistory 结束
+
+--迁移modelChatSegment缓存
+BEGIN;
+ALTER TABLE IF EXISTS model_chat_segment ADD COLUMN player_id bigint;
+DELETE FROM model_chat_segment WHERE 1=1;
+ALTER TABLE IF EXISTS model_chat_segment ALTER COLUMN player_id bigint NOT NULL;
+ALTER TABLE IF EXISTS model_chat_segment DROP COLUMN user_id;
+COMMIT;
+--迁移modelChatSegment缓存 结束
+
+
