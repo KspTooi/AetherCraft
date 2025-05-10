@@ -78,6 +78,7 @@ public class PlayerService {
 
         GetAttachPlayerDetailsVo vo = as(playerPo, GetAttachPlayerDetailsVo.class);
         vo.setDescription(css.decryptForCurUser(playerPo.getDescription()));
+        vo.setGenderData(css.decryptForCurUser(playerPo.getGenderData()));
         return vo;
     }
 

@@ -66,6 +66,7 @@ public class ContentSecurityService {
         }
         String dek = getPlainUserDek(po.getUser().getId());
         po.setDescription(encrypt(po.getDescription(), dek));
+        po.setGenderData(encrypt(po.getGenderData(), dek));
     }
 
     public void encryptEntity(ModelRpHistoryPo po) throws BizException{

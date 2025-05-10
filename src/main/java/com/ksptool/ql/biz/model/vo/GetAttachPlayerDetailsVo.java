@@ -17,6 +17,12 @@ public class GetAttachPlayerDetailsVo {
     //人物名称
     private String name;
 
+    //性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
+    private Integer gender;
+
+    //(密文)自定义性别种类 gender为4 5 6时必填
+    private String genderData;
+
     //(明文)个人信息
     private String publicInfo;
 
