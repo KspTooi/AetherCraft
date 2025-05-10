@@ -44,9 +44,6 @@ public class AuthService {
     private long expiresInSeconds;
 
     @Autowired
-    private ModelUserRoleService modelUserRoleService;
-
-    @Autowired
     private PlayerRepository playerRepository;
 
     /**
@@ -71,9 +68,6 @@ public class AuthService {
         user.setLoginCount(user.getLoginCount() + 1);
         user.setLastLoginTime(new Date());
         userRepository.save(user);
-
-        //为用户创建他默认所扮演的角色
-        modelUserRoleService.createDefaultUserRole(user.getId());
 
         // 登录成功，创建或返回 token
         return createUserSession(user.getId()).getToken();

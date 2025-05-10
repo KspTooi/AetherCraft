@@ -120,14 +120,6 @@ public class ContentSecurityService {
         po.setDescription(encrypt(po.getDescription(), dek));
     }
 
-    public void encryptEntity(ModelUserRolePo po) throws BizException{
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(po.getUserId());
-        po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-        po.setDescription(encrypt(po.getDescription(), dek));
-    }
 
     public void encryptEntity(ModelRolePo po) throws BizException{
         if(po == null) {
@@ -156,26 +148,6 @@ public class ContentSecurityService {
         }
 
         Object firstElement = poList.getFirst();
-        
-        if(firstElement instanceof ModelUserRolePo) {
-            @SuppressWarnings("unchecked")
-            List<ModelUserRolePo> userRoleList = (List<ModelUserRolePo>) poList;
-            String dek = getPlainUserDek(userRoleList.getFirst().getUserId());
-            
-            if(encrypt) {
-                for(ModelUserRolePo po : userRoleList) {
-                    po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
-                    po.setDescription(encrypt(po.getDescription(), dek));
-                }
-                return;
-            }
-            
-            for(ModelUserRolePo po : userRoleList) {
-                po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
-                po.setDescription(decrypt(po.getDescription(), dek));
-            }
-            return;
-        }
 
         if(firstElement instanceof ModelRolePo) {
             @SuppressWarnings("unchecked")

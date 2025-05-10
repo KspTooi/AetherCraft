@@ -36,12 +36,7 @@ public class ModelRpThreadPo {
     @Comment("AI模型代码")
     @Column(length = 50, nullable = false)
     private String modelCode;
-    
-    @Comment("用户选择的角色")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_role_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private ModelUserRolePo userRole;
-    
+
     @Comment("模型扮演的角色")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "model_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

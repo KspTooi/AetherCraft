@@ -22,7 +22,6 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
     @Query("""
            SELECT t FROM ModelRpThreadPo t
            LEFT JOIN FETCH t.histories h
-           LEFT JOIN FETCH t.userRole
            LEFT JOIN FETCH t.modelRole
            WHERE t.modelRole.id = :modelRoleId AND t.player.id = :playerId AND t.active = 1
            ORDER BY h.sequence ASC
@@ -67,7 +66,6 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
     @Query("""
             SELECT t FROM ModelRpThreadPo t
             LEFT JOIN FETCH t.modelRole mr
-            LEFT JOIN FETCH t.userRole ur
             LEFT JOIN FETCH t.histories h
             WHERE t.id = :threadId
             AND t.player.id = :playerName

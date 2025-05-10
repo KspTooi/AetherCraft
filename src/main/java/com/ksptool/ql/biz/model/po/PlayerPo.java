@@ -29,7 +29,7 @@ public class PlayerPo {
     private UserPo user;
 
     @Column(name = "avatar_url", length = 320)
-    @Comment("头像路径")
+    @Comment("(明文)头像路径")
     private String avatarUrl;
 
     @Column(name = "name", nullable = false,unique = true, length = 64)

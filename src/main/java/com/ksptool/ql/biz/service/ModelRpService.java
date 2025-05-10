@@ -28,8 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -155,13 +153,6 @@ public class ModelRpService {
         //newThread=0 创建新存档
         if(dto.getNewThread() == 0 || threadCt == null) {
 
-            //查询用户当前所扮演的角色(未解密)
-            ModelUserRolePo userPlayRoleCt = castService.getUserPlayRole(AuthService.getCurrentUserId());
-
-            if(userPlayRoleCt == null){
-                throw new BizException("无法创建新存档:未找到用户所扮演的角色!");
-            }
-
             //查询模型所扮演的角色(未解密)
             ModelRolePo modelPlayRoleCt = castService.getModelPlayRole(dto.getModelRoleId());
 
@@ -170,12 +161,12 @@ public class ModelRpService {
             }
 
             //调用剧本服务创建新存档
-            scriptService.createNewThread(userPlayRoleCt,modelPlayRoleCt,dto.getModelCode());
+            scriptService.createNewThread(modelPlayRoleCt,dto.getModelCode());
             threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId(),AuthService.getCurrentPlayerId());
         }
 
-        //查询模型扮演的角色 + 用户扮演的角色
-        ModelUserRolePo userPlayRoleCt = threadCt.getUserRole();
+        //查询模型扮演的角色 + 用户选择的人物
+        PlayerPo playerCt = threadCt.getPlayer();
         ModelRolePo modelPlayRoleCt = threadCt.getModelRole();
 
         //查询历史记录
@@ -205,10 +196,10 @@ public class ModelRpService {
                 hisVo.setName("user");
                 hisVo.setAvatarPath("");
 
-                if(userPlayRoleCt != null){
-                    hisVo.setName(userPlayRoleCt.getName());
-                    if(StringUtils.isNotBlank(userPlayRoleCt.getAvatarPath())){
-                        hisVo.setAvatarPath("/res/"+css.decryptForCurUser(userPlayRoleCt.getAvatarPath()));
+                if(playerCt != null){
+                    hisVo.setName(playerCt.getName());
+                    if(StringUtils.isNotBlank(playerCt.getAvatarUrl())){
+                        hisVo.setAvatarPath("/res/"+playerCt.getAvatarUrl());
                     }
                 }
             }
@@ -263,8 +254,8 @@ public class ModelRpService {
             throw new BizException("未配置API Key");
         }
 
-        //获取用户与模型扮演的角色
-        ModelUserRolePo userPlayRoleCt = threadCt.getUserRole();
+        //获取用户选择的人物与模型扮演的角色
+        PlayerPo playerCt = threadCt.getPlayer();
         ModelRolePo modelPlayRoleCt = threadCt.getModelRole();
 
         if (modelPlayRoleCt == null) {
@@ -317,7 +308,7 @@ public class ModelRpService {
         }
 
         //创建主Prompt
-        PreparedPrompt prompt = scriptService.createSystemPrompt(userPlayRoleCt, modelPlayRoleCt);
+        PreparedPrompt prompt = scriptService.createSystemPrompt(playerCt, modelPlayRoleCt);
 
         //解析模型示例对话
         prompt = scriptService.appendExamplePrompt(modelPlayRoleCt.getId(),prompt);
@@ -399,14 +390,11 @@ public class ModelRpService {
             vo.setRoleId(null);
             vo.setRoleName("user");
             vo.setRoleAvatarPath(null);
-            if(userPlayRoleCt != null){
-                vo.setRoleId(userPlayRoleCt.getId());
-                vo.setRoleName(userPlayRoleCt.getName());
-
-                var pathPt = css.decryptForCurUser(userPlayRoleCt.getAvatarPath());
-
-                if(StringUtils.isNotBlank(pathPt)){
-                    vo.setRoleAvatarPath("/res/"+pathPt);
+            if(playerCt != null){
+                vo.setRoleId(playerCt.getId());
+                vo.setRoleName(playerCt.getName());
+                if(StringUtils.isNotBlank(playerCt.getAvatarUrl())){
+                    vo.setRoleAvatarPath("/res/"+playerCt.getAvatarUrl());
                 }
             }
 

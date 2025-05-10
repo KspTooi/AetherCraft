@@ -1,10 +1,7 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
-import com.ksptool.ql.biz.mapper.ModelRpSegmentRepository;
-import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
-import com.ksptool.ql.biz.mapper.ModelRpHistoryRepository;
+import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
@@ -49,17 +46,25 @@ public class ModelRpScriptService {
     @Autowired
     private ModelRpSegmentRepository modelRpSegmentRepository;
 
+    @Autowired
+    private PlayerRepository playerRepository;
+
     /**
      * 创建新的RP对话存档
      * 会将同一角色下的其他存档设置为非激活状态，并创建一个新的激活状态的存档
      * 如果模型角色有首条消息，会同时创建首条AI消息
      *
-     * @param userPlayRoleCt 用户扮演的角色
      * @param modelPlayRoleCt 模型扮演的角色
      * @throws BizException 如果创建过程中出现错误
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createNewThread(ModelUserRolePo userPlayRoleCt, ModelRolePo modelPlayRoleCt,String modeCode) throws BizException {
+    public void createNewThread(ModelRolePo modelPlayRoleCt,String modeCode) throws BizException {
+
+        Long currentPlayerId = AuthService.getCurrentPlayerId();
+
+        if(currentPlayerId == null){
+            throw new BizException("无法定位用户所登录的人物!");
+        }
 
         // 解密用户角色和模型角色的加密字段
         String modelRoleFirstMsg = css.decryptForCurUser(modelPlayRoleCt.getFirstMessage());
@@ -68,13 +73,16 @@ public class ModelRpScriptService {
         threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), modelPlayRoleCt.getId(), 0);
         entityManager.clear();
 
+        //查询当前Player
+        PlayerPo playerPo = playerRepository.findById(currentPlayerId)
+                .orElseThrow(() -> new BizException("无法创建新存档:未找到用户所扮演的角色!"));
+
         //创建新存档
         ModelRpThreadPo thread = new ModelRpThreadPo();
-        thread.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+        thread.setPlayer(playerPo);
         thread.setModelCode(modeCode);
         thread.setModelRole(modelPlayRoleCt);
-        thread.setUserRole(userPlayRoleCt);
-        thread.setTitle(userPlayRoleCt.getName() + "与" + modelPlayRoleCt.getName() + "的对话");
+        thread.setTitle(playerPo.getName() + "与" + modelPlayRoleCt.getName() + "的对话");
         thread.setActive(1);
         
         //加密存档内容
@@ -87,7 +95,7 @@ public class ModelRpScriptService {
             //准备Prompt
             var prompt = PreparedPrompt.prepare(modelRoleFirstMsg);
             prompt.setParameter("model",modelPlayRoleCt.getName());
-            prompt.setParameter("user",userPlayRoleCt.getName());
+            prompt.setParameter("user",playerPo.getName());
 
             ModelRpHistoryPo history = new ModelRpHistoryPo();
             history.setThread(thread);
@@ -194,7 +202,7 @@ public class ModelRpScriptService {
     }
 
     //解析模型主Prompt
-    public PreparedPrompt createSystemPrompt(ModelUserRolePo userPlayRoleCt, ModelRolePo modelPlayRoleCt) {
+    public PreparedPrompt createSystemPrompt(PlayerPo playerCt, ModelRolePo modelPlayRoleCt) {
 
         var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
         var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
@@ -207,9 +215,9 @@ public class ModelRpScriptService {
         prompt.setParameter("modelRoleSummary", css.decryptForCurUser(modelPlayRoleCt.getRoleSummary()));
         prompt.setParameter("modelScenario", css.decryptForCurUser(modelPlayRoleCt.getScenario()));
 
-        if(userPlayRoleCt != null) {
-            prompt.setParameter("user", userPlayRoleCt.getName());
-            prompt.setParameter("userDesc", css.decryptForCurUser(userPlayRoleCt.getDescription()));
+        if(playerCt != null) {
+            prompt.setParameter("user", playerCt.getName());
+            prompt.setParameter("userDesc", css.decryptForCurUser(playerCt.getDescription()));
         }
         return prompt;
     }
