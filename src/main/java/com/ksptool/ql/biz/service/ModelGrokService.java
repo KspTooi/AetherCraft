@@ -7,11 +7,13 @@ import com.ksptool.ql.biz.model.grok.GrokRequest;
 import com.ksptool.ql.biz.model.grok.GrokResponse;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -116,11 +118,12 @@ public class ModelGrokService implements ModelRestCI{
         
         // 使用原子整数跟踪序列号
         AtomicInteger sequence = new AtomicInteger(0);
-        
+
         // 使用虚拟线程执行请求
         Thread.startVirtualThread(() -> {
+
             StringBuilder responseBuilder = new StringBuilder();
-            
+
             try {
                 // 验证参数
                 validateParams(param);

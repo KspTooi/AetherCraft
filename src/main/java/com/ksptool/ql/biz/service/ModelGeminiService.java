@@ -7,11 +7,13 @@ import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.gemini.GeminiResponse;
 import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -111,9 +113,10 @@ public class ModelGeminiService implements ModelRestCI{
         
         // 使用原子整数跟踪序列号
         AtomicInteger sequence = new AtomicInteger(0);
-        
+
         // 使用虚拟线程执行请求，但不使用try-with-resources，避免过早关闭executor
         Thread.startVirtualThread(() -> {
+
             StringBuilder responseBuilder = new StringBuilder();
             
             try {
