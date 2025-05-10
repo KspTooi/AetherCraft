@@ -241,3 +241,9 @@ WHERE c.player_id = -1;
 ALTER TABLE IF EXISTS model_rp_segment DROP COLUMN user_id;
 COMMIT;
 --迁移model_rp_segment结束
+
+--移除旧版用户扮演角色
+BEGIN;
+DROP TABLE MODEL_USER_ROLES;
+ALTER TABLE IF EXISTS MODEL_RP_THREAD DROP COLUMN USER_ROLE_ID;
+COMMIT;
