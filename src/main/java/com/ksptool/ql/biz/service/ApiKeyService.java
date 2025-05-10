@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 @Service
 public class ApiKeyService {
@@ -48,7 +49,7 @@ public class ApiKeyService {
      * @return API密钥字符串
      * @throws BizException 当无权限或配置不存在时
      */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = REQUIRES_NEW,rollbackFor = BizException.class)
     public String getApiKey(String modelCode, Long playerId) throws BizException {
 
         ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(modelCode, playerId);

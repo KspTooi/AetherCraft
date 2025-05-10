@@ -52,11 +52,11 @@ public class ContentSecurityService {
         }
     }
 
-    public void encryptEntity(ModelRpSegmentPo po) throws BizException{
+    public void encryptEntity(ModelRpSegmentPo po,Long userId) throws BizException{
         if(po == null) {
             return;
         }
-        String dek = getPlainUserDek(po.getUserId());
+        String dek = getPlainUserDek(userId);
         po.setContent(encrypt(po.getContent(), dek));
     }
 
@@ -69,7 +69,7 @@ public class ContentSecurityService {
         po.setGenderData(encrypt(po.getGenderData(), dek));
     }
 
-    public void encryptEntity(ModelRpHistoryPo po) throws BizException{
+    public void encryptEntity(ModelRpHistoryPo po,Long userId) throws BizException{
         if(po == null) {
             return;
         }
@@ -77,7 +77,7 @@ public class ContentSecurityService {
         Long uid = null;
 
         if(po.getThread()!=null){
-            uid = po.getThread().getUserId();
+            uid = userId;
         }
         if(uid == null){
             uid = AuthService.getCurrentUserId();
@@ -111,11 +111,11 @@ public class ContentSecurityService {
         po.setTitle(encrypt(po.getTitle(), dek));
     }
 
-    public void encryptEntity(ModelRpThreadPo po) throws BizException{
+    public void encryptEntity(ModelRpThreadPo po,Long userId) throws BizException{
         if(po == null) {
             return;
         }
-        String dek = getPlainUserDek(po.getUserId());
+        String dek = getPlainUserDek(userId);
         po.setTitle(encrypt(po.getTitle(), dek));
         po.setDescription(encrypt(po.getDescription(), dek));
     }

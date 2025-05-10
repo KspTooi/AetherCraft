@@ -35,32 +35,32 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
     @Query("""
             UPDATE ModelRpThreadPo t
             SET t.active = :active
-            WHERE t.userId = :userId
+            WHERE t.player.id = :playerId
             AND t.modelRole.id = :modelRoleId
             """)
     @Modifying
-    void setAllThreadActive(@Param("userId") Long userId, 
+    void setAllThreadActive(@Param("playerId") Long playerId,
                           @Param("modelRoleId") Long modelRoleId, 
                           @Param("active") Integer active);
     
     /**
      * 查找用户除指定ID外最新更新的会话
      * 
-     * @param userId 用户ID
+     * @param playerId 玩家ID
      * @param modelRole 模型角色
      * @param threadId 要排除的会话ID
      * @return 最新更新的会话
      */
     @Query("""
-           SELECT t FROM ModelRpThreadPo t 
-           WHERE t.userId = :userId 
-           AND t.modelRole = :modelRole 
-           AND t.id != :threadId 
+           SELECT t FROM ModelRpThreadPo t
+           WHERE t.player.id = :playerId
+           AND t.modelRole = :modelRole
+           AND t.id != :threadId
            ORDER BY t.updateTime DESC
            LIMIT 1
            """)
     ModelRpThreadPo findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
-        @Param("userId") Long userId,
+        @Param("playerId") Long playerId,
         @Param("modelRole") ModelRolePo modelRole,
         @Param("threadId") Long threadId);
 
@@ -70,11 +70,11 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
             LEFT JOIN FETCH t.userRole ur
             LEFT JOIN FETCH t.histories h
             WHERE t.id = :threadId
-            AND t.userId = :userId
+            AND t.player.id = :playerName
             ORDER BY h.sequence ASC
             """)
     ModelRpThreadPo getThreadWithRoleAndHistoriesById(
             @Param("threadId") Long threadId,
-            @Param("userId") Long userId
+            @Param("playerName") Long playerName
     );
 } 

@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
 import com.ksptool.ql.biz.mapper.ModelRpSegmentRepository;
 import com.ksptool.ql.biz.mapper.ModelRpThreadRepository;
@@ -64,12 +65,12 @@ public class ModelRpScriptService {
         String modelRoleFirstMsg = css.decryptForCurUser(modelPlayRoleCt.getFirstMessage());
 
         //取消该用户该角色下所有存档的激活状态
-        threadRepository.setAllThreadActive(AuthService.getCurrentUserId(), modelPlayRoleCt.getId(), 0);
+        threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), modelPlayRoleCt.getId(), 0);
         entityManager.clear();
 
         //创建新存档
         ModelRpThreadPo thread = new ModelRpThreadPo();
-        thread.setUserId(AuthService.getCurrentUserId());
+        thread.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         thread.setModelCode(modeCode);
         thread.setModelRole(modelPlayRoleCt);
         thread.setUserRole(userPlayRoleCt);
@@ -77,7 +78,7 @@ public class ModelRpScriptService {
         thread.setActive(1);
         
         //加密存档内容
-        css.encryptEntity(thread);
+        css.encryptEntity(thread,AuthService.getCurrentUserId());
         threadRepository.save(thread);
 
         //如果模型角色有首条消息，创建首条AI消息
@@ -94,7 +95,7 @@ public class ModelRpScriptService {
             history.setRawContent(prompt.execute());
             history.setRpContent(modelRoleFirstMsg); // 这里可能需要通过RpHandler处理
             history.setSequence(1);
-            css.encryptEntity(history);
+            css.encryptEntity(history,AuthService.getCurrentUserId());
             historyRepository.save(history);
         }
 
@@ -110,11 +111,10 @@ public class ModelRpScriptService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void activeThread(Long threadId) throws BizException {
-        Long currentUserId = AuthService.getCurrentUserId();
         
         //查询指定ID的存档
         var query = new ModelRpThreadPo();
-        query.setUserId(currentUserId);
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         query.setId(threadId);
 
         ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
@@ -124,7 +124,7 @@ public class ModelRpScriptService {
         Long roleId = thread.getModelRole().getId();
 
         //取消全部Thread的激活状态
-        threadRepository.setAllThreadActive(currentUserId, roleId, 0);
+        threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), roleId, 0);
         entityManager.clear();
 
         //激活指定存档
@@ -133,7 +133,7 @@ public class ModelRpScriptService {
     }
 
     /**
-     * 根据会话ID获取当前用户已激活的会话
+     * 根据会话ID获取当前玩家已激活的会话
      * @param threadId 会话ID
      * @return 不存在返回null
      * @throws BizException 错误抛出异常
@@ -141,7 +141,7 @@ public class ModelRpScriptService {
     @Transactional(readOnly = true)
     public ModelRpThreadPo getCurUserActiveThread(Long threadId) throws BizException {
 
-        ModelRpThreadPo threadPo = threadRepository.getThreadWithRoleAndHistoriesById(threadId, AuthService.getCurrentUserId());
+        ModelRpThreadPo threadPo = threadRepository.getThreadWithRoleAndHistoriesById(threadId, AuthService.getCurrentPlayerId());
 
         if(threadPo == null) {
             return null;
@@ -229,7 +229,7 @@ public class ModelRpScriptService {
         userHistory.setRawContent(content);
         userHistory.setRpContent(content); // 这里可能需要通过RpHandler处理
         userHistory.setSequence(historyRepository.findMaxSequenceByThreadId(threadId) + 1);
-        css.encryptEntity(userHistory);
+        css.encryptEntity(userHistory,AuthService.getCurrentUserId());
         return historyRepository.save(userHistory);
     }
 
@@ -240,7 +240,7 @@ public class ModelRpScriptService {
      */
     public void createStartSegment(ModelRpThreadPo threadPt) {
         ModelRpSegmentPo startSegment = new ModelRpSegmentPo();
-        startSegment.setUserId(threadPt.getUserId());
+        startSegment.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         startSegment.setThread(threadPt);
         startSegment.setSequence(0);
         startSegment.setContent(null);
@@ -252,7 +252,7 @@ public class ModelRpScriptService {
     /**
      * 创建新的加密消息片段(数据)
      */
-    public void createDataSegment(Long uid,Long threadId,String content,Integer seq) throws BizException {
+    public void createDataSegment(Long playerId,Long uid,Long threadId,String content,Integer seq) throws BizException {
 
         Integer nextSeq = seq;
 
@@ -263,7 +263,7 @@ public class ModelRpScriptService {
 
         // 数据类型 - 创建数据片段
         ModelRpSegmentPo dataSegment = new ModelRpSegmentPo();
-        dataSegment.setUserId(uid);
+        dataSegment.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
         var thread = new ModelRpThreadPo();
         thread.setId(threadId);
         dataSegment.setThread(thread);
@@ -271,7 +271,7 @@ public class ModelRpScriptService {
         dataSegment.setContent(content);
         dataSegment.setStatus(0); // 未读状态
         dataSegment.setType(1); // 数据类型
-        css.encryptEntity(dataSegment);
+        css.encryptEntity(dataSegment,uid);
         modelRpSegmentRepository.save(dataSegment);
     }
 

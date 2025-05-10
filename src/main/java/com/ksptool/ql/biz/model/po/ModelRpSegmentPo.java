@@ -19,10 +19,11 @@ public class ModelRpSegmentPo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("主键ID")
     private Long id;
-    
-    @Comment("用户ID")
-    @Column(nullable = false)
-    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("玩家人物ID 为空表示全局配置")
+    private PlayerPo player;
     
     @Comment("关联的RP会话")
     @ManyToOne(fetch = FetchType.LAZY)

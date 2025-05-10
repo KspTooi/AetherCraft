@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,6 +40,7 @@ import java.util.function.Consumer;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 
 import static com.ksptool.entities.Entities.as;
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 @Slf4j
 @Service
@@ -234,7 +237,7 @@ public class ModelRpService {
      * @return 返回对话片段信息
      * @throws BizException 业务异常
      */
-    @Transactional
+    @Transactional(propagation = REQUIRES_NEW)
     public RpSegmentVo rpCompleteSendBatch(BatchRpCompleteDto dto) throws BizException {
 
         if(track.isLocked(dto.getThreadId())){
@@ -254,7 +257,8 @@ public class ModelRpService {
             throw new BizException("会话不存在或不可用");
         }
 
-        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), threadCt.getUserId());
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), threadCt.getPlayer().getUser().getId());
+
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key");
         }
@@ -365,18 +369,20 @@ public class ModelRpService {
             //锁定Thread
             track.newSession(threadCt.getId());
 
+            Long uid = threadCt.getPlayer().getUser().getId();
+
             if(dto.getModel().contains("grok")){
                 param.setUrl(GROK_BASE_URL);
                 // 异步调用ModelGrokService发送流式请求
                 modelGrokService.sendMessageStream(client, param,
-                        onModelRpMessageRcv(threadCt, threadCt.getUserId())
+                        onModelRpMessageRcv(threadCt, uid,AuthService.getCurrentPlayerId())
                 );
             }
 
             if(dto.getModel().contains("gemini")){
                 // 异步调用ModelGeminiService发送流式请求
                 modelGeminiService.sendMessageStream(client, param,
-                        onModelRpMessageRcv(threadCt, threadCt.getUserId())
+                        onModelRpMessageRcv(threadCt, uid,AuthService.getCurrentPlayerId())
                 );
             }
 
@@ -473,8 +479,8 @@ public class ModelRpService {
      */
     public RpSegmentVo rpCompleteQueryBatch(BatchRpCompleteDto dto) throws BizException {
         Long threadId = dto.getThreadId();
-        Long userId = AuthService.getCurrentUserId();
-        
+        Long playerId = AuthService.getCurrentPlayerId();
+
         // 最大等待次数和等待时间
         final int MAX_WAIT_TIMES = 3;
         final long WAIT_INTERVAL_MS = 300;
@@ -490,7 +496,7 @@ public class ModelRpService {
             }
 
             // 一次性查询所有未读片段，按sequence排序
-            unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId);
+            unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId,playerId);
 
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
@@ -511,11 +517,6 @@ public class ModelRpService {
         // 如果等待超时仍未获取到片段
         if (unreadSegments.isEmpty()) {
             return null;
-        }
-        
-        // 检查权限
-        if (!unreadSegments.getFirst().getUserId().equals(userId)) {
-            throw new BizException("无权访问该会话");
         }
 
         //查询角色数据
@@ -633,18 +634,14 @@ public class ModelRpService {
      */
     public void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
         Long threadId = dto.getThreadId();
-        Long userId = AuthService.getCurrentUserId();
 
-        // 检查会话是否存在
-        ModelRpThreadPo thread = threadRepository.findById(threadId).orElse(null);
-        if (thread == null) {
-            throw new BizException("会话不存在");
-        }
+        ModelRpThreadPo query = new ModelRpThreadPo();
+        query.setId(threadId);
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        // 检查权限
-        if (!thread.getUserId().equals(userId)) {
-            throw new BizException("无权访问该会话");
-        }
+        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("会话不存在或不属于您"));
+
 
         int status = track.getStatus(threadId);
 
@@ -660,7 +657,7 @@ public class ModelRpService {
 
         // 创建终止片段
         ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
-        endSegment.setUserId(userId);
+        endSegment.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         endSegment.setThread(thread);
         endSegment.setSequence(nextSequence);
         endSegment.setContent("用户终止了AI响应");
@@ -677,14 +674,14 @@ public class ModelRpService {
     @Transactional
     public void removeRpHistory(RemoveRpHistoryDto dto) throws BizException {
         Long currentUserId = AuthService.getCurrentUserId();
-        
+
         // 查询消息记录
         ModelRpHistoryPo history = historyRepository.findById(dto.getHistoryId())
             .orElseThrow(() -> new BizException("消息不存在"));
         
-        // 验证消息所属的会话是否属于当前用户
+        // 验证消息所属的会话是否属于当前人物
         ModelRpThreadPo thread = history.getThread();
-        if (!thread.getUserId().equals(currentUserId)) {
+        if (!thread.getPlayer().getId().equals(currentUserId)) {
             throw new BizException("无权删除此消息");
         }
         
@@ -704,14 +701,14 @@ public class ModelRpService {
                 .orElseThrow(() -> new BizException("历史记录不存在"));
 
         //验证用户权限
-        if (!history.getThread().getUserId().equals(AuthService.getCurrentUserId())) {
+        if (!history.getThread().getPlayer().getId().equals(AuthService.getCurrentUserId())) {
             throw new BizException("无权编辑此消息");
         }
 
         //更新消息内容
         history.setRawContent(dto.getContent());
         history.setRpContent(dto.getContent());
-        css.encryptEntity(history);
+        css.encryptEntity(history,AuthService.getCurrentUserId());
         historyRepository.save(history);
     }
 
@@ -726,8 +723,8 @@ public class ModelRpService {
     public List<ModelRoleThreadListVo> getModelRoleThreadList(GetModelRoleThreadListDto dto) throws BizException {
         // 构建查询条件
         ModelRpThreadPo query = new ModelRpThreadPo();
-        query.setUserId(AuthService.getCurrentUserId()); // 获取当前用户ID
-        
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
         // 使用Example构建查询
         SimpleExample<ModelRpThreadPo> example = SimpleExample.of(query);
         
@@ -793,7 +790,7 @@ public class ModelRpService {
         // 1. 根据用户ID+ThreadID查询是否有该Thread
         ModelRpThreadPo query = new ModelRpThreadPo();
         query.setId(threadId);
-        query.setUserId(currentUserId);
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         
         ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
             .orElseThrow(() -> new BizException("会话不存在或无权删除"));
@@ -802,7 +799,7 @@ public class ModelRpService {
         if (thread.getActive() == 1) {
             // 如果当前是激活的，需要查询updateTime最新的一个thread将其设置为激活
             ModelRpThreadPo newActiveThread = threadRepository.findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
-                currentUserId, 
+                AuthService.getCurrentPlayerId(),
                 thread.getModelRole(), 
                 threadId
             );
@@ -845,12 +842,13 @@ public class ModelRpService {
      * @param userId 用户ID
      * @return 处理模型消息的Consumer
      */
-    private Consumer<ModelChatContext> onModelRpMessageRcv(ModelRpThreadPo thread, Long userId) {
+    private Consumer<ModelChatContext> onModelRpMessageRcv(ModelRpThreadPo thread, Long userId,Long playerId) {
         return context -> {
             try {
                 // 从ModelChatContext中获取contextId
                 String contextId = context.getContextId();
                 Long threadId = thread.getId();
+                PlayerPo currentPlayer = Any.of().val("id", playerId).as(PlayerPo.class);
 
                 //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
                 if(track.getStatus(threadId) == 11){
@@ -874,7 +872,7 @@ public class ModelRpService {
                 // 根据context.type处理不同类型的消息
                 if (context.getType() == 0) {
                     // 数据类型 - 创建数据片段
-                    scriptService.createDataSegment(userId,threadId,context.getContent(),nextSequence);
+                    scriptService.createDataSegment(playerId,userId,threadId,context.getContent(),nextSequence);
                     return;
                 }
 
@@ -888,12 +886,12 @@ public class ModelRpService {
                     modelHistory.setRawContent(context.getContent());
                     modelHistory.setRpContent(context.getContent());
                     modelHistory.setSequence(historyRepository.findMaxSequenceByThreadId(threadId) + 1);
-                    css.encryptEntity(modelHistory);
+                    css.encryptEntity(modelHistory,userId);
                     historyRepository.save(modelHistory);
 
                     // 完成类型 - 创建结束片段
                     ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
-                    endSegment.setUserId(userId);
+                    endSegment.setPlayer(currentPlayer);
                     endSegment.setThread(thread);
                     endSegment.setSequence(nextSequence);
                     endSegment.setContent(null);
@@ -911,13 +909,13 @@ public class ModelRpService {
                 if (context.getType() == 2) {
                     // 错误类型 - 创建错误片段
                     ModelRpSegmentPo errorSegment = new ModelRpSegmentPo();
-                    errorSegment.setUserId(userId);
+                    errorSegment.setPlayer(currentPlayer);
                     errorSegment.setThread(thread);
                     errorSegment.setSequence(nextSequence);
                     errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
                     errorSegment.setStatus(0); // 未读状态
                     errorSegment.setType(10); // 错误类型
-                    css.encryptEntity(errorSegment);
+                    css.encryptEntity(errorSegment,userId);
                     segmentRepository.save(errorSegment);
 
                     //释放Thread

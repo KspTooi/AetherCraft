@@ -30,30 +30,18 @@ public interface ModelRpSegmentRepository extends JpaRepository<ModelRpSegmentPo
     int findMaxSequenceByThreadId(@Param("threadId") Long threadId);
 
     /**
-     * 查找指定会话的下一个未读片段
-     * @param threadId 会话ID
-     * @return 未读片段列表
-     */
-    @Query("""
-            SELECT s 
-            FROM ModelRpSegmentPo s 
-            WHERE s.thread.id = :threadId 
-            AND s.status = 0 
-            ORDER BY s.sequence ASC
-            """)
-    List<ModelRpSegmentPo> findNextUnreadByThreadId(@Param("threadId") Long threadId);
-    
-    /**
      * 查找指定会话的所有未读片段，按序号排序
      * @param threadId 会话ID
      * @return 所有未读片段列表
      */
     @Query("""
-            SELECT s 
-            FROM ModelRpSegmentPo s 
-            WHERE s.thread.id = :threadId 
-            AND s.status = 0 
+            SELECT s
+            FROM ModelRpSegmentPo s
+            WHERE
+            s.thread.id = :threadId
+            AND s.player.id = :playerId
+            AND s.status = 0
             ORDER BY s.sequence ASC
             """)
-    List<ModelRpSegmentPo> findAllUnreadByThreadIdOrderBySequence(@Param("threadId") Long threadId);
+    List<ModelRpSegmentPo> findAllUnreadByThreadIdOrderBySequence(@Param("threadId") Long threadId,@Param("playerId") Long playerId);
 } 
