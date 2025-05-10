@@ -13,42 +13,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
-    
-    /**
-     * 获取用户的角色列表（分页）
-     * 
-     * @param userId 用户ID
-     * @param keyword 关键字（角色名称，为空时不过滤）
-     * @param pageable 分页参数
-     * @return 分页结果
-     */
-    @Query("""
-            SELECT r 
-            FROM ModelRolePo r 
-            WHERE r.userId = :userId 
-            AND (:keyword IS NULL OR :keyword = '' OR r.name LIKE %:keyword%) 
-            ORDER BY r.sortOrder ASC, r.updateTime DESC
-            """)
-    Page<ModelRolePo> getModelRoleList(
-        @Param("userId") Long userId,
-        @Param("keyword") String keyword,
-        Pageable pageable
-    );
 
-    
-    /**
-     * 检查角色名称是否已存在（新增时使用）
-     * 
-     * @param name 角色名称
-     * @return 是否存在
-     */
-    @Query("""
-            SELECT COUNT(r) > 0 
-            FROM ModelRolePo r 
-            WHERE r.name = :name
-            """)
-    boolean existsByName(@Param("name") String name);
-    
     /**
      * 检查角色名称是否已被其他角色使用（更新时使用）
      * 
@@ -57,11 +22,11 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      * @return 是否存在
      */
     @Query("""
-            SELECT COUNT(r) > 0 
-            FROM ModelRolePo r 
-            WHERE r.name = :name 
-            AND r.userId = :userId 
+            SELECT COUNT(r) > 0
+            FROM ModelRolePo r
+            WHERE r.name = :name
+            AND r.player.id = :playerId 
             AND r.id != :id
             """)
-    boolean existsByNameAndIdNot(@Param("userId") Long userId,@Param("name") String name, @Param("id") Long id);
+    boolean existsByNameAndIdNot(@Param("playerId") Long playerId,@Param("name") String name, @Param("id") Long id);
 } 

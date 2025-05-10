@@ -133,7 +133,7 @@ public class ContentSecurityService {
         if(po == null) {
             return;
         }
-        String dek = getPlainUserDek(po.getUserId());
+        String dek = getPlainUserDek(AuthService.getCurrentUserId());
         po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
         po.setDescription(encrypt(po.getDescription(), dek));
         po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
@@ -180,7 +180,7 @@ public class ContentSecurityService {
         if(firstElement instanceof ModelRolePo) {
             @SuppressWarnings("unchecked")
             List<ModelRolePo> roleList = (List<ModelRolePo>) poList;
-            String dek = getPlainUserDek(roleList.getFirst().getUserId());
+            String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
                 for(ModelRolePo po : roleList) {

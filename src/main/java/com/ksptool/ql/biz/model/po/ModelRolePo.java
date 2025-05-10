@@ -11,7 +11,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "model_roles", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "name"}, name = "uk_user_role_name")
+    @UniqueConstraint(columnNames = {"player_id", "name"}, name = "uk_player_role_name")
 })
 @Data
 public class ModelRolePo {
@@ -21,9 +21,10 @@ public class ModelRolePo {
     @Comment("角色ID")
     private Long id;
 
-    @Column(nullable = false)
-    @Comment("用户ID")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("玩家人物ID 为空表示全局配置")
+    private PlayerPo player;
 
     @Column(nullable = false, length = 50)
     @Comment("(明文)角色名称")

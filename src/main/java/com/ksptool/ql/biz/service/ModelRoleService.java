@@ -1,11 +1,13 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelRoleChatExamplePo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
@@ -44,7 +46,7 @@ public class ModelRoleService {
 
         var query = new ModelRolePo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件
-        query.setUserId(AuthService.getCurrentUserId()); // 按当前用户过滤
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 按当前人物过滤
 
         // 创建 SimpleExample 用于构建查询条件
         SimpleExample<ModelRolePo> example = SimpleExample.of(query);
@@ -80,7 +82,7 @@ public class ModelRoleService {
         // 创建查询条件
         ModelRolePo query = new ModelRolePo();
         query.setId(id);
-        query.setUserId(AuthService.getCurrentUserId()); // 确保只能查询当前用户的角色
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能查询当前玩家的角色
         
         // 创建Example查询
         SimpleExample<ModelRolePo> example = SimpleExample.of(query);
@@ -114,7 +116,7 @@ public class ModelRoleService {
         // 查询要复制的角色
         ModelRolePo query = new ModelRolePo();
         query.setId(sourceId);
-        query.setUserId(AuthService.getCurrentUserId()); // 确保只能复制当前用户的角色
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能复制当前人物的角色
         
         // 创建Example查询
         SimpleExample<ModelRolePo> example = SimpleExample.of(query);
@@ -182,7 +184,7 @@ public class ModelRoleService {
     private boolean isRoleNameExists(String roleName, Long userId) {
         ModelRolePo query = new ModelRolePo();
         query.setName(roleName);
-        query.setUserId(userId);
+        query.setPlayer(Any.of().val("id",userId).as(PlayerPo.class));
         
         SimpleExample<ModelRolePo> example = SimpleExample.of(query);
         // 使用精确匹配，SimpleExample默认就是精确匹配

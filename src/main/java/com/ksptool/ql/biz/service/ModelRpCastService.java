@@ -1,9 +1,11 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ModelRoleRepository;
 import com.ksptool.ql.biz.mapper.ModelUserRoleRepository;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.po.ModelUserRolePo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +61,7 @@ public class ModelRpCastService {
         // 创建查询条件
         ModelRolePo query = new ModelRolePo();
         query.setId(mRoleId);
-        query.setUserId(AuthService.getCurrentUserId());
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         // 使用Example查询
         return modelRoleRepository.findOne(Example.of(query)).orElse(null);

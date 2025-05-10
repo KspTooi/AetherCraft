@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
@@ -97,7 +98,7 @@ public class ModelRpService {
         var query = new ModelRolePo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件
         query.setStatus(1);              // 设置状态为 1 (通常表示有效或启用)
-        query.setUserId(AuthService.getCurrentUserId()); // 按当前用户过滤
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 按当前人物过滤
 
         // 创建 SimpleExample 用于构建查询条件
         SimpleExample<ModelRolePo> example = SimpleExample.of(query);
