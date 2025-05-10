@@ -150,7 +150,7 @@ public class ModelRpService {
         }
 
         //查询激活的存档
-        ModelRpThreadPo threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId());
+        ModelRpThreadPo threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId(),AuthService.getCurrentPlayerId());
 
         //newThread=0 创建新存档
         if(dto.getNewThread() == 0 || threadCt == null) {
@@ -171,7 +171,7 @@ public class ModelRpService {
 
             //调用剧本服务创建新存档
             scriptService.createNewThread(userPlayRoleCt,modelPlayRoleCt,dto.getModelCode());
-            threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId());
+            threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId(),AuthService.getCurrentPlayerId());
         }
 
         //查询模型扮演的角色 + 用户扮演的角色

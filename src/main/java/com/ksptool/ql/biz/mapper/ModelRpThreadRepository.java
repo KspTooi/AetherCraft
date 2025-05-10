@@ -24,10 +24,10 @@ public interface ModelRpThreadRepository extends JpaRepository<ModelRpThreadPo, 
            LEFT JOIN FETCH t.histories h
            LEFT JOIN FETCH t.userRole
            LEFT JOIN FETCH t.modelRole
-           WHERE t.modelRole.id = :modelRoleId AND t.active = 1
+           WHERE t.modelRole.id = :modelRoleId AND t.player.id = :playerId AND t.active = 1
            ORDER BY h.sequence ASC
            """)
-    ModelRpThreadPo getActiveThreadWithRoleAndHistories(@Param("modelRoleId") Long modelRoleId);
+    ModelRpThreadPo getActiveThreadWithRoleAndHistories(@Param("modelRoleId") Long modelRoleId,@Param("playerId")Long playerId);
 
     /**
      * 批量设置用户的所有对话存档状态
