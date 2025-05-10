@@ -33,4 +33,15 @@ public interface UserRepository extends JpaRepository<UserPo, Long> {
             WHERE u.id = :userId
             """)
     List<PermissionPo> findUserPermissions(@Param("userId") Long userId);
+
+    @Query("""
+            SELECT u
+            FROM UserPo u
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM PlayerPo p
+                WHERE p.user = u
+            )
+            """)
+    List<UserPo> getNoPlayerUsers();
 }

@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.biz.service.admin.AdminPermissionService;
+import com.ksptool.ql.biz.service.admin.AdminPlayerService;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 维护工具控制器
  */
 @Controller
-@RequestMapping("/admin/maintain")
+@RestController("/admin/maintain")
 public class AdminMaintainController {
 
     @Autowired
@@ -31,7 +33,9 @@ public class AdminMaintainController {
 
     @Autowired
     private GlobalConfigService globalConfigService;
-    
+    @Autowired
+    private AdminPlayerService adminPlayerService;
+
     /**
      * 校验系统内置权限节点
      * 检查数据库中是否存在所有系统内置权限，如果不存在则自动创建
@@ -104,4 +108,18 @@ public class AdminMaintainController {
             return Result.error("校验系统配置项失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 强制为所有没有Player的玩家创建一个Player
+     */
+    @PostMapping("/forceCreatePlayers")
+    @RequirePermissionRest("admin:maintain:force:create:player")
+    public Result<String> forceCreatePlayers() {
+        try{
+            return Result.success(adminPlayerService.forceCreatePlayers());
+        }catch (Exception e){
+            return Result.error(e.getMessage());
+        }
+    }
+
 } 

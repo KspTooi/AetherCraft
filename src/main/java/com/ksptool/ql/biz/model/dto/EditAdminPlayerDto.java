@@ -1,12 +1,7 @@
 package com.ksptool.ql.biz.model.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Max;
 import lombok.Data;
-import org.hibernate.annotations.Comment;
-
 import java.util.List;
 
 @Data

@@ -1,14 +1,18 @@
 package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
+import com.ksptool.ql.biz.mapper.PlayerDefaultGroupRepository;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
+import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.GetAdminPlayerListDto;
 import com.ksptool.ql.biz.model.dto.EditAdminPlayerDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +23,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.ksptool.entities.Entities.assign;
 
@@ -29,12 +35,21 @@ import static com.ksptool.entities.Entities.assign;
 public class AdminPlayerService {
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private PlayerRepository repository;
 
     @Autowired
     private AuthService authService;
+
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private ContentSecurityService css;
+    @Autowired
+    private PlayerDefaultGroupRepository playerDefaultGroupRepository;
 
     public RestPageableView<GetAdminPlayerListVo> getPlayerList(GetAdminPlayerListDto dto) {
 
@@ -127,4 +142,45 @@ public class AdminPlayerService {
         }
         return new HashSet<>(groupRepository.findAllById(groupIds));
     }
+
+
+    public String forceCreatePlayers() throws BizException{
+
+        //查找所有未创建Player的用户
+        List<UserPo> noPlayerUsers = userRepository.getNoPlayerUsers();
+
+        // 获取默认访问组
+        Set<GroupPo> defaultGroupList = playerDefaultGroupRepository.getDefaultGroupList();
+
+        List<PlayerPo> playerPos = new ArrayList<>();
+
+        for(var user : noPlayerUsers){
+
+            var plName = user.getUsername()+"'s_player";
+
+            //创建新玩家实体
+            PlayerPo create = new PlayerPo();
+            create.setName(plName);
+            create.setGender(2); //性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
+            create.setGenderData(null);
+            create.setUser(user);
+            create.setAvatarUrl(null);
+            create.setPublicInfo("player created by the system");
+            create.setDescription(null);
+            create.setBalance(BigDecimal.ZERO); // 设置初始余额为0
+            create.setLanguage("中文");
+            create.setEra(null);
+            create.setContentFilterLevel(1); // 内容过滤等级 0:不过滤 1:普通 2:严格
+            create.setStatus(1); //初始状态为不活跃
+            css.encryptEntity(create);
+            // 将默认访问组关联到新玩家
+            create.setGroups(defaultGroupList);
+            playerPos.add(create);
+        }
+
+        //批量保存新玩家
+        repository.saveAll(playerPos);
+        return "已为"+noPlayerUsers.size()+"个用户强制创建人物";
+    }
+
 }

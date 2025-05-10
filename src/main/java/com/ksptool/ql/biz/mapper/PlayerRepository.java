@@ -16,12 +16,8 @@ import java.util.List;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpecificationExecutor<PlayerPo> {
+
     boolean existsByName(String name);
-
-
-
-
-
 
     @Query("""
            SELECT p FROM PlayerPo p
