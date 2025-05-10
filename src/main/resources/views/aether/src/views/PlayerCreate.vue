@@ -51,6 +51,26 @@
             </div>
           </div>
         </div>
+
+        <div class="form-row">
+          <GlowSelector
+            v-model="details.gender"
+            title="性别"
+            :options="genderOptions"
+            value-key="value"
+            label-key="label"
+            notBlank
+          />
+          <GlowInput
+            v-if="isCustomGender"
+            v-model="details.genderData"
+            title="自定义性别"
+            :maxLength="20"
+            showLength
+            notBlank
+            placeholder="请输入自定义性别"
+          />
+        </div>
         
         <div class="form-row">
           <GlowInput
@@ -128,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, inject } from "vue";
+import { reactive, ref, computed, inject, watch } from "vue";
 import { useRouter, useRoute } from 'vue-router';
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
@@ -163,7 +183,9 @@ const details = reactive<CreatePlayerDto>({
   era: "",
   language: "中文", // Default language
   name: "",
-  publicInfo: ""
+  publicInfo: "",
+  gender: 0, // Default to 男
+  genderData: ""
 });
 
 const filterLevelOptions = [
@@ -172,10 +194,30 @@ const filterLevelOptions = [
   { label: "严格", value: 2 },
 ];
 
+const genderOptions = [
+  { label: "男", value: 0 },
+  { label: "女", value: 1 },
+  { label: "不愿透露", value: 2 },
+  { label: "自定义(男性)", value: 4 },
+  { label: "自定义(女性)", value: 5 },
+  { label: "自定义(其他)", value: 6 },
+];
+
+const isCustomGender = computed(() => {
+  return [4, 5, 6].includes(details.gender);
+});
+
+// Watch for changes in gender and clear genderData if not custom
+watch(() => details.gender, (newGender) => {
+  if (![4, 5, 6].includes(newGender)) {
+    details.genderData = "";
+  }
+});
+
 
 const checkNameAvailability = async (name: string) => {
 
-  if(!await PlayerApi.checkPlayerName({ name })){
+  if(!await PlayerApi.checkPlayerName({ name })){    
     isNameAvailable.value = false;
     return
   }
@@ -184,6 +226,10 @@ const checkNameAvailability = async (name: string) => {
 
 // --- Form Validation ---
 const isFormValid = computed(() => {
+  // Check if custom gender is selected and genderData is empty
+  if (isCustomGender.value && details.genderData?.trim() === "") {
+    return false;
+  }
   return (
     isNameAvailable.value &&
     details.language.trim() !== ""

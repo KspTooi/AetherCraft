@@ -216,6 +216,8 @@ public class PlayerService {
         //创建新玩家实体
         PlayerPo create = new PlayerPo();
         create.setName(dto.getName());
+        create.setGender(dto.getGender());
+        create.setGenderData(dto.getGenderData());
         create.setUser(user);
         create.setAvatarUrl(dto.getAvatarUrl());
         create.setPublicInfo(dto.getPublicInfo());
@@ -235,8 +237,6 @@ public class PlayerService {
 
         //保存新玩家
         repository.save(create);
-
-
         return create.getId() + "";
     }
 

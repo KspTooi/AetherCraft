@@ -18,6 +18,8 @@ export interface GetPlayerListVo {
 
 export interface CreatePlayerDto {
     name: string;              // (明文)人物角色名称
+    gender: number;            // 性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
+    genderData?: string;       // (密文)自定义性别种类 gender为4 5 6时必填
     publicInfo?: string;       // (明文)个人信息
     description?: string;      // (密文)人物角色描述
     language: string;          // 语言 如 中文,English,zh-CN,en-US
@@ -38,12 +40,14 @@ export interface CheckPlayerNameDto {
 
 export interface EditAttachPlayerDetailsDto {
     id: string;                 // 人物ID (根据Java @NotNull，设为必须)
-    publicInfo?: string;       // (明文)个人信息
-    description?: string;      // (密文)人物角色描述
-    language?: string;          // 语言 (Java非NotNull, 设为可选)
-    era?: string;              // 年代 (Java非NotNull, 设为可选)
-    contentFilterLevel?: number; // 内容过滤等级 (Java非NotNull, 设为可选)
-    avatarUrl?: string;        // 头像路径 (Java非NotNull, 设为可选)
+    avatarUrl?: string;         // 头像路径
+    gender: number;             // 性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
+    genderData?: string;        // (密文)自定义性别种类 gender为4 5 6时必填
+    publicInfo?: string;        // (明文)个人信息
+    description?: string;       // (密文)人物角色描述
+    language: string;           // 语言 如 中文,English,zh-CN,en-US
+    era?: string;               // 年代 如 古代,中世纪,现代,未来,赛博朋克,80S,90S,2025-01-01
+    contentFilterLevel: number; // 内容过滤等级
 }
 
 export interface GetAttachPlayerDetailsVo {
