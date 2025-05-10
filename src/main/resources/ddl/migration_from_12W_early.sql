@@ -167,3 +167,27 @@ COMMIT;
 --迁移modelChatSegment缓存 结束
 
 
+--迁移model_roles
+BEGIN;
+ALTER TABLE IF EXISTS model_roles ADD COLUMN player_id bigint;
+
+UPDATE model_roles
+SET player_id = -1
+WHERE player_id IS NULL;
+
+ALTER TABLE IF EXISTS model_roles ALTER COLUMN player_id bigint NOT NULL;
+
+--已有ModelRoles变更到用户下第一个人物
+UPDATE model_roles c
+SET player_id = (
+    SELECT p.id
+    FROM player p
+    WHERE p.user_id = c.user_id
+    ORDER BY p.create_time ASC
+    LIMIT 1
+    )
+WHERE c.player_id = -1;
+
+ALTER TABLE IF EXISTS model_roles DROP COLUMN user_id;
+COMMIT;
+
