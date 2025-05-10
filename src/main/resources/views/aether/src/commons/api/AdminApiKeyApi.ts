@@ -42,21 +42,23 @@ export interface SaveApiKeyDto {
 
 export interface GetApiKeyAuthorizationListDto extends PageQuery {
     apiKeyId: string;          // 对应的ApiKey ID
-    authorizedUserName: string | null; // 被授权用户名
+    authorizedPlayerName: string | null; // 被授权者人物名
 }
 
 export interface GetApiKeyAuthorizationListVo {
     id: string;             // 授权记录ID
-    authorizedUserName: string; // 被授权用户名
+    authorizedPlayerName: string; // 被授权者人物名
     usageCount: string;     // 已使用次数
     usageLimit: string | null; // 使用次数限制 (null表示无限制)
     expireTime: string | null; // 过期时间 (null表示永不 किंवा)
     status: number;         // 状态：0-禁用，1-启用
+    createTime: string;     // 创建时间
 }
 
 export interface GetApiKeyAuthorizationDetailsVo {
     id: string;             // 授权记录ID
-    authorizedUserName: string; // 被授权用户名
+    apiKeyId: string;       // API密钥ID
+    authorizedPlayerName: string; // 被授权者人物名
     usageLimit: string | null; // 使用次数限制 (null表示无限制)
     expireTime: string | null; // 过期时间 (null表示永不 किंवा)
     status: number;         // 状态：0-禁用，1-启用
@@ -66,8 +68,8 @@ export interface GetApiKeyAuthorizationDetailsVo {
 
 export interface SaveApiKeyAuthorizationDto {
     id?: string | null;        // 授权记录ID (新增时为null)
-    apiKeyId: string;          // 对应的ApiKey ID
-    authorizedUserName: string; // 被授权用户名
+    apiKeyId: string;          // API密钥ID
+    authorizedPlayerName: string; // 被授权者人物名
     usageLimit: string | null; // 使用次数限制 (null表示无限制)
     expireTime: string | null; // 过期时间 (null表示永不 किंवा)
     status: number;         // 状态：0-禁用，1-启用

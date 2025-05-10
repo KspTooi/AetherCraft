@@ -6,10 +6,10 @@
         <el-button @click="goBackToApiKeyManager" icon="Back">返回密钥管理</el-button>
       </div>
       <el-form :model="query" inline>
-        <el-form-item label="授权用户">
+        <el-form-item label="被授权人物">
           <el-input 
-            v-model="query.authorizedUserName" 
-            placeholder="输入授权用户名" 
+            v-model="query.authorizedPlayerName" 
+            placeholder="输入被授权人物名称" 
             clearable 
             style="width: 200px"
           />
@@ -32,8 +32,8 @@
         v-loading="loading"
       >
         <el-table-column 
-          prop="authorizedUserName" 
-          label="授权用户" 
+          prop="authorizedPlayerName" 
+          label="被授权人物名称" 
           min-width="150"
           show-overflow-tooltip
         />
@@ -136,11 +136,11 @@
         label-width="120px"
         :validate-on-rule-change="false"
       >
-        <el-form-item label="授权用户" prop="authorizedUserName">
+        <el-form-item label="人物名称" prop="authorizedPlayerName">
           <el-input 
-            v-model="details.authorizedUserName" 
+            v-model="details.authorizedPlayerName" 
             :disabled="mode === 'update'"
-            placeholder="请输入授权用户名"
+            placeholder="请输入被授权人物名称"
           />
         </el-form-item>
         <el-form-item label="使用次数限制" prop="usageLimit">
@@ -203,7 +203,7 @@ const mode = ref<"insert" | "update">("insert");
 
 const query = reactive<GetApiKeyAuthorizationListDto>({
   apiKeyId: route.query.apiKeyId as string || "",
-  authorizedUserName: null,
+  authorizedPlayerName: null,
   page: 1,
   pageSize: 10
 });
@@ -219,7 +219,7 @@ const formRef = ref<FormInstance>();
 const details = reactive<GetApiKeyAuthorizationDetailsVo & { apiKeyId?: string }>({
   id: "",
   apiKeyId: query.apiKeyId,
-  authorizedUserName: "",
+  authorizedPlayerName: "",
   usageLimit: null,
   usageCount: "",
   expireTime: "",
@@ -229,7 +229,7 @@ const details = reactive<GetApiKeyAuthorizationDetailsVo & { apiKeyId?: string }
 
 // 表单校验规则
 const rules = {
-  authorizedUserName: [
+  authorizedPlayerName: [
     { 
       validator: (rule: any, value: string, callback: Function) => {
         if (mode.value === 'update') {
@@ -238,7 +238,7 @@ const rules = {
         }
         
         if (!value) {
-          callback(new Error('请输入授权用户名'));
+          callback(new Error('请输入授权人物名'));
           return;
         }
         
@@ -317,7 +317,7 @@ const loadList = async () => {
 
 // 重置查询条件
 const resetQuery = () => {
-  query.authorizedUserName = null;
+  query.authorizedPlayerName = null;
   query.page = 1;
   query.pageSize = 10;
   loadList();
@@ -326,7 +326,7 @@ const resetQuery = () => {
 // 重置表单
 const resetForm = () => {
   details.id = "";
-  details.authorizedUserName = "";
+  details.authorizedPlayerName = "";
   details.usageLimit = null;
   details.expireTime = "";
   details.status = 1;
@@ -372,7 +372,7 @@ const save = async () => {
       const dto: SaveApiKeyAuthorizationDto = {
         id: mode.value === 'update' ? details.id : null,
         apiKeyId: query.apiKeyId,
-        authorizedUserName: details.authorizedUserName,
+        authorizedPlayerName: details.authorizedPlayerName,
         usageLimit: details.usageLimit,
         expireTime: details.expireTime,
         status: details.status
@@ -396,7 +396,7 @@ const save = async () => {
 const remove = async (row: GetApiKeyAuthorizationListVo) => {
   try {
     await ElMessageBox.confirm(
-      `确定要移除对 ${row.authorizedUserName} 的授权吗？`,
+      `确定要移除对 ${row.authorizedPlayerName} 的授权吗？人物授权将被删除且无法恢复。`,
       '警告',
       {
         confirmButtonText: '确定',
@@ -441,7 +441,7 @@ onMounted(() => {
   
   // 仅设置 apiKeyId
   query.apiKeyId = routeQuery.apiKeyId as string;
-  query.authorizedUserName = null;
+  query.authorizedPlayerName = null;
   query.page = 1;
   query.pageSize = 10;
   

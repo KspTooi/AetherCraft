@@ -90,7 +90,7 @@ public class AdminModelConfigService {
         vo.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 4096);
 
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
-        vo.setApiKeys(apiKeyService.getCurrentUserAvailableApiKey(byCode.getSeries()));
+        vo.setApiKeys(apiKeyService.getCurrentPlayerAvailableApiKey(byCode.getSeries()));
 
         // 获取当前使用的API密钥ID
         ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(byCode.getCode(),userId);

@@ -56,7 +56,7 @@ public class ApiKeyService {
         if (config == null) {
 
             //查询该人物下是否拥有任意一个可用的密钥
-            List<AvailableApiKeyVo> availableApiKey = getCurrentUserAvailableApiKey(AIModelEnum.getByCode(modelCode).getSeries());
+            List<AvailableApiKeyVo> availableApiKey = getCurrentPlayerAvailableApiKey(AIModelEnum.getByCode(modelCode).getSeries());
 
             if(availableApiKey.isEmpty()){
                 throw new BizException("未找到模型API密钥配置");
@@ -105,9 +105,9 @@ public class ApiKeyService {
      * @param series 模型系列，如 Gemini、Grok 等
      * @return 匹配系列的 API 密钥列表
      */
-    public List<AvailableApiKeyVo> getCurrentUserAvailableApiKey(String series) {
-        // 获取当前用户ID
-        Long userId = AuthService.getCurrentUserId();
+    public List<AvailableApiKeyVo> getCurrentPlayerAvailableApiKey(String series) {
+
+        // 获取当前人物ID
         Long playerId = AuthService.getCurrentPlayerId();
 
         List<AvailableApiKeyVo> result = new ArrayList<>();
@@ -149,8 +149,8 @@ public class ApiKeyService {
 
         if (authorizedKeys != null && !authorizedKeys.isEmpty()) {
             for (ApiKeyPo key : authorizedKeys) {
-                // 此处不需要再次检查status和series，因为JPQL查询已经过滤了
 
+                // 此处不需要再次检查status和series，因为JPQL查询已经过滤了
                 ApiKeyAuthorizationPo auth = apiKeyAuthorizationRepository.findByApiKeyIdAndAuthorizedPlayerId(key.getId(), playerId);
 
                 // 检查使用限制

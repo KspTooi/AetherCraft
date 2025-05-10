@@ -15,7 +15,7 @@ export interface AvailableApiKeyVo {
     apiKeyId: number;     // API密钥ID
     keyName: string;      // 密钥名称
     keySeries: string;    // 密钥系列
-    ownerUsername: string; // 所属用户名
+    ownerPlayerName: string; // 所属人物名称
 }
 
 export interface GetAdminModelConfigVo {

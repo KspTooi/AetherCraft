@@ -23,7 +23,7 @@
                 <el-option
                   v-for="key in curModelConfig.apiKeys"
                   :key="key.apiKeyId"
-                  :label="key.ownerUsername ? `${key.keyName} (${key.keySeries}) 授权自${key.ownerUsername}` : `${key.keyName} (${key.keySeries})`"
+                  :label="key.ownerPlayerName ? `${key.keyName} (${key.keySeries}) 授权自${key.ownerPlayerName}` : `${key.keyName} (${key.keySeries})`"
                   :value="key.apiKeyId"
                 />
               </el-select>
