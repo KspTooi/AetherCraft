@@ -11,7 +11,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "api_key_authorizations", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"api_key_id", "authorized_user_id"},name = "uk_api_authorized"))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"api_key_id", "authorized_player_id"},name = "uk_api_authorized"))
 @Data
 public class ApiKeyAuthorizationPo {
 
@@ -29,9 +29,19 @@ public class ApiKeyAuthorizationPo {
     @Comment("授权者用户ID")
     private Long authorizerUserId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "authorizer_player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("授权者人物ID")
+    private PlayerPo authorizerPlayer;
+
     @Column(name = "authorized_user_id", nullable = false)
     @Comment("被授权的用户ID")
     private Long authorizedUserId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "authorized_player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("被授权者人物ID")
+    private PlayerPo authorizedPlayer;
 
     @Column(name = "usage_limit")
     @Comment("使用次数限制，null表示无限制")

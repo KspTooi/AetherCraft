@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.model.po;
 import com.ksptool.ql.commons.web.ExampleQuery;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.Comment;
 import java.util.Date;
 
@@ -10,9 +11,10 @@ import java.util.Date;
  * API密钥实体类
  * 用于存储用户的API密钥信息
  */
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "api_keys",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "keyName"},name = "uk_user_key_name")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "keyName"},name = "uk_player_key_name")
 )
 @Data
 public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
@@ -26,6 +28,11 @@ public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("所属用户")
     private UserPo user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("所属人物")
+    private PlayerPo player;
 
     @Column(name = "key_name", nullable = false, length = 50)
     @Comment("密钥名称")

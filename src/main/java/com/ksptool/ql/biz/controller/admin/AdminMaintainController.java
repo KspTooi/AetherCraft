@@ -34,6 +34,7 @@ public class AdminMaintainController {
 
     @Autowired
     private GlobalConfigService globalConfigService;
+
     @Autowired
     private AdminPlayerService adminPlayerService;
 
