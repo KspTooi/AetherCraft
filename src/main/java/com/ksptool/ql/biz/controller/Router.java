@@ -181,7 +181,7 @@ public class Router {
         // 获取重定向参数
         String redirectView = request.getParameter("redirect");
         
-        ModelAndView mav = new ModelAndView("redirect:/panel/model/user-role/list");
+        ModelAndView mav = new ModelAndView("redirect:/panel/model/role/list");
         mav.addObject("title", "管理台");
 
         // 如果指定了视图参数，则重定向到指定视图
