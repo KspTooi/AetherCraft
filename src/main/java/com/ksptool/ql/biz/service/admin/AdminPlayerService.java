@@ -81,12 +81,13 @@ public class AdminPlayerService {
                 .orElseThrow(() -> new BizException("要编辑的玩家不存在"));
 
         var oldStatus = playerPo.getStatus();
+        var oldGender = playerPo.getGender();
+        var oldGenderData = playerPo.getGenderData();
 
         // 先使用 assign 更新所有 DTO 中存在的字段
         assign(dto, playerPo);
 
         // 然后，如果 DTO 中传入了 status，则进行覆盖和校验
-
         if(dto.getStatus() != oldStatus){
             if (dto.getStatus() != null) {
                 // 校验状态值是否为 1 或 3
@@ -101,6 +102,12 @@ public class AdminPlayerService {
 
         if (dto.getStatus() == null){
             playerPo.setStatus(oldStatus);
+        }
+
+        //前端传空则不更改性别
+        if (dto.getGender() == null){
+            playerPo.setGender(oldGender);
+            playerPo.setGenderData(oldGenderData);
         }
 
         //处理访问组

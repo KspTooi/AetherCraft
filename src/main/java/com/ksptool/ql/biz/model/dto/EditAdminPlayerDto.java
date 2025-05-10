@@ -1,9 +1,11 @@
 package com.ksptool.ql.biz.model.dto;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 import lombok.Data;
+import org.hibernate.annotations.Comment;
 
 import java.util.List;
 
@@ -16,6 +18,9 @@ public class EditAdminPlayerDto {
 
     //头像路径
     private String avatarUrl;
+
+    //性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他) 管理台只能修改为0 1 2
+    private Integer gender;
 
     //个人信息
     private String publicInfo;

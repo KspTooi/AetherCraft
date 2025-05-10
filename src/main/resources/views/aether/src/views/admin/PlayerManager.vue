@@ -146,6 +146,9 @@
           <el-form-item label="余额(CU)">
             <el-input v-model="details.balance" disabled />
           </el-form-item>
+          <el-form-item label="玩家性别">
+            <el-input :value="formatGender(details.gender)" disabled />
+          </el-form-item>
           <el-form-item label="创建时间">
             <el-input :value="formatDate(details.createTime)" disabled />
           </el-form-item>
@@ -162,6 +165,16 @@
           <!-- 可编辑字段 -->
           <el-form-item label="头像URL" prop="avatarUrl">
             <el-input v-model="editForm.avatarUrl" placeholder="请输入头像URL" clearable/>
+          </el-form-item>
+          <el-form-item label="设置性别" prop="gender">
+            <el-select v-model="editForm.gender" placeholder="选择性别 (仅限男/女/不愿透露)">
+              <el-option label="男" :value="0" />
+              <el-option label="女" :value="1" />
+              <el-option label="不愿透露" :value="2" />
+            </el-select>
+            <el-tooltip content="管理后台只能将性别设置为男(0), 女(1)或不愿透露(2)" placement="top">
+                <el-icon style="margin-left: 5px; cursor: help;"><QuestionFilled /></el-icon>
+            </el-tooltip>
           </el-form-item>
           <el-form-item label="公开信息" prop="publicInfo">
             <el-input v-model="editForm.publicInfo" type="textarea" :rows="3" placeholder="请输入公开信息" />
@@ -264,6 +277,7 @@ const details = reactive<GetAdminPlayerDetailsVo>({
   contentFilterLevel: 0,
   createTime: "",
   era: "",
+  gender: undefined, // 添加 gender 初始化
   id: "",
   language: "",
   lastActiveTime: "",
@@ -277,8 +291,9 @@ const details = reactive<GetAdminPlayerDetailsVo>({
 })
 
 // 编辑表单接口，包含 groupIds
-interface PlayerEditForm extends Omit<EditAdminPlayerDto, 'status' | 'groupIds'> {
+interface PlayerEditForm extends Omit<EditAdminPlayerDto, 'status' | 'groupIds' | 'gender'> {
     status: number | undefined;
+    gender: number | undefined; // 添加 gender
     groupIds: string[]; // 添加 groupIds
 }
 
@@ -291,6 +306,7 @@ const editForm = reactive<PlayerEditForm>({
   era: "",
   contentFilterLevel: 0,
   status: undefined,
+  gender: undefined, // 添加 gender 初始化
   groupIds: [] // 添加 groupIds 初始化
 })
 
@@ -312,6 +328,7 @@ const rules = {
   publicInfo: [ { max: 40000, message: '公开信息过长', trigger: 'blur' } ],
   language: [ { max: 24, message: '语言不能超过24个字符', trigger: 'blur' } ],
   era: [ { max: 32, message: '年代不能超过32个字符', trigger: 'blur' } ],
+  gender: [], // 性别由下拉框约束
   status: [], // 状态由下拉框约束
   groupIds: [] // 访问组不需要校验规则
 }
@@ -330,6 +347,18 @@ const getStatusTagType = (status: number) => {
   switch (status) {
     case 0: return 'success'; case 1: return 'info'; case 2: return 'warning'; case 3: return 'danger'; default: return 'info';
   }
+}
+const formatGender = (gender: number | undefined): string => {
+    if (gender === undefined) return '-';
+    switch (gender) {
+        case 0: return '男';
+        case 1: return '女';
+        case 2: return '不愿透露';
+        case 4: return '自定义(男性)';
+        case 5: return '自定义(女性)';
+        case 6: return '自定义(其他)';
+        default: return `未知 (${gender})`;
+    }
 }
 
 // --- 核心逻辑函数 ---
@@ -371,7 +400,7 @@ const resetQuery = async () => {
 const resetEditForm = () => {
     editForm.id = ""; editForm.avatarUrl = ""; editForm.publicInfo = "";
     editForm.language = ""; editForm.era = ""; editForm.contentFilterLevel = 0;
-    editForm.status = undefined; editForm.groupIds = []; // 重置 groupIds
+    editForm.status = undefined; editForm.gender = undefined; editForm.groupIds = []; // 重置 groupIds
 
     if (formRef.value) { formRef.value.resetFields(); }
 }
@@ -390,12 +419,13 @@ const openUpdateModal = async (row: GetAdminPlayerListVo) => {
 
     // 填充可编辑表单
     editForm.id = details.id;
-    editForm.avatarUrl = details.avatarUrl;
-    editForm.publicInfo = details.publicInfo;
-    editForm.language = details.language;
-    editForm.era = details.era;
-    editForm.contentFilterLevel = details.contentFilterLevel;
+    editForm.avatarUrl = details.avatarUrl || ""; // 处理 undefined
+    editForm.publicInfo = details.publicInfo || "";
+    editForm.language = details.language || "";
+    editForm.era = details.era || "";
+    editForm.contentFilterLevel = details.contentFilterLevel === undefined ? 0 : details.contentFilterLevel;
     editForm.status = details.status === 1 || details.status === 3 ? details.status : undefined;
+    editForm.gender = details.gender === 0 || details.gender === 1 || details.gender === 2 ? details.gender : undefined;
     editForm.groupIds = details.groupIds || []; // 填充 groupIds
 
     dialogVisible.value = true;
@@ -457,18 +487,20 @@ const edit = async () => {
        const payload: EditAdminPlayerDto = {
            id: editForm.id, // ID 始终从 editForm 获取 (在打开 modal 时已设置)
            avatarUrl: mode.value === 'update' ? editForm.avatarUrl : details.avatarUrl,
+           gender: mode.value === 'update' ? editForm.gender : details.gender,
            publicInfo: mode.value === 'update' ? editForm.publicInfo : details.publicInfo,
            language: mode.value === 'update' ? editForm.language : details.language,
            era: mode.value === 'update' ? editForm.era : details.era,
            contentFilterLevel: mode.value === 'update' ? editForm.contentFilterLevel : details.contentFilterLevel,
-           // status: 在 update 模式下，如果 editForm.status 有值(1或3)则用它，否则用 details 的原始 status；在 group 模式下，始终用 details 的原始 status
            status: mode.value === 'update'
                      ? (editForm.status !== undefined ? editForm.status : details.status)
                      : details.status,
-           // groupIds: 在 update 模式下，用 details 的原始 groupIds；在 group 模式下，用 editForm 的 groupIds
            groupIds: mode.value === 'update' ? details.groupIds : editForm.groupIds
        };
-
+        // 如果 gender 是 undefined，从 payload 中删除它，避免发送 null
+       if (payload.gender === undefined) {
+           delete payload.gender;
+       }
 
        console.log(`尝试保存 (${mode.value}模式):`, payload);
        await AdminPlayerApi.editPlayer(payload); // API 需要完整的 DTO
