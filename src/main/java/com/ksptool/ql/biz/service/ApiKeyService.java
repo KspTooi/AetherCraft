@@ -1,12 +1,10 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
-import com.ksptool.ql.biz.model.po.ApiKeyPo;
-import com.ksptool.ql.biz.model.po.UserPo;
-import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
-import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -44,20 +42,20 @@ public class ApiKeyService {
 
 
     /**
-     * 根据模型代码和用户ID获取API密钥
+     * 根据模型代码和人物ID获取API密钥
      * @param modelCode 模型代码
-     * @param userId 用户ID
+     * @param playerId 用户ID
      * @return API密钥字符串
      * @throws BizException 当无权限或配置不存在时
      */
     @Transactional(rollbackFor = Exception.class)
-    public String getApiKey(String modelCode, Long userId) throws BizException {
+    public String getApiKey(String modelCode, Long playerId) throws BizException {
 
-        ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelCode, userId);
+        ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(modelCode, playerId);
 
         if (config == null) {
 
-            //查询该用户下是否拥有任意一个可用的密钥
+            //查询该人物下是否拥有任意一个可用的密钥
             List<AvailableApiKeyVo> availableApiKey = getCurrentUserAvailableApiKey(AIModelEnum.getByCode(modelCode).getSeries());
 
             if(availableApiKey.isEmpty()){
@@ -66,7 +64,7 @@ public class ApiKeyService {
 
             //自动为用户绑定第一个可用的密钥
             config = new ModelApiKeyConfigPo();
-            config.setUserId(userId);
+            config.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
             config.setModelCode(modelCode);
             config.setApiKeyId(availableApiKey.getFirst().getApiKeyId());
             modelApiKeyConfigRepository.save(config);
@@ -75,7 +73,7 @@ public class ApiKeyService {
         ApiKeyPo apiKey = repository.findById(config.getApiKeyId())
             .orElseThrow(() -> new BizException("API密钥不存在"));
 
-        if (apiKey.getUser().getId().equals(userId)) {
+        if (apiKey.getPlayer().getId().equals(playerId)) {
             // 更新使用次数和最后使用时间
             apiKey.setUsageCount(apiKey.getUsageCount() + 1);
             apiKey.setLastUsedTime(new Date());
@@ -83,14 +81,14 @@ public class ApiKeyService {
             return apiKey.getKeyValue();
         }
 
-        if (authRepository.countByAuthorized(userId, apiKey.getId(), 1) > 0) {
+        if (authRepository.countByAuthorized(playerId, apiKey.getId(), 1) > 0) {
             // 更新使用次数和最后使用时间
             apiKey.setUsageCount(apiKey.getUsageCount() + 1);
             apiKey.setLastUsedTime(new Date());
             repository.save(apiKey);
 
             // 更新授权记录的使用次数
-            ApiKeyAuthorizationPo auth = authRepository.findByApiKeyIdAndAuthorizedUserId(apiKey.getId(), userId);
+            ApiKeyAuthorizationPo auth = authRepository.findByApiKeyIdAndAuthorizedPlayerId(apiKey.getId(), playerId);
             if (auth != null) {
                 auth.setUsageCount(auth.getUsageCount() + 1);
                 authRepository.save(auth);
@@ -103,21 +101,22 @@ public class ApiKeyService {
 
 
     /**
-     * 获取当前用户特定模型系列可用的API密钥列表
+     * 获取当前人物特定模型系列可用的API密钥列表
      * @param series 模型系列，如 Gemini、Grok 等
      * @return 匹配系列的 API 密钥列表
      */
     public List<AvailableApiKeyVo> getCurrentUserAvailableApiKey(String series) {
         // 获取当前用户ID
         Long userId = AuthService.getCurrentUserId();
+        Long playerId = AuthService.getCurrentPlayerId();
 
         List<AvailableApiKeyVo> result = new ArrayList<>();
 
         // 创建查询对象
         ApiKeyPo probe = new ApiKeyPo();
-        UserPo userPo = new UserPo();
-        userPo.setId(userId);
-        probe.setUser(userPo);
+        PlayerPo playerPo = new PlayerPo();
+        playerPo.setId(playerId);
+        probe.setPlayer(playerPo);
         probe.setStatus(1);
 
         // 如果指定了系列，设置系列条件
@@ -140,19 +139,19 @@ public class ApiKeyService {
                 vo.setApiKeyId(key.getId());
                 vo.setKeyName(key.getKeyName());
                 vo.setKeySeries(key.getKeySeries());
-                vo.setOwnerUsername("");
+                vo.setOwnerPlayerName("");
                 result.add(vo);
             }
         }
 
         // 查询被授权的API密钥 - 使用新的JPQL查询
-        List<ApiKeyPo> authorizedKeys = apiKeyAuthorizationRepository.getApiKeyFromAuthorized(userId, 1, series);
+        List<ApiKeyPo> authorizedKeys = apiKeyAuthorizationRepository.getApiKeyFromAuthorized(playerId, 1, series);
 
         if (authorizedKeys != null && !authorizedKeys.isEmpty()) {
             for (ApiKeyPo key : authorizedKeys) {
                 // 此处不需要再次检查status和series，因为JPQL查询已经过滤了
 
-                ApiKeyAuthorizationPo auth = apiKeyAuthorizationRepository.findByApiKeyIdAndAuthorizedUserId(key.getId(), userId);
+                ApiKeyAuthorizationPo auth = apiKeyAuthorizationRepository.findByApiKeyIdAndAuthorizedPlayerId(key.getId(), playerId);
 
                 // 检查使用限制
                 if (auth.getUsageLimit() != null && auth.getUsageCount() >= auth.getUsageLimit()) {
@@ -168,7 +167,7 @@ public class ApiKeyService {
                 vo.setApiKeyId(key.getId());
                 vo.setKeyName(key.getKeyName());
                 vo.setKeySeries(key.getKeySeries());
-                vo.setOwnerUsername(key.getUser().getUsername());
+                vo.setOwnerPlayerName(key.getPlayer().getName());
                 result.add(vo);
             }
         }

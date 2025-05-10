@@ -18,7 +18,6 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RestController;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
-
 import java.util.List;
 
 @RestController

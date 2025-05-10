@@ -14,7 +14,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "api_keys",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "keyName"},name = "uk_player_key_name")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "key_name"},name = "uk_player_key_name")
 )
 @Data
 public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
@@ -23,11 +23,6 @@ public class ApiKeyPo extends ExampleQuery<ApiKeyPo> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("API密钥ID")
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("所属用户")
-    private UserPo user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

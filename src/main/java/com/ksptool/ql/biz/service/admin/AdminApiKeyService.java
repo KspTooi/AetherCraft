@@ -1,16 +1,10 @@
 package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
-import com.ksptool.ql.biz.mapper.ApiKeyRepository;
-import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
-import com.ksptool.ql.biz.mapper.UserRepository;
-import com.ksptool.ql.biz.model.po.ApiKeyAuthorizationPo;
-import com.ksptool.ql.biz.model.po.ApiKeyPo;
-import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.mapper.*;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ksptool.ql.biz.model.dto.GetApiKeyAuthorizationListDto;
 import com.ksptool.ql.biz.model.dto.SaveApiKeyAuthorizationDto;
 
-import java.util.Optional;
-
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
@@ -41,16 +33,10 @@ public class AdminApiKeyService {
     private ApiKeyAuthorizationRepository authRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private ModelApiKeyConfigRepository modelApiKeyConfigRepository;
 
     @Autowired
-    private ApiKeyAuthorizationRepository apiKeyAuthorizationRepository;
-
-    @Autowired
-    private ApiKeyRepository apiKeyRepository;
+    private PlayerRepository playerRepository;
 
     /**
      * 获取API密钥分页列表
@@ -58,7 +44,7 @@ public class AdminApiKeyService {
     public RestPageableView<GetApiKeyListVo> getApiKeyList(GetApiKeyListDto dto) {
 
         var probe = new ApiKeyPo();
-        probe.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        probe.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         // 构建查询条件
         var query = SimpleExample.of(probe)
@@ -76,7 +62,7 @@ public class AdminApiKeyService {
     public GetApiKeyDetailsVo getApiKeyDetails(CommonIdDto dto) throws BizException {
         var query = new ApiKeyPo();
         query.setId(dto.getId());
-        query.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         ApiKeyPo po = repository.findOne(Example.of(query)).orElseThrow(() -> new BizException("Apikey未找到或无权访问"));
         return as(po,GetApiKeyDetailsVo.class);
     }
@@ -90,22 +76,22 @@ public class AdminApiKeyService {
         var createMode = dto.getId() == null;
 
         // 检查名称是否重复
-        if (repository.existsByKeyNameAndUserId(dto.getKeyName(), AuthService.getCurrentUserId(), dto.getId())) {
+        if (repository.existsByKeyNameAndPlayerId(dto.getKeyName(), AuthService.getCurrentPlayerId(), dto.getId())) {
             throw new BizException("密钥名称已存在");
         }
 
         if(createMode){
             ApiKeyPo create = as(dto,ApiKeyPo.class);
-            UserPo user = new UserPo();
-            user.setId(AuthService.getCurrentUserId());
-            create.setUser(user);
+            PlayerPo player = new PlayerPo();
+            player.setId(AuthService.getCurrentPlayerId());
+            create.setPlayer(player);
             repository.save(create);
             return;
         }
 
         var query = new ApiKeyPo();
         query.setId(dto.getId());
-        query.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         ApiKeyPo po = repository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("Api密钥不存在"));
@@ -127,7 +113,7 @@ public class AdminApiKeyService {
 
         var query = new ApiKeyPo();
         query.setId(dto.getId());
-        query.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         ApiKeyPo po = repository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("Api密钥不存在"));
@@ -147,17 +133,18 @@ public class AdminApiKeyService {
      */
     public RestPageableView<GetApiKeyAuthorizationListVo> getAuthorizationList(GetApiKeyAuthorizationListDto dto) throws BizException {
 
-        //检查API密钥是否存在且属于当前用户
+        //检查API密钥是否存在且属于当前人物
         var apiKeyQuery = new ApiKeyPo();
         apiKeyQuery.setId(dto.getApiKeyId());
-        apiKeyQuery.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        apiKeyQuery.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
         repository.findOne(Example.of(apiKeyQuery))
                 .orElseThrow(() -> new BizException("API密钥不存在或无权访问"));
 
         // 查询授权列表
         Page<GetApiKeyAuthorizationListVo> page = authRepository.getApiKeyAuthorizationList(
                 dto.getApiKeyId(),
-                dto.getAuthorizedUserName(),
+                dto.getAuthorizedPlayerName(),
                 dto.pageRequest()
         );
 
@@ -171,20 +158,20 @@ public class AdminApiKeyService {
 
         var query = new ApiKeyAuthorizationPo();
         query.setId(dto.getId());
-        query.setAuthorizerUserId(AuthService.getCurrentUserId());
+        query.setAuthorizerPlayer(Any.of().val("id", AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         var authPo = authRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("授权记录不存在或无权访问"));
 
         var vo = as(authPo,GetApiKeyAuthorizationDetailsVo.class);
-        vo.setAuthorizedUserName("----");
+        vo.setAuthorizedPlayerName("----");
 
-        //查询并设置被授权用户名
-        Optional<UserPo> userPo = userRepository.findById(authPo.getAuthorizedUserId());
+        //查询并设置被授权人物名
+        PlayerPo player = authPo.getAuthorizedPlayer();
 
-        userPo.ifPresent(u -> {
-            vo.setAuthorizedUserName(u.getUsername());
-        });
+        if(player != null){
+            vo.setAuthorizedPlayerName(player.getName());
+        }
 
         return vo;
     }
@@ -200,32 +187,34 @@ public class AdminApiKeyService {
         //查询API密钥
         var apiKeyQuery = new ApiKeyPo();
         apiKeyQuery.setId(dto.getApiKeyId());
-        apiKeyQuery.setUser(Any.of().val("id", AuthService.getCurrentUserId()).as(UserPo.class));
+        apiKeyQuery.setPlayer(Any.of().val("id", AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
         ApiKeyPo apiKeyPo = repository.findOne(Example.of(apiKeyQuery))
                 .orElseThrow(() -> new BizException("API密钥不存在或无权访问"));
 
-        //查找被授权用户
-        UserPo authorizedUser = userRepository.findByUsername(dto.getAuthorizedUserName());
-        if (authorizedUser == null) {
-            throw new BizException("被授权用户不存在");
+        //查找被授权人物
+        PlayerPo authorizedPlayer = playerRepository.findOneByName(dto.getAuthorizedPlayerName());
+
+        if (authorizedPlayer == null) {
+            throw new BizException("被授权人物不存在");
         }
 
         // 检查是否为自授权
-        if (authorizedUser.getId().equals(AuthService.getCurrentUserId())) {
+        if (authorizedPlayer.getId().equals(AuthService.getCurrentPlayerId())) {
             throw new BizException("无需授权，您已经可以使用自己创建的API密钥");
         }
 
         // 检查是否已存在授权
-        if (authRepository.existsByApiKeyIdAndAuthorizedUserId(
-                dto.getApiKeyId(), authorizedUser.getId(), dto.getId())) {
-            throw new BizException("该用户已被授权使用此密钥");
+        if (authRepository.existsByApiKeyIdAndAuthorizedPlayerId(
+                dto.getApiKeyId(), authorizedPlayer.getId(), dto.getId())) {
+            throw new BizException("该人物已被授权使用此密钥");
         }
 
         //创建
         if (createMode) {
             var auth = as(dto, ApiKeyAuthorizationPo.class);
-            auth.setAuthorizedUserId(authorizedUser.getId());
-            auth.setAuthorizerUserId(AuthService.getCurrentUserId());
+            auth.setAuthorizedPlayer(authorizedPlayer);
+            auth.setAuthorizerPlayer(Any.of().val("id", AuthService.getCurrentPlayerId()).as(PlayerPo.class));
             auth.setApiKey(Any.of().val("id",apiKeyPo.getId()).as(ApiKeyPo.class));
             auth.setUsageCount(0L);
             authRepository.save(auth);
@@ -235,7 +224,8 @@ public class AdminApiKeyService {
         //修改
         var query = new ApiKeyAuthorizationPo();
         query.setId(dto.getId());
-        query.setAuthorizerUserId(AuthService.getCurrentUserId());
+        query.setAuthorizerPlayer(Any.of().val("id", AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
         var edit = authRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("授权记录不存在或无权访问"));
 
@@ -254,7 +244,8 @@ public class AdminApiKeyService {
         //查询授权记录
         var query = new ApiKeyAuthorizationPo();
         query.setId(dto.getId());
-        query.setAuthorizerUserId(AuthService.getCurrentUserId());
+        query.setAuthorizerPlayer(Any.of().val("id", AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
         var po = authRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("授权记录不存在或无权访问"));
 

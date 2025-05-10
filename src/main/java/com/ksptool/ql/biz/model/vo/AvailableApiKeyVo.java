@@ -24,7 +24,7 @@ public class AvailableApiKeyVo {
     private String keySeries;
     
     /**
-     * 所属用户名
+     * 所属人物名称
      */
-    private String ownerUsername;
+    private String ownerPlayerName;
 } 

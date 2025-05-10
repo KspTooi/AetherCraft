@@ -1,11 +1,13 @@
 package com.ksptool.ql.biz.service.admin;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ApiKeyRepository;
 import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.service.*;
 import com.ksptool.ql.biz.service.ApiKeyService;
@@ -91,7 +93,7 @@ public class AdminModelConfigService {
         vo.setApiKeys(apiKeyService.getCurrentUserAvailableApiKey(byCode.getSeries()));
 
         // 获取当前使用的API密钥ID
-        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByUserIdAnyModeCode(byCode.getCode(),userId);
+        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(byCode.getCode(),userId);
 
         if (currentConfig != null) {
             vo.setCurrentApiKeyId(currentConfig.getApiKeyId());
@@ -109,8 +111,8 @@ public class AdminModelConfigService {
             throw new IllegalArgumentException("无效的模型代码");
         }
 
-        // 获取当前用户ID
-        Long userId = AuthService.getCurrentUserId();
+        // 获取当前人物ID
+        Long playerId = AuthService.getCurrentPlayerId();
 
         // 验证API密钥权限
         if (dto.getApiKeyId() != null) {
@@ -118,21 +120,21 @@ public class AdminModelConfigService {
             ApiKeyPo apiKey = apiKeyRepository.findById(dto.getApiKeyId()).orElseThrow(() -> new BizException("API密钥不存在"));
 
             // 检查是否是自己的密钥
-            if (!apiKey.getUser().getId().equals(userId)) {
+            if (!apiKey.getPlayer().getId().equals(playerId)) {
                 // 不是自己的密钥，检查是否有授权
-                if (apiKeyAuthorizationRepository.countByAuthorized(userId, dto.getApiKeyId(), 1) == 0) {
+                if (apiKeyAuthorizationRepository.countByAuthorized(playerId, dto.getApiKeyId(), 1) == 0) {
                     throw new BizException("您没有使用此API密钥的权限");
                 }
             }
 
             // 保存模型API密钥配置
-            ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByUserIdAnyModeCode(modelEnum.getCode(),userId);
+            ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(modelEnum.getCode(),playerId);
 
             if (config == null) {
                 config = new ModelApiKeyConfigPo();
             }
 
-            config.setUserId(userId);
+            config.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
             config.setModelCode(dto.getModelCode());
             config.setApiKeyId(dto.getApiKeyId());
             modelApiKeyConfigRepository.save(config);
@@ -173,9 +175,10 @@ public class AdminModelConfigService {
 
         // 获取当前用户ID
         Long userId = AuthService.getCurrentUserId();
+        Long playerId = AuthService.getCurrentPlayerId();
 
         // 获取API密钥
-        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), userId);
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), playerId);
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key，请先选择API Key并保存配置");
         }

@@ -21,10 +21,6 @@ public class ModelApiKeyConfigPo {
     @Comment("配置ID")
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    @Comment("用户ID")
-    private Long userId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("人物ID")

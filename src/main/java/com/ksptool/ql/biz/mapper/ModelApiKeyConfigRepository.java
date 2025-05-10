@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 模型API密钥配置数据访问层
@@ -19,9 +18,9 @@ public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyCo
      */
     @Query("""
             SELECT m FROM ModelApiKeyConfigPo m
-            WHERE m.modelCode = :modelCode AND m.userId = :userId
+            WHERE m.modelCode = :modelCode AND m.player.id = :playerId
             """)
-    ModelApiKeyConfigPo getByUserIdAnyModeCode(@Param("modelCode") String modelCode, @Param("userId") Long userId);
+    ModelApiKeyConfigPo getByPlayerIdAnyModeCode(@Param("modelCode") String modelCode, @Param("playerId") Long playerId);
     
     /**
      * 根据API密钥ID查询配置

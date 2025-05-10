@@ -10,9 +10,9 @@ import java.util.Date;
 @Data
 public class GetApiKeyAuthorizationListVo {
 
-    public GetApiKeyAuthorizationListVo(Long id, String authorizedUserName, Long usageLimit, Long usageCount, Date expireTime, Integer status, Date createTime) {
+    public GetApiKeyAuthorizationListVo(Long id, String authorizedPlayerName, Long usageLimit, Long usageCount, Date expireTime, Integer status, Date createTime) {
         this.id = id;
-        this.authorizedUserName = authorizedUserName;
+        this.authorizedPlayerName = authorizedPlayerName;
         this.usageLimit = usageLimit;
         this.usageCount = usageCount;
         this.expireTime = expireTime;
@@ -27,8 +27,8 @@ public class GetApiKeyAuthorizationListVo {
     // 授权ID
     private Long id;
     
-    // 被授权人用户名
-    private String authorizedUserName;
+    // 被授权者人物名
+    private String authorizedPlayerName;
     
     // 使用次数限制
     private Long usageLimit;

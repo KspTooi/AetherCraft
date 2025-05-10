@@ -13,7 +13,7 @@ public class GetApiKeyAuthorizationListDto extends PageQuery {
     @NotNull
     private Long apiKeyId;
 
-    // 被授权人用户名
-    private String authorizedUserName;
+    // 被授权者人物名
+    private String authorizedPlayerName;
 
 }

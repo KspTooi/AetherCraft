@@ -13,8 +13,8 @@ public class GetApiKeyAuthorizationDetailsVo {
     // API密钥ID
     private Long apiKeyId;
 
-    // 被授权人用户名
-    private String authorizedUserName;
+    // 被授权者人物名
+    private String authorizedPlayerName;
 
     // 使用次数限制
     private Long usageLimit;

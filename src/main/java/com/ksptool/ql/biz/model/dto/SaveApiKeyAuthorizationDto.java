@@ -19,9 +19,9 @@ public class SaveApiKeyAuthorizationDto {
     @NotNull(message = "API密钥ID不能为空")
     private Long apiKeyId;
     
-    // 被授权人用户名
-    @NotBlank(message = "被授权人用户名不能为空")
-    private String authorizedUserName;
+    // 被授权者人物名
+    @NotBlank(message = "被授权者人物名称不能为空")
+    private String authorizedPlayerName;
     
     // 使用次数限制
     private Long usageLimit;

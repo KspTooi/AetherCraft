@@ -75,4 +75,7 @@ public interface PlayerRepository extends JpaRepository<PlayerPo, Long>, JpaSpec
             """)
     List<PermissionPo> getPermissionByPlayerId(@Param("playerId") Long playerId);
 
+    List<PlayerPo> findByName(String name);
+
+    PlayerPo findOneByName(String name);
 }
