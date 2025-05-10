@@ -88,3 +88,23 @@ COMMIT;
 
 ALTER TABLE IF EXISTS model_api_key_configs DROP COLUMN user_id;
 --迁移模型API配置 结束
+
+--迁移配置项
+ALTER TABLE IF EXISTS config ADD COLUMN player_id bigint;
+
+UPDATE config c SET player_id = -1
+WHERE c.USER_ID != -1;
+
+--已有配置变更到用户下第一个人物
+UPDATE config c
+SET player_id = (
+    SELECT p.id
+    FROM player p
+    WHERE p.user_id = c.user_id
+    ORDER BY p.create_time ASC
+    LIMIT 1
+    )
+WHERE c.player_id = -1;
+
+ALTER TABLE IF EXISTS config DROP COLUMN user_id;
+--迁移配置项 结束

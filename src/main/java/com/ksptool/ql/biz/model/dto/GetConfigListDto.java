@@ -10,6 +10,6 @@ public class GetConfigListDto extends PageQuery {
     private String keyword;
 
     // 所有者
-    private String username;
+    private String playerName;
 
 } 

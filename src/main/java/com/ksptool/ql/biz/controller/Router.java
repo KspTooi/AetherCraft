@@ -3,7 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
-import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.panel.PanelInstallWizardService;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
@@ -26,7 +26,7 @@ public class Router {
     private AuthService authService;
 
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -198,10 +198,10 @@ public class Router {
                 if (path.isEmpty()) {
                     path = "/";
                 }
-                userConfigService.setValue("path.referer.dashboard", path, AuthService.getCurrentUserId());
+                playerConfigService.put("path.referer.dashboard", path);
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                userConfigService.setValue("path.referer.dashboard", "/client-ui", AuthService.getCurrentUserId());
+                playerConfigService.put("path.referer.dashboard", "/client-ui");
             }
         }
         
@@ -210,7 +210,7 @@ public class Router {
 
     @GetMapping("/leaveDashboard")
     public String leaveDashboard() {
-        String referer = userConfigService.get("path.referer.dashboard", "/client-ui");
+        String referer = playerConfigService.getString("path.referer.dashboard", "/client-ui");
         return "redirect:" + referer;
     }
     
@@ -231,10 +231,10 @@ public class Router {
                 if (path.isEmpty()) {
                     path = "/";
                 }
-                userConfigService.setValue("path.referer.nopermission", path, AuthService.getCurrentUserId());
+                playerConfigService.put("path.referer.nopermission", path);
             } catch (Exception e) {
                 // 如果URL解析失败，使用默认路径
-                userConfigService.setValue("path.referer.nopermission", "/", AuthService.getCurrentUserId());
+                playerConfigService.put("path.referer.nopermission", "/");
             }
         }
         
@@ -247,7 +247,7 @@ public class Router {
      */
     @GetMapping("/leaveNoPermission")
     public String leaveNoPermission() {
-        String referer = userConfigService.get("path.referer.nopermission", "/");
+        String referer = playerConfigService.getString("path.referer.nopermission", "/");
         return "redirect:" + referer;
     }
 

@@ -53,16 +53,12 @@ public class ModelChatService {
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
-    // 默认模型参数
-    private static final double DEFAULT_TEMPERATURE = 0.7;
-    private static final double DEFAULT_TOP_P = 1.0;
-    private static final int DEFAULT_TOP_K = 40;
 
     //线程会话状态跟踪
     private final ThreadStatusTrack track = new ThreadStatusTrack();
 
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
     
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -128,11 +124,11 @@ public class ModelChatService {
     /**
      * 创建ModelChatDto并预先填充配置信息
      * @param modelCode 模型代码
-     * @param userId 用户ID
+     * @param playerId 人物ID
      * @return 预填充配置的ModelChatDto
      * @throws BizException 业务异常
      */
-    public ModelChatParam createModelChatDto(String modelCode, Long userId) throws BizException {
+    public ModelChatParam createModelChatDto(String modelCode, Long playerId) throws BizException {
         // 验证模型代码
         AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
         if (modelEnum == null) {
@@ -142,7 +138,7 @@ public class ModelChatService {
         // 创建并填充DTO
         ModelChatParam param = new ModelChatParam();
         param.setModelCode(modelEnum.getCode());
-        userConfigService.readUserModelParam(param,userId);
+        playerConfigService.readPlayerModelParam(param,playerId);
         return param;
     }
 
@@ -194,7 +190,10 @@ public class ModelChatService {
             // 获取当前用户ID
             Long userId = AuthService.getCurrentUserId();
 
-            String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), userId);
+            //获取当前玩家ID
+            var playerId = AuthService.getCurrentPlayerId();
+
+            String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), playerId);
 
             if (StringUtils.isBlank(apiKey)) {
                 throw new BizException("未配置API Key");
@@ -269,13 +268,13 @@ public class ModelChatService {
             segmentRepository.save(startSegment);
 
             // 获取代理配置
-            String proxyConfig = getProxyConfig(userId);
+            String proxyConfig = getProxyConfig(playerId);
 
             // 创建HTTP客户端
             OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 60);
 
             // 创建请求DTO
-            ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), userId);
+            ModelChatParam modelChatParam = createModelChatDto(modelEnum.getCode(), playerId);
             modelChatParam.setMessage(dto.getMessage());
             modelChatParam.setApiKey(apiKey);
 
@@ -303,7 +302,7 @@ public class ModelChatService {
                 modelGrokService.sendMessageStream(
                         client,
                         modelChatParam,
-                        onModelMessageRcv(thread, userId)
+                        onModelMessageRcv(thread, userId,playerId)
                 );
             }
             if(dto.getModel().contains("gemini")){
@@ -311,7 +310,7 @@ public class ModelChatService {
                 modelGeminiService.sendMessageStream(
                         client,
                         modelChatParam,
-                        onModelMessageRcv(thread, userId)
+                        onModelMessageRcv(thread, userId,playerId)
                 );
             }
 
@@ -575,7 +574,7 @@ public class ModelChatService {
      * @param threadId 会话ID
      * @param model 模型代码
      */
-    public void generateThreadTitle(Long threadId, String model,Long uid) {
+    public void generateThreadTitle(Long threadId, String model,Long uid,Long playerId) {
         try {
             // 检查是否需要生成标题
             boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
@@ -636,13 +635,13 @@ public class ModelChatService {
 
             // 获取当前用户ID
             Long userId = thread.getUserId();
-            
+
             // 创建请求DTO
-            ModelChatParam modelChatParam = createModelChatDto(model, userId);
+            ModelChatParam modelChatParam = createModelChatDto(model, playerId);
             modelChatParam.setMessage(prompt.execute());
                   
             // 获取代理配置
-            String proxyUrl = getProxyConfig(userId);
+            String proxyUrl = getProxyConfig(playerId);
             
             String apiKey = apiKeyService.getApiKey(model, userId);
             
@@ -799,7 +798,7 @@ public class ModelChatService {
             throw new BizException("无权访问该会话");
         }
 
-        userConfigService.setValue(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(), thread.getId());
+        playerConfigService.put(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(), thread.getId());
 
         // 获取会话历史记录
         List<ModelChatHistoryPo> histories = thread.getHistories();
@@ -849,12 +848,12 @@ public class ModelChatService {
 
     /**
      * 获取用户空间或全局的代理配置
-     * @param uid 用户ID
+     * @param playerId 玩家ID
      * @return 代理url
      */
-    public String getProxyConfig(Long uid){
+    public String getProxyConfig(Long playerId){
         // 获取代理配置 - 首先检查用户级别的代理配置
-        String proxyConfig = userConfigService.get("model.proxy.config", uid);
+        String proxyConfig = playerConfigService.getString("model.proxy.config", null,playerId);
 
         // 如果用户未配置代理，则使用全局代理配置
         if (StringUtils.isBlank(proxyConfig)) {
@@ -870,7 +869,7 @@ public class ModelChatService {
      * @param userId 用户ID
      * @return 处理模型消息的Consumer
      */
-    private Consumer<ModelChatContext> onModelMessageRcv(ModelChatThreadPo thread, Long userId) {
+    private Consumer<ModelChatContext> onModelMessageRcv(ModelChatThreadPo thread, Long userId,Long playerId) {
         return context -> {
             try {
                 Long threadId = thread.getId();
@@ -933,7 +932,7 @@ public class ModelChatService {
                         //异步生成会话标题
                         Thread.ofVirtual().start(()->{
                             try {
-                                generateThreadTitle(thread.getId(), modelEnum.getCode(),userId);
+                                generateThreadTitle(thread.getId(), modelEnum.getCode(),userId,playerId);
                             } catch (Exception e) {
                                 log.error("生成会话标题失败", e);
                                 // 生成标题失败不影响主流程
@@ -977,7 +976,7 @@ public class ModelChatService {
         List<ModelChatThreadPo> threads = threadRepository.findByUserIdOrderByUpdateTimeDesc(userId);
         
         // 获取用户上次选择的会话ID
-        String lastThreadIdStr = userConfigService.get(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+        String lastThreadIdStr = playerConfigService.getString(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),null);
         Long lastThreadId = null;
         if (StringUtils.isNotBlank(lastThreadIdStr)) {
             try {
@@ -998,7 +997,7 @@ public class ModelChatService {
             vo.setChecked(0);
 
             // 检查是否为上次选中的会话
-            if (lastThreadId != null && thread.getId().equals(lastThreadId)) {
+            if (thread.getId().equals(lastThreadId)) {
                 vo.setChecked(1);
             }
             voList.add(vo);

@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class FileExplorerService {
-    @Autowired
-    private UserConfigService userConfigService;
 
+    @Autowired
+    private PlayerConfigService playerConfigService;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private static final String DEFAULT_EXPLORER_CMD = "explorer";
@@ -36,7 +36,7 @@ public class FileExplorerService {
      */
     public String getLastPath() {
         Long userId = AuthService.getCurrentUserId();
-        String path = userConfigService.getValue(EXPLORER_PATH_KEY, userId);
+        String path = playerConfigService.getString(EXPLORER_PATH_KEY, null);
         return StringUtils.isNotBlank(path) ? path : "@";
     }
 
@@ -45,7 +45,7 @@ public class FileExplorerService {
      */
     public void saveCurrentPath(String path) {
         Long userId = AuthService.getCurrentUserId();
-        userConfigService.setValue(EXPLORER_PATH_KEY, path, userId);
+        playerConfigService.put(EXPLORER_PATH_KEY, path);
     }
 
     /**
@@ -230,11 +230,11 @@ public class FileExplorerService {
         Long userId = AuthService.getCurrentUserId();
         
         // 获取用户自定义运行命令，如果没有则尝试获取全局配置
-        String command = userConfigService.getValue(EXPLORER_CONFIG_KEY, userId);
+        String command = playerConfigService.getString(EXPLORER_CONFIG_KEY,null);
         if (StringUtils.isBlank(command)) {
             // 如果没有配置，添加默认配置到用户作用域
             command = DEFAULT_EXPLORER_CMD + " #{path}";
-            userConfigService.setValue(EXPLORER_CONFIG_KEY, command, userId);
+            playerConfigService.put(EXPLORER_CONFIG_KEY, command);
         }
 
         // 替换路径占位符并执行命令

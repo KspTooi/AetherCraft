@@ -3,14 +3,13 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
-import com.ksptool.ql.biz.model.dto.DeActiveThreadDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleThreadListDto;
 import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.ModelRpService;
-import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
@@ -32,8 +31,9 @@ public class ModelRpController {
 
     @Autowired
     private ModelRpService modelRpService;
+
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     @GetMapping("/view")
     public ModelAndView getModelRpView() {
@@ -48,8 +48,8 @@ public class ModelRpController {
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
 
-        String lastThread = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
-        String lastRole = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+        String lastThread = playerConfigService.getString(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(),null);
+        String lastRole = playerConfigService.getString(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(),null);
 
         if(StringUtils.isNotBlank(lastThread)){
             modelAndView.addObject("lastThread", lastThread);
@@ -69,8 +69,8 @@ public class ModelRpController {
 
         GetRpLastStatusVo vo = new GetRpLastStatusVo();
 
-        String lastThread = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
-        String lastRole = userConfigService.get(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+        String lastThread = playerConfigService.getString(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(),null);
+        String lastRole = playerConfigService.getString(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(),null);
 
         if(StringUtils.isNotBlank(lastThread)){
             vo.setLastThread(lastThread);
@@ -123,7 +123,7 @@ public class ModelRpController {
     @PostMapping("/removeThread")
     public Result<String> removeThread(@RequestBody @Valid RemoveThreadDto dto) throws BizException {
         modelRpService.removeThread(dto);
-        userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
+        playerConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
         return Result.success("会话已删除");
     }
 

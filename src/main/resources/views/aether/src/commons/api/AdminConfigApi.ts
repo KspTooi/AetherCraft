@@ -5,13 +5,12 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts";
 
 export interface GetConfigListDto extends PageQuery {
     keyword: string | null;     // 配置键/值/描述
-    username: string | null;    // 所有者
+    playerName: string | null;    // 所有者名称
 }
 
 export interface GetConfigListVo {
     id: string;             // 配置ID
-    userId: string;         // 用户ID
-    username: string;       // 用户名
+    playerName: string;       // 所有者名称
     configKey: string;      // 配置键
     configValue: string;    // 配置值
     description: string;    // 配置描述
@@ -22,7 +21,7 @@ export interface GetConfigListVo {
 export interface GetConfigDetailsVo {
     id: string;             // 配置ID
     userId: string;         // 用户ID
-    username: string;       // 用户名
+    playerName: string;       // 所有者名称
     configKey: string;      // 配置键
     configValue: string;    // 配置值
     description: string;    // 配置描述

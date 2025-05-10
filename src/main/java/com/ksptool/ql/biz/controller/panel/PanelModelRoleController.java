@@ -4,17 +4,15 @@ import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
-import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -41,8 +39,9 @@ public class PanelModelRoleController {
     
     @Autowired
     private UserFileService userFileService;
+
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     /**
      * 获取模型角色列表视图
@@ -124,11 +123,11 @@ public class PanelModelRoleController {
             redirectAttributes.addFlashAttribute("vo", Result.success("角色删除成功", null));
 
             //如移除的角色是用户最后选择的那一个角色 需清空用户保存的配置
-            Long userLastSelect = userConfigService.getLong(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(),-1L);
+            Long userLastSelect = playerConfigService.getLong(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(),-1L);
 
             if(userLastSelect.equals(id)){
-                userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
-                userConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
+                playerConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key());
+                playerConfigService.remove(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key());
             }
 
         } catch (Exception e) {

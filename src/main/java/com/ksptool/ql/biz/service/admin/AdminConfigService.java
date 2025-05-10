@@ -1,28 +1,21 @@
 package com.ksptool.ql.biz.service.admin;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ConfigRepository;
-import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.dto.GetConfigListDto;
 import com.ksptool.ql.biz.model.dto.SaveConfigDto;
 import com.ksptool.ql.biz.model.po.ConfigPo;
-import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetConfigDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetConfigListVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import static com.ksptool.entities.Entities.as;
 import static com.ksptool.entities.Entities.assign;
 
@@ -31,10 +24,9 @@ public class AdminConfigService {
 
     @Autowired
     private ConfigRepository repository;
-    @Autowired
-    private UserRepository userRepository;
 
     public RestPageableView<GetConfigListVo> getConfigList(GetConfigListDto dto) {
+
         Long userId = AuthService.getCurrentUserId();
 
         if(AuthService.hasPermission("panel:config:view:global")){
@@ -42,13 +34,12 @@ public class AdminConfigService {
         }
 
         Pageable pageQuery = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), Sort.Direction.DESC, "updateTime");
-        Page<GetConfigListVo> pPos = repository.getConfigList(dto.getKeyword(),dto.getUsername(), userId, pageQuery);
-
+        Page<GetConfigListVo> pPos = repository.getConfigList(dto.getKeyword(),dto.getPlayerName(), userId, pageQuery);
         List<GetConfigListVo> vos = as(pPos.getContent(),GetConfigListVo.class);
 
         for(GetConfigListVo vo:vos){
-            if(vo.getUserId() == -1){
-                vo.setUsername("全局");
+            if(vo.getPlayerName() == null){
+                vo.setPlayerName("全局");
             }
         }
 
@@ -57,25 +48,25 @@ public class AdminConfigService {
 
     public GetConfigDetailsVo getConfigDetails(Long id) throws BizException {
 
-        Long userId = AuthService.getCurrentUserId();
+        var query = new ConfigPo();
+        query.setId(id);
 
-        if(AuthService.hasPermission("panel:config:view:global")){
-            userId = null;
+        //无全局数据权限时仅查询当前玩家下的配置
+        if(!AuthService.hasPermission("panel:config:view:global")){
+            query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         }
 
-        ConfigPo po = repository.getByIdAndUserId(id, userId)
+        ConfigPo po = repository.findOne(Example.of(query))
                 .orElseThrow(()->new BizException("配置项不存在或无权访问"));
 
         GetConfigDetailsVo vo = as(po, GetConfigDetailsVo.class);
 
-        if(po.getUserId() == -1){
-            vo.setUsername("全局");
+        if(po.getPlayer() == null){
+            vo.setPlayerName("全局");
         }
-        if(po.getUserId() != null && po.getUserId() != -1){
-            UserPo userPo = userRepository.findById(po.getUserId()).orElse(null);
-            if(userPo != null){
-                vo.setUsername(userPo.getUsername());
-            }
+
+        if(po.getPlayer() != null){
+            vo.setPlayerName(po.getPlayer().getName());
         }
 
         return vo;
@@ -86,24 +77,26 @@ public class AdminConfigService {
 
         //创建
         if (dto.getId() == null) {
-            if (repository.existsByUserIdAndConfigKey(AuthService.getCurrentUserId(), dto.getConfigKey())) {
+            if (repository.existsByPlayerIdAndConfigKey(AuthService.getCurrentPlayerId(), dto.getConfigKey())) {
                 throw new RuntimeException("配置键已存在");
             }
             ConfigPo config = new ConfigPo();
             assign(dto, config);
-            config.setUserId(AuthService.getCurrentUserId());
+            config.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
             repository.save(config);
             return;
         }
 
         //编辑
-        Long userId = AuthService.getCurrentUserId();
+        var query = new ConfigPo();
+        query.setId(dto.getId());
 
-        if(AuthService.hasPermission("panel:config:view:global")){
-            userId = null;
+        //无全局数据权限时仅查询当前玩家下的配置
+        if(!AuthService.hasPermission("panel:config:view:global")){
+            query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         }
 
-        ConfigPo po = repository.getByIdAndUserId(dto.getId(), userId)
+        ConfigPo po = repository.findOne(Example.of(query))
                 .orElseThrow(()->new BizException("配置项不存在或无权访问"));
 
         po.setConfigValue(dto.getConfigValue());
@@ -114,14 +107,16 @@ public class AdminConfigService {
     @Transactional
     public void removeConfig(Long id) throws BizException {
 
-        Long userId = AuthService.getCurrentUserId();
+        var query = new ConfigPo();
+        query.setId(id);
 
-        if(AuthService.hasPermission("panel:config:view:global")){
-            userId = null;
+        //无全局数据权限时仅查询当前玩家下的配置
+        if(!AuthService.hasPermission("panel:config:view:global")){
+            query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         }
 
-        ConfigPo po = repository.getByIdAndUserId(id, userId)
-                .orElseThrow(()->new BizException("配置项不存在或无权访问"));
+        ConfigPo po = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("配置项不存在或无权访问"));
 
         repository.delete(po);
     }

@@ -13,8 +13,8 @@ public class GetConfigDetailsVo {
     // 用户ID
     private Long userId;
 
-    // 用户名
-    private String username;
+    // 人物名称
+    private String playerName;
 
     // 配置键
     private String configKey;

@@ -66,7 +66,7 @@ public class ModelRpService {
     private ModelGeminiService modelGeminiService;
     
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
     
     @Autowired
     private ApiKeyService apiKeyService;
@@ -221,8 +221,8 @@ public class ModelRpService {
             historyVos.add(hisVo);
         }
 
-        userConfigService.setValue(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(), threadCt.getId());
-        userConfigService.setValue(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(), threadCt.getModelRole().getId());
+        playerConfigService.put(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(), threadCt.getId());
+        playerConfigService.put(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(), threadCt.getModelRole().getId());
         return vo;
     }
 
@@ -325,7 +325,7 @@ public class ModelRpService {
         //为消息创建起始片段
         scriptService.createStartSegment(threadCt);
 
-        OkHttpClient client = HttpClientUtils.createHttpClient(getProxyConfig(threadCt.getUserId()), 60);
+        OkHttpClient client = HttpClientUtils.createHttpClient(getProxyConfig(), 60);
 
         // 创建请求参数
         ModelChatParam param = new ModelChatParam();
@@ -349,7 +349,7 @@ public class ModelRpService {
         threadCt.setModelCode(modelEnum.getCode());
         threadRepository.save(threadCt);
 
-        userConfigService.readUserModelParam(param,null);
+        playerConfigService.readPlayerModelParam(param,null);
 
         //保存该线程的角色数据到缓存中
         threadModelRoleMap.remove(threadCt.getId());
@@ -827,9 +827,9 @@ public class ModelRpService {
      * 获取用户空间或全局的代理配置
      * @return 代理url
      */
-    public String getProxyConfig(Long uid){
+    public String getProxyConfig(){
         // 获取代理配置 - 首先检查用户级别的代理配置
-        String proxyConfig = userConfigService.get("model.proxy.config", uid);
+        String proxyConfig = playerConfigService.getString("model.proxy.config",null);
 
         // 如果用户未配置代理，则使用全局代理配置
         if (StringUtils.isBlank(proxyConfig)) {

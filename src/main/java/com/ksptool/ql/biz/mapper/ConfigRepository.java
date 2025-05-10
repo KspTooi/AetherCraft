@@ -16,58 +16,39 @@ import java.util.Optional;
 @Repository
 public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {
 
-    @Query("""
-            SELECT c
-            FROM ConfigPo c
-            WHERE c.id = :id
-            AND (:userId IS NULL OR c.userId = :userId)
-            """)
-    Optional<ConfigPo> getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
-    
-    ConfigPo findByConfigKey(String configKey);
-    
-    ConfigPo findByUserIdAndConfigKey(Long userId, String configKey);
-    
-    boolean existsByConfigKey(String configKey);
-    
-    boolean existsByUserIdAndConfigKey(Long userId, String configKey);
 
     @Query("""
-            SELECT new com.ksptool.ql.biz.model.vo.ListPanelConfigVo(
-                c.id, c.userId, u.username, c.configKey,
-                c.configValue, c.description, c.createTime, c.updateTime
-            )
-            FROM ConfigPo c
-            LEFT JOIN UserPo u ON c.userId = u.id
-            WHERE (TRIM(COALESCE(:keyOrValue, '')) = '' OR c.configKey LIKE %:keyOrValue% OR c.configValue LIKE %:keyOrValue%)
-            AND (TRIM(COALESCE(:description, '')) = '' OR c.description LIKE %:description%)
-            AND (:userId IS NULL OR c.userId = :userId)
-            """)
-    Page<ListPanelConfigVo> getListView(@Param("keyOrValue") String keyOrValue,
-                                       @Param("description") String description,
-                                       @Param("userId") Long userId,
-                                       Pageable pageable);
+        SELECT c FROM ConfigPo c
+        WHERE c.player IS NULL AND c.configKey = :key
+        """)
+    ConfigPo getGlobalConfig(@Param("key") String key);
+
+
+    boolean existsByPlayerIdAndConfigKey(Long playerId, String configKey);
+
 
     @Query("""
             SELECT new com.ksptool.ql.biz.model.vo.GetConfigListVo(
-                c.id, c.userId, u.username, c.configKey,
+                c.id, cpl.name, c.configKey,
                 c.configValue, c.description, c.createTime, c.updateTime
             )
             FROM ConfigPo c
-            LEFT JOIN UserPo u ON c.userId = u.id
+            LEFT JOIN c.player cpl
             WHERE (:keyword IS NULL
                 OR c.configKey LIKE %:keyword%
                 OR c.configValue LIKE %:keyword%
                 OR c.description LIKE %:keyword%
             )
-            AND (:username IS NULL OR u.username LIKE %:username%)
-            AND (:userId IS NULL OR c.userId = :userId)
+            AND (:playerName IS NULL
+                OR (cpl.name LIKE CONCAT('%', :playerName, '%') AND :playerName != '全局')
+                OR (cpl IS NULL AND :playerName = '全局')
+            )
+            AND (:playerId IS NULL OR cpl.id = :playerId)
             ORDER BY c.configKey ASC,c.updateTime DESC
             """)
     Page<GetConfigListVo> getConfigList(@Param("keyword") String keyword,
-                                        @Param("username") String username,
-                                        @Param("userId") Long userId,
+                                        @Param("playerName") String playerName,
+                                        @Param("playerId") Long playerId,
                                         Pageable pageable);
 
-    void removeByConfigKeyAndUserId(String configKey, Long userId);
 }

@@ -11,10 +11,10 @@
             style="width: 200px"
           />
         </el-form-item>
-        <el-form-item label="所有者">
+        <el-form-item label="所有者名称">
           <el-input 
-            v-model="query.username" 
-            placeholder="输入所有者查询" 
+            v-model="query.playerName" 
+            placeholder="输入所有者名称查询" 
             clearable 
             style="width: 200px"
           />
@@ -70,8 +70,8 @@
           }"
         />
         <el-table-column 
-          prop="username" 
-          label="所有者"
+          prop="playerName" 
+          label="所有者名称"
           min-width="120"
         />
         <el-table-column label="操作" fixed="right" min-width="140">
@@ -145,8 +145,8 @@
           <el-form-item label="修改时间">
             <el-input v-model="details.updateTime" disabled />
           </el-form-item>
-          <el-form-item label="创建人">
-            <el-input v-model="details.username" disabled />
+          <el-form-item label="所有者名称">
+            <el-input v-model="details.playerName" disabled />
           </el-form-item>
         </template>
 
@@ -200,7 +200,7 @@ const mode = ref<"insert" | "update">("insert")
 
 const query = reactive<GetConfigListDto>({
   keyword: null,
-  username: null,
+  playerName: null,
   page: 1,
   pageSize: 10
 })
@@ -229,7 +229,7 @@ const details = reactive<GetConfigDetailsVo>({
   id: "",
   updateTime: "",
   userId: "",
-  username: ""
+  playerName: ""
 })
 
 // 表单校验规则
@@ -264,7 +264,7 @@ const loadConfigList = async () => {
 
 const resetQuery = () => {
   query.keyword = null
-  query.username = null
+  query.playerName = null
   query.page = 1
   loadConfigList()
 }
@@ -277,7 +277,7 @@ const resetForm = () => {
   details.createTime = ""
   details.updateTime = ""
   details.userId = ""
-  details.username = ""
+  details.playerName = ""
   
   if (formRef.value) {
     formRef.value.resetFields()

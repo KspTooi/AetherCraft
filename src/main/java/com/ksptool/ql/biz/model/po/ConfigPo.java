@@ -8,7 +8,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "config", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "config_key"}, name = "uk_user_config")
+    @UniqueConstraint(columnNames = {"player_id", "config_key"}, name = "uk_player_config")
 })
 public class ConfigPo {
     
@@ -17,9 +17,10 @@ public class ConfigPo {
     @Comment("主键ID")
     private Long id;
 
-    @Column(nullable = false)
-    @Comment("用户ID，-1表示全局配置")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("玩家人物ID 为空表示全局配置")
+    private PlayerPo player;
 
     @Column(name = "config_key", nullable = false, length = 100)
     @Comment("配置键")

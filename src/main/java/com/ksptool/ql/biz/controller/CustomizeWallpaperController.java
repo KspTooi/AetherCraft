@@ -4,13 +4,12 @@ import com.ksptool.ql.biz.model.dto.WallpaperDto;
 import com.ksptool.ql.biz.model.po.UserFilePo;
 import com.ksptool.ql.biz.model.vo.WallpaperVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
-import com.ksptool.ql.biz.service.UserConfigService;
+import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.enums.WallpaperEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -19,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,7 +33,7 @@ public class CustomizeWallpaperController {
     private UserFileService userFileService;
 
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -44,7 +42,7 @@ public class CustomizeWallpaperController {
     public Result<?> resetWallpaper() {
         try {
             // 通过设置为 null 来移除壁纸配置项
-            userConfigService.setValue(UserConfigEnum.WALLPAPER_PATH.key(), (String) null);
+            playerConfigService.put(UserConfigEnum.WALLPAPER_PATH.key(), (String) null);
             return Result.success("已恢复默认壁纸");
         } catch (Exception e) {
             return Result.error("恢复默认壁纸失败：" + e.getMessage());
@@ -60,7 +58,7 @@ public class CustomizeWallpaperController {
             String defaultWallpaperPath = globalConfigService.get("customize.wallpaper.default.path","/img/bg2.jpg");
 
             // 从用户配置中获取壁纸路径
-            String wallpaperPath = userConfigService.get(UserConfigEnum.WALLPAPER_PATH.key());
+            String wallpaperPath = playerConfigService.getString(UserConfigEnum.WALLPAPER_PATH.key(),null);
             if (!StringUtils.hasText(wallpaperPath)) {
                 return ResponseEntity.status(302)
                         .header("Location", defaultWallpaperPath)
@@ -113,7 +111,7 @@ public class CustomizeWallpaperController {
             UserFilePo userFile = userFileService.receive(multipartFile);
 
             // 3. 更新用户配置，保存壁纸路径
-            userConfigService.setValue(UserConfigEnum.WALLPAPER_PATH.key(), userFile.getFilepath());
+            playerConfigService.put(UserConfigEnum.WALLPAPER_PATH.key(), userFile.getFilepath());
 
             return Result.success("壁纸设置成功");
         } catch (Exception e) {

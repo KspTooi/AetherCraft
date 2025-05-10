@@ -16,10 +16,9 @@ import java.util.List;
 public class GlobalConfigService {
     
     private final ConfigRepository configRepository;
-    private static final Long GLOBAL_USER_ID = -1L;
 
     public String getValue(String key) {
-        ConfigPo config = configRepository.findByUserIdAndConfigKey(GLOBAL_USER_ID, key);
+        ConfigPo config = configRepository.getGlobalConfig(key);
         if(config == null){
             return null;
         }
@@ -27,11 +26,11 @@ public class GlobalConfigService {
     }
 
     public void setValue(String key, String value) {
-        ConfigPo config = configRepository.findByUserIdAndConfigKey(GLOBAL_USER_ID, key);
+        ConfigPo config = configRepository.getGlobalConfig(key);
         if (config == null) {
             config = new ConfigPo();
             config.setConfigKey(key);
-            config.setUserId(GLOBAL_USER_ID);
+            config.setPlayer(null);
             config.setCreateTime(new Date());
         }
         config.setConfigValue(value);
@@ -120,11 +119,11 @@ public class GlobalConfigService {
         int existCount = 0;
 
         for (GlobalConfigEnum config : GlobalConfigEnum.values()) {
-            ConfigPo existingConfig = configRepository.findByUserIdAndConfigKey(GLOBAL_USER_ID, config.getKey());
+            ConfigPo existingConfig = configRepository.getGlobalConfig(config.getKey());
             
             if (existingConfig == null) {
                 ConfigPo newConfig = new ConfigPo();
-                newConfig.setUserId(GLOBAL_USER_ID);
+                newConfig.setPlayer(null);
                 newConfig.setConfigKey(config.getKey());
                 newConfig.setConfigValue(config.getDefaultValue());
                 newConfig.setDescription(config.getDescription());

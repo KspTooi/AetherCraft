@@ -26,7 +26,7 @@ import java.util.ArrayList;
 public class AdminModelConfigService {
 
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     @Autowired
     private GlobalConfigService globalConfigService;
@@ -66,28 +66,23 @@ public class AdminModelConfigService {
 
         Long userId = AuthService.getCurrentUserId();
         // 从配置服务加载配置
-
         String baseKey = "ai.model.cfg." + byCode.getCode() + ".";
 
         // 获取全局代理配置和用户代理配置
         vo.setGlobalProxyConfig(globalConfigService.getValue("model.proxy.config"));
-        vo.setUserProxyConfig(userConfigService.getValue("model.proxy.config"));
+        vo.setUserProxyConfig(playerConfigService.getString("model.proxy.config",null));
 
         // 获取温度值，默认0.7
-        String tempStr = userConfigService.getValue(baseKey + "temperature");
-        vo.setTemperature(tempStr != null ? Double.parseDouble(tempStr) : 0.7);
+        vo.setTemperature(playerConfigService.getDouble(baseKey + "temperature",0.7D));
 
         // 获取top_p值，默认1.0
-        String topPStr = userConfigService.getValue(baseKey + "topP");
-        vo.setTopP(topPStr != null ? Double.parseDouble(topPStr) : 1.0);
+        vo.setTopP(playerConfigService.getDouble(baseKey + "topP",1.0D));
 
         // 获取top_k值，默认40
-        String topKStr = userConfigService.getValue(baseKey + "topK");
-        vo.setTopK(topKStr != null ? Integer.parseInt(topKStr) : 40);
+        vo.setTopK(playerConfigService.getInt(baseKey, 40));
 
-        // 获取最大输出长度，默认800
-        String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
-        vo.setMaxOutputTokens(maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 4096);
+        // 获取最大输出长度，默认4096
+        vo.setMaxOutputTokens(playerConfigService.getInt(baseKey, 4096));
 
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
         vo.setApiKeys(apiKeyService.getCurrentPlayerAvailableApiKey(byCode.getSeries()));
@@ -144,16 +139,16 @@ public class AdminModelConfigService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
 
         // 保存其他配置
-        userConfigService.setValue(baseKey + "temperature", String.valueOf(dto.getTemperature()));
-        userConfigService.setValue(baseKey + "topP", String.valueOf(dto.getTopP()));
-        userConfigService.setValue(baseKey + "topK", String.valueOf(dto.getTopK()));
-        userConfigService.setValue(baseKey + "maxOutputTokens", String.valueOf(dto.getMaxOutputTokens()));
+        playerConfigService.put(baseKey + "temperature", dto.getTemperature());
+        playerConfigService.put(baseKey + "topP", dto.getTopP());
+        playerConfigService.put(baseKey + "topK", dto.getTopK());
+        playerConfigService.put(baseKey + "maxOutputTokens", dto.getMaxOutputTokens());
 
         // 保存用户代理配置
-        userConfigService.setValue("model.proxy.config", (String) null);
+        playerConfigService.put("model.proxy.config", (String) null);
 
         if(StringUtils.isNotBlank(dto.getUserProxyConfig())){
-            userConfigService.setValue("model.proxy.config", dto.getUserProxyConfig());
+            playerConfigService.put("model.proxy.config", dto.getUserProxyConfig());
         }
 
         //保存全局代理配置
@@ -187,25 +182,19 @@ public class AdminModelConfigService {
         String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
 
         // 获取代理配置 - 首先检查用户级别的代理配置
-        String proxyConfig = userConfigService.getValue("model.proxy.config");
+        String proxyConfig = playerConfigService.getString("model.proxy.config", null);
 
         // 如果用户未配置代理，则使用全局代理配置
         if (StringUtils.isBlank(proxyConfig)) {
-            proxyConfig = globalConfigService.getValue("model.proxy.config");
+            proxyConfig = globalConfigService.get("model.proxy.config", null);
         }
 
         // 获取其他参数
-        String tempStr = userConfigService.getValue(baseKey + "temperature");
-        double temperature = tempStr != null ? Double.parseDouble(tempStr) : 0.7;
+        double temperature = playerConfigService.getDouble(baseKey + "temperature", 0.7);
 
-        String topPStr = userConfigService.getValue(baseKey + "topP");
-        double topP = topPStr != null ? Double.parseDouble(topPStr) : 1.0;
-
-        String topKStr = userConfigService.getValue(baseKey + "topK");
-        int topK = topKStr != null ? Integer.parseInt(topKStr) : 40;
-
-        String maxOutputTokensStr = userConfigService.getValue(baseKey + "maxOutputTokens");
-        int maxOutputTokens = maxOutputTokensStr != null ? Integer.parseInt(maxOutputTokensStr) : 800;
+        double topP = playerConfigService.getDouble(baseKey + "topP", 1.0);
+        int topK = playerConfigService.getInt(baseKey + "topK", 40);
+        int maxOutputTokens = playerConfigService.getInt(baseKey + "maxOutputTokens", 4096);
 
         try {
             // 创建HTTP客户端

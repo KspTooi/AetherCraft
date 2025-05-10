@@ -1,12 +1,9 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.vo.*;
-import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.commons.annotation.RequirePermission;
-import com.ksptool.ql.commons.annotation.RequirePermissionRest;
+import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.biz.model.dto.ChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
 import com.ksptool.ql.biz.model.dto.EditThreadDto;
@@ -16,20 +13,12 @@ import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
 import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 import com.ksptool.ql.biz.service.ModelChatService;
 import com.ksptool.ql.commons.web.Result;
-import com.ksptool.ql.commons.web.SseResult;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.http.MediaType;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import com.ksptool.ql.commons.enums.AIModelEnum;
-
-import com.ksptool.ql.biz.service.UserConfigService;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +33,7 @@ public class ModelChatController {
     @Autowired
     private ModelChatService modelChatService;
     @Autowired
-    private UserConfigService userConfigService;
+    private PlayerConfigService playerConfigService;
 
     /**
      * 获取聊天视图
@@ -63,7 +52,7 @@ public class ModelChatController {
         modelAndView.addObject("models", models);
         modelAndView.addObject("defaultModel", defaultModel);
 
-        String lastThread = userConfigService.get(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+        String lastThread = playerConfigService.getString(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),null);
 
         if(StringUtils.isNotBlank(lastThread)){
             modelAndView.addObject("lastThread", lastThread);
@@ -177,10 +166,10 @@ public class ModelChatController {
             modelChatService.removeThread(dto.getThreadId());
 
             //如移除的角色是用户最后选择的那一个Thread 需清空用户保存的配置
-            Long userLastSelect = userConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
+            Long userLastSelect = playerConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
 
             if(userLastSelect.equals(dto.getThreadId())){
-                userConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
+                playerConfigService.remove(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key());
             }
 
             return Result.success("会话删除成功");

@@ -9,11 +9,8 @@ public class GetConfigListVo {
     // 主键ID
     private Long id;
 
-    // 用户ID
-    private Long userId;
-
-    // 用户名
-    private String username;
+    // 人物名称
+    private String playerName;
 
     // 配置键
     private String configKey;
@@ -35,10 +32,9 @@ public class GetConfigListVo {
     }
 
 
-    public GetConfigListVo(Long id, Long userId, String username, String configKey, String configValue, String description, Date createTime, Date updateTime) {
+    public GetConfigListVo(Long id, String playerName, String configKey, String configValue, String description, Date createTime, Date updateTime) {
         this.id = id;
-        this.userId = userId;
-        this.username = username;
+        this.playerName = playerName;
         this.configKey = configKey;
         this.configValue = configValue;
         this.description = description;
