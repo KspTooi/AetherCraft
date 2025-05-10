@@ -25,7 +25,8 @@ const operationLoading = ref<{ [key: string]: boolean }>({
     permissions: false,
     groups: false,
     users: false,
-    configs: false
+    configs: false,
+    forceCreatePlayers: false
 })
 
 // 执行维护操作的通用方法
@@ -87,6 +88,15 @@ const maintainOperations: MaintainOperation[] = [
         bgColor: 'rgba(144, 147, 153, 0.1)',
         iconColor: '#909399',
         action: () => executeMaintainOperation('configs', MaintainApi.validateSystemConfigs)
+    },
+    {
+        title: '强制创建Player',
+        description: '为所有没有Player角色的用户强制创建Player角色。',
+        icon: UserFilled,
+        buttonText: '强制创建Player',
+        bgColor: 'rgba(245, 108, 108, 0.1)',
+        iconColor: '#F56C6C',
+        action: () => executeMaintainOperation('forceCreatePlayers', MaintainApi.forceCreatePlayers)
     }
 ]
 </script>
@@ -119,7 +129,8 @@ const maintainOperations: MaintainOperation[] = [
                             index === 0 ? 'permissions' : 
                             index === 1 ? 'groups' : 
                             index === 2 ? 'users' : 
-                            'configs'
+                            index === 3 ? 'configs' : 
+                            'forceCreatePlayers'
                         ]"
                         @click="operation.action"
                         class="card-button"

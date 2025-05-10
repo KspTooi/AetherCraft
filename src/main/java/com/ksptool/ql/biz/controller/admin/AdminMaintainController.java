@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
  * 维护工具控制器
  */
 @Controller
-@RestController("/admin/maintain")
+@RestController
+@RequestMapping("/admin/maintain")
 public class AdminMaintainController {
 
     @Autowired
@@ -116,7 +117,7 @@ public class AdminMaintainController {
     @RequirePermissionRest("admin:maintain:force:create:player")
     public Result<String> forceCreatePlayers() {
         try{
-            return Result.success(adminPlayerService.forceCreatePlayers());
+            return Result.success(adminPlayerService.forceCreatePlayers(),null);
         }catch (Exception e){
             return Result.error(e.getMessage());
         }
