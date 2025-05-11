@@ -71,6 +71,11 @@ public enum PermissionEnum {
     ADMIN_PLAYER_VIEW("admin:player:view", "查看玩家列表"),
     ADMIN_PLAYER_SAVE("admin:player:save", "新增/编辑玩家"),
     ADMIN_PLAYER_DELETE("admin:player:delete", "删除玩家"),
+    
+    //新玩家默认访问组管理
+    ADMIN_PLAYER_DEFAULT_GROUP_VIEW("admin:player:default:group:view", "查看新玩家默认访问组"),
+    ADMIN_PLAYER_DEFAULT_GROUP_ADD("admin:player:default:group:add", "添加新玩家默认访问组"),
+    ADMIN_PLAYER_DEFAULT_GROUP_REMOVE("admin:player:default:group:remove", "移除新玩家默认访问组"),
 
     //用户组管理  
     ADMIN_GROUP_VIEW("admin:group:view", "查看用户组"),
