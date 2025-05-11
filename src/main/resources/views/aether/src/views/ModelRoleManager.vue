@@ -13,7 +13,7 @@
     <GlowDiv class="role-content" border="none">
         <div v-if="!selectedRoleId" class="empty-detail">
           <i class="bi bi-person-bounding-box"></i>
-          <p>请从左侧选择一个角色进行设计</p>
+          <p>请从左侧选择一个NPC进行设计</p>
         </div>
       
       <GlowTab
@@ -21,7 +21,7 @@
         :items="roleTabItems"
         v-model:activeTab="currentTab"
       >
-        <!-- 角色基本信息 -->
+        <!-- NPC基本信息 -->
         <div v-if="currentTab === 'base-info'" class="role-tab-panel">
           <div class="role-panel">
             <!-- 操作按钮区域（顶部） -->
@@ -30,7 +30,7 @@
                 @click="removeModelRole(selectedRoleId)"
                 :disabled="loading"
                 class="action-button danger-button"
-                title="移除角色"
+                title="移除NPC"
               >
                 移除
               </GlowButton>
@@ -38,7 +38,7 @@
                 @click="copyCurrentRole"
                 :disabled="loading"
                 class="action-button"
-                title="复制角色"
+                title="复制NPC"
               >
                 复制
               </GlowButton>
@@ -46,7 +46,7 @@
                 @click="saveRoleChanges" 
                 :disabled="loading"
                 class="action-button save-button"
-                title="保存角色"
+                title="保存NPC"
               >
                 保存
               </GlowButton>
@@ -56,7 +56,7 @@
               <div class="form-row">
                 <GlowInput
                   v-model="currentRoleDetails.name"
-                  title="角色名称"
+                  title="NPC名称"
                   :maxLength="50"
                   showLength
                   notBlank
@@ -67,7 +67,7 @@
                 <div class="input-group">
                   <GlowInput
                     v-model="currentRoleDetails.tags"
-                    title="角色标签"
+                    title="NPC标签"
                     :maxLength="50"
                     showLength
                     placeholder="使用逗号分隔多个标签"
@@ -77,8 +77,8 @@
                   <div class="status-wrapper">
                     <GlowCheckBox 
                       v-model="roleEnabled"
-                      tip="被禁用的角色在聊天界面将不可见">
-                      启用角色
+                      tip="被禁用的NPC在聊天界面将不可见">
+                      启用NPC
                     </GlowCheckBox>
                   </div>
                 </div>
@@ -87,7 +87,7 @@
               <div class="form-row">
                 <GlowInputArea
                   v-model="currentRoleDetails.description"
-                  title="角色描述"
+                  title="NPC描述"
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
@@ -97,7 +97,7 @@
               <div class="form-row">
                 <GlowInputArea
                   v-model="currentRoleDetails.roleSummary"
-                  title="角色设定摘要"
+                  title="NPC设定摘要"
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
@@ -126,9 +126,9 @@
               
               <!-- 头像区域 -->
               <div class="avatar-section">
-                <p class="section-title">角色头像</p>
+                <p class="section-title">NPC头像</p>
                 <div class="avatar-container">
-                  <img v-if="currentRoleDetails.avatarPath" :src="currentRoleDetails.avatarPath" class="avatar-preview" alt="角色头像" />
+                  <img v-if="currentRoleDetails.avatarPath" :src="currentRoleDetails.avatarPath" class="avatar-preview" alt="NPC头像" />
                   <div v-else class="avatar-placeholder">
                     <i class="bi bi-person"></i>
                   </div>
@@ -212,7 +212,7 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
 // 获取偏好设置存储
 const preferencesStore = usePreferencesStore();
 
-// 角色列表引用
+// NPC列表引用
 const roleListRef = ref<any>(null);
 const alterRef = ref<any>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -220,14 +220,14 @@ const uploading = ref(false);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 const confirmInputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null);
 
-// 角色列表数据
+// NPC列表数据
 const roleList = ref<GetModelRoleListVo[]>([]);
 const loading = ref(true);
 const selectedRoleId = ref<string>("");
 
 // 定义标签项
 const roleTabItems = [
-  { title: '角色基本', action: 'base-info' },
+  { title: 'NPC基本', action: 'base-info' },
   { title: '对话示例', action: 'chat-examples' },
 ];
 
@@ -258,12 +258,12 @@ const currentRoleDetails = reactive<GetModelRoleDetailsVo>({
 // 然后初始化roleEnabled并设置监听
 const roleEnabled = ref(currentRoleDetails.status === 1);
 
-// 监听角色启用状态变化
+// 监听NPC启用状态变化
 watch(roleEnabled, (newValue) => {
   currentRoleDetails.status = newValue ? 1 : 0;
 });
 
-// 监听角色详情中的status变化
+// 监听NPC详情中的status变化
 watch(() => currentRoleDetails.status, (newValue) => {
   roleEnabled.value = newValue === 1;
 });
@@ -272,7 +272,7 @@ watch(() => currentRoleDetails.status, (newValue) => {
 onMounted(async () => {
   await loadRoleList();
   
-  // 从偏好设置中加载上次选择的角色ID和Tab
+  // 从偏好设置中加载上次选择的NPCID和Tab
   const savedRoleId = preferencesStore.getModelRoleEditCurrentId;
   const savedTab = preferencesStore.getModelRoleEditPathTab;
   
@@ -281,7 +281,7 @@ onMounted(async () => {
   }
   
   if (savedRoleId) {
-    // 检查保存的角色ID是否在列表中存在
+    // 检查保存的NPCID是否在列表中存在
     const roleExists = roleList.value.some(role => role.id === savedRoleId);
     if (roleExists) {
       selectedRoleId.value = savedRoleId;
@@ -290,7 +290,7 @@ onMounted(async () => {
   }
 });
 
-// 加载角色列表
+// 加载NPC列表
 const loadRoleList = async () => {
   try {
     loading.value = true;
@@ -308,7 +308,7 @@ const loadRoleList = async () => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '加载失败',
-      content: error instanceof Error ? error.message : '无法加载角色列表，请稍后重试',
+      content: error instanceof Error ? error.message : '无法加载NPC列表，请稍后重试',
       closeText: '确定'
     });
   }
@@ -328,7 +328,7 @@ const loadModelRoleDetails = async () => {
   } catch (error) {
     alterRef.value?.showConfirm({
       title: '加载失败',
-      content: error instanceof Error ? error.message : '无法加载角色详情，请稍后重试',
+      content: error instanceof Error ? error.message : '无法加载NPC详情，请稍后重试',
       closeText: '确定'
     });
   }
@@ -339,10 +339,10 @@ const removeModelRole = async (roleId: string) => {
   
   // 显示确认对话框
   const confirmed = await confirmRef.value.showConfirm({
-    title: '移除角色',
-    content: '警告：这是一个不可逆的操作！移除角色将同时删除：\n\n' +
-             '• 与该角色的所有聊天记录\n' +
-             '• 角色的所有个人设定数据\n' +
+    title: '移除NPC',
+    content: '警告：这是一个不可逆的操作！移除NPC将同时删除：\n\n' +
+             '• 与该NPC的所有聊天记录\n' +
+             '• NPC的所有个人设定数据\n' +
              '• 所有对话示例\n\n' +
              '删除后，您将无法恢复这些数据。确定要继续吗？',
     confirmText: '确认移除',
@@ -359,18 +359,18 @@ const removeModelRole = async (roleId: string) => {
     });
     
     if (response === 'success') {
-      // 如果删除的是当前选中的角色，清空选择
+      // 如果删除的是当前选中的NPC，清空选择
       if (roleId === selectedRoleId.value) {
         selectedRoleId.value = '';
       }
       
-      // 刷新角色列表
+      // 刷新NPC列表
       await loadRoleList();
     } else {
       // 使用GlowAlter显示错误提示
       alterRef.value?.showConfirm({
         title: '操作失败',
-        content: '删除角色失败：' + (response || '未知错误'),
+        content: '删除NPC失败：' + (response || '未知错误'),
         closeText: '确定'
       });
     }
@@ -382,7 +382,7 @@ const removeModelRole = async (roleId: string) => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '操作失败',
-      content: error instanceof Error ? error.message : '删除角色出错，请稍后重试',
+      content: error instanceof Error ? error.message : '删除NPC出错，请稍后重试',
       closeText: '确定'
     });
   }
@@ -393,22 +393,22 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
     loading.value = true;
     const response = await http.postEntity<string>('/model/role/saveModelRole', roleData);
     
-    // 返回的是新角色的ID
+    // 返回的是新NPC的ID
     if (response) {
-      // 刷新角色列表
+      // 刷新NPC列表
       await loadRoleList();
       
-      // 如果是新创建的角色，选中它
+      // 如果是新创建的NPC，选中它
       if (!roleData.id) {
         selectedRoleId.value = response;
-        // 加载新创建角色的详情
+        // 加载新创建NPC的详情
         await loadModelRoleDetails();
       }
     } else {
       // 使用GlowAlter显示错误提示
       alterRef.value?.showConfirm({
         title: '保存失败',
-        content: '保存角色信息失败：未获取有效响应',
+        content: '保存NPC信息失败：未获取有效响应',
         closeText: '确定'
       });
     }
@@ -420,24 +420,24 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
     // 使用GlowAlter显示错误提示
     alterRef.value?.showConfirm({
       title: '保存失败',
-      content: error instanceof Error ? error.message : '保存角色信息出错，请稍后重试',
+      content: error instanceof Error ? error.message : '保存NPC信息出错，请稍后重试',
       closeText: '确定'
     });
   }
 }
 
-// 选择角色
+// 选择NPC
 const onSelectRole = async (roleId: string) => {
   selectedRoleId.value = roleId;
   
-  // 保存选中的角色ID到偏好设置
+  // 保存选中的NPCID到偏好设置
   preferencesStore.saveModelRoleEditCurrentId(roleId);
   
-  // 加载选中角色的详情
+  // 加载选中NPC的详情
   await loadModelRoleDetails();
 };
 
-// 复制角色 - 空实现
+// 复制NPC - 空实现
 const onCopyRole = async (roleId: string) => {
   try {
     loading.value = true;
@@ -445,14 +445,14 @@ const onCopyRole = async (roleId: string) => {
       id: roleId
     });
     
-    // 刷新角色列表
+    // 刷新NPC列表
     await loadRoleList();
     loading.value = false;
     
     // 显示成功提示
     alterRef.value?.showConfirm({
       title: '复制成功',
-      content: '角色已成功复制。\n\n请注意：\n• 仅复制角色基本设定和对话示例\n• 不会复制用户与角色的聊天历史记录\n• 您可以开始与新角色进行全新的对话',
+      content: 'NPC已成功复制。\n\n请注意：\n• 仅复制NPC基本设定和对话示例\n• 不会复制用户与NPC的聊天历史记录\n• 您可以开始与新NPC进行全新的对话',
       closeText: '确定'
     });
   } catch (error) {
@@ -461,29 +461,29 @@ const onCopyRole = async (roleId: string) => {
     // 显示错误提示
     alterRef.value?.showConfirm({
       title: '复制失败',
-      content: error instanceof Error ? error.message : '复制角色失败，请稍后重试',
+      content: error instanceof Error ? error.message : '复制NPC失败，请稍后重试',
       closeText: '确定'
     });
   }
 };
 
-// 复制当前角色
+// 复制当前NPC
 const copyCurrentRole = () => {
   if (selectedRoleId.value) {
     onCopyRole(selectedRoleId.value);
   }
 };
 
-// 创建新角色
+// 创建新NPC
 const onCreateRole = async () => {
   if (!confirmInputRef.value) return;
   
-  // 弹出输入框让用户输入角色名称
+  // 弹出输入框让用户输入NPC名称
   const result = await confirmInputRef.value.showInput({
-    title: '创建新角色',
-    defaultValue: '新角色',
-    placeholder: '请输入角色名称',
-    message: '创建后可以继续编辑角色的其他信息',
+    title: '创建新NPC',
+    defaultValue: '新NPC',
+    placeholder: '请输入NPC名称',
+    message: '创建后可以继续编辑NPC的其他信息',
     confirmText: '创建',
     cancelText: '取消'
   });
@@ -491,15 +491,15 @@ const onCreateRole = async () => {
   // 用户取消创建
   if (!result.confirmed) return;
   
-  // 用户确认创建且输入了角色名称
+  // 用户确认创建且输入了NPC名称
   if (result.value.trim()) {
-    // 清空当前选中的角色ID
+    // 清空当前选中的NPCID
     selectedRoleId.value = "";
     
-    // 初始化一个新的角色详情对象
+    // 初始化一个新的NPC详情对象
     Object.assign(currentRoleDetails, {
       id: "",
-      name: result.value.trim(), // 使用用户输入的角色名称
+      name: result.value.trim(), // 使用用户输入的NPC名称
       status: 1,
       sortOrder: 0,
       avatarPath: "",
@@ -512,26 +512,26 @@ const onCreateRole = async () => {
     
     // 等待下一个事件循环，确保表单已重置
     setTimeout(() => {
-      // 自动保存新角色
+      // 自动保存新NPC
       saveRoleChanges();
     }, 0);
   } else {
     // 用户输入为空，显示提示
     alterRef.value?.showConfirm({
       title: '创建失败',
-      content: '角色名称不能为空',
+      content: 'NPC名称不能为空',
       closeText: '确定'
     });
   }
 };
 
-// 保存角色更改
+// 保存NPC更改
 const saveRoleChanges = async () => {
   // 验证必填字段
   if (!currentRoleDetails.name.trim()) {
     alterRef.value?.showConfirm({
       title: '验证失败',
-      content: '角色名称不能为空',
+      content: 'NPC名称不能为空',
       closeText: '确定'
     });
     return;
@@ -642,7 +642,7 @@ const handleFileUpload = async (event: Event) => {
   }
 };
 
-// 跳转到旧版控制台角色管理页面
+// 跳转到旧版控制台NPC管理页面
 const goToOldPanel = () => {
   if (selectedRoleId.value) {
     window.location.href = `/panel/model/role/list?id=${selectedRoleId.value}`;

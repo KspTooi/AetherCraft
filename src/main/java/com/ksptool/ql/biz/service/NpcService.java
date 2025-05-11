@@ -76,14 +76,14 @@ public class NpcService {
         // 创建查询条件
         NpcPo query = new NpcPo();
         query.setId(id);
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能查询当前玩家的角色
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能查询当前玩家的NPC
         
         // 创建Example查询
         SimpleExample<NpcPo> example = SimpleExample.of(query);
         
         // 执行查询
         NpcPo modelRole = repository.findOne(example.get())
-                .orElseThrow(() -> new BizException("角色不存在或无权限访问"));
+                .orElseThrow(() -> new BizException("NPC不存在或无权限访问"));
         
         // 创建VO对象并映射属性
         GetModelRoleDetailsVo vo = new GetModelRoleDetailsVo();
@@ -107,26 +107,26 @@ public class NpcService {
 
     public void copyModelRole(long sourceId) throws BizException{
 
-        // 查询要复制的角色
+        // 查询要复制的NPC
         NpcPo query = new NpcPo();
         query.setId(sourceId);
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能复制当前人物的角色
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 确保只能复制当前人物的NPC
         
         // 创建Example查询
         SimpleExample<NpcPo> example = SimpleExample.of(query);
         
         // 执行查询
         NpcPo sourceRole = repository.findOne(example.get())
-                .orElseThrow(() -> new BizException("要复制的角色不存在或无权限访问"));
+                .orElseThrow(() -> new BizException("要复制的NPC不存在或无权限访问"));
         
-        // 创建新角色并复制属性
+        // 创建新NPC并复制属性
         NpcPo newRole = new NpcPo();
         assign(sourceRole, newRole);
         
-        // 设置新角色的基本属性
+        // 设置新NPC的基本属性
         newRole.setId(null); // 清空ID，让数据库自动生成
         
-        // 生成不冲突的角色名称
+        // 生成不冲突的NPC名称
         String baseName = sourceRole.getName() + " 副本";
         String newName = baseName;
         int suffix = 1;
@@ -141,7 +141,7 @@ public class NpcService {
         newRole.setCreateTime(null); // 清空创建时间，让数据库自动设置
         newRole.setUpdateTime(null); // 清空更新时间，让数据库自动设置
         
-        // 保存新角色 (不需要再次加密，因为查询出的数据并没有解密)
+        // 保存新NPC (不需要再次加密，因为查询出的数据并没有解密)
         NpcPo savedRole = repository.save(newRole);
         
         // 查询并复制对话示例
@@ -170,8 +170,8 @@ public class NpcService {
     }
     
     /**
-     * 检查角色名称是否已存在
-     * @param roleName 角色名称
+     * 检查NPC名称是否已存在
+     * @param roleName NPC名称
      * @param userId 用户ID
      * @return 如果名称已存在返回true，否则返回false
      */

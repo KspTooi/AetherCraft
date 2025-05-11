@@ -7,7 +7,7 @@
       class="mobile-menu-btn"
       :corners="[`top-left`]"
     >
-      角色列表
+      NPC列表
     </GlowButton>
 
     <!-- 移动端遮罩层 -->
@@ -23,14 +23,14 @@
       :class="{ 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile }"
     >
 
-      <!-- 管理角色按钮 -->
+      <!-- 管理NPC按钮 -->
       <div class="manage-role-btn-wrapper"> 
         <GlowButton
           @click="handleRoleManage" 
           class="manage-role-btn"
           :corners="['bottom-right','bottom-left']"
         >
-          角色设计器
+          NPC设计器
         </GlowButton>
       </div>
       
@@ -45,12 +45,12 @@
         <!-- 空列表状态 -->
         <div v-else-if="threads.length === 0" class="empty-list">
           <i class="bi bi-person-plus"></i>
-          <div class="empty-text">您可以通过角色设计器创建您的第一个角色</div>
+          <div class="empty-text">您可以通过NPC设计器创建您的第一个NPC</div>
           <GlowButton
             @click="handleRoleManage" 
             class="empty-create-btn"
           >
-            进入角色设计器
+            进入NPC设计器
           </GlowButton>
         </div>
         
@@ -136,7 +136,7 @@ const contextMenu = ref<InstanceType<typeof GlowContextMenu> | null>(null)
 const menuActions = ref([
   { name: '开始新会话', action: 'new-thread' },
   { name: '管理全部会话', action: 'manage-threads' },
-  { name: '编辑角色', action: 'edit-role' },
+  { name: '编辑NPC', action: 'edit-role' },
 ])
 
 // 处理点击会话
@@ -149,7 +149,7 @@ const handleRoleClick = (roleId: string) => {
   closeMobileMenu()
 }
 
-// 处理管理角色按钮点击
+// 处理管理NPC按钮点击
 const handleRoleManage = () => {
   router.push('/model-role-manager')
   closeMobileMenu()
@@ -177,7 +177,7 @@ const closeMobileMenu = () => {
 // 打开/关闭上下文菜单
 const toggleContextMenu = (roleId: string, roleName: string, event: MouseEvent) => {
   if (contextMenu.value) {
-    contextMenu.value.show(roleId, event, roleName) // 将角色名作为标题传递
+    contextMenu.value.show(roleId, event, roleName) // 将NPC名作为标题传递
   }
 }
 
