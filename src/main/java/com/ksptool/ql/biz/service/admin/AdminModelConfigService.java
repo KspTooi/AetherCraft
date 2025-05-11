@@ -64,7 +64,6 @@ public class AdminModelConfigService {
         vo.setModelCode(byCode.getCode());
         vo.setModelName(byCode.getName());
 
-        Long userId = AuthService.getCurrentUserId();
         // 从配置服务加载配置
         String baseKey = "ai.model.cfg." + byCode.getCode() + ".";
 
@@ -88,7 +87,7 @@ public class AdminModelConfigService {
         vo.setApiKeys(apiKeyService.getCurrentPlayerAvailableApiKey(byCode.getSeries()));
 
         // 获取当前使用的API密钥ID
-        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(byCode.getCode(),userId);
+        ModelApiKeyConfigPo currentConfig = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(byCode.getCode(),AuthService.getCurrentPlayerId());
 
         if (currentConfig != null) {
             vo.setCurrentApiKeyId(currentConfig.getApiKeyId());
