@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditMessageDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
@@ -37,16 +38,19 @@ public class ChatMessageController {
         return Result.success(service.getThreadList(dto));
     }
 
+    //移除聊天Thread
+    @PostMapping("/removeThread")
+    public Result<String> removeThread(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        service.removeThread(dto.getId());
+        return Result.success("操作成功");
+    }
+
 
     //编辑对话消息
     @PostMapping("/editMessage")
-    public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto){
-        try {
-            service.editMessage(dto.getMessageId(),dto.getContent());
-            return Result.success("操作成功");
-        } catch (BizException e) {
-            return Result.error(e);
-        }
+    public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto) throws BizException {
+        service.editMessage(dto.getMessageId(),dto.getContent());
+        return Result.success("操作成功");
     }
 
 

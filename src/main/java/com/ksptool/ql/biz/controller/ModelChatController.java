@@ -1,24 +1,20 @@
 package com.ksptool.ql.biz.controller;
 
+import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.ChatMessageService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
-import com.ksptool.ql.biz.model.dto.RecoverChatDto;
-import com.ksptool.ql.biz.model.dto.EditThreadDto;
-import com.ksptool.ql.biz.model.dto.RemoveThreadDto;
-import com.ksptool.ql.biz.model.dto.RemoveHistoryDto;
-import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
-import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 import com.ksptool.ql.biz.service.ModelChatService;
+import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
@@ -118,7 +114,7 @@ public class ModelChatController {
     public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
 
-            modelChatService.removeThread(dto.getThreadId());
+            chatMessageService.removeThread(dto.getThreadId());
 
             //如移除的角色是用户最后选择的那一个Thread 需清空用户保存的配置
             Long userLastSelect = playerConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
@@ -169,11 +165,22 @@ public class ModelChatController {
      */
     @PostMapping("/getThreadList")
     public Result<List<ThreadListItemVo>> getThreadList() {
-        try {
-            return Result.success(modelChatService.getThreadList());
-        } catch (BizException e) {
-            return Result.error(e);
+
+        var dto = new GetThreadListDto();
+        dto.setType(0);
+        RestPageableView<GetThreadListVo> threadList = chatMessageService.getThreadList(dto);
+        List<GetThreadListVo> rows = threadList.getRows();
+        var vos = new ArrayList<ThreadListItemVo>();
+
+        for(var row : rows){
+            var vo = new ThreadListItemVo();
+            vo.setId(row.getId());
+            vo.setTitle(row.getTitle());
+            vo.setModelCode(row.getModelCode());
+            vo.setChecked(row.getActive());
+            vos.add(vo);
         }
+        return Result.success(vos);
     }
 
     /**

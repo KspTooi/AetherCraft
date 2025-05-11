@@ -4,15 +4,21 @@ import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatSegmentRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
+import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
+import com.ksptool.ql.commons.web.Result;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,8 +73,30 @@ public class ChatMessageService {
         return new RestPageableView<>(vos, pPos.getTotalElements());
     }
 
+    @Transactional
+    public void removeThread(Long threadId)throws BizException{
+
+        //查询当前玩家下的Thread
+        var query = new ChatThreadPo();
+        query.setId(threadId);
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
+        ChatThreadPo po = threadRepository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("消息记录不存在或无权访问"));
+
+        //移除关联记录
+        segmentRepository.removeByThreadId(po.getId());
+        messageRepository.removeByThreadId(po.getId());
+
+        //移除Thread
+        threadRepository.delete(po);
+    }
+
+
 
     //编辑对话历史消息
+    @Transactional
     public void editMessage(Long messageId, String content) throws BizException {
 
         ChatMessagePo messagePo = messageRepository.findById(messageId)

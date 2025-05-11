@@ -24,21 +24,13 @@ import java.util.List;
 import java.util.ArrayList;
 import static com.ksptool.entities.Entities.as;
 import java.util.function.Consumer;
-
 import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
-
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.model.vo.ThreadListItemVo;
-
 import com.ksptool.ql.biz.model.dto.CreateEmptyThreadDto;
-
-import java.util.Date;
 import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
-
-import com.ksptool.ql.biz.model.dto.EditHistoryDto;
 
 @Slf4j
 @Service
@@ -145,28 +137,6 @@ public class ModelChatService {
         playerConfigService.readPlayerModelParam(param,playerId);
         return param;
     }
-
-    /**
-     * 删除会话
-     * @param threadId 会话ID
-     * @throws BizException 业务异常
-     */
-    public void removeThread(Long threadId) throws BizException {
-
-        var query = new ModelChatThreadPo();
-        query.setId(threadId);
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
-                .orElseThrow(() -> new BizException("会话不存在或不属于您"));
-
-        // 先删除关联的聊天片段
-        modelSegmentRepository.deleteByThreadId(threadId);
-        
-        // 再删除会话
-        modalThreadRepository.delete(thread);
-    }
-
 
     /**
      * 发送批量聊天消息
@@ -922,49 +892,6 @@ public class ModelChatService {
                 log.error("处理聊天片段失败", e);
             }
         };
-    }
-
-    /**
-     * 获取当前用户的会话列表
-     * @return 会话列表
-     * @throws BizException 业务异常
-     */
-    public List<ThreadListItemVo> getThreadList() throws BizException {
-        // 获取当前玩家ID
-        Long playerId = AuthService.getCurrentPlayerId();
-        
-        // 查询该用户的所有会话，按更新时间排序
-        List<ModelChatThreadPo> threads = modalThreadRepository.findByPlayerIdOrderByUpdateTimeDesc(playerId);
-        
-        // 获取用户上次选择的会话ID
-        String lastThreadIdStr = playerConfigService.getString(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),null);
-        Long lastThreadId = null;
-        if (StringUtils.isNotBlank(lastThreadIdStr)) {
-            try {
-                lastThreadId = Long.parseLong(lastThreadIdStr);
-            } catch (NumberFormatException e) {
-                log.warn("无效的 lastThreadId: {}", lastThreadIdStr);
-            }
-        }
-        
-        // 转换为VO
-        List<ThreadListItemVo> voList = new ArrayList<>();
-        
-        for (ModelChatThreadPo thread : threads) {
-            ThreadListItemVo vo = new ThreadListItemVo();
-            vo.setId(thread.getId());
-            vo.setTitle(css.decryptForCurUser(thread.getTitle()));
-            vo.setModelCode(thread.getModelCode());
-            vo.setChecked(0);
-
-            // 检查是否为上次选中的会话
-            if (thread.getId().equals(lastThreadId)) {
-                vo.setChecked(1);
-            }
-            voList.add(vo);
-        }
-        
-        return voList;
     }
 
     /**
