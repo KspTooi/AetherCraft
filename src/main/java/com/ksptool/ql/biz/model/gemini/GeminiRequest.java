@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.model.gemini;
 
 import lombok.Data;
-import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
+
 import java.util.ArrayList;
 import java.util.List;
 

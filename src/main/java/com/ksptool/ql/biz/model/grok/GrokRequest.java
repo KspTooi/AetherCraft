@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.model.grok;
 
-import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import lombok.Data;
 
 import java.util.ArrayList;

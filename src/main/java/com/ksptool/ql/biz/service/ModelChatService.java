@@ -1,14 +1,11 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.ModelChatThreadRepository;
-import com.ksptool.ql.biz.mapper.ModelChatHistoryRepository;
+import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.dto.RecoverChatDto;
-import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
-import com.ksptool.ql.biz.model.po.ModelChatThreadPo;
-import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
@@ -23,16 +20,11 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.List;
 import java.util.ArrayList;
-
 import static com.ksptool.entities.Entities.as;
-
 import java.util.function.Consumer;
 
-import com.ksptool.ql.biz.mapper.ModelChatSegmentRepository;
-import com.ksptool.ql.biz.model.po.ModelChatSegmentPo;
 import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
@@ -65,13 +57,13 @@ public class ModelChatService {
     private GlobalConfigService globalConfigService;
     
     @Autowired
-    private ModelChatThreadRepository threadRepository;
+    private ModelChatThreadRepository modalThreadRepository;
     
     @Autowired
-    private ModelChatHistoryRepository historyRepository;
+    private ModelChatHistoryRepository modelHistoryRepository;
     
     @Autowired
-    private ModelChatSegmentRepository segmentRepository;
+    private ModelChatSegmentRepository modelSegmentRepository;
     
     @Autowired
     private ModelGeminiService modelGeminiService;
@@ -85,22 +77,32 @@ public class ModelChatService {
     @Autowired
     private ContentSecurityService css;
 
+    @Autowired
+    private ChatThreadRepository threadRepository;
+
+    @Autowired
+    private ChatMessageRepository messageRepository;
+
+    @Autowired
+    private ChatSegmentRepository segmentRepository;
+
+
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long playerId, String modelCode) throws BizException {
 
         if (threadId == null || threadId == -1) {
             // 创建新的会话
-            long count = threadRepository.countByPlayerId(playerId);
+            long count = modalThreadRepository.countByPlayerId(playerId);
             
             ModelChatThreadPo thread = new ModelChatThreadPo();
             thread.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
             thread.setTitle("新对话" + (count + 1));
             thread.setModelCode(modelCode);
             css.encryptEntity(thread);
-            return threadRepository.save(thread);
+            return modalThreadRepository.save(thread);
         }
         
         // 获取已有会话
-        ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+        ModelChatThreadPo thread = modalThreadRepository.findByIdWithHistories(threadId);
         if (thread == null) {
             throw new BizException("会话不存在");
         }
@@ -117,10 +119,10 @@ public class ModelChatService {
         history.setRole(role);
         
         // 获取当前最大序号并加1
-        int nextSequence = historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
+        int nextSequence = modelHistoryRepository.findMaxSequenceByThreadId(thread.getId()) + 1;
         history.setSequence(nextSequence);
         css.encryptEntity(history,thread.getPlayer().getUser().getId());
-        return historyRepository.save(history);
+        return modelHistoryRepository.save(history);
     }
 
     /**
@@ -155,14 +157,14 @@ public class ModelChatService {
         query.setId(threadId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelChatThreadPo thread = threadRepository.findOne(Example.of(query))
+        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("会话不存在或不属于您"));
 
         // 先删除关联的聊天片段
-        segmentRepository.deleteByThreadId(threadId);
+        modelSegmentRepository.deleteByThreadId(threadId);
         
         // 再删除会话
-        threadRepository.delete(thread);
+        modalThreadRepository.delete(thread);
     }
 
 
@@ -215,7 +217,7 @@ public class ModelChatService {
             if(dto.getQueryKind() == 0){
 
                 //获取用户加密聊天记录
-                historyPos.addAll(historyRepository.getByThreadId(thread.getId()));
+                historyPos.addAll(modelHistoryRepository.getByThreadId(thread.getId()));
 
                 ModelChatHistoryPo userHistory = createHistory(thread, dto.getMessage(), 0);
                 userHistoryId = userHistory.getId();
@@ -228,7 +230,7 @@ public class ModelChatService {
                 query.setThread(Any.of().val("id",threadId).as(ModelChatThreadPo.class));
                 query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-                ModelChatHistoryPo rootHistory = historyRepository.findOne(Example.of(query))
+                ModelChatHistoryPo rootHistory = modelHistoryRepository.findOne(Example.of(query))
                         .orElseThrow(() -> new BizException("指定的根消息记录不存在或无权访问"));
 
                 // 检查消息类型，只能是用户消息
@@ -237,14 +239,14 @@ public class ModelChatService {
                 }
                 
                 // 删除根消息之后的所有消息
-                historyRepository.removeHistoryAfter(threadId, rootHistory.getSequence());
+                modelHistoryRepository.removeHistoryAfter(threadId, rootHistory.getSequence());
                 
                 // 使用根消息的ID作为当前用户消息ID
                 userHistoryId = rootHistory.getId();
                 thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
 
                 //获取用户加密聊天记录
-                historyPos.addAll(historyRepository.getByThreadId(thread.getId()));
+                historyPos.addAll(modelHistoryRepository.getByThreadId(thread.getId()));
 
                 //需要移除最后一条消息(防止历史记录中的消息与当前要发送的消息出现重复)
                 if(!historyPos.isEmpty()){
@@ -255,7 +257,7 @@ public class ModelChatService {
             }
 
             // 清理之前的片段（如果有）
-            segmentRepository.deleteByThreadId(thread.getId());
+            modelSegmentRepository.deleteByThreadId(thread.getId());
 
             // 创建开始片段并返回
             ModelChatSegmentPo startSegment = new ModelChatSegmentPo();
@@ -265,7 +267,7 @@ public class ModelChatService {
             startSegment.setContent(null);
             startSegment.setStatus(0); // 未读状态
             startSegment.setType(0); // 开始类型
-            segmentRepository.save(startSegment);
+            modelSegmentRepository.save(startSegment);
 
             // 获取代理配置
             String proxyConfig = getProxyConfig(playerId);
@@ -287,7 +289,7 @@ public class ModelChatService {
 
             //将新模型选项保存到Thread
             thread.setModelCode(modelEnum.getCode());
-            threadRepository.save(thread);
+            modalThreadRepository.save(thread);
 
             modelChatParam.setHistories(as(historyPos, ModelChatParamHistory.class));
 
@@ -336,7 +338,7 @@ public class ModelChatService {
             // 清理所有片段
             try {
                 if (!threadId.equals(-1L)) {
-                    segmentRepository.deleteByThreadId(threadId);
+                    modelSegmentRepository.deleteByThreadId(threadId);
                 }
             } catch (Exception ex) {
                 log.error("清理聊天片段失败", ex);
@@ -372,7 +374,7 @@ public class ModelChatService {
             }
 
             // 一次性查询所有未读片段，按sequence排序
-            unreadSegments = segmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId,playerId);
+            unreadSegments = modelSegmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId,playerId);
             
             // 如果有未读片段，跳出循环
             if (!unreadSegments.isEmpty()) {
@@ -400,7 +402,7 @@ public class ModelChatService {
             // 开始片段，只标记该片段为已读并返回
             if (segment.getType() == 0) {
                 segment.setStatus(1);
-                segmentRepository.save(segment);
+                modelSegmentRepository.save(segment);
                 ChatSegmentVo vo = new ChatSegmentVo();
                 vo.setThreadId(threadId);
                 vo.setHistoryId(segment.getHistoryId());
@@ -416,7 +418,7 @@ public class ModelChatService {
                 for (ModelChatSegmentPo seg : unreadSegments) {
                     seg.setStatus(1);
                 }
-                segmentRepository.saveAll(unreadSegments);
+                modelSegmentRepository.saveAll(unreadSegments);
                 ChatSegmentVo vo = new ChatSegmentVo();
                 vo.setThreadId(threadId);
                 vo.setSequence(segment.getSequence());
@@ -449,7 +451,7 @@ public class ModelChatService {
                 segmentsToMark.add(segment);
             }
             
-            segmentRepository.saveAll(segmentsToMark);
+            modelSegmentRepository.saveAll(segmentsToMark);
             
             // 返回合并后的数据片段
             ChatSegmentVo vo = new ChatSegmentVo();
@@ -466,7 +468,7 @@ public class ModelChatService {
         
         // 如果第一个片段是type=2结束片段
         firstSegment.setStatus(1); // 标记为已读
-        segmentRepository.save(firstSegment);
+        modelSegmentRepository.save(firstSegment);
         
         ChatSegmentVo vo = new ChatSegmentVo();
         vo.setThreadId(threadId);
@@ -490,7 +492,7 @@ public class ModelChatService {
         query.setId(threadId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelChatThreadPo thread = threadRepository.findOne(Example.of(query))
+        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("会话不存在或不属于您"));
 
         // 检查会话状态
@@ -503,7 +505,7 @@ public class ModelChatService {
         track.notifyTerminated(threadId);
 
         // 获取当前最大序号
-        int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+        int nextSequence = modelSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
 
         // 创建终止片段
         ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
@@ -513,7 +515,7 @@ public class ModelChatService {
         endSegment.setContent("用户终止了AI响应");
         endSegment.setStatus(0); // 未读状态
         endSegment.setType(2); // 结束类型
-        segmentRepository.save(endSegment);
+        modelSegmentRepository.save(endSegment);
     }
 
     /**
@@ -541,7 +543,7 @@ public class ModelChatService {
         query.setId(threadId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelChatThreadPo thread = threadRepository.findOne(Example.of(query))
+        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("会话不存在或不属于您"));
 
         // 更新会话标题
@@ -549,7 +551,7 @@ public class ModelChatService {
         // 标记为手动编辑的标题
         thread.setTitleGenerated(1);
         css.encryptEntity(thread);
-        threadRepository.save(thread);
+        modalThreadRepository.save(thread);
     }
 
     /**
@@ -566,7 +568,7 @@ public class ModelChatService {
             }
             
             // 获取会话
-            ModelChatThreadPo thread = threadRepository.findByIdWithHistories(threadId);
+            ModelChatThreadPo thread = modalThreadRepository.findByIdWithHistories(threadId);
             if (thread == null) {
                 throw new BizException("会话不存在");
             }
@@ -660,7 +662,7 @@ public class ModelChatService {
             thread.setTitle(title);
             thread.setTitleGenerated(1); // 标记为已生成标题
             css.encryptEntity(thread,uid);
-            threadRepository.save(thread);
+            modalThreadRepository.save(thread);
             
             log.info("已为会话 {} 生成标题: {}", threadId, title);
         } catch (Exception e) {
@@ -691,12 +693,12 @@ public class ModelChatService {
         query.setId(dto.getThreadId());
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        if(threadRepository.count(Example.of(query)) < 1){
+        if(modalThreadRepository.count(Example.of(query)) < 1){
             throw new BizException("会话不存在或不可用!");
         }
 
         // 查找最后一条用户消息
-        ModelChatHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
+        ModelChatHistoryPo lastUserMessage = modelHistoryRepository.getLastMessage(dto.getThreadId(), 0);
         if (lastUserMessage == null) {
             throw new BizException("未找到任何用户消息");
         }
@@ -724,11 +726,11 @@ public class ModelChatService {
         query.setThread(Any.of().val("id",threadId).as(ModelChatThreadPo.class));
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelChatHistoryPo history = historyRepository.findOne(Example.of(query))
+        ModelChatHistoryPo history = modelHistoryRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("历史消息不存在或不属于您"));
 
         // 删除历史消息
-        historyRepository.delete(history);
+        modelHistoryRepository.delete(history);
         log.info("已删除会话 {} 的历史消息 {}", threadId, historyId);
     }
     /**
@@ -739,17 +741,18 @@ public class ModelChatService {
      */
     public RecoverChatVo recoverChat(RecoverChatDto dto) throws BizException {
 
-        var query = new ModelChatThreadPo();
+        var query = new ChatThreadPo();
         query.setId(dto.getThreadId());
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelChatThreadPo thread = threadRepository.findOne(Example.of(query))
+        ChatThreadPo thread = threadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("会话不存在或无权限访问"));
 
         playerConfigService.put(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(), thread.getId());
 
         // 获取会话历史记录
-        List<ModelChatHistoryPo> histories = thread.getHistories();
+        List<ChatMessagePo> messages = thread.getMessages();
         
         // 创建响应VO
         RecoverChatVo vo = new RecoverChatVo();
@@ -758,8 +761,8 @@ public class ModelChatService {
         
         // 转换历史记录
         List<RecoverChatHistoryVo> messageVos = new ArrayList<>();
-        if (histories != null && !histories.isEmpty()) {
-            for (ModelChatHistoryPo history : histories) {
+        if (messages != null && !messages.isEmpty()) {
+            for (ChatMessagePo history : messages) {
                 RecoverChatHistoryVo messageVo = new RecoverChatHistoryVo();
                 
                 // 手动映射特定字段
@@ -767,17 +770,17 @@ public class ModelChatService {
                 messageVo.setContent(css.decryptForCurUser(history.getContent()));
                 messageVo.setCreateTime(history.getCreateTime());
                 
-                // 将role映射到type (0-用户消息，1-AI消息)
-                messageVo.setRole(history.getRole());
+                //发送人角色 0:Player 1:Model
+                messageVo.setRole(history.getSenderRole());
                 
                 // 根据角色设置名称和头像
-                if (history.getRole() == 0) {
+                if (history.getSenderRole() == 0) {
                     // 用户消息
                     messageVo.setName("User");
                     messageVo.setAvatarPath("");
                 }
                 
-                if (history.getRole() == 1) {
+                if (history.getSenderRole() == 1) {
                     // AI消息 - 设置为模型系列名称
                     AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
                     String aiName = modelEnum != null ? modelEnum.getSeries() : "AI助手";
@@ -840,7 +843,7 @@ public class ModelChatService {
                 }
 
                 // 获取当前最大序号
-                int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+                int nextSequence = modelSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
 
                 // 根据context.type处理不同类型的消息
                 if (context.getType() == 0) {
@@ -853,7 +856,7 @@ public class ModelChatService {
                     dataSegment.setStatus(0); // 未读状态
                     dataSegment.setType(1); // 数据类型
                     css.encryptEntity(dataSegment,userId);
-                    segmentRepository.save(dataSegment);
+                    modelSegmentRepository.save(dataSegment);
                     return;
                 }
 
@@ -866,9 +869,9 @@ public class ModelChatService {
                     history.setContent(context.getContent());
                     history.setRole(1);
                     // 获取当前最大序号并加1
-                    history.setSequence(historyRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
+                    history.setSequence(modelHistoryRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
                     css.encryptEntity(history,userId);
-                    ModelChatHistoryPo aiHistory = historyRepository.save(history);
+                    ModelChatHistoryPo aiHistory = modelHistoryRepository.save(history);
 
                     // 完成类型 - 创建结束片段
                     ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
@@ -880,7 +883,7 @@ public class ModelChatService {
                     endSegment.setType(2); // 结束类型
                     endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
                     css.encryptEntity(endSegment,userId);
-                    segmentRepository.save(endSegment);
+                    modelSegmentRepository.save(endSegment);
 
                     // 通知会话已结束
                     track.notifyFinished(threadId);
@@ -909,7 +912,7 @@ public class ModelChatService {
                     errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
                     errorSegment.setStatus(0); // 未读状态
                     errorSegment.setType(10); // 错误类型
-                    segmentRepository.save(errorSegment);
+                    modelSegmentRepository.save(errorSegment);
 
                     // 通知会话已失败
                     track.notifyFailed(threadId);
@@ -931,7 +934,7 @@ public class ModelChatService {
         Long playerId = AuthService.getCurrentPlayerId();
         
         // 查询该用户的所有会话，按更新时间排序
-        List<ModelChatThreadPo> threads = threadRepository.findByPlayerIdOrderByUpdateTimeDesc(playerId);
+        List<ModelChatThreadPo> threads = modalThreadRepository.findByPlayerIdOrderByUpdateTimeDesc(playerId);
         
         // 获取用户上次选择的会话ID
         String lastThreadIdStr = playerConfigService.getString(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),null);
@@ -972,50 +975,31 @@ public class ModelChatService {
      */
     public CreateEmptyThreadVo createEmptyThread(CreateEmptyThreadDto dto) throws BizException {
 
-        // 获取当前玩家ID
+        //获取当前玩家ID
         Long playerId = AuthService.getCurrentPlayerId();
         
-        // 获取当前玩家已有的会话数量
-        long threadCount = threadRepository.countByPlayerId(playerId);
-        
-        // 生成新会话标题
+        //获取当前玩家已有的会话数量
+        long threadCount = threadRepository.getPlayerThreadCount(playerId);
+
+        //生成新会话标题
         String title = String.format("新会话#%d", threadCount + 1);
         
-        // 创建新会话
-        ModelChatThreadPo thread = new ModelChatThreadPo();
-        thread.setTitle(title);
-        thread.setModelCode(dto.getModel());
+        //创建新会话
+        ChatThreadPo thread = new ChatThreadPo();
+        thread.setType(0);//Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+        thread.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
         thread.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
-        thread.setCreateTime(new Date());
-        thread.setUpdateTime(new Date());
-        css.encryptEntity(thread);
+        thread.setNpc(null);
+        thread.setTitle(title);
+        thread.setPublicInfo(null);
+        thread.setDescription(null);
+        thread.setTitleGenerated(0);
+        thread.setModelCode(dto.getModel());
+        thread.setActive(-1);
+        thread.setDescription(css.encryptForCurUser(thread.getDescription()));
         threadRepository.save(thread);
-        
         // 返回新创建的会话ID
         return CreateEmptyThreadVo.of(thread.getId());
     }
 
-    /**
-     * 编辑聊天历史记录
-     * @param dto 编辑聊天历史记录的请求参数
-     * @throws BizException 业务异常
-     */
-    public void editHistory(EditHistoryDto dto) throws BizException {
-        // 获取当前用户ID
-        Long userId = AuthService.getCurrentUserId();
-        
-        // 创建Example查询对象
-        ModelChatHistoryPo query = new ModelChatHistoryPo();
-        query.setId(dto.getHistoryId());
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        // 查询符合条件的记录
-        ModelChatHistoryPo history = historyRepository.findOne(Example.of(query))
-            .orElseThrow(() -> new BizException("历史记录不存在或无权编辑"));
-            
-        // 更新消息内容
-        history.setContent(dto.getContent());
-        css.encryptEntity(history,userId);
-        historyRepository.save(history);
-    }
 }

@@ -11,7 +11,7 @@ public class ModelRoleThreadListVo {
     
     // 会话标题
     private String title;
-    
+
     // 会话描述
     private String description;
     

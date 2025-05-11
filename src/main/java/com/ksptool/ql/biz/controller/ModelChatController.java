@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.vo.*;
+import com.ksptool.ql.biz.service.ChatMessageService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -17,11 +18,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,6 +31,9 @@ public class ModelChatController {
     private ModelChatService modelChatService;
     @Autowired
     private PlayerConfigService playerConfigService;
+
+    @Autowired
+    private ChatMessageService chatMessageService;
 
     /**
      * 恢复会话
@@ -154,9 +154,9 @@ public class ModelChatController {
      * @return 编辑结果
      */
     @PostMapping("/editHistory")
-    public Result<String> editHistory(@Valid @RequestBody EditHistoryDto dto) {
+    public Result<String> editMessage(@Valid @RequestBody EditHistoryDto dto) {
         try {
-            modelChatService.editHistory(dto);
+            chatMessageService.editMessage(dto.getHistoryId(),dto.getContent());
             return Result.success("历史消息已编辑");
         } catch (BizException e) {
             return Result.error(e);

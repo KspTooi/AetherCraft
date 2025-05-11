@@ -50,6 +50,14 @@ public class ContentSecurityService {
         }
     }
 
+    public String encryptForCurUser(String content) throws BizException {
+        if(StringUtils.isBlank(content)) {
+            return null;
+        }
+        String dek = getPlainUserDek(AuthService.getCurrentUserId());
+        return encrypt(content, dek);
+    }
+
     public void encryptEntity(NpcChatSegmentPo po, Long userId) throws BizException{
         if(po == null) {
             return;
@@ -83,38 +91,6 @@ public class ContentSecurityService {
         String dek = getPlainUserDek(uid);
         po.setRawContent(encrypt(po.getRawContent(), dek));
         po.setRpContent(encrypt(po.getRpContent(), dek));
-    }
-
-    public void encryptEntity(ModelChatHistoryPo po,Long uid) throws BizException {
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(uid);
-        po.setContent(encrypt(po.getContent(), dek));
-    }
-
-    public void encryptEntity(ModelChatSegmentPo po,Long uid) throws BizException {
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(uid);
-        po.setContent(encrypt(po.getContent(), dek));
-    }
-
-    public void encryptEntity(ModelChatThreadPo po) throws BizException {
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(AuthService.getCurrentUserId());
-        po.setTitle(encrypt(po.getTitle(), dek));
-    }
-
-    public void encryptEntity(ModelChatThreadPo po,Long userId) throws BizException {
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(userId);
-        po.setTitle(encrypt(po.getTitle(), dek));
     }
 
     public void encryptEntity(NpcChatThreadPo po, Long userId) throws BizException{

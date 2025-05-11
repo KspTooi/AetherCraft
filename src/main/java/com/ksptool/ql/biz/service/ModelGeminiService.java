@@ -2,26 +2,19 @@ package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import com.ksptool.ql.biz.model.gemini.GeminiRequest;
 import com.ksptool.ql.biz.model.gemini.GeminiResponse;
-import com.ksptool.ql.biz.model.po.ModelChatHistoryPo;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
