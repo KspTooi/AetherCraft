@@ -45,7 +45,7 @@ public class CustomizeThemeController {
     //获取当前玩家拥有的主题列表(不分页查全部)
     @PostMapping("/getThemeList")
     public Result<PageableView<GetUserThemeListVo>> getThemeList() {
-        Long userId = AuthService.getCurrentUserId();
+        Long userId = AuthService.getCurrentPlayerId();
         
         // 查询当前玩家所有主题
         List<PlayerThemePo> themes = themeRepository.findByPlayerIdWithValues(userId);
