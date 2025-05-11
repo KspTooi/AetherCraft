@@ -58,7 +58,7 @@ public class ChatThreadPo {
     private String modelCode;
 
     @Column(name = "active", nullable = false)
-    @Comment("是否为当前激活的对话 0:存档 1:激活 type为1时需处理")
+    @Comment("是否为当前激活的对话 -1:旁路 0:存档 1:激活 type为1时需处理")
     private Integer active;
 
     @Column(name = "token_input", nullable = false)
@@ -80,6 +80,11 @@ public class ChatThreadPo {
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Comment("消息列表")
     private List<ChatMessagePo> messages;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_message_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("最后一条消息ID")
+    private ChatMessagePo lastMessage;
 
     @Comment("创建时间")
     @Column(name = "create_time", nullable = false)
