@@ -225,10 +225,12 @@ const pollMessage = async () => {
       // --- 更新临时消息元数据 --- START
       // 每次收到片段都尝试更新元数据 (名称、头像、最终ID)
       console.log(segment)
+
+
       await updateTempMsg({
         id: segment.historyId, // historyId 在 type=2 时才有有效值
         name: segment.roleName, // 使用 roleName
-        avatarPath: "/res/"+segment.roleAvatarPath // 使用 roleAvatarPath
+        avatarPath: segment.roleAvatarPath ? "/res/"+segment.roleAvatarPath : undefined // 使用 roleAvatarPath
       });
       // --- 更新临时消息元数据 --- END
 
