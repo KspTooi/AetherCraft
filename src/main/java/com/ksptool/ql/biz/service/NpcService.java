@@ -20,13 +20,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-
 import static com.ksptool.entities.Entities.assign;
 
 @Service
-public class ModelRoleService {
+public class NpcService {
 
     @Autowired
     private NpcRepository repository;

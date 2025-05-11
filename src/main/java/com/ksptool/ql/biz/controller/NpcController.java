@@ -7,9 +7,9 @@ import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
 import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
-import com.ksptool.ql.biz.service.ModelRoleService;
+import com.ksptool.ql.biz.service.NpcService;
 import com.ksptool.ql.biz.service.UserFileService;
-import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
+import com.ksptool.ql.biz.service.panel.PanelNpcService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -20,16 +20,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/model/role")
-public class ModelRoleController {
+public class NpcController {
 
     @Autowired
     private UserFileService userFileService;
 
     @Autowired
-    private ModelRoleService service;
+    private NpcService service;
 
     @Autowired
-    private PanelModelRoleService panelModelRoleService;
+    private PanelNpcService panelNpcService;
 
 
     @PostMapping("/getModelRoleList")
@@ -57,7 +57,7 @@ public class ModelRoleController {
     @PostMapping("/saveModelRole")
     public Result<String> saveModelRole(@RequestBody @Valid SaveModelRoleDto dto){
         try{
-            NpcPo npcPo = panelModelRoleService.saveModelRole(dto);
+            NpcPo npcPo = panelNpcService.saveModelRole(dto);
             return Result.success(npcPo.getId()+"");
         }catch (BizException ex){
             return Result.error(ex.getMessage());
@@ -67,7 +67,7 @@ public class ModelRoleController {
     @PostMapping("/removeModelRole")
     public Result<String> removeModelRole(@RequestBody @Valid CommonIdDto dto){
         try{
-            panelModelRoleService.removeModelRole(dto.getId());
+            panelNpcService.removeModelRole(dto.getId());
             return Result.success("success");
         }catch (BizException ex){
             return Result.error(ex.getMessage());

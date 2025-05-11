@@ -171,7 +171,7 @@ public class ModelRpScriptService {
     @Transactional(readOnly = true)
     public PreparedPrompt appendExamplePrompt(Long modelRoleId,PreparedPrompt prompt) throws BizException {
 
-        //查询该模型角色是否还有示例对话
+        //查询该NPC是否还有示例对话
         List<NpcChatExamplePo> exampleChatPos = npcChatExampleRepository.getByNpcId(modelRoleId);
 
         if(exampleChatPos.isEmpty()){

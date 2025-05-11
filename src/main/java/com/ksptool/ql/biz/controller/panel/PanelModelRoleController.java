@@ -6,7 +6,7 @@ import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
-import com.ksptool.ql.biz.service.panel.PanelModelRoleService;
+import com.ksptool.ql.biz.service.panel.PanelNpcService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
@@ -35,7 +35,7 @@ import static com.ksptool.entities.Entities.assign;
 public class PanelModelRoleController {
 
     @Autowired
-    private PanelModelRoleService panelModelRoleService;
+    private PanelNpcService panelNpcService;
     
     @Autowired
     private UserFileService userFileService;
@@ -52,7 +52,7 @@ public class PanelModelRoleController {
     public ModelAndView getListView(ListModelRoleDto dto, @ModelAttribute("formData") SaveModelRoleDto formData) throws BizException {
 
         // 调用服务获取视图数据
-        ListModelRoleVo vo = panelModelRoleService.getListView(dto);
+        ListModelRoleVo vo = panelNpcService.getListView(dto);
         
         // 如果是新建模式，设置isNew标志
         if (dto.getIsNew()) {
@@ -95,7 +95,7 @@ public class PanelModelRoleController {
         
         try {
             // 调用服务保存角色
-            NpcPo po = panelModelRoleService.saveModelRole(dto);
+            NpcPo po = panelNpcService.saveModelRole(dto);
 
             // 保存成功，添加成功消息
             ra.addFlashAttribute("vo", Result.success("角色已保存:"+po.getName(),null));
@@ -119,7 +119,7 @@ public class PanelModelRoleController {
     public String removeModelRole(@RequestParam(name = "id") Long id, RedirectAttributes redirectAttributes) {
         try {
             // 删除角色
-            panelModelRoleService.removeModelRole(id);
+            panelNpcService.removeModelRole(id);
             redirectAttributes.addFlashAttribute("vo", Result.success("角色删除成功", null));
 
             //如移除的角色是用户最后选择的那一个角色 需清空用户保存的配置

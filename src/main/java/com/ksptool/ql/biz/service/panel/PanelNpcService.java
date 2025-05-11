@@ -26,7 +26,7 @@ import static com.ksptool.entities.Entities.assign;
  * 模型角色管理服务
  */
 @Service
-public class PanelModelRoleService {
+public class PanelNpcService {
 
     @Autowired
     private NpcRepository npcRepository;
