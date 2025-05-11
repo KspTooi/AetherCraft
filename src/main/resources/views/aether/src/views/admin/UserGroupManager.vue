@@ -160,9 +160,27 @@
                       <el-icon><Search /></el-icon>
                     </template>
                   </el-input>
+                  <div class="permission-select-buttons">
+                    <el-button-group>
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        @click="selectAllPermissions"
+                      >
+                        全选
+                      </el-button>
+                      <el-button 
+                        type="primary" 
+                        size="small" 
+                        @click="deselectAllPermissions"
+                      >
+                        取消全选
+                      </el-button>
+                    </el-button-group>
+                  </div>
                 </div>
                 <div class="permission-list">
-                  <el-checkbox-group v-model="groupForm.permissionIds" id="permission-group">
+                  <el-checkbox-group v-model="groupForm.permissionIds" id="permission-group" style="width: 240px">
                     <div 
                       v-for="permission in filteredPermissions" 
                       :key="permission.id" 
@@ -446,6 +464,16 @@ const handleDelete = (row: GetGroupListVo) => {
   });
 };
 
+// 全选权限节点
+const selectAllPermissions = () => {
+  groupForm.permissionIds = filteredPermissions.value.map(p => Number(p.id));
+};
+
+// 取消全选权限节点
+const deselectAllPermissions = () => {
+  groupForm.permissionIds = [];
+};
+
 // 页面加载和窗口大小变化时检测设备类型
 onMounted(() => {
   checkMobile();
@@ -541,9 +569,7 @@ onMounted(() => {
   height: 100%;
 }
 
-.permission-search {
-  padding: 0 0 10px 0;
-}
+
 
 .permission-list {
   max-height: 300px;
@@ -599,5 +625,12 @@ onMounted(() => {
   .permission-list {
     max-height: 200px;
   }
+}
+
+.permission-select-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 10px;
 }
 </style>
