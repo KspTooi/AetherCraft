@@ -54,11 +54,11 @@ public class ModelRpScriptService {
      * 会将同一角色下的其他存档设置为非激活状态，并创建一个新的激活状态的存档
      * 如果模型角色有首条消息，会同时创建首条AI消息
      *
-     * @param modelPlayRoleCt 模型扮演的角色
+     * @param npcCt 模型扮演的角色
      * @throws BizException 如果创建过程中出现错误
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createNewThread(NpcPo modelPlayRoleCt, String modeCode) throws BizException {
+    public void createNewThread(NpcPo npcCt, String modeCode) throws BizException {
 
         Long currentPlayerId = AuthService.getCurrentPlayerId();
 
@@ -67,10 +67,10 @@ public class ModelRpScriptService {
         }
 
         // 解密用户角色和模型角色的加密字段
-        String modelRoleFirstMsg = css.decryptForCurUser(modelPlayRoleCt.getFirstMessage());
+        String npcFirstMsg = css.decryptForCurUser(npcCt.getFirstMessage());
 
         //取消该用户该角色下所有存档的激活状态
-        threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), modelPlayRoleCt.getId(), 0);
+        threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), npcCt.getId(), 0);
         entityManager.clear();
 
         //查询当前Player
@@ -81,27 +81,27 @@ public class ModelRpScriptService {
         NpcChatThreadPo thread = new NpcChatThreadPo();
         thread.setPlayer(playerPo);
         thread.setModelCode(modeCode);
-        thread.setNpc(modelPlayRoleCt);
-        thread.setTitle(playerPo.getName() + "与" + modelPlayRoleCt.getName() + "的对话");
+        thread.setNpc(npcCt);
+        thread.setTitle(playerPo.getName() + "与" + npcCt.getName() + "的对话");
         thread.setActive(1);
         
         //加密存档内容
         css.encryptEntity(thread,AuthService.getCurrentUserId());
         threadRepository.save(thread);
 
-        //如果模型角色有首条消息，创建首条AI消息
-        if (StringUtils.isNotBlank(modelRoleFirstMsg)) {
+        //如果NPC有首条消息，创建首条AI消息
+        if (StringUtils.isNotBlank(npcFirstMsg)) {
 
             //准备Prompt
-            var prompt = PreparedPrompt.prepare(modelRoleFirstMsg);
-            prompt.setParameter("model",modelPlayRoleCt.getName());
-            prompt.setParameter("user",playerPo.getName());
+            var prompt = PreparedPrompt.prepare(npcFirstMsg);
+            prompt.setParameter("npc",npcCt.getName());
+            prompt.setParameter("player",playerPo.getName());
 
             NpcChatHistoryPo history = new NpcChatHistoryPo();
             history.setThread(thread);
             history.setType(1); // AI消息
             history.setRawContent(prompt.execute());
-            history.setRpContent(modelRoleFirstMsg); // 这里可能需要通过RpHandler处理
+            history.setRpContent(npcFirstMsg); // 这里可能需要通过RpHandler处理
             history.setSequence(1);
             css.encryptEntity(history,AuthService.getCurrentUserId());
             historyRepository.save(history);

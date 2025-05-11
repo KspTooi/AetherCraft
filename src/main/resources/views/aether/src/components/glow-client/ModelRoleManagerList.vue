@@ -7,7 +7,7 @@
       class="mobile-menu-btn"
       :corners="[`top-left`]"
     >
-      角色列表
+      NPC列表
     </GlowButton>
 
     <!-- 移动端遮罩层 -->
@@ -23,7 +23,7 @@
       :class="{ 'mobile-open': isMobile && mobileMenuOpen, 'mobile': isMobile }"
     >
 
-      <!-- 管理角色按钮 -->
+      <!-- 管理NPC按钮 -->
       <div class="manage-role-btn-wrapper"> 
         <GlowButton
           @click="handleRoleManage" 
@@ -45,18 +45,18 @@
         <!-- 空列表状态 -->
         <div v-else-if="threads.length === 0" class="empty-list">
           <i class="bi bi-person-plus"></i>
-          <div class="empty-text">您还未拥有模型角色</div>
+          <div class="empty-text">您还未拥有模型NPC</div>
           <GlowButton
             @click="handleCreateRole($event)" 
             class="empty-create-btn"
           >
-            创建新角色
+            创建新NPC
           </GlowButton>
         </div>
         
         <!-- 会话列表 -->
         <div v-else class="thread-list">
-          <!-- 新增角色按钮 -->
+          <!-- 新增NPC按钮 -->
           <div 
             class="thread-item new-role-item"
             @click="handleCreateRole($event)"
@@ -65,11 +65,11 @@
               <i class="bi bi-plus-lg"></i>
             </div>
             <div class="thread-content">
-              <div class="thread-title">创建新角色</div>
+              <div class="thread-title">创建新NPC</div>
             </div>
           </div>
           
-          <!-- 现有角色列表 -->
+          <!-- 现有NPC列表 -->
           <div 
             v-for="thread in threads" 
             :key="thread.id"
@@ -109,7 +109,7 @@ const preferencesStore = usePreferencesStore()
 // 事件定义
 const emit = defineEmits<{
   (e: 'select-role', roleId: string): void;
-  (e: 'create-role'): void; // 添加创建角色事件
+  (e: 'create-role'): void; // 添加创建NPC事件
 }>()
 
 const props = defineProps<{
@@ -139,7 +139,7 @@ const handleRoleClick = (roleId: string) => {
   closeMobileMenu()
 }
 
-// 处理管理角色按钮点击
+// 处理管理NPC按钮点击
 const handleRoleManage = async () => {
   // 在跳转前先将clientRpPath设置为/rp-main，防止循环重定向
   await preferencesStore.saveClientRpPath('/rp')
@@ -147,7 +147,7 @@ const handleRoleManage = async () => {
   closeMobileMenu()
 }
 
-// 处理创建角色点击
+// 处理创建NPC点击
 const handleCreateRole = (event: Event) => {
   event.stopPropagation()
   emit('create-role')
@@ -458,11 +458,11 @@ defineExpose({
   }
 }
 
-/* 新角色按钮样式 */
+/* 新NPC按钮样式 */
 .new-role-item {
   border-left: 3px solid v-bind('theme.mainColor');
   background-color: rgba(255, 255, 255, 0.05);
-  margin: 4px 0; /* 与其他角色项目保持一致的边距 */
+  margin: 4px 0; /* 与其他NPC项目保持一致的边距 */
 }
 
 .new-role-item:hover {
@@ -475,7 +475,7 @@ defineExpose({
 }
 
 .new-role-avatar i {
-  font-size: 18px; /* 调整图标大小与其他角色头像图标一致 */
+  font-size: 18px; /* 调整图标大小与其他NPC头像图标一致 */
   color: v-bind('theme.mainTextColor');
 }
 

@@ -117,7 +117,7 @@ public class PanelNpcService {
             query.setName(dto.getName());
 
             if (npcRepository.count(Example.of(query)) > 0) {
-                throw new BizException("角色名称已存在");
+                throw new BizException("NPC名称已存在");
             }
 
             NpcPo insert = new NpcPo();
@@ -139,7 +139,7 @@ public class PanelNpcService {
 
         // 更新时检查名称是否与其他角色重复
         if (npcRepository.existsByNameAndIdNot(AuthService.getCurrentPlayerId(),dto.getName(), dto.getId())) {
-            throw new BizException("角色名称已存在");
+            throw new BizException("NPC名称已存在");
         }
 
         css.encryptEntity(update);
