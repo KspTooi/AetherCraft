@@ -248,7 +248,7 @@ public class ModelRpService {
             throw new BizException("会话不存在或不可用");
         }
 
-        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), threadCt.getPlayer().getUser().getId());
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), threadCt.getPlayer().getId());
 
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key");
