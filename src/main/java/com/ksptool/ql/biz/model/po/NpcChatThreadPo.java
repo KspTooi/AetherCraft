@@ -22,7 +22,7 @@ public class NpcChatThreadPo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("玩家人物ID 为空表示全局配置")
+    @Comment("玩家人物ID")
     private PlayerPo player;
     
     @Comment("(加密)存档名称")

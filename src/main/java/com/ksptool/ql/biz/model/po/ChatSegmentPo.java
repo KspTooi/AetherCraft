@@ -12,52 +12,54 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "npc_chat_segment")
-public class NpcChatSegmentPo {
-    
+@Table(name = "chat_segment")
+public class ChatSegmentPo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("主键ID")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id",nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("用户ID")
+    private UserPo user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("玩家人物ID")
     private PlayerPo player;
-    
-    @Comment("关联的RP会话")
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private NpcChatThreadPo thread;
-    
-    @Comment("关联的历史记录ID")
-    @Column(name = "history_id")
-    private Long historyId;
-    
-    @Comment("片段序号，用于排序")
-    @Column(nullable = false)
-    private Integer sequence;
-    
-    @Comment("片段内容")
-    @Column(columnDefinition = "TEXT")
+    @Comment("关联的会话")
+    private ChatThreadPo thread;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "message_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("关联的消息")
+    private ChatMessagePo message;
+
+    @Column(name = "content", columnDefinition = "TEXT")
+    @Comment("(加密)片段内容")
     private String content;
-    
-    @Comment("片段状态 0-未读取 1-已读取")
-    @Column(nullable = false)
+
+    @Column(name = "status", nullable = false)
+    @Comment("片段状态 0:未读取 1:已读取")
     private Integer status;
-    
-    @Comment("片段类型 0-开始 1-数据 2-结束 10-错误")
-    @Column(nullable = false)
+
+    @Column(name = "type", nullable = false)
+    @Comment("片段类型 0:开始 1:数据 2:结束 10:错误")
     private Integer type;
-    
+
+    @Column(name = "create_time", nullable = false)
     @Comment("创建时间")
-    @Column(nullable = false)
     private Date createTime;
-    
-    @Comment("更新时间")
-    @Column(nullable = false)
+
+    @Column(name = "update_time", nullable = false)
+    @Comment("编辑时间")
     private Date updateTime;
-    
+
     @PrePersist
     protected void onCreate() {
         createTime = new Date();
@@ -66,9 +68,11 @@ public class NpcChatSegmentPo {
             status = 0; // 默认未读取
         }
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updateTime = new Date();
     }
-} 
+
+
+}
