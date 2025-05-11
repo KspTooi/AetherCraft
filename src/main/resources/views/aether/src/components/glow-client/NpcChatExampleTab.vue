@@ -3,6 +3,7 @@
     <div class="chat-examples-header">
       <h3>NPC对话示例</h3>
       <p class="subtitle">管理NPC的对话示例，用于训练和指导AI模型生成更符合角色设定的回复</p>
+      <p class="help-note">这些示例直接影响NPC的写作风格和对话语气，是塑造角色个性的重要环节。可使用 <code>#{npc}</code> 和 <code>#{player}</code> 占位符分别代表NPC和玩家的名称</p>
     </div>
 
     <div class="action-buttons">
@@ -32,6 +33,11 @@
       <i class="bi bi-chat-square-text"></i>
       <p>暂无对话示例</p>
       <p class="help-text">添加对话示例可以帮助AI更好地理解NPC的对话风格和个性</p>
+      <div class="example-format">
+        <p>示例格式：</p>
+        <pre>#{player}: 今天天气真不错，你觉得呢？
+#{npc}: *望向窗外* 是啊，阳光明媚！这样的好天气适合去湖边散步，#{player}你有空一起去吗？</pre>
+      </div>
     </div>
 
     <div v-else class="examples-list">
@@ -69,7 +75,9 @@
           </div>
           <GlowInputArea
             v-model="item.content"
-            placeholder="输入对话示例..."
+            placeholder="#{player}: 今天天气真不错，你觉得呢？
+#{npc}: *望向窗外* 是啊，阳光明媚！这样的好天气适合去湖边散步，
+#{player}你有空一起去吗？"
             :maxLength="5000"
             :auto-resize="true"
             showLength
@@ -188,11 +196,6 @@ const deleteItem = async (index: number) => {
       list.value.splice(index, 1);
       loading.value = false;
       
-      alterRef.value?.showConfirm({
-        title: '删除成功',
-        content: '对话示例已删除',
-        closeText: '确定'
-      });
     } catch (error) {
       loading.value = false;
       alterRef.value?.showConfirm({
@@ -304,6 +307,23 @@ onMounted(() => {
   color: v-bind('theme.boxTextColorNoActive');
 }
 
+.help-note {
+  font-size: 13px;
+  margin: 8px 0 0 0;
+  color: v-bind('theme.boxTextColorNoActive');
+  line-height: 1.5;
+  max-width: 100%;
+  text-align: left;
+}
+
+.help-note code {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-family: monospace;
+  color: v-bind('theme.boxGlowColor');
+}
+
 .action-buttons {
   display: flex;
   justify-content: flex-end;
@@ -392,6 +412,36 @@ onMounted(() => {
   margin-top: 8px;
   max-width: 300px;
   text-align: center;
+}
+
+.example-format {
+  margin-top: 15px;
+  width: 95%;
+  max-width: 550px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  text-align: left;
+}
+
+.example-format p {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: v-bind('theme.boxTextColor');
+  padding: 10px 10px 0 10px;
+}
+
+.example-format pre {
+  margin: 0;
+  padding: 10px;
+  background-color: transparent;
+  border-radius: 0;
+  font-family: monospace;
+  font-size: 13px;
+  color: v-bind('theme.boxGlowColor');
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .examples-list {
