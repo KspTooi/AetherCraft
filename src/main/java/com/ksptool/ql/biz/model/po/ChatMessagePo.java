@@ -18,19 +18,17 @@ public class ChatMessagePo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("Thread拥有方用户")
-    private UserPo user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("Thread拥有方")
-    private PlayerPo player;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false,foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("会话ThreadID")
     private ChatThreadPo thread;
+
+    @Column(name = "sender_role", nullable = false)
+    @Comment("发送人角色 0:Player 1:Model")
+    private Integer senderRole;
+
+    @Column(name = "sender_name", nullable = false)
+    @Comment("发送人名称")
+    private String senderName;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     @Comment("(加密)消息内容")
@@ -41,15 +39,15 @@ public class ChatMessagePo {
     private Integer seq;
 
     @Column(name = "total_token_input", nullable = false)
-    @Comment("总TOKEN使用量(用户输入)")
+    @Comment("TOKEN使用量(用户输入)")
     private Long tokenInput;
 
     @Column(name = "total_token_output", nullable = false)
-    @Comment("总TOKEN使用量(模型输出)")
+    @Comment("TOKEN使用量(模型输出)")
     private Long tokenOutput;
 
     @Column(name = "total_token_thoughts", nullable = false)
-    @Comment("总TOKEN使用量(模型思考)")
+    @Comment("TOKEN使用量(模型思考)")
     private Long tokenThoughts;
 
     @Column(name = "create_time", nullable = false)

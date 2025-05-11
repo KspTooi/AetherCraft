@@ -36,8 +36,6 @@ public class ModelChatHistoryPo {
     @Comment("消息序号")
     @Column(nullable = false)
     private Integer sequence;
-
-
     
     @Comment("创建时间")
     @Column(nullable = false)
