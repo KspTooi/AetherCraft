@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<UserPo, Long> {
 
     // 获取用户编辑视图，包含用户组信息
     @Query("""
-            SELECT u 
+            SELECT u
             FROM UserPo u 
             LEFT JOIN FETCH u.groups 
             WHERE u.id = :id

@@ -71,12 +71,6 @@ public class UserPo {
     @EqualsAndHashCode.Exclude
     @Comment("用户所属的用户组")
     private Set<GroupPo> groups = new HashSet<>();
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @Comment("用户主题列表")
-    private List<PlayerThemePo> themes = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
