@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 
+import static com.ksptool.ql.commons.enums.PermissionEnum.PANEL_MODEL_EDIT_GLOBAL_PROXY;
+import static com.ksptool.ql.commons.enums.PermissionEnum.PANEL_MODEL_EDIT_USER_PROXY;
+
 @Service
 public class AdminModelConfigService {
 
@@ -144,14 +147,15 @@ public class AdminModelConfigService {
         playerConfigService.put(baseKey + "maxOutputTokens", dto.getMaxOutputTokens());
 
         // 保存用户代理配置
-        playerConfigService.put("model.proxy.config", (String) null);
-
-        if(StringUtils.isNotBlank(dto.getUserProxyConfig())){
-            playerConfigService.put("model.proxy.config", dto.getUserProxyConfig());
+        if(AuthService.hasPermission(PANEL_MODEL_EDIT_USER_PROXY.getCode())){
+            //playerConfigService.put("model.proxy.config", (String) null);
+            if(StringUtils.isNotBlank(dto.getUserProxyConfig())){
+                playerConfigService.put("model.proxy.config", dto.getUserProxyConfig());
+            }
         }
 
         //保存全局代理配置
-        if(AuthService.hasPermission("panel:model:edit:global:proxy")){
+        if(AuthService.hasPermission(PANEL_MODEL_EDIT_GLOBAL_PROXY.getCode())){
             globalConfigService.setValue("model.proxy.config", null);
             if(StringUtils.isNotBlank(dto.getGlobalProxyConfig())){
                 globalConfigService.setValue("model.proxy.config", dto.getGlobalProxyConfig());
