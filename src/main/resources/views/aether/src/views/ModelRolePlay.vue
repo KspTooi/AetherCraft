@@ -454,7 +454,12 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
     
   } catch (error) {
     console.error(`为角色 ${role.name} 创建新会话请求失败:`, error);
-    alert('创建新会话时发生网络错误');
+
+    alterRef.value?.showConfirm({
+      title: "故障",
+      content: `${error}`,
+      closeText: "关闭",
+    })
     clearChatState();
   }
 }
@@ -603,7 +608,12 @@ const onMessageRemove = async (msgId: string) => {
 
   } catch (error) {
     console.error(`Error removing message ${msgId}:`, error);
-    alert('删除消息时发生网络错误');
+
+    alterRef.value?.showConfirm({
+      title: "故障",
+      content: `${error}`,
+      closeText: "关闭",
+    })
   }
 };
 
@@ -654,9 +664,15 @@ const onMessageRegenerate = async (msgId: string) => {
     await pollMessage();
 
   } catch (error) {
-    // 10. 处理网络或其他错误
+
     console.error('消息重新生成过程中出错:', error);
-    alert('重新生成消息时发生网络错误');
+
+    alterRef.value?.showConfirm({
+      title: "故障",
+      content: `${error}`,
+      closeText: "关闭",
+    })
+
     // 清理临时消息
     removeTempMsg(); 
     isGenerating.value = false;
@@ -680,7 +696,12 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
     console.log(`Message ${params.msgId} updated successfully.`);
   } catch (error) {
     console.error(`Error updating message ${params.msgId}:`, error);
-    alert('消息更新时发生网络错误');
+
+    alterRef.value?.showConfirm({
+      title: "故障",
+      content: `${error}`,
+      closeText: "关闭",
+    })
   }
 };
 
