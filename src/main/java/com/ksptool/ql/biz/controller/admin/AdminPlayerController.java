@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.service.admin.AdminPlayerService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,11 +25,13 @@ public class AdminPlayerController {
     private AdminPlayerService service;
 
     @PostMapping("getPlayerList")
+    @RequirePermissionRest("admin:player:view")
     public Result<RestPageableView<GetAdminPlayerListVo>> getPlayerList(@RequestBody @Valid GetAdminPlayerListDto dto){
         return Result.success(service.getPlayerList(dto));
     }
 
     @PostMapping("getPlayerDetails")
+    @RequirePermissionRest("admin:player:view")
     public Result<GetAdminPlayerDetailsVo> getPlayerDetails(@RequestBody @Valid CommonIdDto dto){
         try {
             return Result.success(service.getPlayerDetails(dto.getId()));
@@ -38,6 +41,7 @@ public class AdminPlayerController {
     }
 
     @PostMapping("editPlayer")
+    @RequirePermissionRest("admin:player:save")
     public Result<String> editPlayer(@RequestBody @Valid EditAdminPlayerDto dto){
         try {
             service.editPlayer(dto);

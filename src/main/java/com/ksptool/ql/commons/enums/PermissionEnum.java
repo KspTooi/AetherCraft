@@ -67,6 +67,11 @@ public enum PermissionEnum {
     ADMIN_USER_SAVE("admin:user:save", "新增/编辑用户"), 
     ADMIN_USER_DELETE("admin:user:delete", "删除用户"),
 
+    //玩家管理
+    ADMIN_PLAYER_VIEW("admin:player:view", "查看玩家列表"),
+    ADMIN_PLAYER_SAVE("admin:player:save", "新增/编辑玩家"),
+    ADMIN_PLAYER_DELETE("admin:player:delete", "删除玩家"),
+
     //用户组管理  
     ADMIN_GROUP_VIEW("admin:group:view", "查看用户组"),
     ADMIN_GROUP_SAVE("admin:group:save", "新增/编辑用户组"), 
