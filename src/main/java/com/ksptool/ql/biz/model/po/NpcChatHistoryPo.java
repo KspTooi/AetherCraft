@@ -7,8 +7,8 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "model_rp_history")
-public class ModelRpHistoryPo {
+@Table(name = "npc_chat_history")
+public class NpcChatHistoryPo {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +18,7 @@ public class ModelRpHistoryPo {
     @Comment("会话存档ID")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false,foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private ModelRpThreadPo thread;
+    private NpcChatThreadPo thread;
 
     @Comment("(加密)消息内容-原始消息(展示给用户看的消息,不含系统Prompt等)")
     @Column(columnDefinition = "TEXT", nullable = false)

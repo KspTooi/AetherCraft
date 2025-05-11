@@ -4,7 +4,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.service.ModelRoleService;
@@ -15,7 +15,6 @@ import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -58,8 +57,8 @@ public class ModelRoleController {
     @PostMapping("/saveModelRole")
     public Result<String> saveModelRole(@RequestBody @Valid SaveModelRoleDto dto){
         try{
-            ModelRolePo modelRolePo = panelModelRoleService.saveModelRole(dto);
-            return Result.success(modelRolePo.getId()+"");
+            NpcPo npcPo = panelModelRoleService.saveModelRole(dto);
+            return Result.success(npcPo.getId()+"");
         }catch (BizException ex){
             return Result.error(ex.getMessage());
         }

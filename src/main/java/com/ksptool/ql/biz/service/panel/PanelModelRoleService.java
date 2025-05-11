@@ -1,11 +1,11 @@
 package com.ksptool.ql.biz.service.panel;
 
 import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
-import com.ksptool.ql.biz.mapper.ModelRoleRepository;
+import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
+import com.ksptool.ql.biz.mapper.NpcRepository;
 import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleItemVo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
@@ -29,10 +29,10 @@ import static com.ksptool.entities.Entities.assign;
 public class PanelModelRoleService {
 
     @Autowired
-    private ModelRoleRepository modelRoleRepository;
+    private NpcRepository npcRepository;
     
     @Autowired
-    private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
+    private NpcChatExampleRepository npcChatExampleRepository;
     @Autowired
     private ContentSecurityService css;
 
@@ -51,16 +51,16 @@ public class PanelModelRoleService {
         vo.setId(dto.getId());
         vo.setKeyword(dto.getKeyword());
 
-        ModelRolePo query = new ModelRolePo();
+        NpcPo query = new NpcPo();
         query.setName(dto.getKeyword());
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        SimpleExample<ModelRolePo> simpleExample = SimpleExample.of(query)
+        SimpleExample<NpcPo> simpleExample = SimpleExample.of(query)
                 .like("name")
                 .orderByDesc("updateTime");
 
         // 查询角色列表
-        Page<ModelRolePo> pagePos = modelRoleRepository.findAll(simpleExample.get(),  dto.pageRequest().withSort(
+        Page<NpcPo> pagePos = npcRepository.findAll(simpleExample.get(),  dto.pageRequest().withSort(
                 simpleExample.getSort()
         ));
         
@@ -78,7 +78,7 @@ public class PanelModelRoleService {
         
         // 如果有选中的角色ID，则查询角色详情
         if (dto.getId() != null) {
-            ModelRolePo rolePo = modelRoleRepository.findById(dto.getId()).orElse(null);
+            NpcPo rolePo = npcRepository.findById(dto.getId()).orElse(null);
             if (rolePo != null) {
                 // 将角色详情映射到VO
                 assign(rolePo, vo);
@@ -104,7 +104,7 @@ public class PanelModelRoleService {
      * @throws BizException 业务异常
      */
     @Transactional(rollbackFor = BizException.class)
-    public ModelRolePo saveModelRole(SaveModelRoleDto dto) throws BizException {
+    public NpcPo saveModelRole(SaveModelRoleDto dto) throws BizException {
 
         var createMode = dto.getId() == null;
 
@@ -112,24 +112,24 @@ public class PanelModelRoleService {
         if (createMode) {
 
             // 新增时检查名称是否已存在
-            var query = new ModelRolePo();
+            var query = new NpcPo();
             query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
             query.setName(dto.getName());
 
-            if (modelRoleRepository.count(Example.of(query)) > 0) {
+            if (npcRepository.count(Example.of(query)) > 0) {
                 throw new BizException("角色名称已存在");
             }
 
-            ModelRolePo insert = new ModelRolePo();
+            NpcPo insert = new NpcPo();
             assign(dto, insert);
             insert.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
             css.encryptEntity(insert);
-            return modelRoleRepository.save(insert);
+            return npcRepository.save(insert);
         }
 
         //编辑角色
-        ModelRolePo update = modelRoleRepository.findById(dto.getId()).orElseThrow(() -> new BizException("角色不存在!"));
+        NpcPo update = npcRepository.findById(dto.getId()).orElseThrow(() -> new BizException("角色不存在!"));
         assign(dto,update);
 
         // 检查是否有权限修改该角色
@@ -138,12 +138,12 @@ public class PanelModelRoleService {
         }
 
         // 更新时检查名称是否与其他角色重复
-        if (modelRoleRepository.existsByNameAndIdNot(AuthService.getCurrentPlayerId(),dto.getName(), dto.getId())) {
+        if (npcRepository.existsByNameAndIdNot(AuthService.getCurrentPlayerId(),dto.getName(), dto.getId())) {
             throw new BizException("角色名称已存在");
         }
 
         css.encryptEntity(update);
-        modelRoleRepository.save(update);
+        npcRepository.save(update);
         return update;
     }
     
@@ -162,7 +162,7 @@ public class PanelModelRoleService {
         try {
 
             // 查询角色
-            ModelRolePo rolePo = modelRoleRepository.findById(id).orElse(null);
+            NpcPo rolePo = npcRepository.findById(id).orElse(null);
             if (rolePo == null) {
                 throw new BizException("角色不存在");
             }
@@ -173,10 +173,10 @@ public class PanelModelRoleService {
             }
             
             // 先删除角色相关的对话示例
-            modelRoleChatExampleRepository.removeByModelRoleId(id);
+            npcChatExampleRepository.removeByNpcId(id);
             
             // 删除角色
-            modelRoleRepository.deleteById(id);
+            npcRepository.deleteById(id);
         } catch (Exception e) {
             if (e instanceof BizException) {
                 throw (BizException) e;

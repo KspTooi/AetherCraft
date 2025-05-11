@@ -3,10 +3,10 @@ package com.ksptool.ql.biz.service.panel;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleChatDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleDto;
-import com.ksptool.ql.biz.model.po.ModelRoleChatExamplePo;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.po.NpcChatExamplePo;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.vo.EditModelRoleChatExampleVo;
-import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
+import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import jakarta.transaction.Transactional;
@@ -24,7 +24,7 @@ import static com.ksptool.entities.Entities.assign;
 public class PanelModelRoleChatExampleService {
 
     @Autowired
-    private ModelRoleChatExampleRepository repository;
+    private NpcChatExampleRepository repository;
 
     @Autowired
     private ContentSecurityService css;
@@ -36,10 +36,10 @@ public class PanelModelRoleChatExampleService {
      * @throws BizException 业务异常
      */
     public List<EditModelRoleChatExampleVo> getExamplesByRoleId(Long modelRoleId) throws BizException {
-        List<ModelRoleChatExamplePo> examples = repository.getByModelRoleId(modelRoleId);
+        List<NpcChatExamplePo> examples = repository.getByNpcId(modelRoleId);
         
         List<EditModelRoleChatExampleVo> result = new ArrayList<>();
-        for (ModelRoleChatExamplePo po : examples) {
+        for (NpcChatExamplePo po : examples) {
             EditModelRoleChatExampleVo vo = new EditModelRoleChatExampleVo();
             assign(po, vo);
             // 解密VO中的加密字段
@@ -57,9 +57,9 @@ public class PanelModelRoleChatExampleService {
     @Transactional
     public void save(SaveModelRoleChatExampleDto dto) throws BizException {
         // 获取当前角色下的所有对话示例
-        ModelRoleChatExamplePo probe = new ModelRoleChatExamplePo();
-        probe.setModelRole(Any.of().val("id",dto.getModelRoleId()).as(ModelRolePo.class));
-        List<ModelRoleChatExamplePo> existingExamples = repository.findAll(Example.of(probe));
+        NpcChatExamplePo probe = new NpcChatExamplePo();
+        probe.setNpc(Any.of().val("id",dto.getModelRoleId()).as(NpcPo.class));
+        List<NpcChatExamplePo> existingExamples = repository.findAll(Example.of(probe));
         
         // 逐个处理聊天示例
         for (SaveModelRoleChatExampleChatDto chatDto : dto.getChatList()) {
@@ -71,8 +71,8 @@ public class PanelModelRoleChatExampleService {
             
             // 如果有ID，表示更新已有示例
             if (chatDto.getId() != null) {
-                ModelRoleChatExamplePo existingPo = null;
-                for (ModelRoleChatExamplePo po : existingExamples) {
+                NpcChatExamplePo existingPo = null;
+                for (NpcChatExamplePo po : existingExamples) {
                     if (po.getId().equals(chatDto.getId())) {
                         existingPo = po;
                         break;
@@ -91,8 +91,8 @@ public class PanelModelRoleChatExampleService {
             }
             
             // 否则，创建新的示例
-            ModelRoleChatExamplePo newPo = new ModelRoleChatExamplePo();
-            newPo.setModelRole(Any.of().val("id",dto.getModelRoleId()).as(ModelRolePo.class));
+            NpcChatExamplePo newPo = new NpcChatExamplePo();
+            newPo.setNpc(Any.of().val("id",dto.getModelRoleId()).as(NpcPo.class));
             newPo.setContent(chatDto.getContent());
             newPo.setSortOrder(chatDto.getSortOrder());
             // 加密内容

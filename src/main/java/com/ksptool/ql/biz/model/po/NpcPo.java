@@ -10,15 +10,15 @@ import java.util.Date;
  * 用于管理AI模型的角色信息和对话设置
  */
 @Entity
-@Table(name = "model_roles", uniqueConstraints = {
+@Table(name = "npc", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"player_id", "name"}, name = "uk_player_role_name")
 })
 @Data
-public class ModelRolePo {
+public class NpcPo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Comment("角色ID")
+    @Comment("NPC ID")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,7 +27,7 @@ public class ModelRolePo {
     private PlayerPo player;
 
     @Column(nullable = false, length = 50)
-    @Comment("(明文)角色名称")
+    @Comment("(明文)NPC名称")
     private String name;
     
     @Column(name = "avatar_path", length = 255)
@@ -35,11 +35,11 @@ public class ModelRolePo {
     private String avatarPath;
 
     @Column(length = 50000)
-    @Comment("(加密)角色描述")
+    @Comment("(加密)NPC描述")
     private String description;
 
     @Column(name = "role_summary", length = 50000)
-    @Comment("(加密)角色设定摘要")
+    @Comment("(加密)NPC角色设定摘要")
     private String roleSummary;
 
     @Column(name = "scenario", length = 50000)
@@ -51,7 +51,7 @@ public class ModelRolePo {
     private String firstMessage;
 
     @Column(length = 50)
-    @Comment("(加密)角色标签，多个标签用逗号分隔")
+    @Comment("(加密)NPC标签，多个标签用逗号分隔")
     private String tags;
 
     @Column(nullable = false)

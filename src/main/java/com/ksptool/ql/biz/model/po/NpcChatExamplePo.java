@@ -10,9 +10,9 @@ import java.util.Date;
  * 用于存储角色的对话示例，帮助AI理解角色特性
  */
 @Entity
-@Table(name = "model_role_chat_example")
+@Table(name = "npc_chat_example")
 @Data
-public class ModelRoleChatExamplePo {
+public class NpcChatExamplePo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,9 +20,9 @@ public class ModelRoleChatExamplePo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_role_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "npc_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("模型角色ID")
-    private ModelRolePo modelRole;
+    private NpcPo npc;
 
     @Column(name = "content", nullable = false, length = 3000)
     @Comment("(加密)对话内容")

@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +50,7 @@ public class ContentSecurityService {
         }
     }
 
-    public void encryptEntity(ModelRpSegmentPo po,Long userId) throws BizException{
+    public void encryptEntity(NpcChatSegmentPo po, Long userId) throws BizException{
         if(po == null) {
             return;
         }
@@ -69,7 +67,7 @@ public class ContentSecurityService {
         po.setGenderData(encrypt(po.getGenderData(), dek));
     }
 
-    public void encryptEntity(ModelRpHistoryPo po,Long userId) throws BizException{
+    public void encryptEntity(NpcChatHistoryPo po, Long userId) throws BizException{
         if(po == null) {
             return;
         }
@@ -111,7 +109,7 @@ public class ContentSecurityService {
         po.setTitle(encrypt(po.getTitle(), dek));
     }
 
-    public void encryptEntity(ModelRpThreadPo po,Long userId) throws BizException{
+    public void encryptEntity(NpcChatThreadPo po, Long userId) throws BizException{
         if(po == null) {
             return;
         }
@@ -121,7 +119,7 @@ public class ContentSecurityService {
     }
 
 
-    public void encryptEntity(ModelRolePo po) throws BizException{
+    public void encryptEntity(NpcPo po) throws BizException{
         if(po == null) {
             return;
         }
@@ -134,7 +132,7 @@ public class ContentSecurityService {
         po.setTags(encrypt(po.getTags(), dek));
     }
 
-    public void encryptEntity(ModelRoleChatExamplePo po) throws BizException{
+    public void encryptEntity(NpcChatExamplePo po) throws BizException{
         if(po == null) {
             return;
         }
@@ -149,13 +147,13 @@ public class ContentSecurityService {
 
         Object firstElement = poList.getFirst();
 
-        if(firstElement instanceof ModelRolePo) {
+        if(firstElement instanceof NpcPo) {
             @SuppressWarnings("unchecked")
-            List<ModelRolePo> roleList = (List<ModelRolePo>) poList;
+            List<NpcPo> roleList = (List<NpcPo>) poList;
             String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
-                for(ModelRolePo po : roleList) {
+                for(NpcPo po : roleList) {
                     po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
                     po.setDescription(encrypt(po.getDescription(), dek));
                     po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
@@ -166,7 +164,7 @@ public class ContentSecurityService {
                 return;
             }
             
-            for(ModelRolePo po : roleList) {
+            for(NpcPo po : roleList) {
                 po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
                 po.setDescription(decrypt(po.getDescription(), dek));
                 po.setRoleSummary(decrypt(po.getRoleSummary(), dek));
@@ -177,63 +175,63 @@ public class ContentSecurityService {
             return;
         }
 
-        if(firstElement instanceof ModelRoleChatExamplePo) {
+        if(firstElement instanceof NpcChatExamplePo) {
             @SuppressWarnings("unchecked")
-            List<ModelRoleChatExamplePo> exampleList = (List<ModelRoleChatExamplePo>) poList;
+            List<NpcChatExamplePo> exampleList = (List<NpcChatExamplePo>) poList;
             String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
-                for(ModelRoleChatExamplePo po : exampleList) {
+                for(NpcChatExamplePo po : exampleList) {
                     po.setContent(encrypt(po.getContent(), dek));
                 }
                 return;
             }
             
-            for(ModelRoleChatExamplePo po : exampleList) {
+            for(NpcChatExamplePo po : exampleList) {
                 po.setContent(decrypt(po.getContent(), dek));
             }
             return;
         }
 
-        if(firstElement instanceof ModelRpHistoryPo) {
+        if(firstElement instanceof NpcChatHistoryPo) {
             @SuppressWarnings("unchecked")
-            List<ModelRpHistoryPo> historyList = (List<ModelRpHistoryPo>) poList;
+            List<NpcChatHistoryPo> historyList = (List<NpcChatHistoryPo>) poList;
             if(historyList.isEmpty()) {
                 return;
             }
             String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
-                for(ModelRpHistoryPo po : historyList) {
+                for(NpcChatHistoryPo po : historyList) {
                     po.setRawContent(encrypt(po.getRawContent(), dek));
                     po.setRpContent(encrypt(po.getRpContent(), dek));
                 }
                 return;
             }
             
-            for(ModelRpHistoryPo po : historyList) {
+            for(NpcChatHistoryPo po : historyList) {
                 po.setRawContent(decrypt(po.getRawContent(), dek));
                 po.setRpContent(decrypt(po.getRpContent(), dek));
             }
             return;
         }
 
-        if(firstElement instanceof ModelRpSegmentPo) {
+        if(firstElement instanceof NpcChatSegmentPo) {
             @SuppressWarnings("unchecked")
-            List<ModelRpSegmentPo> segmentList = (List<ModelRpSegmentPo>) poList;
+            List<NpcChatSegmentPo> segmentList = (List<NpcChatSegmentPo>) poList;
             if(segmentList.isEmpty()) {
                 return;
             }
             String dek = getPlainUserDek(AuthService.getCurrentUserId());
             
             if(encrypt) {
-                for(ModelRpSegmentPo po : segmentList) {
+                for(NpcChatSegmentPo po : segmentList) {
                     po.setContent(encrypt(po.getContent(), dek));
                 }
                 return;
             }
             
-            for(ModelRpSegmentPo po : segmentList) {
+            for(NpcChatSegmentPo po : segmentList) {
                 po.setContent(decrypt(po.getContent(), dek));
             }
         }

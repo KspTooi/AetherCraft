@@ -2,7 +2,7 @@ package com.ksptool.ql.biz.controller.panel;
 
 import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
@@ -95,7 +95,7 @@ public class PanelModelRoleController {
         
         try {
             // 调用服务保存角色
-            ModelRolePo po = panelModelRoleService.saveModelRole(dto);
+            NpcPo po = panelModelRoleService.saveModelRole(dto);
 
             // 保存成功，添加成功消息
             ra.addFlashAttribute("vo", Result.success("角色已保存:"+po.getName(),null));

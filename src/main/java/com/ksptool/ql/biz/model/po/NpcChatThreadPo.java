@@ -10,10 +10,10 @@ import java.util.List;
 @Entity
 // 一个模型角色只能有一个激活的对话
 // 注意：需要在数据库层面添加部分唯一索引 WHERE active = 1
-@Table(name = "model_rp_thread",uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"model_role_id", "active"}, name = "uk_model_role_active")
+@Table(name = "npc_chat_thread",uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"npc_id", "active"}, name = "uk_npc_thread_active")
 })
-public class ModelRpThreadPo {
+public class NpcChatThreadPo {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,17 +37,17 @@ public class ModelRpThreadPo {
     @Column(length = 50, nullable = false)
     private String modelCode;
 
-    @Comment("模型扮演的角色")
+    @Comment("NPC角色")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_role_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private ModelRolePo modelRole;
+    @JoinColumn(name = "npc_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private NpcPo npc;
     
     @Comment("是否为当前激活的对话 0-存档 1-激活")
     @Column(nullable = false)
     private Integer active;
 
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ModelRpHistoryPo> histories;
+    private List<NpcChatHistoryPo> histories;
     
     @Comment("创建时间")
     @Column(nullable = false)

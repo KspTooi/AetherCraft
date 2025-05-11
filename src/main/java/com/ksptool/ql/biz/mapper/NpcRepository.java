@@ -1,8 +1,6 @@
 package com.ksptool.ql.biz.mapper;
 
-import com.ksptool.ql.biz.model.po.ModelRolePo;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * 模型角色数据访问接口
  */
 @Repository
-public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
+public interface NpcRepository extends JpaRepository<NpcPo, Long> {
 
     /**
      * 检查角色名称是否已被其他角色使用（更新时使用）
@@ -23,9 +21,9 @@ public interface ModelRoleRepository extends JpaRepository<ModelRolePo, Long> {
      */
     @Query("""
             SELECT COUNT(r) > 0
-            FROM ModelRolePo r
+            FROM NpcPo r
             WHERE r.name = :name
-            AND r.player.id = :playerId 
+            AND r.player.id = :playerId
             AND r.id != :id
             """)
     boolean existsByNameAndIdNot(@Param("playerId") Long playerId,@Param("name") String name, @Param("id") Long id);

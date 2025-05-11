@@ -53,16 +53,16 @@ public class ModelRpService {
     private final ConcurrentHashMap<Long, ThreadModelRoleVo> threadModelRoleMap = new ConcurrentHashMap<>();
 
     @Autowired
-    private ModelRoleRepository modelRoleRepository;
+    private NpcRepository npcRepository;
 
     @Autowired
-    private ModelRpThreadRepository threadRepository;
+    private NpcChatThreadRepository threadRepository;
 
     @Autowired
-    private ModelRpHistoryRepository historyRepository;
+    private NpcChatHistoryRepository historyRepository;
     
     @Autowired
-    private ModelRpSegmentRepository segmentRepository;
+    private NpcChatSegmentRepository segmentRepository;
 
     @Autowired
     private ModelGeminiService modelGeminiService;
@@ -96,13 +96,13 @@ public class ModelRpService {
      */
     public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
 
-        var query = new ModelRolePo();
+        var query = new NpcPo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件
         query.setStatus(1);              // 设置状态为 1 (通常表示有效或启用)
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 按当前人物过滤
 
         // 创建 SimpleExample 用于构建查询条件
-        SimpleExample<ModelRolePo> example = SimpleExample.of(query);
+        SimpleExample<NpcPo> example = SimpleExample.of(query);
         example.like("name"); // 添加名称的模糊查询
 
         // 显式定义排序规则：按 "sortOrder" 字段升序排列
@@ -111,7 +111,7 @@ public class ModelRpService {
         Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), sort);
 
         // 使用 example 条件和 pageable（包含排序）从 repository 获取分页数据
-        Page<ModelRolePo> page = modelRoleRepository.findAll(example.get(), pageable);
+        Page<NpcPo> page = npcRepository.findAll(example.get(), pageable);
 
         // 将查询结果 Page<ModelRolePo> 转换为 PageableView<GetModelRoleListVo>
         PageableView<GetModelRoleListVo> pageableView = new PageableView<>(page, GetModelRoleListVo.class);
@@ -148,13 +148,13 @@ public class ModelRpService {
         }
 
         //查询激活的存档
-        ModelRpThreadPo threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId(),AuthService.getCurrentPlayerId());
+        NpcChatThreadPo threadCt = threadRepository.getActiveThreadWithRoleAndHistories(dto.getModelRoleId(),AuthService.getCurrentPlayerId());
 
         //newThread=0 创建新存档
         if(dto.getNewThread() == 0 || threadCt == null) {
 
             //查询模型所扮演的角色(未解密)
-            ModelRolePo modelPlayRoleCt = castService.getModelPlayRole(dto.getModelRoleId());
+            NpcPo modelPlayRoleCt = castService.getModelPlayRole(dto.getModelRoleId());
 
             if(modelPlayRoleCt == null){
                 throw new BizException("无法创建新存档:未找到模型所扮演的角色!");
@@ -167,10 +167,10 @@ public class ModelRpService {
 
         //查询模型扮演的角色 + 用户选择的人物
         PlayerPo playerCt = threadCt.getPlayer();
-        ModelRolePo modelPlayRoleCt = threadCt.getModelRole();
+        NpcPo modelPlayRoleCt = threadCt.getNpc();
 
         //查询历史记录
-        List<ModelRpHistoryPo> historyPos = threadCt.getHistories();
+        List<NpcChatHistoryPo> historyPos = threadCt.getHistories();
         List<RecoverRpChatHistoryVo> historyVos = new ArrayList<>();
 
         //构建响应数据
@@ -183,7 +183,7 @@ public class ModelRpService {
             return vo;
         }
 
-        for(ModelRpHistoryPo history : historyPos){
+        for(NpcChatHistoryPo history : historyPos){
 
             RecoverRpChatHistoryVo hisVo = as(history,RecoverRpChatHistoryVo.class);
 
@@ -217,7 +217,7 @@ public class ModelRpService {
         }
 
         playerConfigService.put(UserConfigEnum.MODEL_RP_CURRENT_THREAD.key(), threadCt.getId());
-        playerConfigService.put(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(), threadCt.getModelRole().getId());
+        playerConfigService.put(UserConfigEnum.MODEL_RP_CURRENT_ROLE.key(), threadCt.getNpc().getId());
         return vo;
     }
 
@@ -242,7 +242,7 @@ public class ModelRpService {
         }
 
         //获取当前用户的会话信息
-        ModelRpThreadPo threadCt = scriptService.getCurUserActiveThread(dto.getThreadId());
+        NpcChatThreadPo threadCt = scriptService.getCurUserActiveThread(dto.getThreadId());
 
         if(threadCt == null){
             throw new BizException("会话不存在或不可用");
@@ -256,14 +256,14 @@ public class ModelRpService {
 
         //获取用户选择的人物与模型扮演的角色
         PlayerPo playerCt = threadCt.getPlayer();
-        ModelRolePo modelPlayRoleCt = threadCt.getModelRole();
+        NpcPo modelPlayRoleCt = threadCt.getNpc();
 
         if (modelPlayRoleCt == null) {
             throw new BizException("模型角色信息不存在");
         }
 
         // 先获取全部历史记录
-        List<ModelRpHistoryPo> historyPos = new ArrayList<>();
+        List<NpcChatHistoryPo> historyPos = new ArrayList<>();
 
         Long userHistoryId = null;
 
@@ -273,19 +273,19 @@ public class ModelRpService {
             historyPos.addAll(historyRepository.findByThreadIdOrderBySequence(threadCt.getId()));
 
             //创建加密的用户的历史消息
-            ModelRpHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
+            NpcChatHistoryPo userHistoryCt = scriptService.createNewRpUserHistory(dto.getThreadId(), dto.getMessage());
             userHistoryId = userHistoryCt.getId();
         }
 
         // 处理重新生成逻辑
         if (dto.getQueryKind() ==3 && dto.getRegenerateRootHistoryId()!=null) {
             // 获取指定的根消息记录
-            var rootHistoryQuery = new ModelRpHistoryPo();
+            var rootHistoryQuery = new NpcChatHistoryPo();
             rootHistoryQuery.setId(dto.getRegenerateRootHistoryId());
             rootHistoryQuery.setThread(threadCt);
             rootHistoryQuery.setType(0); //用户消息
 
-            ModelRpHistoryPo rootHistory = historyRepository.findOne(Example.of(rootHistoryQuery))
+            NpcChatHistoryPo rootHistory = historyRepository.findOne(Example.of(rootHistoryQuery))
                 .orElseThrow(() -> new BizException("指定的根消息记录不存在"));
             
             // 删除根消息之后的所有消息
@@ -334,7 +334,7 @@ public class ModelRpService {
         List<ModelChatParamHistory> paramHistories = new ArrayList<>();
         param.setHistories(paramHistories);
 
-        for (ModelRpHistoryPo history : historyPos) {
+        for (NpcChatHistoryPo history : historyPos) {
             ModelChatParamHistory paramHistory = new ModelChatParamHistory();
             paramHistory.setRole(history.getType()); // 设置角色类型：0-用户 1-AI助手
             paramHistory.setContent(css.decryptForCurUser(history.getRawContent()));
@@ -438,14 +438,14 @@ public class ModelRpService {
         }
 
         //获取当前用户的会话信息
-        ModelRpThreadPo threadCt = scriptService.getCurUserActiveThread(dto.getThreadId());
+        NpcChatThreadPo threadCt = scriptService.getCurUserActiveThread(dto.getThreadId());
 
         if(threadCt == null){
             throw new BizException("会话不存在或不可用");
         }
 
         // 查找最后一条用户消息
-        ModelRpHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
+        NpcChatHistoryPo lastUserMessage = historyRepository.getLastMessage(dto.getThreadId(), 0);
         if (lastUserMessage == null) {
             throw new BizException("未找到任何用户消息");
         }
@@ -474,7 +474,7 @@ public class ModelRpService {
         final long WAIT_INTERVAL_MS = 300;
         
         // 尝试获取所有未读片段，最多等待3次
-        List<ModelRpSegmentPo> unreadSegments = null;
+        List<NpcChatSegmentPo> unreadSegments = null;
         int waitTimes = 0;
         
         while (waitTimes < MAX_WAIT_TIMES) {
@@ -512,7 +512,7 @@ public class ModelRpService {
 
 
         // 优先处理错误片段(type=10)和开始片段(type=0)
-        for (ModelRpSegmentPo segment : unreadSegments) {
+        for (NpcChatSegmentPo segment : unreadSegments) {
             //开始片段，只标记该片段为已读并返回
             if (segment.getType() == 0) {
                 segment.setStatus(1);
@@ -535,7 +535,7 @@ public class ModelRpService {
 
             //错误片段，标记所有片段为已读并返回错误信息
             if (segment.getType() == 10) {
-                for (ModelRpSegmentPo seg : unreadSegments) {
+                for (NpcChatSegmentPo seg : unreadSegments) {
                     seg.setStatus(1);
                 }
                 segmentRepository.saveAll(unreadSegments);
@@ -557,15 +557,15 @@ public class ModelRpService {
         }
 
         // 获取第一个片段
-        ModelRpSegmentPo firstSegment = unreadSegments.getFirst();
+        NpcChatSegmentPo firstSegment = unreadSegments.getFirst();
         
         // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
         if (firstSegment.getType() == 1) {
             StringBuilder combinedContent = new StringBuilder();
-            List<ModelRpSegmentPo> segmentsToMark = new ArrayList<>();
+            List<NpcChatSegmentPo> segmentsToMark = new ArrayList<>();
             
             // 遍历所有片段，合并type=1的片段，直到遇到非type=1的片段
-            for (ModelRpSegmentPo segment : unreadSegments) {
+            for (NpcChatSegmentPo segment : unreadSegments) {
 
                 if (segment.getType() != 1) {
                     break;
@@ -623,11 +623,11 @@ public class ModelRpService {
     public void rpCompleteTerminateBatch(BatchRpCompleteDto dto) throws BizException {
         Long threadId = dto.getThreadId();
 
-        ModelRpThreadPo query = new ModelRpThreadPo();
+        NpcChatThreadPo query = new NpcChatThreadPo();
         query.setId(threadId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
-        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+        NpcChatThreadPo thread = threadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("会话不存在或不属于您"));
 
 
@@ -644,7 +644,7 @@ public class ModelRpService {
         int nextSequence = segmentRepository.findMaxSequenceByThreadId(threadId) + 1;
 
         // 创建终止片段
-        ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
+        NpcChatSegmentPo endSegment = new NpcChatSegmentPo();
         endSegment.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         endSegment.setThread(thread);
         endSegment.setSequence(nextSequence);
@@ -664,11 +664,11 @@ public class ModelRpService {
         Long currentUserId = AuthService.getCurrentUserId();
 
         // 查询消息记录
-        ModelRpHistoryPo history = historyRepository.findById(dto.getHistoryId())
+        NpcChatHistoryPo history = historyRepository.findById(dto.getHistoryId())
             .orElseThrow(() -> new BizException("消息不存在"));
         
         // 验证消息所属的会话是否属于当前人物
-        ModelRpThreadPo thread = history.getThread();
+        NpcChatThreadPo thread = history.getThread();
         if (!thread.getPlayer().getId().equals(currentUserId)) {
             throw new BizException("无权删除此消息");
         }
@@ -685,7 +685,7 @@ public class ModelRpService {
     @Transactional
     public void editRpHistory(EditRpHistoryDto dto) throws BizException {
         //查询历史记录
-        ModelRpHistoryPo history = historyRepository.findById(dto.getHistoryId())
+        NpcChatHistoryPo history = historyRepository.findById(dto.getHistoryId())
                 .orElseThrow(() -> new BizException("历史记录不存在"));
 
         //验证用户权限
@@ -710,17 +710,17 @@ public class ModelRpService {
      */
     public List<ModelRoleThreadListVo> getModelRoleThreadList(GetModelRoleThreadListDto dto) throws BizException {
         // 构建查询条件
-        ModelRpThreadPo query = new ModelRpThreadPo();
+        NpcChatThreadPo query = new NpcChatThreadPo();
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         // 使用Example构建查询
-        SimpleExample<ModelRpThreadPo> example = SimpleExample.of(query);
+        SimpleExample<NpcChatThreadPo> example = SimpleExample.of(query);
         
         // 添加排序（按更新时间倒序）
         example.orderByDesc("updateTime");
         
         // 执行查询，查询指定modelRoleId的记录
-        List<ModelRpThreadPo> threads = threadRepository.findAll(example.get(),example.getSort());
+        List<NpcChatThreadPo> threads = threadRepository.findAll(example.get(),example.getSort());
 
         //解密全部会话
         css.processList(threads,false);
@@ -728,9 +728,9 @@ public class ModelRpService {
         // 过滤出指定modelRoleId的记录，同时获取每个线程的最后一条消息作为预览
         List<ModelRoleThreadListVo> result = new ArrayList<>();
         
-        for (ModelRpThreadPo thread : threads) {
+        for (NpcChatThreadPo thread : threads) {
             // 判断是否是指定角色的线程
-            if (thread.getModelRole() != null && thread.getModelRole().getId().equals(dto.getModelRoleId())) {
+            if (thread.getNpc() != null && thread.getNpc().getId().equals(dto.getModelRoleId())) {
                 ModelRoleThreadListVo vo = new ModelRoleThreadListVo();
                 
                 // 将PO的基本字段映射到VO
@@ -746,8 +746,8 @@ public class ModelRpService {
                 String lastMessage = "";
                 if (thread.getHistories() != null && !thread.getHistories().isEmpty()) {
                     // 找出序号最大的那条消息
-                    ModelRpHistoryPo lastHistoryItem = thread.getHistories().stream()
-                        .max(Comparator.comparing(ModelRpHistoryPo::getSequence))
+                    NpcChatHistoryPo lastHistoryItem = thread.getHistories().stream()
+                        .max(Comparator.comparing(NpcChatHistoryPo::getSequence))
                         .orElse(null);
 
                     // 截取前50个字符作为预览
@@ -776,19 +776,19 @@ public class ModelRpService {
         Long threadId = dto.getThreadId();
         
         // 1. 根据用户ID+ThreadID查询是否有该Thread
-        ModelRpThreadPo query = new ModelRpThreadPo();
+        NpcChatThreadPo query = new NpcChatThreadPo();
         query.setId(threadId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         
-        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+        NpcChatThreadPo thread = threadRepository.findOne(Example.of(query))
             .orElseThrow(() -> new BizException("会话不存在或无权删除"));
         
         // 2. 判断该thread是否为激活的
         if (thread.getActive() == 1) {
             // 如果当前是激活的，需要查询updateTime最新的一个thread将其设置为激活
-            ModelRpThreadPo newActiveThread = threadRepository.findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
+            NpcChatThreadPo newActiveThread = threadRepository.findTopByUserIdAndModelRoleAndIdNotOrderByUpdateTimeDesc(
                 AuthService.getCurrentPlayerId(),
-                thread.getModelRole(), 
+                thread.getNpc(),
                 threadId
             );
             
@@ -830,7 +830,7 @@ public class ModelRpService {
      * @param userId 用户ID
      * @return 处理模型消息的Consumer
      */
-    private Consumer<ModelChatContext> onModelRpMessageRcv(ModelRpThreadPo thread, Long userId,Long playerId) {
+    private Consumer<ModelChatContext> onModelRpMessageRcv(NpcChatThreadPo thread, Long userId, Long playerId) {
         return context -> {
             try {
                 // 从ModelChatContext中获取contextId
@@ -868,7 +868,7 @@ public class ModelRpService {
                 if (context.getType() == 1) {
 
                     // 保存加密的AI响应到历史记录
-                    ModelRpHistoryPo modelHistory = new ModelRpHistoryPo();
+                    NpcChatHistoryPo modelHistory = new NpcChatHistoryPo();
                     modelHistory.setThread(thread);
                     modelHistory.setType(1); //Model消息
                     modelHistory.setRawContent(context.getContent());
@@ -878,7 +878,7 @@ public class ModelRpService {
                     historyRepository.save(modelHistory);
 
                     // 完成类型 - 创建结束片段
-                    ModelRpSegmentPo endSegment = new ModelRpSegmentPo();
+                    NpcChatSegmentPo endSegment = new NpcChatSegmentPo();
                     endSegment.setPlayer(currentPlayer);
                     endSegment.setThread(thread);
                     endSegment.setSequence(nextSequence);
@@ -896,7 +896,7 @@ public class ModelRpService {
 
                 if (context.getType() == 2) {
                     // 错误类型 - 创建错误片段
-                    ModelRpSegmentPo errorSegment = new ModelRpSegmentPo();
+                    NpcChatSegmentPo errorSegment = new NpcChatSegmentPo();
                     errorSegment.setPlayer(currentPlayer);
                     errorSegment.setThread(thread);
                     errorSegment.setSequence(nextSequence);

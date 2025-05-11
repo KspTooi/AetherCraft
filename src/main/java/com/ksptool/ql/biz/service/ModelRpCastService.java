@@ -1,8 +1,8 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.ModelRoleRepository;
-import com.ksptool.ql.biz.model.po.ModelRolePo;
+import com.ksptool.ql.biz.mapper.NpcRepository;
+import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class ModelRpCastService {
 
     @Autowired
-    private ModelRoleRepository modelRoleRepository;
+    private NpcRepository npcRepository;
 
     @Autowired
     private ContentSecurityService contentSecurityService;
@@ -29,18 +29,18 @@ public class ModelRpCastService {
      * @param mRoleId 角色ID
      * @return 角色实体，如果未找到则返回null
      */
-    public ModelRolePo getModelPlayRole(Long mRoleId) {
+    public NpcPo getModelPlayRole(Long mRoleId) {
         if (mRoleId == null) {
             return null;
         }
 
         // 创建查询条件
-        ModelRolePo query = new ModelRolePo();
+        NpcPo query = new NpcPo();
         query.setId(mRoleId);
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
 
         // 使用Example查询
-        return modelRoleRepository.findOne(Example.of(query)).orElse(null);
+        return npcRepository.findOne(Example.of(query)).orElse(null);
     }
 
 

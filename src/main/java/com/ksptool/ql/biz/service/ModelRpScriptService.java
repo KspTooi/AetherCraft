@@ -26,7 +26,7 @@ import java.util.List;
 public class ModelRpScriptService {
 
     @Autowired
-    private ModelRpThreadRepository threadRepository;
+    private NpcChatThreadRepository threadRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -35,16 +35,16 @@ public class ModelRpScriptService {
     private ContentSecurityService css;
 
     @Autowired
-    private ModelRpHistoryRepository historyRepository;
+    private NpcChatHistoryRepository historyRepository;
 
     @Autowired
-    private ModelRoleChatExampleRepository modelRoleChatExampleRepository;
+    private NpcChatExampleRepository npcChatExampleRepository;
 
     @Autowired
     private GlobalConfigService globalConfigService;
 
     @Autowired
-    private ModelRpSegmentRepository modelRpSegmentRepository;
+    private NpcChatSegmentRepository npcChatSegmentRepository;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -58,7 +58,7 @@ public class ModelRpScriptService {
      * @throws BizException 如果创建过程中出现错误
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createNewThread(ModelRolePo modelPlayRoleCt,String modeCode) throws BizException {
+    public void createNewThread(NpcPo modelPlayRoleCt, String modeCode) throws BizException {
 
         Long currentPlayerId = AuthService.getCurrentPlayerId();
 
@@ -78,10 +78,10 @@ public class ModelRpScriptService {
                 .orElseThrow(() -> new BizException("无法创建新存档:未找到用户所扮演的角色!"));
 
         //创建新存档
-        ModelRpThreadPo thread = new ModelRpThreadPo();
+        NpcChatThreadPo thread = new NpcChatThreadPo();
         thread.setPlayer(playerPo);
         thread.setModelCode(modeCode);
-        thread.setModelRole(modelPlayRoleCt);
+        thread.setNpc(modelPlayRoleCt);
         thread.setTitle(playerPo.getName() + "与" + modelPlayRoleCt.getName() + "的对话");
         thread.setActive(1);
         
@@ -97,7 +97,7 @@ public class ModelRpScriptService {
             prompt.setParameter("model",modelPlayRoleCt.getName());
             prompt.setParameter("user",playerPo.getName());
 
-            ModelRpHistoryPo history = new ModelRpHistoryPo();
+            NpcChatHistoryPo history = new NpcChatHistoryPo();
             history.setThread(thread);
             history.setType(1); // AI消息
             history.setRawContent(prompt.execute());
@@ -121,15 +121,15 @@ public class ModelRpScriptService {
     public void activeThread(Long threadId) throws BizException {
         
         //查询指定ID的存档
-        var query = new ModelRpThreadPo();
+        var query = new NpcChatThreadPo();
         query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         query.setId(threadId);
 
-        ModelRpThreadPo thread = threadRepository.findOne(Example.of(query))
+        NpcChatThreadPo thread = threadRepository.findOne(Example.of(query))
                 .orElseThrow(() -> new BizException("ThreadId无效!"));
                 
         //获取该存档的角色ID
-        Long roleId = thread.getModelRole().getId();
+        Long roleId = thread.getNpc().getId();
 
         //取消全部Thread的激活状态
         threadRepository.setAllThreadActive(AuthService.getCurrentPlayerId(), roleId, 0);
@@ -147,9 +147,9 @@ public class ModelRpScriptService {
      * @throws BizException 错误抛出异常
      */
     @Transactional(readOnly = true)
-    public ModelRpThreadPo getCurUserActiveThread(Long threadId) throws BizException {
+    public NpcChatThreadPo getCurUserActiveThread(Long threadId) throws BizException {
 
-        ModelRpThreadPo threadPo = threadRepository.getThreadWithRoleAndHistoriesById(threadId, AuthService.getCurrentPlayerId());
+        NpcChatThreadPo threadPo = threadRepository.getThreadWithRoleAndHistoriesById(threadId, AuthService.getCurrentPlayerId());
 
         if(threadPo == null) {
             return null;
@@ -172,7 +172,7 @@ public class ModelRpScriptService {
     public PreparedPrompt appendExamplePrompt(Long modelRoleId,PreparedPrompt prompt) throws BizException {
 
         //查询该模型角色是否还有示例对话
-        List<ModelRoleChatExamplePo> exampleChatPos = modelRoleChatExampleRepository.getByModelRoleId(modelRoleId);
+        List<NpcChatExamplePo> exampleChatPos = npcChatExampleRepository.getByNpcId(modelRoleId);
 
         if(exampleChatPos.isEmpty()){
             return prompt;
@@ -202,7 +202,7 @@ public class ModelRpScriptService {
     }
 
     //解析模型主Prompt
-    public PreparedPrompt createSystemPrompt(PlayerPo playerCt, ModelRolePo modelPlayRoleCt) {
+    public PreparedPrompt createSystemPrompt(PlayerPo playerCt, NpcPo modelPlayRoleCt) {
 
         var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
         var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
@@ -228,9 +228,9 @@ public class ModelRpScriptService {
      * @param content 消息内容
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ModelRpHistoryPo createNewRpUserHistory(Long threadId,String content) throws BizException {
-        ModelRpHistoryPo userHistory = new ModelRpHistoryPo();
-        var thread = new ModelRpThreadPo();
+    public NpcChatHistoryPo createNewRpUserHistory(Long threadId, String content) throws BizException {
+        NpcChatHistoryPo userHistory = new NpcChatHistoryPo();
+        var thread = new NpcChatThreadPo();
         thread.setId(threadId);
         userHistory.setThread(thread);
         userHistory.setType(0); // 用户消息
@@ -246,15 +246,15 @@ public class ModelRpScriptService {
      * 创建新的开始片段
      * @param threadPt 会话存档PO
      */
-    public void createStartSegment(ModelRpThreadPo threadPt) {
-        ModelRpSegmentPo startSegment = new ModelRpSegmentPo();
+    public void createStartSegment(NpcChatThreadPo threadPt) {
+        NpcChatSegmentPo startSegment = new NpcChatSegmentPo();
         startSegment.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
         startSegment.setThread(threadPt);
         startSegment.setSequence(0);
         startSegment.setContent(null);
         startSegment.setStatus(0); // 未读状态
         startSegment.setType(0); // 开始类型
-        modelRpSegmentRepository.save(startSegment);
+        npcChatSegmentRepository.save(startSegment);
     }
 
     /**
@@ -266,13 +266,13 @@ public class ModelRpScriptService {
 
         if(nextSeq == null){
             // 获取当前最大序号
-            nextSeq = modelRpSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
+            nextSeq = npcChatSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
         }
 
         // 数据类型 - 创建数据片段
-        ModelRpSegmentPo dataSegment = new ModelRpSegmentPo();
+        NpcChatSegmentPo dataSegment = new NpcChatSegmentPo();
         dataSegment.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
-        var thread = new ModelRpThreadPo();
+        var thread = new NpcChatThreadPo();
         thread.setId(threadId);
         dataSegment.setThread(thread);
         dataSegment.setSequence(nextSeq);
@@ -280,7 +280,7 @@ public class ModelRpScriptService {
         dataSegment.setStatus(0); // 未读状态
         dataSegment.setType(1); // 数据类型
         css.encryptEntity(dataSegment,uid);
-        modelRpSegmentRepository.save(dataSegment);
+        npcChatSegmentRepository.save(dataSegment);
     }
 
 

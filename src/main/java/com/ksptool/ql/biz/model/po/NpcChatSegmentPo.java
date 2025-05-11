@@ -12,8 +12,8 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "model_rp_segment")
-public class ModelRpSegmentPo {
+@Table(name = "npc_chat_segment")
+public class NpcChatSegmentPo {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +28,7 @@ public class ModelRpSegmentPo {
     @Comment("关联的RP会话")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    private ModelRpThreadPo thread;
+    private NpcChatThreadPo thread;
     
     @Comment("关联的历史记录ID")
     @Column(name = "history_id")
