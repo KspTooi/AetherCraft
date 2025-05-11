@@ -27,13 +27,13 @@ public enum GlobalConfigEnum {
     CUSTOMIZE_WALLPAPER_DEFAULT_PATH("customize.wallpaper.default.path", "/img/bg5.jpg", "默认壁纸路径"),
 
     // 角色扮演系统相关配置
-    MODEL_RP_PROMPT_MAIN("model.rp.prompt.main", "扮演 #{model}。在与 #{user} 的虚构对话中，生成 #{model} 的下一条回复。", "RP-主提示词"),
-    MODEL_RP_PROMPT_ROLE("model.rp.prompt.role.model", """
-            #{userDesc}
-            #{modelDescription}
-            #{modelRoleSummary}
-            #{modelScenario}
-            """, "RP-角色设定提示词"),
+    MODEL_RP_PROMPT_MAIN("model.rp.prompt.main.v2", "扮演 #{npc}。在与 #{player} 的虚构对话中，生成 #{npc} 的下一条回复。", "RP-主提示词"),
+    MODEL_RP_PROMPT_ROLE("model.rp.prompt.role.model.v2", """
+            #{playerDesc}
+            #{npcDescription}
+            #{npcRoleSummary}
+            #{npcScenario}
+            """, "RP-主系统提示词"),
 
     MODEL_RP_PROMPT_EXAMPLE_CHAT_START("model.rp.prompt.example.chat.start","#示例对话#\n\n","RP-角色示例对话片段-开始 提示词"),
     MODEL_RP_PROMPT_EXAMPLE_CHAT_END("model.rp.prompt.example.chat.end","\n\n","RP-角色示例对话片段-结束 提示词"),

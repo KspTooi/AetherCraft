@@ -256,9 +256,9 @@ public class ModelRpService {
 
         //获取用户选择的人物与模型扮演的角色
         PlayerPo playerCt = threadCt.getPlayer();
-        NpcPo modelPlayRoleCt = threadCt.getNpc();
+        NpcPo npcCt = threadCt.getNpc();
 
-        if (modelPlayRoleCt == null) {
+        if (npcCt == null) {
             throw new BizException("模型角色信息不存在");
         }
 
@@ -308,10 +308,10 @@ public class ModelRpService {
         }
 
         //创建主Prompt
-        PreparedPrompt prompt = scriptService.createSystemPrompt(playerCt, modelPlayRoleCt);
+        PreparedPrompt prompt = scriptService.createSystemPrompt(playerCt, npcCt);
 
         //解析模型示例对话
-        prompt = scriptService.appendExamplePrompt(modelPlayRoleCt.getId(),prompt);
+        prompt = scriptService.appendExamplePrompt(npcCt.getId(),prompt);
 
         String finalPrompt = prompt.executeNested();
 
@@ -350,9 +350,9 @@ public class ModelRpService {
         //保存该线程的角色数据到缓存中
         threadModelRoleMap.remove(threadCt.getId());
         var roleCache = new ThreadModelRoleVo();
-        roleCache.setRoleId(modelPlayRoleCt.getId());
-        roleCache.setRoleName(modelPlayRoleCt.getName());
-        roleCache.setRoleAvatarPath(css.decryptForCurUser(modelPlayRoleCt.getAvatarPath()));
+        roleCache.setRoleId(npcCt.getId());
+        roleCache.setRoleName(npcCt.getName());
+        roleCache.setRoleAvatarPath(css.decryptForCurUser(npcCt.getAvatarPath()));
         threadModelRoleMap.put(threadCt.getId(),roleCache);
 
         try {

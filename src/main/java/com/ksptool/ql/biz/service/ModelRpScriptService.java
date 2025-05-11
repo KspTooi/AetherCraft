@@ -164,15 +164,15 @@ public class ModelRpScriptService {
 
     /**
      * 查询该模型角色下是否还有示例对话 如果有示例对话将其附加到PrePrompt中
-     * @param modelRoleId 模型角色ID
+     * @param npcId 模型角色ID
      * @param prompt 待附加的Prompt
      * @throws BizException 解密数据失败抛出
      */
     @Transactional(readOnly = true)
-    public PreparedPrompt appendExamplePrompt(Long modelRoleId,PreparedPrompt prompt) throws BizException {
+    public PreparedPrompt appendExamplePrompt(Long npcId,PreparedPrompt prompt) throws BizException {
 
         //查询该NPC是否还有示例对话
-        List<NpcChatExamplePo> exampleChatPos = npcChatExampleRepository.getByNpcId(modelRoleId);
+        List<NpcChatExamplePo> exampleChatPos = npcChatExampleRepository.getByNpcId(npcId);
 
         if(exampleChatPos.isEmpty()){
             return prompt;
@@ -202,22 +202,23 @@ public class ModelRpScriptService {
     }
 
     //解析模型主Prompt
-    public PreparedPrompt createSystemPrompt(PlayerPo playerCt, NpcPo modelPlayRoleCt) {
+    public PreparedPrompt createSystemPrompt(PlayerPo playerCt, NpcPo npcCt) {
 
         var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
         var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
         PreparedPrompt prompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
-        prompt.setParameter("model", modelPlayRoleCt.getName());
-        prompt.setParameter("user", "user");
-        prompt.setParameter("userDesc", "");
-        prompt.setParameter("modelDescription", css.decryptForCurUser(modelPlayRoleCt.getDescription()));
-        prompt.setParameter("modelRoleSummary", css.decryptForCurUser(modelPlayRoleCt.getRoleSummary()));
-        prompt.setParameter("modelScenario", css.decryptForCurUser(modelPlayRoleCt.getScenario()));
+        prompt.setParameter("npc", npcCt.getName());
+        prompt.setParameter("player", "user");
+
+        prompt.setParameter("playerDesc", "");
+        prompt.setParameter("npcDescription", css.decryptForCurUser(npcCt.getDescription()));
+        prompt.setParameter("npcRoleSummary", css.decryptForCurUser(npcCt.getRoleSummary()));
+        prompt.setParameter("npcScenario", css.decryptForCurUser(npcCt.getScenario()));
 
         if(playerCt != null) {
-            prompt.setParameter("user", playerCt.getName());
-            prompt.setParameter("userDesc", css.decryptForCurUser(playerCt.getDescription()));
+            prompt.setParameter("player", playerCt.getName());
+            prompt.setParameter("playerDesc", css.decryptForCurUser(playerCt.getDescription()));
         }
         return prompt;
     }
