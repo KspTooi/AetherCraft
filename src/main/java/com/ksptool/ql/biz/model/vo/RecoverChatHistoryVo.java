@@ -10,10 +10,10 @@ public class RecoverChatHistoryVo {
     //对话历史ID
     private Long id;
 
-    // 角色名称
+    //角色名称
     private String name;
 
-    // 头像路径
+    //头像路径
     private String avatarPath;
 
     //消息类型：0-用户消息，1-AI消息

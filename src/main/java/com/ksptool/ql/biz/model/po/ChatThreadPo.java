@@ -19,7 +19,7 @@ public class ChatThreadPo {
     private Long id;
 
     @Column(name = "type")
-    @Comment("Thread类型 0:常规对话 1:RP对话")
+    @Comment("Thread类型 0:标准会话 1:RP会话 2:标准增强会话")
     private Integer type;
 
     @ManyToOne(fetch = FetchType.LAZY)
