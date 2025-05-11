@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -41,7 +42,6 @@ public class NpcChatExampleService {
     private ContentSecurityService css;
 
 
-    @PostMapping("/getNpcChatExampleList")
     public List<GetNpcChatExampleListVo> getModelRoleList(Long npcId) throws BizException {
 
         //查询NPC
@@ -60,11 +60,12 @@ public class NpcChatExampleService {
         for(var po : pos){
             var vo = as(po,GetNpcChatExampleListVo.class);
             vo.setContent(css.decryptForCurUser(vo.getContent()));
+            vos.add(vo);
         }
         return vos;
     }
 
-    @PostMapping("saveNpcChatExample")
+    @Transactional
     public void saveNpcChatExample(@RequestBody @Valid SaveNpcChatExampleDto dto) throws BizException {
         //查询NPC
         var npcQuery = new NpcPo();
@@ -79,7 +80,7 @@ public class NpcChatExampleService {
             //新增
             if(example.getId() == null){
                 var insert = new NpcChatExamplePo();
-                assign(dto,insert);
+                assign(example,insert);
                 insert.setNpc(npcPo);
                 insert.setSortOrder(repository.getNextOrder(npcPo.getId()));
                 css.encryptEntity(insert);
@@ -103,7 +104,7 @@ public class NpcChatExampleService {
 
     }
 
-    @PostMapping("removeNpcChatExample")
+    @Transactional
     public void removeNpcChatExample(Long exampleId) throws BizException {
 
         NpcChatExamplePo po = repository.findById(exampleId)

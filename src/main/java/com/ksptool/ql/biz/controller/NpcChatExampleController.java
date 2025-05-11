@@ -1,13 +1,10 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
 import com.ksptool.ql.biz.model.dto.SaveNpcChatExampleDto;
-import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
 import com.ksptool.ql.biz.model.vo.GetNpcChatExampleListVo;
 import com.ksptool.ql.biz.service.NpcChatExampleService;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
 @RestController

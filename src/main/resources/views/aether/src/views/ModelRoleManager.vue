@@ -158,16 +158,10 @@
         <!-- 对话示例 -->
         <div v-if="currentTab === 'chat-examples'" class="role-tab-panel">
           <div class="role-panel">
-            <div class="chat-examples-placeholder">
+            <NpcChatExampleTab v-if="selectedRoleId" :npcId="selectedRoleId" />
+            <div v-else class="chat-examples-placeholder">
               <i class="bi bi-chat-dots"></i>
-              <p>对话示例功能正在开发中...请转到旧版管理台</p>
-              <GlowButton
-                @click="goToOldPanel"
-                class="redirect-btn"
-                title="前往旧版管理台"
-              >
-                前往旧版管理台
-              </GlowButton>
+              <p>请先选择一个NPC以查看和编辑对话示例</p>
             </div>
           </div>
         </div>
@@ -205,6 +199,7 @@ import GlowTab from "@/components/glow-ui/GlowTab.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue";
 import { usePreferencesStore } from '@/stores/preferences';
+import NpcChatExampleTab from '@/components/glow-client/NpcChatExampleTab.vue';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
@@ -223,7 +218,7 @@ const confirmInputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null);
 // NPC列表数据
 const roleList = ref<GetModelRoleListVo[]>([]);
 const loading = ref(true);
-const selectedRoleId = ref<string>("");
+const selectedRoleId = ref<string>(""); //当前选择的NPC_ID
 
 // 定义标签项
 const roleTabItems = [
