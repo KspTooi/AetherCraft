@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface NpcChatExampleRepository extends JpaRepository<NpcChatExamplePo, Long>, JpaSpecificationExecutor<NpcChatExamplePo> {
-    
+
     /**
      * 根据角色ID查询所有对话示例
      * @param npcId 角色ID
@@ -36,5 +36,18 @@ public interface NpcChatExampleRepository extends JpaRepository<NpcChatExamplePo
         WHERE e.npc.id = :npcId
     """)
     int removeByNpcId(@Param("npcId") Long npcId);
+
+    /**
+     * 获取指定NPC下一个对话示例的排序号
+     * 如果没有现有记录，返回0，否则返回最大排序号+1
+     * @param npcId 角色ID
+     * @return 下一个排序号
+     */
+    @Query("""
+        SELECT COALESCE(MAX(e.sortOrder), -1) + 1
+        FROM NpcChatExamplePo e
+        WHERE e.npc.id = :npcId
+    """)
+    int getNextOrder(@Param("npcId") Long npcId);
     
 } 

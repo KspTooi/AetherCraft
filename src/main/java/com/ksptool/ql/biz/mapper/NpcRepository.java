@@ -27,4 +27,6 @@ public interface NpcRepository extends JpaRepository<NpcPo, Long> {
             AND r.id != :id
             """)
     boolean existsByNameAndIdNot(@Param("playerId") Long playerId,@Param("name") String name, @Param("id") Long id);
+
+
 } 
