@@ -1,8 +1,10 @@
 package com.ksptool.ql.biz.service.panel;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleChatDto;
 import com.ksptool.ql.biz.model.dto.SaveModelRoleChatExampleDto;
 import com.ksptool.ql.biz.model.po.ModelRoleChatExamplePo;
+import com.ksptool.ql.biz.model.po.ModelRolePo;
 import com.ksptool.ql.biz.model.vo.EditModelRoleChatExampleVo;
 import com.ksptool.ql.biz.mapper.ModelRoleChatExampleRepository;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
@@ -56,7 +58,7 @@ public class PanelModelRoleChatExampleService {
     public void save(SaveModelRoleChatExampleDto dto) throws BizException {
         // 获取当前角色下的所有对话示例
         ModelRoleChatExamplePo probe = new ModelRoleChatExamplePo();
-        probe.setModelRoleId(dto.getModelRoleId());
+        probe.setModelRole(Any.of().val("id",dto.getModelRoleId()).as(ModelRolePo.class));
         List<ModelRoleChatExamplePo> existingExamples = repository.findAll(Example.of(probe));
         
         // 逐个处理聊天示例
@@ -90,7 +92,7 @@ public class PanelModelRoleChatExampleService {
             
             // 否则，创建新的示例
             ModelRoleChatExamplePo newPo = new ModelRoleChatExamplePo();
-            newPo.setModelRoleId(dto.getModelRoleId());
+            newPo.setModelRole(Any.of().val("id",dto.getModelRoleId()).as(ModelRolePo.class));
             newPo.setContent(chatDto.getContent());
             newPo.setSortOrder(chatDto.getSortOrder());
             // 加密内容

@@ -19,8 +19,8 @@ public interface ModelRoleChatExampleRepository extends JpaRepository<ModelRoleC
      * @return 对话示例列表
      */
     @Query("""
-        SELECT e FROM ModelRoleChatExamplePo e 
-        WHERE e.modelRoleId = :modelRoleId 
+        SELECT e FROM ModelRoleChatExamplePo e
+        WHERE e.modelRole.id = :modelRoleId
         ORDER BY e.sortOrder ASC
     """)
     List<ModelRoleChatExamplePo> getByModelRoleId(@Param("modelRoleId") Long modelRoleId);
@@ -32,8 +32,8 @@ public interface ModelRoleChatExampleRepository extends JpaRepository<ModelRoleC
      */
     @Modifying
     @Query("""
-        DELETE FROM ModelRoleChatExamplePo e 
-        WHERE e.modelRoleId = :modelRoleId
+        DELETE FROM ModelRoleChatExamplePo e
+        WHERE e.modelRole.id = :modelRoleId
     """)
     int removeByModelRoleId(@Param("modelRoleId") Long modelRoleId);
     

@@ -19,9 +19,10 @@ public class ModelRoleChatExamplePo {
     @Comment("示例ID")
     private Long id;
 
-    @Column(name = "model_role_id", nullable = false)
-    @Comment("关联的角色ID")
-    private Long modelRoleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "model_role_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("模型角色ID")
+    private ModelRolePo modelRole;
 
     @Column(name = "content", nullable = false, length = 3000)
     @Comment("(加密)对话内容")

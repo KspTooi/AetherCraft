@@ -152,7 +152,7 @@ public class ModelRoleService {
         
         // 查询并复制对话示例
         var chatExampleQuery = new ModelRoleChatExamplePo();
-        chatExampleQuery.setModelRoleId(sourceId);
+        chatExampleQuery.setModelRole(sourceRole);
         
         SimpleExample<ModelRoleChatExamplePo> chatExample = SimpleExample.of(chatExampleQuery);
         List<ModelRoleChatExamplePo> examples = chatExampleRepository.findAll(chatExample.get());
@@ -165,7 +165,7 @@ public class ModelRoleService {
                 
                 // 设置新对话示例的基本属性
                 newExample.setId(null);
-                newExample.setModelRoleId(savedRole.getId());
+                newExample.setModelRole(Any.of().val("id",savedRole.getId()).as(ModelRolePo.class));
                 newExample.setCreateTime(null);
                 newExample.setUpdateTime(null);
                 
