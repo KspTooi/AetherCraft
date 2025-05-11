@@ -63,16 +63,6 @@
                 <el-icon><Back /></el-icon>
                 <span class="button-text">返回客户端</span>
               </el-button>
-              <el-button 
-                type="info" 
-                plain 
-                size="small" 
-                @click="navigateToUrl('/dashboard')"
-                class="nav-button"
-              >
-                <el-icon><Menu /></el-icon>
-                <span class="button-text">旧版管理台</span>
-              </el-button>
             </div>
             
             <!-- 用户自定义操作区域 -->
