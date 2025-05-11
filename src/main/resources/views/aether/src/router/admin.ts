@@ -34,6 +34,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/session',
+      name: 'session-manager',
+      component: () => import('@/views/admin/SessionManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: '会话管理'
+        }
+      }
+    },
+    {
       path: '/admin/player/default/group',
       name: 'player-default-group-manager',
       component: () => import('@/views/admin/PlayerDefaultGroupManager.vue'),

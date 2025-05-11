@@ -1,6 +1,10 @@
 package com.ksptool.ql.biz.mapper;
 
+import com.ksptool.ql.biz.model.dto.GetSessionListDto;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
+import com.ksptool.ql.biz.model.vo.GetSessionListVo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +15,22 @@ import java.util.List;
 
 @Repository
 public interface UserSessionRepository extends JpaRepository<UserSessionPo, Long> {
+
+
+    @Query("""
+          SELECT new com.ksptool.ql.biz.model.vo.GetSessionListVo(
+            us.id,
+            u.username,
+            us.playerName,
+            us.createTime,
+            us.expiresAt
+          ) FROM UserSessionPo us
+          LEFT JOIN UserPo u ON us.userId = u.id
+          WHERE (:#{#dto.userName} IS NULL OR u.username LIKE %:#{#dto.userName}%)
+          AND (:#{#dto.playerName} IS NULL OR us.playerName LIKE %:#{#dto.playerName}%)
+          ORDER BY us.createTime DESC
+          """)
+    Page<GetSessionListVo> getSessionList(@Param("dto") GetSessionListDto dto, Pageable page);
 
     UserSessionPo findByToken(String token);
 

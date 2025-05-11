@@ -98,6 +98,10 @@ public enum PermissionEnum {
     ADMIN_APIKEY_AUTH_SAVE("admin:apikey:auth:save", "新增/编辑API密钥授权"),
     ADMIN_APIKEY_AUTH_REMOVE("admin:apikey:auth:remove", "移除API密钥授权"),
 
+    //会话管理
+    ADMIN_SESSION_VIEW("admin:session:view", "查看会话列表"),
+    ADMIN_SESSION_CLOSE("admin:session:close", "关闭会话"),
+
     /**
      * 客户端权限
      */

@@ -171,8 +171,7 @@ public class AdminModelConfigService {
             throw new BizException("无效的模型代码");
         }
 
-        // 获取当前用户ID
-        Long userId = AuthService.getCurrentUserId();
+        // 获取当前玩家ID
         Long playerId = AuthService.getCurrentPlayerId();
 
         // 获取API密钥

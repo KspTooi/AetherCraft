@@ -180,6 +180,12 @@ const menuItems = ref([
     routerLink: '/admin/player'
   },
   {
+    id: 'session',
+    title: '会话管理',
+    icon: User,
+    routerLink: '/admin/session'
+  },
+  {
     id: 'player_default_group',
     title: '玩家默认访问组',
     icon: Lock,
