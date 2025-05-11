@@ -659,7 +659,7 @@ public class ModelChatService {
             // 更新会话标题
             thread.setTitle(title);
             thread.setTitleGenerated(1); // 标记为已生成标题
-            css.encryptEntity(thread);
+            css.encryptEntity(thread,uid);
             threadRepository.save(thread);
             
             log.info("已为会话 {} 生成标题: {}", threadId, title);

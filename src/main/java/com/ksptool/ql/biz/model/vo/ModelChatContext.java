@@ -26,5 +26,16 @@ public class ModelChatContext {
 
     //异常信息，当type=2时不为null
     private Exception exception;
+
+    //当type=1时产生TOKEN计数
+
+    //Token计数 - 用户输入
+    private Integer tokenInput;
+
+    //Token计数 - 输出
+    private Integer tokenOutput;
+
+    //Token计数 - 输出(思考)
+    private Integer tokenThoughtsOutput;
     
 } 

@@ -7,6 +7,7 @@ import java.util.List;
 public class GeminiResponse {
     private List<Candidate> candidates;
     private PromptFeedback promptFeedback;
+    private UsageMetadata usageMetadata;
 
     @Data
     public static class Candidate {
@@ -36,6 +37,14 @@ public class GeminiResponse {
     @Data
     public static class PromptFeedback {
         private List<SafetyRating> safetyRatings;
+    }
+
+    @Data
+    public static class UsageMetadata {
+        private Integer promptTokenCount;
+        private Integer candidatesTokenCount;
+        private Integer totalTokenCount;
+        private Integer thoughtsTokenCount;
     }
 
     public String getFirstResponseText() {

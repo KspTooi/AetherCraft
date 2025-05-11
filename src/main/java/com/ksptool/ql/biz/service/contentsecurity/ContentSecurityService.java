@@ -109,6 +109,14 @@ public class ContentSecurityService {
         po.setTitle(encrypt(po.getTitle(), dek));
     }
 
+    public void encryptEntity(ModelChatThreadPo po,Long userId) throws BizException {
+        if(po == null) {
+            return;
+        }
+        String dek = getPlainUserDek(userId);
+        po.setTitle(encrypt(po.getTitle(), dek));
+    }
+
     public void encryptEntity(NpcChatThreadPo po, Long userId) throws BizException{
         if(po == null) {
             return;

@@ -140,7 +140,9 @@ public class ModelGeminiService implements ModelRestCI{
                     .url(param.getUrl() + SSE_PARAM + "&key=" + param.getApiKey())
                     .post(RequestBody.create(jsonBody, JSON))
                     .build();
-                
+
+                GeminiResponse geminiResponse = null;
+
                 // 处理SSE响应
                 try (Response response = client.newCall(request).execute()) {
                     if (!response.isSuccessful()) {
@@ -153,7 +155,7 @@ public class ModelGeminiService implements ModelRestCI{
                             if (line.startsWith("data: ")) {
                                 String data = line.substring(6);
                                 if (!"[DONE]".equals(data)) {
-                                    GeminiResponse geminiResponse = gson.fromJson(data, GeminiResponse.class);
+                                    geminiResponse = gson.fromJson(data, GeminiResponse.class);
                                     String text = geminiResponse.getFirstResponseText();
                                     if (text != null) {
                                         responseBuilder.append(text);
@@ -196,7 +198,7 @@ public class ModelGeminiService implements ModelRestCI{
                     param.getModelCode(),
                     jsonBody.replaceAll("\\s+", ""), 
                     fullResponse.length());
-                
+
                 // 调用回调，返回type为1的ModelChatContext
                 if (callback != null) {
                     ModelChatContext context = new ModelChatContext();
@@ -205,6 +207,16 @@ public class ModelGeminiService implements ModelRestCI{
                     context.setContent(fullResponse);
                     context.setSequence(sequence.get()); // 使用当前序列号
                     context.setModelCode(param.getModelCode());
+
+                    //处理TOKEN计数
+                    if(geminiResponse!=null && geminiResponse.getUsageMetadata()!=null){
+                        GeminiResponse.UsageMetadata umd = geminiResponse.getUsageMetadata();
+                        context.setTokenInput(umd.getPromptTokenCount());
+                        context.setTokenOutput(umd.getCandidatesTokenCount());
+                        context.setTokenThoughtsOutput(umd.getThoughtsTokenCount());
+                        log.info(gson.toJson(geminiResponse));
+                    }
+
                     callback.accept(context);
                 }
                 
