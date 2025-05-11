@@ -14,7 +14,8 @@
         <i class="bi bi-plus-lg"></i>
         添加示例
       </GlowButton>
-      <GlowButton 
+      <GlowButton
+        :corners="['bottom-right']"
         @click="saveChatExamples" 
         :disabled="loading"
         class="action-button save-button"
@@ -36,7 +37,7 @@
       <div class="example-format">
         <p>示例格式：</p>
         <pre>#{player}: 今天天气真不错，你觉得呢？
-#{npc}: *望向窗外* 是啊，阳光明媚！这样的好天气适合去湖边散步，#{player}你有空一起去吗？</pre>
+#{npc}: *望向窗外* 是啊，阳光明媚！这样的好天气适合去湖边散步，#{player}:你有空一起去吗？</pre>
       </div>
     </div>
 
@@ -77,7 +78,7 @@
             v-model="item.content"
             placeholder="#{player}: 今天天气真不错，你觉得呢？
 #{npc}: *望向窗外* 是啊，阳光明媚！这样的好天气适合去湖边散步，
-#{player}你有空一起去吗？"
+#{player}: 你有空一起去吗？"
             :maxLength="5000"
             :auto-resize="true"
             showLength

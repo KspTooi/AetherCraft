@@ -76,9 +76,13 @@ import type GetRpLastStatusVo from '@/entity/vo/GetRpLastStatusVo.ts';
 import type RpSegmentVo from '@/entity/vo/RpSegmentVo.ts';
 import RoleThreadsModal from "@/components/glow-client/RoleThreadsModal.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import { useRouter } from 'vue-router';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
+
+// 获取路由实例
+const router = useRouter();
 
 // 定义 ImMessageBox 需要的消息项类型
 interface MessageBoxItem {
@@ -464,12 +468,16 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
   }
 }
 
-//编辑角色(这里桥接到旧版编辑页面)
+//编辑角色(修改为使用Vue Router导航到ModelRoleManager)
 const onEditRole = async (role:GetModelRoleListVo) => {
   if (!role.id) {
     return
   }
-  window.location.href = `/dashboard?redirect=/panel/model/role/list?id=${role.id}`
+  // 使用Vue Router导航到ModelRoleManager.vue并携带roleId参数
+  router.push({
+    path: '/model-role-manager',
+    query: { roleId: role.id }
+  });
 }
 
 const onManageThreads = async (role:GetModelRoleListVo) => {

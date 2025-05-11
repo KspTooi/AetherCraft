@@ -200,9 +200,13 @@ import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue";
 import { usePreferencesStore } from '@/stores/preferences';
 import NpcChatExampleTab from '@/components/glow-client/NpcChatExampleTab.vue';
+import { useRoute } from 'vue-router';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
+
+// 获取路由和路由参数
+const route = useRoute();
 
 // 获取偏好设置存储
 const preferencesStore = usePreferencesStore();
@@ -267,6 +271,9 @@ watch(() => currentRoleDetails.status, (newValue) => {
 onMounted(async () => {
   await loadRoleList();
   
+  // 优先检查URL中的roleId参数
+  const urlRoleId = route.query.roleId as string;
+  
   // 从偏好设置中加载上次选择的NPCID和Tab
   const savedRoleId = preferencesStore.getModelRoleEditCurrentId;
   const savedTab = preferencesStore.getModelRoleEditPathTab;
@@ -275,7 +282,15 @@ onMounted(async () => {
     currentTab.value = savedTab;
   }
   
-  if (savedRoleId) {
+  // 如果URL中有roleId，优先使用它
+  if (urlRoleId && roleList.value.some(role => role.id === urlRoleId)) {
+    selectedRoleId.value = urlRoleId;
+    // 保存到偏好设置中，以便下次访问时记住
+    preferencesStore.saveModelRoleEditCurrentId(urlRoleId);
+    await loadModelRoleDetails();
+  } 
+  // 否则，尝试使用保存的roleId
+  else if (savedRoleId) {
     // 检查保存的NPCID是否在列表中存在
     const roleExists = roleList.value.some(role => role.id === savedRoleId);
     if (roleExists) {
