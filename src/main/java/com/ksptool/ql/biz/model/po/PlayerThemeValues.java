@@ -7,9 +7,9 @@ import org.hibernate.annotations.Comment;
 import java.util.Date;
 
 @Entity
-@Table(name = "user_theme_values")
+@Table(name = "player_theme_values")
 @Data
-public class UserThemeValues {
+public class PlayerThemeValues {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,7 @@ public class UserThemeValues {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "theme_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("所属主题")
-    private UserThemePo theme;
+    private PlayerThemePo theme;
 
     @Column(length = 50, nullable = false)
     @Comment("设置项键名")

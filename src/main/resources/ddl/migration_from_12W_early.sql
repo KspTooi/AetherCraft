@@ -247,3 +247,35 @@ BEGIN;
 DROP TABLE MODEL_USER_ROLES;
 ALTER TABLE IF EXISTS MODEL_RP_THREAD DROP COLUMN USER_ROLE_ID;
 COMMIT;
+--移除旧版用户扮演角色 结束
+
+--迁移user_theme
+BEGIN;
+ALTER TABLE IF EXISTS user_theme ADD COLUMN player_id bigint;
+
+UPDATE user_theme
+SET player_id = -1
+WHERE player_id IS NULL;
+
+ALTER TABLE IF EXISTS user_theme ALTER COLUMN player_id bigint NOT NULL;
+
+--已有UserTheme变更到用户下第一个人物
+UPDATE user_theme c
+SET player_id = (
+    SELECT p.id
+    FROM player p
+    WHERE p.user_id = c.user_id
+    ORDER BY p.create_time ASC
+    LIMIT 1
+    )
+WHERE c.player_id = -1;
+
+ALTER TABLE IF EXISTS user_theme DROP COLUMN user_id;
+
+-- user_theme更名为player_theme
+ALTER TABLE user_theme RENAME TO player_theme;
+ALTER TABLE user_theme_values RENAME TO player_theme_values;
+COMMIT;
+--迁移user_theme_values 结束
+
+

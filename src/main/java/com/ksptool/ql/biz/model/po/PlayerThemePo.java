@@ -8,9 +8,9 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "user_theme")
+@Table(name = "player_theme")
 @Data
-public class UserThemePo {
+public class PlayerThemePo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,9 +18,9 @@ public class UserThemePo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("所属用户")
-    private UserPo user;
+    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("所属人物ID")
+    private PlayerPo player;
 
     @Column(length = 50, nullable = false)
     @Comment("主题名称")
@@ -40,7 +40,7 @@ public class UserThemePo {
     
     @OneToMany(mappedBy = "theme", cascade = CascadeType.ALL, orphanRemoval = true)
     @Comment("主题配置值列表")
-    private List<UserThemeValues> themeValues;
+    private List<PlayerThemeValues> themeValues;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")

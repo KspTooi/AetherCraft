@@ -1,12 +1,11 @@
 package com.ksptool.ql.biz.controller;
 
-import com.ksptool.entities.Any;
-import com.ksptool.ql.biz.mapper.UserThemeRepository;
-import com.ksptool.ql.biz.mapper.UserThemeValuesRepository;
+import com.ksptool.ql.biz.mapper.PlayerThemeRepository;
+import com.ksptool.ql.biz.mapper.PlayerThemeValuesRepository;
 import com.ksptool.ql.biz.model.dto.*;
-import com.ksptool.ql.biz.model.po.UserPo;
-import com.ksptool.ql.biz.model.po.UserThemePo;
-import com.ksptool.ql.biz.model.po.UserThemeValues;
+import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.po.PlayerThemePo;
+import com.ksptool.ql.biz.model.po.PlayerThemeValues;
 import com.ksptool.ql.biz.model.vo.GetActiveThemeVo;
 import com.ksptool.ql.biz.model.vo.GetThemeValuesVo;
 import com.ksptool.ql.biz.model.vo.GetUserThemeListVo;
@@ -33,30 +32,27 @@ import org.apache.commons.lang3.StringUtils;
 public class CustomizeThemeController {
     
     @Autowired
-    private UserThemeRepository themeRepository;
+    private PlayerThemeRepository themeRepository;
 
     @Autowired
-    private UserThemeValuesRepository themeValuesRepository;
-
-    // 用户壁纸路径的配置键
-    private static final String USER_WALLPAPER_PATH_KEY = "customize.wallpaper.path";
+    private PlayerThemeValuesRepository themeValuesRepository;
     
     @GetMapping("/view")
     public ModelAndView customizeView() {
         return new ModelAndView("user-customize/user-customize.html");
     }
 
-    //获取当前用户拥有的主题列表(不分页查全部)
+    //获取当前玩家拥有的主题列表(不分页查全部)
     @PostMapping("/getThemeList")
     public Result<PageableView<GetUserThemeListVo>> getThemeList() {
         Long userId = AuthService.getCurrentUserId();
         
-        // 查询当前用户所有主题
-        List<UserThemePo> themes = themeRepository.findByUserIdWithValues(userId);
+        // 查询当前玩家所有主题
+        List<PlayerThemePo> themes = themeRepository.findByPlayerIdWithValues(userId);
         
         // 将PO转换为VO
         List<GetUserThemeListVo> voList = new ArrayList<>();
-        for (UserThemePo theme : themes) {
+        for (PlayerThemePo theme : themes) {
             GetUserThemeListVo vo = new GetUserThemeListVo();
             assign(theme, vo);
             voList.add(vo);
@@ -71,15 +67,14 @@ public class CustomizeThemeController {
     @Transactional
     public Result<String> removeTheme(@RequestBody @Valid RemoveThemeDto dto) throws BizException {
 
-        Long uid = AuthService.getCurrentUserId();
 
-        var query = new UserThemePo();
-        var user = new UserPo();
-        user.setId(uid);
-        query.setUser(user);
+        var query = new PlayerThemePo();
+        var player = new PlayerPo();
+        player.setId(AuthService.getCurrentPlayerId());
+        query.setPlayer(player);
         query.setId(dto.getThemeId());
 
-        UserThemePo po = themeRepository.findOne(Example.of(query)).orElseThrow(() -> new BizException("未找到主题"));
+        PlayerThemePo po = themeRepository.findOne(Example.of(query)).orElseThrow(() -> new BizException("未找到主题"));
 
         if(po.getIsActive() == 1){
             return Result.error("主题正在使用,无法移除.");
@@ -92,23 +87,22 @@ public class CustomizeThemeController {
     @PostMapping("/copyTheme")
     @Transactional
     public Result<String> copyTheme(@RequestBody @Valid GetThemeValuesDto dto) throws BizException {
-        Long userId = AuthService.getCurrentUserId();
-        
+
         // 查找要复制的主题
-        UserThemePo sourceTheme = themeRepository.findById(dto.getThemeId()).orElse(null);
+        PlayerThemePo sourceTheme = themeRepository.findById(dto.getThemeId()).orElse(null);
         
         // 验证主题是否存在
         if (sourceTheme == null) {
             return Result.error("要复制的主题不存在");
         }
         
-        // 验证主题是否属于当前用户
-        if (!sourceTheme.getUser().getId().equals(userId)) {
+        // 验证主题是否属于当前玩家
+        if (!sourceTheme.getPlayer().getId().equals(AuthService.getCurrentPlayerId())) {
             return Result.error("无权复制此主题");
         }
         
         // 创建新主题
-        UserThemePo newTheme = new UserThemePo();
+        PlayerThemePo newTheme = new PlayerThemePo();
         // 复制原主题基本信息
         assign(sourceTheme, newTheme);
         // 设置新ID为null，使JPA生成新ID
@@ -117,10 +111,10 @@ public class CustomizeThemeController {
         newTheme.setThemeName(sourceTheme.getThemeName() + " - 副本");
         // 设置为非激活状态
         newTheme.setIsActive(0);
-        // 设置所属用户
-        UserPo user = new UserPo();
-        user.setId(userId);
-        newTheme.setUser(user);
+        // 设置所属玩家
+        PlayerPo user = new PlayerPo();
+        user.setId(AuthService.getCurrentPlayerId());
+        newTheme.setPlayer(user);
         // 更新时间
         newTheme.setUpdateTime(new Date());
         // 清空主题值，后面会重新添加
@@ -131,10 +125,10 @@ public class CustomizeThemeController {
         
         // 复制主题值
         if (sourceTheme.getThemeValues() != null) {
-            List<UserThemeValues> newThemeValues = new ArrayList<>();
+            List<PlayerThemeValues> newThemeValues = new ArrayList<>();
             
-            for (UserThemeValues sourceValue : sourceTheme.getThemeValues()) {
-                UserThemeValues newValue = new UserThemeValues();
+            for (PlayerThemeValues sourceValue : sourceTheme.getThemeValues()) {
+                PlayerThemeValues newValue = new PlayerThemeValues();
                 newValue.setTheme(newTheme);
                 newValue.setThemeKey(sourceValue.getThemeKey());
                 newValue.setThemeValue(sourceValue.getThemeValue());
@@ -153,28 +147,27 @@ public class CustomizeThemeController {
     @Transactional
     public Result<String> saveTheme(@RequestBody @Valid SaveThemeDto dto) {
 
-        Long userId = AuthService.getCurrentUserId();
-        UserThemePo theme;
+        PlayerThemePo theme;
         
         // 根据themeId判断是创建新主题还是更新现有主题
         if (dto.getThemeId() != null) {
             // 查找现有主题
             theme = themeRepository.findById(dto.getThemeId()).orElse(null);
             
-            // 验证主题是否存在且属于当前用户
+            // 验证主题是否存在且属于当前玩家
             if (theme == null) {
                 return Result.error("主题不存在");
             }
             
-            if (!theme.getUser().getId().equals(userId)) {
+            if (!theme.getPlayer().getId().equals(AuthService.getCurrentPlayerId())) {
                 return Result.error("无权操作此主题");
             }
         } else {
             // 创建新主题
-            theme = new UserThemePo();
-            UserPo user = new UserPo();
-            user.setId(userId);
-            theme.setUser(user);
+            theme = new PlayerThemePo();
+            PlayerPo player = new PlayerPo();
+            player.setId(AuthService.getCurrentPlayerId());
+            theme.setPlayer(player);
             theme.setIsActive(0); // 默认非激活
             theme.setIsSystem(0); // 默认非系统主题
         }
@@ -196,7 +189,7 @@ public class CustomizeThemeController {
         themeRepository.save(theme);
 
         //处理主题值合并
-        List<UserThemeValues> themeValues = theme.getThemeValues();
+        List<PlayerThemeValues> themeValues = theme.getThemeValues();
 
         if (themeValues == null) {
             themeValues = new ArrayList<>();
@@ -206,7 +199,7 @@ public class CustomizeThemeController {
         themeValues.clear();
 
         for(var item : dto.getThemeValues().entrySet()){
-            var po = new UserThemeValues();
+            var po = new PlayerThemeValues();
             po.setTheme(theme);
             po.setThemeKey(item.getKey());
             po.setThemeValue(item.getValue());
@@ -220,23 +213,22 @@ public class CustomizeThemeController {
     //获取主题值
     @PostMapping("/getThemeValues")
     public Result<GetThemeValuesVo> getThemeValuesDetails(@RequestBody @Valid GetThemeValuesDto dto) {
-        Long userId = AuthService.getCurrentUserId();
-        
+
         // 参数校验
         if (dto.getThemeId() == null) {
             return Result.error("主题ID不能为空");
         }
         
         // 查找主题
-        UserThemePo theme = themeRepository.findById(dto.getThemeId()).orElse(null);
+        PlayerThemePo theme = themeRepository.findById(dto.getThemeId()).orElse(null);
         
         // 验证主题是否存在
         if (theme == null) {
             return Result.error("主题不存在");
         }
         
-        // 验证主题是否属于当前用户
-        if (!theme.getUser().getId().equals(userId)) {
+        // 验证主题是否属于当前玩家
+        if (!theme.getPlayer().getId().equals(AuthService.getCurrentPlayerId())) {
             return Result.error("无权查看此主题");
         }
         
@@ -249,9 +241,9 @@ public class CustomizeThemeController {
         vo.setIsSystem(theme.getIsSystem());
         
         // 获取主题值
-        List<UserThemeValues> themeValues = themeValuesRepository.findByTheme_Id(theme.getId());
+        List<PlayerThemeValues> themeValues = themeValuesRepository.findByTheme_Id(theme.getId());
         Map<String, String> valueMap = new HashMap<>();
-        for (UserThemeValues value : themeValues) {
+        for (PlayerThemeValues value : themeValues) {
             valueMap.put(value.getThemeKey(), value.getThemeValue());
         }
         vo.setThemeValues(valueMap);
@@ -262,12 +254,11 @@ public class CustomizeThemeController {
     //获取当前正在使用的主题
     @PostMapping("getActiveTheme")
     public Result<GetActiveThemeVo> getActiveTheme() {
-        Long userId = AuthService.getCurrentUserId();
+
+        // 查询当前玩家的激活主题
+        PlayerThemePo activeTheme = themeRepository.findActiveThemeByPlayerId(AuthService.getCurrentPlayerId());
         
-        // 查询当前用户的激活主题
-        UserThemePo activeTheme = themeRepository.findActiveThemeByUserId(userId);
-        
-        // 如果用户没有激活的主题，返回错误
+        // 如果玩家没有激活的主题，返回错误
         if (activeTheme == null) {
             return Result.error("您还没有激活的主题");
         }
@@ -282,7 +273,7 @@ public class CustomizeThemeController {
         // 获取主题值
         Map<String, String> themeValues = new HashMap<>();
         if (activeTheme.getThemeValues() != null) {
-            for (UserThemeValues value : activeTheme.getThemeValues()) {
+            for (PlayerThemeValues value : activeTheme.getThemeValues()) {
                 themeValues.put(value.getThemeKey(), value.getThemeValue());
             }
         }
@@ -293,36 +284,37 @@ public class CustomizeThemeController {
     
     /**
      * 激活指定的主题
-     * 将当前用户下的指定主题设置为默认，同时将其他主题设置为非默认
+     * 将当前玩家下的指定主题设置为默认，同时将其他主题设置为非默认
      */
     @PostMapping("/activeTheme")
     @Transactional
     public Result<String> activeTheme(@RequestBody @Valid ActiveThemeDto dto) {
+
         Long userId = AuthService.getCurrentUserId();
-        
+
         // 参数校验
         if (dto.getThemeId() == null) {
             return Result.error("主题ID不能为空");
         }
         
         // 查找要激活的主题
-        UserThemePo themeToActive = themeRepository.findById(dto.getThemeId()).orElse(null);
+        PlayerThemePo themeToActive = themeRepository.findById(dto.getThemeId()).orElse(null);
         
         // 验证主题是否存在
         if (themeToActive == null) {
             return Result.error("要激活的主题不存在");
         }
         
-        // 验证主题是否属于当前用户
-        if (!themeToActive.getUser().getId().equals(userId)) {
+        // 验证主题是否属于当前玩家
+        if (!themeToActive.getPlayer().getId().equals(AuthService.getCurrentPlayerId())) {
             return Result.error("无权操作此主题");
         }
         
-        // 查询当前用户的所有主题
-        List<UserThemePo> userThemePos = themeRepository.findByUserIdWithValues(userId);
+        // 查询当前玩家的所有主题
+        List<PlayerThemePo> playerThemePos = themeRepository.findByPlayerIdWithValues(AuthService.getCurrentPlayerId());
         
         // 将所有主题设置为非激活状态
-        for (UserThemePo theme : userThemePos) {
+        for (PlayerThemePo theme : playerThemePos) {
             // 只修改激活状态非当前值的主题
             if (theme.getIsActive() != 0) {
                 theme.setIsActive(0);
