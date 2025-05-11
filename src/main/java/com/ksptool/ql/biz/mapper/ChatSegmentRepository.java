@@ -14,6 +14,7 @@ public interface ChatSegmentRepository extends JpaRepository<ChatSegmentPo, Long
 
 
     @Modifying
-    Long removeByThreadId(Long threadId);
+    void removeByThreadId(Long threadId);
 
-} 
+    void removeByMessageId(Long messageId);
+}

@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditMessageDto;
+import com.ksptool.ql.biz.model.dto.EditThreadDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatMessageService;
@@ -26,7 +27,7 @@ public class ChatMessageController {
     private ChatMessageService service;
 
 
-    //获取对话历史列表
+    //获取对话Thread列表
     @PostMapping("/getThreadList")
     public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto){
 
@@ -36,6 +37,13 @@ public class ChatMessageController {
         }
 
         return Result.success(service.getThreadList(dto));
+    }
+
+    //编辑Thread
+    public Result<String> editThread(@RequestBody @Valid EditThreadDto dto) throws BizException {
+
+
+        return null;
     }
 
     //移除聊天Thread
@@ -50,6 +58,13 @@ public class ChatMessageController {
     @PostMapping("/editMessage")
     public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto) throws BizException {
         service.editMessage(dto.getMessageId(),dto.getContent());
+        return Result.success("操作成功");
+    }
+
+    //移除聊天消息
+    @PostMapping("/removeMessage")
+    public Result<String> removeMessage(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        service.removeMessage(dto.getId());
         return Result.success("操作成功");
     }
 

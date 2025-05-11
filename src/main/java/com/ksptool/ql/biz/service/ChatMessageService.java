@@ -102,7 +102,30 @@ public class ChatMessageService {
         ChatMessagePo messagePo = messageRepository.findById(messageId)
                 .orElseThrow(() -> new BizException("消息记录不存在"));
 
-        ChatThreadPo thread = messagePo.getThread();
+        ensureHasPermission(messagePo);
+
+        messagePo.setContent(css.encryptForCurUser(content));
+        messageRepository.save(messagePo);
+    }
+
+    //删除消息
+    @Transactional
+    public void removeMessage(Long messageId) throws BizException {
+
+        ChatMessagePo messagePo = messageRepository.findById(messageId)
+                .orElseThrow(() -> new BizException("消息记录不存在"));
+
+        ensureHasPermission(messagePo);
+        segmentRepository.removeByMessageId(messageId);
+        messageRepository.delete(messagePo);
+    }
+
+
+
+
+    private void ensureHasPermission(ChatMessagePo po) throws BizException{
+
+        ChatThreadPo thread = po.getThread();
         UserPo user = thread.getUser();
         PlayerPo player = thread.getPlayer();
 
@@ -123,8 +146,6 @@ public class ChatMessageService {
             throw new BizException("无权限访问消息");
         }
 
-        messagePo.setContent(css.encryptForCurUser(content));
-        messageRepository.save(messagePo);
     }
 
 

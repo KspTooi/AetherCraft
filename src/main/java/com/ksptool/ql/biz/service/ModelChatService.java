@@ -684,26 +684,6 @@ public class ModelChatService {
     }
 
     /**
-     * 删除指定的历史消息
-     * @param threadId 会话ID
-     * @param historyId 历史消息ID
-     * @throws BizException 业务异常
-     */
-    public void removeHistory(Long threadId, Long historyId) throws BizException {
-
-        var query = new ModelChatHistoryPo();
-        query.setId(historyId);
-        query.setThread(Any.of().val("id",threadId).as(ModelChatThreadPo.class));
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        ModelChatHistoryPo history = modelHistoryRepository.findOne(Example.of(query))
-                .orElseThrow(() -> new BizException("历史消息不存在或不属于您"));
-
-        // 删除历史消息
-        modelHistoryRepository.delete(history);
-        log.info("已删除会话 {} 的历史消息 {}", threadId, historyId);
-    }
-    /**
      * 恢复会话
      * @param dto 包含threadId参数
      * @return 返回会话信息和历史消息

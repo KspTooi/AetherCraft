@@ -135,13 +135,9 @@ public class ModelChatController {
      * @return 删除结果
      */
     @PostMapping("/removeHistory")
-    public Result<String> removeHistory(@Valid @RequestBody RemoveHistoryDto dto) {
-        try {
-            modelChatService.removeHistory(dto.getThreadId(), dto.getHistoryId());
-            return Result.success("历史消息已删除");
-        } catch (BizException e) {
-            return Result.error(e);
-        }
+    public Result<String> removeHistory(@Valid @RequestBody RemoveHistoryDto dto) throws BizException {
+        chatMessageService.removeMessage(dto.getHistoryId());
+        return Result.success("操作成功");
     }
 
     /**
@@ -150,13 +146,9 @@ public class ModelChatController {
      * @return 编辑结果
      */
     @PostMapping("/editHistory")
-    public Result<String> editMessage(@Valid @RequestBody EditHistoryDto dto) {
-        try {
-            chatMessageService.editMessage(dto.getHistoryId(),dto.getContent());
-            return Result.success("历史消息已编辑");
-        } catch (BizException e) {
-            return Result.error(e);
-        }
+    public Result<String> editMessage(@Valid @RequestBody EditHistoryDto dto) throws BizException {
+        chatMessageService.editMessage(dto.getHistoryId(),dto.getContent());
+        return Result.success("操作成功");
     }
 
     /**
@@ -189,11 +181,7 @@ public class ModelChatController {
      * @return 新创建的会话ID
      */
     @PostMapping("/createEmptyThread")
-    public Result<CreateEmptyThreadVo> createEmptyThread(@Valid @RequestBody CreateEmptyThreadDto dto) {
-        try {
-            return Result.success(modelChatService.createEmptyThread(dto));
-        } catch (BizException e) {
-            return Result.error(e);
-        }
+    public Result<CreateEmptyThreadVo> createEmptyThread(@Valid @RequestBody CreateEmptyThreadDto dto) throws BizException {
+        return Result.success(modelChatService.createEmptyThread(dto));
     }
 } 
