@@ -47,11 +47,11 @@ public interface UserSessionRepository extends JpaRepository<UserSessionPo, Long
      */
     @Query("""
           SELECT DISTINCT us FROM UserSessionPo us
-          JOIN UserPo u ON us.userId = u.id
-          JOIN u.groups ug
-          JOIN PlayerPo pl ON us.playerId = pl.id
-          JOIN pl.groups pg
-          WHERE ug.id = :groupId OR pg.id = :groupId
+          LEFT JOIN UserPo u ON us.userId = u.id
+          LEFT JOIN u.groups ug
+          LEFT JOIN PlayerPo pl ON us.playerId = pl.id
+          LEFT JOIN pl.groups pg
+          WHERE (ug.id = :groupId OR pg.id = :groupId)
           AND us.expiresAt > CURRENT_TIMESTAMP
           ORDER BY us.userId
           """)
