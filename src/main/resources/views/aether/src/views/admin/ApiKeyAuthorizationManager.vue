@@ -274,12 +274,12 @@ const rules = {
     { 
       validator: (rule: any, value: string, callback: Function) => {
         // 编辑模式下允许留空
-        if (mode.value === 'update' && (value === '' || value === null)) {
+        if ((mode.value === 'update' || mode.value === "insert") && (value === '' || value === null)) {
           callback();
           return;
         }
         
-        // 新增模式或有值时进行格式验证
+        // 有值时进行格式验证
         if (value === '') {
           callback(new Error('请选择过期时间'));
           return;
