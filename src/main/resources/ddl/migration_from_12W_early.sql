@@ -288,5 +288,13 @@ ALTER TABLE MODEL_ROLE_CHAT_EXAMPLE RENAME TO NPC_CHAT_EXAMPLE;
 ALTER TABLE NPC_CHAT_EXAMPLE ALTER COLUMN MODEL_ROLE_ID RENAME TO NPC_ID;
 --模型角色更名为NPC 结束
 
+--添加TOKEN计数
+ALTER TABLE IF EXISTS model_chat_history ADD COLUMN token_input bigint;
+ALTER TABLE IF EXISTS model_chat_history ADD COLUMN token_output bigint;
+ALTER TABLE IF EXISTS model_chat_history ADD COLUMN token_thoughts_output bigint;
+
+ALTER TABLE IF EXISTS npc_chat_history ADD COLUMN token_input bigint;
+ALTER TABLE IF EXISTS npc_chat_history ADD COLUMN token_output bigint;
+ALTER TABLE IF EXISTS npc_chat_history ADD COLUMN token_thoughts_output bigint;
 
 
