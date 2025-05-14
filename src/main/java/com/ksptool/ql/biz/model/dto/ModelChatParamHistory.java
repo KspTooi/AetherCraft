@@ -7,19 +7,13 @@ import lombok.Data;
  */
 @Data
 public class ModelChatParamHistory {
-    
-    /**
-     * 角色 0-用户 1-AI助手
-     */
+
+    //角色 0:用户 1:模型
     private Integer role;
 
-    /**
-     * 消息内容
-     */
+    //消息内容
     private String content;
 
-    /**
-     * 消息序号
-     */
+    //消息序号
     private Integer sequence;
 } 

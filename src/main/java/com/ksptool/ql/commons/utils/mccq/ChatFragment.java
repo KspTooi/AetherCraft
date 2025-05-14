@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class ChatFragment {
 
-    //分片类型 1:数据 2:结束 3:错误
+    //分片类型 0:起始 1:数据 2:结束 3:错误
     private int type;
 
     //玩家ID
@@ -13,9 +13,6 @@ public class ChatFragment {
 
     //对话线程ID
     private long threadId;
-
-    //消息ID
-    private long messageId;
 
     //分片内容
     private String content;

@@ -78,6 +78,7 @@ public class ChatThreadPo {
     private BigDecimal coinUsage;
 
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("seq ASC")
     @Comment("消息列表")
     private List<ChatMessagePo> messages;
 

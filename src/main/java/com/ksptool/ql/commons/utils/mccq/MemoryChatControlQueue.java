@@ -48,7 +48,7 @@ public class MemoryChatControlQueue {
      */
     public void receive(ChatFragment cf) {
 
-        if(cf.getType() < 1 || cf.getPlayerId() < 1 || cf.getThreadId() < 1){
+        if(cf.getType() < 0 || cf.getPlayerId() < 1 || cf.getThreadId() < 1){
             log.error("入栈失败,分片数据不正确 T:{} P:{} TH:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId());
             return;
         }
@@ -118,7 +118,7 @@ public class MemoryChatControlQueue {
                     if (newTtl <= 0) {
                         // 如果 TTL <= 0，移除元素
                         iterator.remove();
-                        log.debug("移除过期分片，ThreadId: {}, MessageId: {}", threadId, fragment.getMessageId());
+                        log.debug("移除过期分片，ThreadId: {}", threadId);
                     }
                 }
                 log.debug("TTL 清理完成，ThreadId: {}, 队列大小: {}", threadId, queue.size());
