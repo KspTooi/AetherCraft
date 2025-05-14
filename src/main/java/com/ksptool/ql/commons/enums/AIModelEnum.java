@@ -1,5 +1,6 @@
 package com.ksptool.ql.commons.enums;
 
+import com.ksptool.ql.commons.exception.BizException;
 import lombok.Getter;
 import java.util.Arrays;
 import java.util.List;
@@ -128,4 +129,15 @@ public enum AIModelEnum {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    public static AIModelEnum ensureModelCodeExists(String modelCode) throws BizException {
+        // 获取并验证模型配置
+        AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
+        if (modelEnum == null) {
+            throw new BizException("无效的模型代码");
+        }
+        return modelEnum;
+    }
+
+
 } 

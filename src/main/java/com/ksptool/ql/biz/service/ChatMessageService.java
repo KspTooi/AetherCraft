@@ -148,6 +148,15 @@ public class ChatMessageService {
 
     }
 
+    public ChatThreadPo getThread(long threadId,long playerId){
+        var query = new ChatThreadPo();
+        query.setId(threadId);
+        query.setPlayer(Any.of().val("id",playerId).as(PlayerPo.class));
+        return threadRepository.findOne(Example.of(query)).orElse(null);
+    }
+
+
+
 
 
 }

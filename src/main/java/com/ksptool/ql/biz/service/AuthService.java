@@ -11,6 +11,7 @@ import com.ksptool.ql.biz.model.po.UserSessionPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.WebUtils;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.SHA256;
 import jakarta.servlet.http.HttpServletRequest;
@@ -90,6 +91,30 @@ public class AuthService {
     public static UserSessionVo getCurrentUserSession() {
         return (UserSessionVo) RequestContextHolder.currentRequestAttributes()
             .getAttribute(SESSION_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+    }
+
+    public static Long requirePlayerId() throws AuthException {
+        var playerId = getCurrentPlayerId();
+        if(playerId == null){
+            throw new AuthException("require player login");
+        }
+        return playerId;
+    }
+
+    public static String requirePlayerName() throws AuthException {
+        var playerName = getCurrentPlayerName();
+        if(playerName == null){
+            throw new AuthException("require player login");
+        }
+        return playerName;
+    }
+
+    public static Long requireUserId() throws AuthException {
+        var userId = getCurrentUserId();
+        if(userId == null){
+            throw new AuthException("require user login");
+        }
+        return userId;
     }
 
     public static Long getCurrentPlayerId(){

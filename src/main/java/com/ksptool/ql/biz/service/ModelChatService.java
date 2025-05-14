@@ -77,7 +77,8 @@ public class ModelChatService {
 
     @Autowired
     private ChatSegmentRepository segmentRepository;
-
+    @Autowired
+    private ChatMessageService chatMessageService;
 
     public ModelChatThreadPo createOrRetrieveThread(Long threadId, Long playerId, String modelCode) throws BizException {
 
@@ -152,24 +153,23 @@ public class ModelChatService {
             throw new BizException("该会话正在处理中，请等待AI响应完成");
         }
 
+        //获取并验证模型Code
+        var modelEnum = AIModelEnum.ensureModelCodeExists(dto.getModel());
+        var userId = AuthService.getCurrentUserId();
+        var playerId = AuthService.getCurrentPlayerId();
+
+        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), playerId);
+
+        if (StringUtils.isBlank(apiKey)) {
+            throw new BizException("没有为模型:"+modelEnum.getCode()+"配置APIKEY");
+        }
+
+        //获取Thread
+        ChatThreadPo thread1 = chatMessageService.getThread(threadId, playerId);
+
         try {
-            // 获取并验证模型配置
-            AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModel());
-            if (modelEnum == null) {
-                throw new BizException("无效的模型代码");
-            }
 
-            // 获取当前用户ID
-            Long userId = AuthService.getCurrentUserId();
 
-            //获取当前玩家ID
-            var playerId = AuthService.getCurrentPlayerId();
-
-            String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), playerId);
-
-            if (StringUtils.isBlank(apiKey)) {
-                throw new BizException("未配置API Key");
-            }
 
             // 获取或创建会话
             ModelChatThreadPo thread = createOrRetrieveThread(threadId, userId, modelEnum.getCode());
