@@ -48,6 +48,22 @@ public class MemoryChatControlQueue {
      */
     public void receive(ChatFragment cf) {
 
+        if(cf.getType() < 1 || cf.getPlayerId() < 1 || cf.getThreadId() < 1){
+            log.error("入栈失败,分片数据不正确 T:{} P:{} TH:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId());
+            return;
+        }
+
+        LinkedBlockingQueue<ChatFragment> queue = threadFragmentPool.get(cf.getThreadId());
+
+        if (queue == null) {
+            queue = new LinkedBlockingQueue<>(FRAGMENT_POOL_SIZE);
+            log.info("为Thread:{}创建队列...", cf.getThreadId());
+            threadFragmentPool.put(cf.getThreadId(), queue);
+        }
+
+        cf.setSeq(queue.size() + 1);
+        cf.setTtl(FRAGMENT_TTL);
+        queue.offer(cf);
     }
 
     /**
@@ -89,9 +105,9 @@ public class MemoryChatControlQueue {
                 LinkedBlockingQueue<ChatFragment> queue = entry.getValue();
                 if (queue.isEmpty()) {
                     // 如果队列为空，考虑移除线程池中的 key（可选）
-                    threadFragmentPool.remove(threadId);
-                    log.debug("移除空队列，ThreadId: {}", threadId);
-                    continue;
+                    //threadFragmentPool.remove(threadId);
+                    //log.debug("移除空队列，ThreadId: {}", threadId);
+                    //continue;
                 }
                 // 遍历队列并更新 TTL
                 Iterator<ChatFragment> iterator = queue.iterator();
@@ -110,6 +126,18 @@ public class MemoryChatControlQueue {
         } catch (Exception e) {
             log.error("TTL 清理任务执行出错: {}", e.getMessage(), e);
         }
+    }
+
+    public void setFragmentPoolSize(int size) {
+        FRAGMENT_POOL_SIZE = size;
+    }
+
+    public void setFragmentTtl(int ttl) {
+        FRAGMENT_TTL = ttl;
+    }
+
+    public void setFragmentNextTimeout(int nextTimeout) {
+        FRAGMENT_NEXT_TIMEOUT = nextTimeout;
     }
 
 }
