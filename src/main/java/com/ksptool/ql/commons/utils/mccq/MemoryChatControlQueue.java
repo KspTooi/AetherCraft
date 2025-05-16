@@ -69,7 +69,7 @@ public class MemoryChatControlQueue {
     /**
      * 获取下一个对话帧
      */
-    public ChatFragment next(long threadId) throws BizException {
+    public ChatFragment next(long threadId) throws BizException,TimeoutException {
 
         if(!threadFragmentPool.containsKey(threadId)) {
             throw new BizException("对话帧获取失败,该Thread未在池中注册:" + threadId);
@@ -82,7 +82,7 @@ public class MemoryChatControlQueue {
 
             if(poll == null){
                 log.error("获取对话帧超时 ThreadId:{} 池大小:{}",threadId,queue.size());
-                throw new BizException("获取对话帧超时");
+                throw new TimeoutException("获取对话帧超时");
             }
 
             return poll;

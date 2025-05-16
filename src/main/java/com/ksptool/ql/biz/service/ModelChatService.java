@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import static com.ksptool.entities.Entities.as;
+
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import com.ksptool.ql.biz.model.vo.ChatSegmentVo;
 import com.ksptool.ql.biz.model.dto.BatchChatCompleteDto;
@@ -306,41 +308,20 @@ public class ModelChatService {
         Long threadId = dto.getThreadId();
         Long playerId = AuthService.getCurrentPlayerId();
 
-        // 最大等待次数和等待时间
-        final int MAX_WAIT_TIMES = 3;
-        final long WAIT_INTERVAL_MS = 300;
-        
-        // 尝试获取所有未读片段，最多等待3次
-        List<ModelChatSegmentPo> unreadSegments = null;
-        int waitTimes = 0;
-        
-        while (waitTimes < MAX_WAIT_TIMES) {
-            // 检查会话状态
-            if(track.getStatus(threadId) == 0){
-                continue;
+
+        while (true){
+
+            try {
+                ChatFragment next = mccq.next(dto.getThreadId());
+            } catch (TimeoutException e) {
+                throw new BizException(e.getMessage());
             }
 
-            // 一次性查询所有未读片段，按sequence排序
-            unreadSegments = modelSegmentRepository.findAllUnreadByThreadIdOrderBySequence(threadId,playerId);
-            
-            // 如果有未读片段，跳出循环
-            if (!unreadSegments.isEmpty()) {
-                break;
-            }
-            
-            // 等待一段时间后再次尝试
-            try {
-                Thread.sleep(WAIT_INTERVAL_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new BizException("等待片段时被中断");
-            }
-            
-            waitTimes++;
         }
-        
+
+
         // 如果等待超时仍未获取到片段
-        if (unreadSegments.isEmpty()) {
+        if (next == null) {
             return null;
         }
 

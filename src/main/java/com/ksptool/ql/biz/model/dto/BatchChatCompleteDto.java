@@ -13,8 +13,10 @@ public class BatchChatCompleteDto {
     @NotNull
     private Long threadId;
 
+    //模型代码
     private String model;
 
+    //消息内容
     private String message;
 
     @NotNull
