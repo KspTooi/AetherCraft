@@ -45,7 +45,7 @@ public class ModelGeminiService implements ModelRestCI{
             
             // 构建请求
             GeminiRequest geminiRequest = GeminiRequest.ofHistory(
-                    as(dto.getHistories(),ModelChatHistoryPo.class),
+                    dto.getHistories(),
                     dto.getMessage(),
                     dto.getTemperature(),
                     dto.getTopP(),
@@ -118,7 +118,7 @@ public class ModelGeminiService implements ModelRestCI{
                 
                 // 构建请求
                 GeminiRequest geminiRequest = GeminiRequest.ofHistory(
-                        as(param.getHistories(), ModelChatHistoryPo.class),
+                        param.getHistories(),
                         param.getMessage(),
                         param.getTemperature(),
                         param.getTopP(),

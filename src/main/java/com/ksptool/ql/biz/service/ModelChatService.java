@@ -59,9 +59,6 @@ public class ModelChatService {
     private GlobalConfigService globalConfigService;
 
     @Autowired
-    private ModelChatSegmentRepository modelSegmentRepository;
-    
-    @Autowired
     private ModelGeminiService modelGeminiService;
 
     @Autowired
@@ -497,9 +494,6 @@ public class ModelChatService {
                     track.notifyReceive(threadId);
                 }
 
-                // 获取当前最大序号
-                int nextSequence = modelSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
-
                 // 根据context.type处理不同类型的消息
                 if (context.getType() == 0) {
                     // 数据类型 - 创建数据片段
@@ -510,7 +504,6 @@ public class ModelChatService {
                     cf.setPlayerId(playerId);
                     cf.setThreadId(threadId);
                     cf.setContent(context.getContent());
-                    cf.setSeq(nextSequence);
                     mccq.receive(cf);
                     return;
                 }

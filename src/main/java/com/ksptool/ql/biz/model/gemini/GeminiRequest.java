@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.model.gemini;
 
+import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -113,12 +114,12 @@ public class GeminiRequest {
         return of(List.of(new ChatMessage("user", text)), temperature, topP, topK, maxOutputTokens);
     }
     
-    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {
+    public static GeminiRequest ofHistory(List<ModelChatParamHistory> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {
         List<ChatMessage> messages = new ArrayList<>();
         
         // 添加历史记录
         if (histories != null && !histories.isEmpty()) {
-            for (ModelChatHistoryPo history : histories) {
+            for (ModelChatParamHistory history : histories) {
                 String role = history.getRole() == 0 ? "user" : "model";
                 messages.add(new ChatMessage(role, history.getContent()));
             }
@@ -129,7 +130,7 @@ public class GeminiRequest {
         return of(messages, temperature, topP, topK, maxOutputTokens);
     }
 
-    public static GeminiRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens, String systemPrompt) {
+    public static GeminiRequest ofHistory(List<ModelChatParamHistory> histories, String userMessage, Double temperature, Double topP, Integer topK, Integer maxOutputTokens, String systemPrompt) {
         GeminiRequest request = ofHistory(histories, userMessage, temperature, topP, topK, maxOutputTokens);
         
         // 添加系统提示词

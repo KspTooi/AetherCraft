@@ -85,7 +85,7 @@ public class ModelChatController {
 
             //处理重新生成
             if(dto.getQueryKind() == 3) {
-                return Result.success(modelChatService.chatCompleteRegenerateBatch(dto));
+                return Result.success(modelChatService.chatCompleteQueryBatch(dto));
             }
             
             // 默认情况
