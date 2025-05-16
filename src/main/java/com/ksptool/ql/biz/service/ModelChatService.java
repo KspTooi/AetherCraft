@@ -102,10 +102,7 @@ public class ModelChatService {
      */
     public ModelChatParam createModelChatDto(String modelCode, Long playerId) throws BizException {
         // 验证模型代码
-        AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
-        if (modelEnum == null) {
-            throw new BizException("无效的模型代码");
-        }
+        AIModelEnum modelEnum = AIModelEnum.ensureModelCodeExists(modelCode);
 
         // 创建并填充DTO
         ModelChatParam param = new ModelChatParam();
@@ -406,123 +403,6 @@ public class ModelChatService {
         mccq.receive(cf);
     }
 
-
-    /**
-     * 生成会话标题
-     * @param threadId 会话ID
-     * @param model 模型代码
-     */
-    public void generateThreadTitle(Long threadId, String model,Long uid,Long playerId) {
-        try {
-            // 检查是否需要生成标题
-            boolean shouldGenerateTitle = globalConfigService.getBoolean("model.chat.gen.thread.title", true);
-            if (!shouldGenerateTitle) {
-                return; // 配置为不生成标题，直接返回
-            }
-            
-            // 获取会话
-            ModelChatThreadPo thread = modalThreadRepository.findByIdWithHistories(threadId);
-            if (thread == null) {
-                throw new BizException("会话不存在");
-            }
-            
-            // 检查是否已生成过标题
-            if (thread.getTitleGenerated() != null && thread.getTitleGenerated() == 1) {
-                return; // 已生成过标题，直接返回
-            }
-            
-            // 获取第一条用户消息和对应的AI回复
-            List<ModelChatHistoryPo> histories = thread.getHistories();
-            if (histories == null || histories.isEmpty()) {
-                return; // 没有历史记录，无法生成标题
-            }
-            
-            // 查找第一条用户消息和对应的AI回复
-            ModelChatHistoryPo firstUserMessage = null;
-            ModelChatHistoryPo firstAIResponse = null;
-            boolean foundUser = false;
-            
-            for (ModelChatHistoryPo history : histories) {
-                if (!foundUser && history.getRole() == 0) { // 用户消息
-                    firstUserMessage = history;
-                    foundUser = true;
-                    continue;
-                }
-                
-                if (foundUser && history.getRole() == 1) { // AI回复
-                    firstAIResponse = history;
-                    break;
-                }
-            }
-            
-            if (firstUserMessage == null || firstAIResponse == null || 
-                StringUtils.isBlank(firstUserMessage.getContent()) || 
-                StringUtils.isBlank(firstAIResponse.getContent())) {
-                return; // 必须同时有用户消息和AI回复才生成标题
-            }
-
-            // 从配置获取提示语模板
-            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
-                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
-
-            String dekPt = css.getPlainUserDek(uid);
-
-            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
-            prompt.setParameter("userContent", css.decryptForCurUser(firstUserMessage.getContent(),dekPt));
-            prompt.setParameter("modelContent", css.decryptForCurUser(firstAIResponse.getContent(),dekPt));
-
-            // 创建请求DTO
-            ModelChatParam modelChatParam = createModelChatDto(model, playerId);
-            modelChatParam.setMessage(prompt.execute());
-                  
-            // 获取代理配置
-            String proxyUrl = getProxyConfig(playerId);
-            
-            String apiKey = apiKeyService.getApiKey(model, playerId);
-            
-            if (StringUtils.isBlank(apiKey)) {
-                throw new BizException("未配置API Key");
-            }
-            
-            // 根据模型类型设置不同的URL
-            if (model.contains("grok")) {
-                modelChatParam.setUrl(GROK_BASE_URL);
-            } else {
-                modelChatParam.setUrl(GEMINI_BASE_URL + model + ":generateContent");
-            }
-            
-            modelChatParam.setApiKey(apiKey);
-            
-            // 根据模型类型选择不同的服务发送请求
-            String title= "";
-
-            if (model.contains("grok")) {
-                // 使用GROK服务
-                title = modelGrokService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
-            }
-            if(model.contains("gemini")){
-                // 使用Gemini服务
-                title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), modelChatParam);
-            }
-            
-            // 处理标题（去除引号和多余空格，限制长度）
-            title = title.replaceAll("^\"|\"$", "").trim();
-            if (title.length() > 100) {
-                title = title.substring(0, 97) + "...";
-            }
-            
-            // 更新会话标题
-            thread.setTitle(title);
-            thread.setTitleGenerated(1); // 标记为已生成标题
-            css.encryptEntity(thread,uid);
-            modalThreadRepository.save(thread);
-            
-            log.info("已为会话 {} 生成标题: {}", threadId, title);
-        } catch (Exception e) {
-            log.error("生成会话标题失败", e);
-            // 生成标题失败不抛出异常，不影响主流程
-        }
-    }
 
     /**
      * 重新生成AI最后一条回复

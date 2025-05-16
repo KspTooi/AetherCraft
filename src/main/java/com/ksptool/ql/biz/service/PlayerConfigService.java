@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.mapper.ConfigRepository;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -307,6 +308,24 @@ public class PlayerConfigService {
         param.setTopP(topP);
         param.setTopK(topK);
         param.setMaxOutputTokens(maxOutputTokens);
+    }
+
+    /**
+     * 获取玩家自身或全局的代理配置
+     * @return 代理url
+     */
+    public String getSelfProxyUrl() throws AuthException {
+        // 获取代理配置 - 首先检查用户级别的代理配置
+        String proxyConfig = this.getString("model.proxy.config", null,AuthService.requirePlayerId());
+
+        // 如果用户未配置代理，则使用全局代理配置
+        if (StringUtils.isBlank(proxyConfig)) {
+            ConfigPo config = repository.getGlobalConfig("model.proxy.config");
+            if (config != null) {
+                proxyConfig = config.getConfigValue();
+            }
+        }
+        return proxyConfig;
     }
 
 }

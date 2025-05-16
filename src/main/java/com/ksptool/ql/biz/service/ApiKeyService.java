@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,10 @@ public class ApiKeyService {
     private ApiKeyRepository apiKeyRepository;
 
 
+    @Transactional
+    public String getSelfApiKey(String modelCode) throws BizException {
+        return this.getApiKey(modelCode,AuthService.requirePlayerId());
+    }
 
     /**
      * 根据模型代码和人物ID获取API密钥

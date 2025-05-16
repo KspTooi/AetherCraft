@@ -2,25 +2,50 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
+import com.ksptool.ql.biz.model.dto.ModelChatParam;
+import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.HttpClientUtils;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
+@Slf4j
 @Service
 public class ChatThreadService {
+
+    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
     @Autowired
     private ChatThreadRepository repository;
 
     @Autowired
     private GlobalConfigService globalConfigService;
+
+    @Autowired
+    private PlayerConfigService playerConfigService;
+
+    @Autowired
+    private ContentSecurityService css;
+    @Autowired
+    private ApiKeyService apiKeyService;
+    @Autowired
+    private ModelGrokService modelGrokService;
+    @Autowired
+    private ModelGeminiService modelGeminiService;
 
     public ChatThreadPo getSelfThread(long threadId) throws BizException{
         var query = new ChatThreadPo();
@@ -50,14 +75,91 @@ public class ChatThreadService {
     @Transactional(rollbackFor = BizException.class)
     public void generateThreadTitleAsync(long threadId) throws BizException {
 
-        // 检查是否需要生成标题
-        boolean shouldGenerateTitle = globalConfigService.getBoolean(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_TITLE.getKey(), true);
-        if (!shouldGenerateTitle) {
-            return; // 配置为不生成标题，直接返回
+        try{
+            // 检查是否需要生成标题
+            boolean shouldGenerateTitle = globalConfigService.getBoolean(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_TITLE.getKey(), true);
+            if (!shouldGenerateTitle) {
+                return; // 配置为不生成标题，直接返回
+            }
+
+            ChatThreadPo threadPo = this.getSelfThread(threadId);
+
+            if(threadPo.getTitleGenerated() != 0){
+                return;
+            }
+
+            List<ChatMessagePo> messages = threadPo.getMessages();
+
+            //没有足够的消息用于生成标题 生成标题的最低要求为一条用户消息与一条AI回复
+            if(messages.size() < 2){
+                log.warn("无法为会话 {} 生成标题 原因:没有足够的消息用于生成标题 当前消息计数:{}", threadId,messages.size());
+                return;
+            }
+
+            ChatMessagePo playerMessage = messages.get(0);
+            ChatMessagePo modelMessage = messages.get(1);
+
+            //消息发送人类型不对应 发送人角色 0:Player 1:Model
+            if(playerMessage.getSenderRole() != 0 || modelMessage.getSenderRole() != 1){
+                log.warn("无法为会话 {} 生成标题 原因:消息发送人类型不对应 首条消息:{} 第二条消息:{}", threadId,playerMessage.getSenderRole(),modelMessage.getSenderRole());
+                return;
+            }
+
+            //获取Thread绑定的模型及其系列
+            AIModelEnum model = AIModelEnum.getByCode(threadPo.getModelCode());
+
+            if(model == null){
+                log.warn("无法为会话 {} 生成标题 原因:Thread未配置modelCode", threadId);
+                return;
+            }
+
+            // 从配置获取提示语模板
+            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
+                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
+
+            //组合Prompt
+            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
+            prompt.setParameter("userContent", css.decryptForCurUser(playerMessage.getContent()));
+            prompt.setParameter("modelContent", css.decryptForCurUser(modelMessage.getContent()));
+
+            var param = new ModelChatParam();
+            param.setMessage(prompt.execute());
+
+            var proxyUrl = playerConfigService.getSelfProxyUrl();
+            var apikey = apiKeyService.getSelfApiKey(model.getCode());
+
+            if(StringUtils.isBlank(apikey)){
+                log.warn("无法为会话 {} 生成标题 原因:未配置APIKEY", threadId);
+                return;
+            }
+
+            param.setApiKey(apikey);
+
+            var title = "";
+
+            //根据模型类型选择不同的服务发送请求
+            if (model.getSeries().contains("Grok")) {
+                param.setUrl(GROK_BASE_URL);
+                title = modelGrokService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), param);
+            } else {
+                param.setUrl(GEMINI_BASE_URL + model + ":generateContent");
+                title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), param);
+            }
+
+            // 处理标题（去除引号和多余空格，限制长度）
+            title = title.replaceAll("^\"|\"$", "").trim();
+            if (title.length() > 100) {
+                title = title.substring(0, 97) + "...";
+            }
+
+            threadPo.setTitle(title);
+            threadPo.setTitleGenerated(1);
+            repository.save(threadPo);
+            log.info("已为会话 {} 生成标题: {}", threadId, title);
+        }catch (Exception e){
+            log.error("生成会话标题失败", e);
+            // 生成标题失败不抛出异常，不影响主流程
         }
-
-
-
 
     }
 
