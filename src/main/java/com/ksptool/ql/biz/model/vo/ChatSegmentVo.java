@@ -19,7 +19,7 @@ public class ChatSegmentVo {
     private Long historyId;
     
     /**
-     * 角色 0-用户 1-AI助手
+     * 角色 0:用户 1:模型
      */
     private Integer role;
     
@@ -44,5 +44,6 @@ public class ChatSegmentVo {
     private Integer type;
 
     private String name;
+
     private String AvatarPath;
 } 

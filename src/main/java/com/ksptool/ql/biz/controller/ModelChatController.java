@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.ChatMessageService;
+import com.ksptool.ql.biz.service.ChatThreadService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
@@ -25,11 +26,15 @@ public class ModelChatController {
     
     @Autowired
     private ModelChatService modelChatService;
+
     @Autowired
     private PlayerConfigService playerConfigService;
 
     @Autowired
     private ChatMessageService chatMessageService;
+
+    @Autowired
+    private ChatThreadService chatThreadService;
 
     /**
      * 恢复会话
@@ -98,7 +103,7 @@ public class ModelChatController {
     @PostMapping("/editThread")
     public Result<String> editThread(@Valid @RequestBody EditThreadDto dto) {
         try {
-            modelChatService.editThreadTitle(dto.getThreadId(), dto.getTitle());
+            chatThreadService.editThreadTitle(dto.getThreadId(), dto.getTitle());
             return Result.success("会话标题修改成功");
         } catch (BizException e) {
             return Result.error(e);

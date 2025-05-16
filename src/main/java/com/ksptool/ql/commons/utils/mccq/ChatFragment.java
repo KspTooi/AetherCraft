@@ -5,8 +5,14 @@ import lombok.Data;
 @Data
 public class ChatFragment {
 
-    //分片类型 0:起始 1:数据 2:结束 3:错误
+    //分片类型 0:起始 1:数据 2:结束 10:错误
     private int type;
+
+    //发送人名称
+    private String senderName;
+
+    //发送人头像URL
+    private String senderAvatarUrl;
 
     //玩家ID
     private long playerId;
@@ -18,7 +24,7 @@ public class ChatFragment {
     private String content;
 
     //分片序号
-    private long seq;
+    private int seq;
 
     //分片生存时间 为0时从队列销毁
     private int ttl;

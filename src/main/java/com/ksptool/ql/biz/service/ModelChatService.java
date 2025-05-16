@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
@@ -88,6 +89,8 @@ public class ModelChatService {
     private ChatSegmentRepository segmentRepository;
     @Autowired
     private ChatMessageService chatMessageService;
+    @Autowired
+    private ChatThreadService chatThreadService;
 
 
     /**
@@ -228,7 +231,7 @@ public class ModelChatService {
 
             //创建起始分片
             var cf = new ChatFragment();
-            cf.setType(0); //0:起始 1:数据 2:结束 3:错误
+            cf.setType(0); //0:起始 1:数据 2:结束 10:错误
             cf.setPlayerId(playerId);
             cf.setThreadId(threadId);
             cf.setContent(null); //起始消息无内容
@@ -279,7 +282,7 @@ public class ModelChatService {
             vo.setThreadId(cgiThreadId);
             vo.setHistoryId(playerLastMessageId);
             vo.setRole(0); // 用户角色
-            vo.setSequence((int) cf.getSeq());
+            vo.setSequence(cf.getSeq());
             vo.setContent(dto.getMessage()); // 返回用户的消息内容
             vo.setType(0); // 起始类型，而不是数据类型
             vo.setName("User");
@@ -305,107 +308,73 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public ChatSegmentVo chatCompleteQueryBatch(BatchChatCompleteDto dto) throws BizException {
-        Long threadId = dto.getThreadId();
-        Long playerId = AuthService.getCurrentPlayerId();
 
+        long threadId = dto.getThreadId();
+        long playerId = AuthService.requirePlayerId();
+        var ret = new ChatSegmentVo();
 
-        while (true){
+        try{
+            //消费消息队列中该Thread的消息片段
+            var first = mccq.next(threadId);
 
-            try {
-                ChatFragment next = mccq.next(dto.getThreadId());
-            } catch (TimeoutException e) {
-                throw new BizException(e.getMessage());
+            if(first.getPlayerId() != playerId){
+                mccq.receive(first);
+                throw new AuthException("你没有权限访问该内容");
             }
 
-        }
-
-
-        // 如果等待超时仍未获取到片段
-        if (next == null) {
-            return null;
-        }
-
-        // 优先处理错误片段(type=10)和开始片段(type=0)
-        for (ModelChatSegmentPo segment : unreadSegments) {
-            // 开始片段，只标记该片段为已读并返回
-            if (segment.getType() == 0) {
-                segment.setStatus(1);
-                modelSegmentRepository.save(segment);
-                ChatSegmentVo vo = new ChatSegmentVo();
-                vo.setThreadId(threadId);
-                vo.setHistoryId(segment.getHistoryId());
-                vo.setSequence(segment.getSequence());
-                vo.setContent(segment.getContent());
-                vo.setType(segment.getType());
-                vo.setRole(1); // AI助手角色
-                return vo;
-            }
-
-            // 错误片段，标记所有片段为已读并返回错误信息
-            if (segment.getType() == 10) {
-                for (ModelChatSegmentPo seg : unreadSegments) {
-                    seg.setStatus(1);
+            /*
+             * 分片类型 0:起始 1:数据 2:结束 10:错误
+             * 消费逻辑
+             * 1.当首个段`firstFragment`为起始、错误片段时需立即返回内容给客户端
+             * 2.当首个段为数据段,尝试获取尽可能多的数据段并将其组装到一个客户端响应中
+             * 在消费数据片段时获取到"结束"或"错误"片段时立即返回已组装的客户端响应,并将已获取到的"结束"或"错误"片段重新放入队头
+             */
+            if(first.getType() == 0 || first.getType() == 10){
+                ret.setThreadId(threadId);
+                ret.setHistoryId(-1L);
+                ret.setRole(1);
+                ret.setSequence(first.getSeq());
+                ret.setContent(first.getContent());
+                ret.setType(first.getType());
+                ret.setName(first.getSenderName());
+                ret.setAvatarPath(first.getSenderAvatarUrl());
+                if(first.getType() == 10){
+                    ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
                 }
-                modelSegmentRepository.saveAll(unreadSegments);
-                ChatSegmentVo vo = new ChatSegmentVo();
-                vo.setThreadId(threadId);
-                vo.setSequence(segment.getSequence());
-                vo.setContent(segment.getContent() != null ? segment.getContent() : "AI响应出错");
-                vo.setType(segment.getType());
-                vo.setRole(1); // AI助手角色
-                return vo;
+                return ret;
             }
-        }
 
-        // 获取第一个片段
-        ModelChatSegmentPo firstSegment = unreadSegments.getFirst();
-        ModelChatThreadPo thread = firstSegment.getThread();
-        AIModelEnum modelEnum = AIModelEnum.getByCode(thread.getModelCode());
-        String modelName = modelEnum != null ? modelEnum.getSeries() : "AI助手";
+            ret.setThreadId(threadId);
+            ret.setHistoryId(-1L);
+            ret.setRole(1);
+            ret.setSequence(first.getSeq());
+            ret.setContent("----");
+            ret.setType(first.getType());
+            ret.setName(first.getSenderName());
+            ret.setAvatarPath(first.getSenderAvatarUrl());
 
-        // 如果第一个片段是数据片段(type=1)，则合并后续的数据片段
-        if (firstSegment.getType() == 1) {
-            StringBuilder combinedContent = new StringBuilder();
-            List<ModelChatSegmentPo> segmentsToMark = new ArrayList<>();
-            
-            // 遍历所有片段，合并type=1的片段，直到遇到非type=1的片段
-            for (ModelChatSegmentPo segment : unreadSegments) {
-                if (segment.getType() != 1) {
+            StringBuilder content = new StringBuilder(first.getContent());
+
+            //处理消息片段
+            while (mccq.hasNext(threadId)){
+
+                ChatFragment next = mccq.next(threadId);
+
+                if(next.getType() == 10 || next.getType() == 2){
+                    mccq.receive(next);
                     break;
                 }
-                
-                combinedContent.append(css.decryptForCurUser(segment.getContent()));
-                segment.setStatus(1); // 标记为已读
-                segmentsToMark.add(segment);
+
+                content.append(mccq.next(threadId).getContent());
             }
-            
-            modelSegmentRepository.saveAll(segmentsToMark);
-            
-            // 返回合并后的数据片段
-            ChatSegmentVo vo = new ChatSegmentVo();
-            vo.setThreadId(threadId);
-            vo.setHistoryId(null);
-            vo.setSequence(firstSegment.getSequence());
-            vo.setContent(combinedContent.toString());
-            vo.setType(1); // 数据类型
-            vo.setRole(1); // AI助手角色
-            vo.setName(modelName);
-            vo.setAvatarPath(null);
-            return vo;
+
+            ret.setContent(content.toString());
+            return ret;
+
+        }catch (TimeoutException e){
+            throw new BizException(e.getMessage());
         }
-        
-        // 如果第一个片段是type=2结束片段
-        firstSegment.setStatus(1); // 标记为已读
-        modelSegmentRepository.save(firstSegment);
-        
-        ChatSegmentVo vo = new ChatSegmentVo();
-        vo.setThreadId(threadId);
-        vo.setHistoryId(firstSegment.getHistoryId());
-        vo.setSequence(firstSegment.getSequence());
-        vo.setContent(firstSegment.getContent());
-        vo.setType(firstSegment.getType());
-        vo.setRole(1); // AI助手角色
-        return vo;
+
     }
 
     /**
@@ -414,73 +383,29 @@ public class ModelChatService {
      * @throws BizException 业务异常
      */
     public void chatCompleteTerminateBatch(BatchChatCompleteDto dto) throws BizException {
-        Long threadId = dto.getThreadId();
 
-        var query = new ModelChatThreadPo();
-        query.setId(threadId);
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+        var threadPo = chatThreadService.getSelfThread(dto.getThreadId());
 
-        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
-                .orElseThrow(() -> new BizException("会话不存在或不属于您"));
-
-        // 检查会话状态
-        int status = track.getStatus(threadId);
+        //检查会话状态
+        int status = track.getStatus(threadPo.getId());
         if(status != 0 && status != 1){
             throw new BizException("该会话未在进行中或已经终止");
         }
 
-        // 通知会话已终止
-        track.notifyTerminated(threadId);
+        //通知会话已终止
+        track.notifyTerminated(threadPo.getId());
 
-        // 获取当前最大序号
-        int nextSequence = modelSegmentRepository.findMaxSequenceByThreadId(threadId) + 1;
-
-        // 创建终止片段
-        ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
-        endSegment.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-        endSegment.setThread(thread);
-        endSegment.setSequence(nextSequence);
-        endSegment.setContent("用户终止了AI响应");
-        endSegment.setStatus(0); // 未读状态
-        endSegment.setType(2); // 结束类型
-        modelSegmentRepository.save(endSegment);
+        //创建终止片段
+        var cf = new ChatFragment();
+        cf.setType(2);
+        cf.setSenderName(threadPo.getModelCode());
+        cf.setSenderAvatarUrl("");
+        cf.setPlayerId(AuthService.requirePlayerId());
+        cf.setThreadId(threadPo.getId());
+        cf.setContent("用户已终止模型响应");
+        mccq.receive(cf);
     }
 
-    /**
-     * 编辑会话标题
-     *
-     * @param threadId 会话ID
-     * @param newTitle 新标题
-     * @throws BizException 业务异常
-     */
-    public void editThreadTitle(Long threadId, String newTitle) throws BizException {
-        if (threadId == null) {
-            throw new BizException("会话ID不能为空");
-        }
-        
-        if (StringUtils.isBlank(newTitle)) {
-            throw new BizException("标题不能为空");
-        }
-        
-        // 限制标题长度
-        if (newTitle.length() > 100) {
-            newTitle = newTitle.substring(0, 97) + "...";
-        }
-
-        var query = new ModelChatThreadPo();
-        query.setId(threadId);
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        ModelChatThreadPo thread = modalThreadRepository.findOne(Example.of(query))
-                .orElseThrow(() -> new BizException("会话不存在或不属于您"));
-
-        // 更新会话标题
-        thread.setTitle(newTitle);
-        // 标记为手动编辑的标题
-        thread.setTitleGenerated(1);
-        css.encryptEntity(thread);
-        modalThreadRepository.save(thread);
-    }
 
     /**
      * 生成会话标题

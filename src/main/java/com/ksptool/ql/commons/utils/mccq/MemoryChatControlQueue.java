@@ -92,7 +92,10 @@ public class MemoryChatControlQueue {
         }
     }
 
-
+    public boolean hasNext(long threadId){
+        LinkedBlockingQueue<ChatFragment> queue = threadFragmentPool.get(threadId);
+        return queue != null && !queue.isEmpty();
+    }
 
     /**
      * 清理过期分片（TTL <= 0 的元素）
