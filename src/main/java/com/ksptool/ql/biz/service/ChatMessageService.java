@@ -79,26 +79,6 @@ public class ChatMessageService {
 
     }
 
-    //创建新的标准会话
-    public ChatThreadPo createThread(long userId,long playerId,String modelCode){
-        var user = Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class);
-        var player = Any.of().val("id",playerId).as(PlayerPo.class);
-        var insert = new ChatThreadPo();
-        insert.setType(0); //0:标准会话 1:RP会话 2:标准增强会话
-        insert.setUser(user);
-        insert.setPlayer(player);
-        insert.setNpc(null);
-        insert.setTitle("新会话");
-        insert.setPublicInfo(null);
-        insert.setDescription(null);
-        insert.setTitleGenerated(0);
-        insert.setModelCode(modelCode);
-        insert.setActive(1);
-        insert.setMessages(new ArrayList<>());
-        return threadRepository.save(insert);
-    }
-    
-
 
 
 

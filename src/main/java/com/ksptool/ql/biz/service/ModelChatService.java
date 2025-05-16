@@ -153,7 +153,7 @@ public class ModelChatService {
 
                 //创建新会话
                 if (threadPo == null) {
-                    threadPo = chatMessageService.createThread(userId,playerId,modelEnum.getCode());
+                    threadPo = chatThreadService.createThread(userId,playerId,modelEnum.getCode());
                 }
 
                 //锁定会话
