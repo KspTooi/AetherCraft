@@ -24,7 +24,7 @@ public class ConversationController {
     private ConversationService service;
 
     @PostMapping("/sendMessage")
-    public Result<MessageFragmentVo> sendMessage(@RequestBody @Valid SendMessageDto dto) {
+    public Result<String> sendMessage(@RequestBody @Valid SendMessageDto dto) {
         return null;
     }
 

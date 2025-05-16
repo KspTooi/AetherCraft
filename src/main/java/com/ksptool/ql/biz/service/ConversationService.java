@@ -14,11 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Service
 public class ConversationService {
 
-
     public MessageFragmentVo sendMessage(SendMessageDto dto) {
-
-        
-
 
 
 
