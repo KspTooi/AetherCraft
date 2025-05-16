@@ -59,12 +59,6 @@ public class ModelChatService {
     private GlobalConfigService globalConfigService;
     
     @Autowired
-    private ModelChatThreadRepository modalThreadRepository;
-    
-    @Autowired
-    private ModelChatHistoryRepository modelHistoryRepository;
-    
-    @Autowired
     private ModelChatSegmentRepository modelSegmentRepository;
     
     @Autowired
@@ -190,18 +184,13 @@ public class ModelChatService {
             //在指定高度消息重新生成下一条回复
             if(dto.getQueryKind() == 3){
 
-                var query = new ChatMessagePo();
-                query.setId(dto.getRegenerateRootHistoryId());
-                query.setThread(Any.of().val("id",dto.getThreadId()).as(ChatThreadPo.class));
-                query.setSenderRole(0);  //发送人角色 0:Player 1:Model
-                ChatMessagePo rootMessagePo = messageRepository.findOne(Example.of(query))
-                        .orElseThrow(() -> new BizException("指定的根消息记录不存在或无权访问"));
+                var rootMessagePo = chatMessageService.getSelfMessage(dto.getRegenerateRootHistoryId());
                 var threadPo = rootMessagePo.getThread();
                 var threadMessages = threadPo.getMessages();
 
-                //验证消息的Thread属于当前登录的玩家
-                if(!threadPo.getUser().getId().equals(userId) || !threadPo.getPlayer().getId().equals(userId)){
-                    throw new BizException("无权访问该消息记录或Thread");
+                //发送人角色 0:Player 1:Model
+                if(rootMessagePo.getSenderRole() != 0){
+                    throw new BizException("消息发送人类型错误 需为Player");
                 }
 
                 //删除根消息记录之后的所有记录
@@ -403,47 +392,6 @@ public class ModelChatService {
     }
 
     /**
-     * 重新生成AI最后一条回复
-     * @param dto 批量聊天请求参数
-     * @return 聊天片段VO
-     * @throws BizException 业务异常
-     */
-    public ChatSegmentVo chatCompleteRegenerateBatch(BatchChatCompleteDto dto) throws BizException {
-
-        if (track.isLocked(dto.getThreadId())) {
-            throw new BizException("该会话正在处理中，请等待AI响应完成");
-        }
-
-        // 获取并验证模型配置
-        AIModelEnum modelEnum = AIModelEnum.ensureModelCodeExists(dto.getModel());
-
-        ChatThreadPo selfThread = chatThreadService.getSelfThread(dto.getThreadId());
-
-        var query = new ModelChatThreadPo();
-        query.setId(dto.getThreadId());
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        if(modalThreadRepository.count(Example.of(query)) < 1){
-            throw new BizException("会话不存在或不可用!");
-        }
-
-        // 查找最后一条用户消息
-        ModelChatHistoryPo lastUserMessage = modelHistoryRepository.getLastMessage(dto.getThreadId(), 0);
-        if (lastUserMessage == null) {
-            throw new BizException("未找到任何用户消息");
-        }
-
-        // 使用找到的最后一条用户消息作为重新生成的起点
-        BatchChatCompleteDto batchSendDto = new BatchChatCompleteDto();
-        batchSendDto.setThreadId(dto.getThreadId());
-        batchSendDto.setModel(dto.getModel());
-        batchSendDto.setMessage(css.decryptForCurUser(lastUserMessage.getContent()));
-        batchSendDto.setQueryKind(3); // 重新生成AI最后一条回复
-        batchSendDto.setRegenerateRootHistoryId(lastUserMessage.getId());
-        return chatCompleteSendBatch(batchSendDto);
-    }
-
-    /**
      * 恢复会话
      * @param dto 包含threadId参数
      * @return 返回会话信息和历史消息
@@ -525,18 +473,15 @@ public class ModelChatService {
     /**
      * 创建处理模型消息回调的Consumer
      *
-     * @param thread 聊天线程
+     * @param threadId 聊天线程ID
      * @param userId 用户ID
      * @return 处理模型消息的Consumer
      */
     private Consumer<ModelChatContext> onModelMessageRcv(long threadId, Long userId,Long playerId) {
         return context -> {
             try {
-                Long threadId = thread.getId();
                 String modelCode = context.getModelCode();
                 AIModelEnum modelEnum = AIModelEnum.getByCode(modelCode);
-
-                PlayerPo currentPlayer = Any.of().val("id", playerId).as(PlayerPo.class);
 
                 //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
                 if(track.getStatus(threadId) == 11){
@@ -558,42 +503,39 @@ public class ModelChatService {
                 // 根据context.type处理不同类型的消息
                 if (context.getType() == 0) {
                     // 数据类型 - 创建数据片段
-                    ModelChatSegmentPo dataSegment = new ModelChatSegmentPo();
-                    dataSegment.setPlayer(currentPlayer);
-                    dataSegment.setThread(thread);
-                    dataSegment.setSequence(nextSequence);
-                    dataSegment.setContent(context.getContent());
-                    dataSegment.setStatus(0); // 未读状态
-                    dataSegment.setType(1); // 数据类型
-                    css.encryptEntity(dataSegment,userId);
-                    modelSegmentRepository.save(dataSegment);
+                    var cf = new ChatFragment();
+                    cf.setType(0);
+                    cf.setSenderName(context.getModelCode());
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(playerId);
+                    cf.setThreadId(threadId);
+                    cf.setContent(context.getContent());
+                    cf.setSeq(nextSequence);
+                    mccq.receive(cf);
                     return;
                 }
 
                 if (context.getType() == 1) {
 
-                    // 保存AI响应到历史记录
-                    ModelChatHistoryPo history = new ModelChatHistoryPo();
-                    history.setThread(thread);
-                    history.setPlayer(thread.getPlayer());
-                    history.setContent(context.getContent());
-                    history.setRole(1);
-                    // 获取当前最大序号并加1
-                    history.setSequence(modelHistoryRepository.findMaxSequenceByThreadId(thread.getId()) + 1);
-                    css.encryptEntity(history,userId);
-                    ModelChatHistoryPo aiHistory = modelHistoryRepository.save(history);
+                    var messagePo = new ChatMessagePo();
+                    messagePo.setThread(Any.of().val("id", threadId).as(ChatThreadPo.class));
+                    messagePo.setSenderRole(1);
+                    messagePo.setSenderName(modelCode);
+                    messagePo.setContent(css.encryptForCurUser(context.getContent()));
+                    messagePo.setSeq(messageRepository.getCountByThreadId(threadId) + 1);
+                    messagePo.setTokenInput(Long.valueOf(context.getTokenInput()));
+                    messagePo.setTokenOutput(Long.valueOf(context.getTokenOutput()));
+                    messagePo.setTokenThoughts(Long.valueOf(context.getTokenThoughtsOutput()));
+                    messageRepository.save(messagePo);
 
-                    // 完成类型 - 创建结束片段
-                    ModelChatSegmentPo endSegment = new ModelChatSegmentPo();
-                    endSegment.setPlayer(currentPlayer);
-                    endSegment.setThread(thread);
-                    endSegment.setSequence(nextSequence);
-                    endSegment.setContent(null);
-                    endSegment.setStatus(0); // 未读状态
-                    endSegment.setType(2); // 结束类型
-                    endSegment.setHistoryId(aiHistory.getId()); // 设置关联的历史记录ID
-                    css.encryptEntity(endSegment,userId);
-                    modelSegmentRepository.save(endSegment);
+                    var cf = new ChatFragment();
+                    cf.setType(2);
+                    cf.setSenderName(modelCode);
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(playerId);
+                    cf.setThreadId(threadId);
+                    cf.setContent(context.getContent());
+                    mccq.receive(cf);
 
                     // 通知会话已结束
                     track.notifyFinished(threadId);
@@ -601,28 +543,28 @@ public class ModelChatService {
 
                     if (modelEnum != null) {
                         //异步生成会话标题
-                        Thread.ofVirtual().start(()->{
+                        /*Thread.ofVirtual().start(()->{
                             try {
                                 generateThreadTitle(thread.getId(), modelEnum.getCode(),userId,playerId);
                             } catch (Exception e) {
                                 log.error("生成会话标题失败", e);
                                 // 生成标题失败不影响主流程
                             }
-                        });
+                        });*/
                     }
                     return;
                 }
 
                 if (context.getType() == 2) {
                     // 错误类型 - 创建错误片段
-                    ModelChatSegmentPo errorSegment = new ModelChatSegmentPo();
-                    errorSegment.setPlayer(currentPlayer);
-                    errorSegment.setThread(thread);
-                    errorSegment.setSequence(nextSequence);
-                    errorSegment.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
-                    errorSegment.setStatus(0); // 未读状态
-                    errorSegment.setType(10); // 错误类型
-                    modelSegmentRepository.save(errorSegment);
+                    var cf = new ChatFragment();
+                    cf.setType(10);
+                    cf.setSenderName(modelCode);
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(playerId);
+                    cf.setThreadId(threadId);
+                    cf.setContent(context.getException() != null ? "AI响应错误: " + context.getException().getMessage() : "AI响应错误");
+                    mccq.receive(cf);
 
                     // 通知会话已失败
                     track.notifyFailed(threadId);

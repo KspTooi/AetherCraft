@@ -43,7 +43,7 @@ public class ModelGrokService implements ModelRestCI{
             
             // 构建请求
             GrokRequest grokRequest = GrokRequest.ofHistory(
-                    as(dto.getHistories(), ModelChatHistoryPo.class),
+                    dto.getHistories(),
                     dto.getMessage(),
                     dto.getTemperature(),
                     dto.getTopP(),

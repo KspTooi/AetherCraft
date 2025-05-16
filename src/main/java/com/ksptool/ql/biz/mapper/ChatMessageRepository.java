@@ -14,4 +14,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessagePo, Long
 
     @Modifying
     Long removeByThreadId(Long threadId);
+
+    int getCountByThreadId(Long threadId);
 }

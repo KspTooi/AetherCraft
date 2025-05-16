@@ -79,6 +79,12 @@ public class ChatMessageService {
 
     }
 
+    public ChatMessagePo getSelfMessage(long messageId) throws BizException{
+        ChatMessagePo messagePo = messageRepository.findById(messageId)
+                .orElseThrow(() -> new BizException("消息记录不存在"));
+        ensureHasPermission(messagePo);
+        return messagePo;
+    }
 
 
 

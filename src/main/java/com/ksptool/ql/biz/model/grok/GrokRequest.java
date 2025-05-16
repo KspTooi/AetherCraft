@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.model.grok;
 
+import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -34,29 +35,8 @@ public class GrokRequest {
         return request;
     }
 
-    public static GrokRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer maxTokens) {
-        GrokRequest request = new GrokRequest();
-        List<Message> messages = new ArrayList<>();
 
-        // 添加历史记录
-        if (histories != null && !histories.isEmpty()) {
-            for (ModelChatHistoryPo history : histories) {
-                String role = history.getRole() == 0 ? "user" : "assistant";
-                messages.add(new Message(role, history.getContent()));
-            }
-        }
-
-        // 添加用户的最新消息
-        messages.add(new Message("user", userMessage));
-
-        request.setMessages(messages);
-        request.setTemperature(temperature);
-        request.setTopP(topP);
-        request.setMaxTokens(maxTokens);
-        return request;
-    }
-
-    public static GrokRequest ofHistory(List<ModelChatHistoryPo> histories, String userMessage, Double temperature, Double topP, Integer maxTokens, String systemPrompt) {
+    public static GrokRequest ofHistory(List<ModelChatParamHistory> histories, String userMessage, Double temperature, Double topP, Integer maxTokens, String systemPrompt) {
         GrokRequest request = new GrokRequest();
         List<Message> messages = new ArrayList<>();
 
@@ -67,7 +47,7 @@ public class GrokRequest {
 
         // 添加历史记录
         if (histories != null && !histories.isEmpty()) {
-            for (ModelChatHistoryPo history : histories) {
+            for (ModelChatParamHistory history : histories) {
                 String role = history.getRole() == 0 ? "user" : "assistant";
                 messages.add(new Message(role, history.getContent()));
             }
