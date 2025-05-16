@@ -30,8 +30,8 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
             LEFT JOIN FETCH ctp.lastMessage
             LEFT JOIN ctp.npc npc
             WHERE
-            (ctp.player.id = #{#po.player.id})
-            AND (ctp.user.id = #{#po.user.id})
+            (ctp.player.id = :#{#po.player.id})
+            AND (ctp.user.id = :#{#po.user.id})
             AND (ctp.type = :#{#po.type})
             AND (:#{#po.npc.id} IS NULL OR npc.id = :#{#po.npc.id})
             ORDER BY ctp.updateTime DESC
