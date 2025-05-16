@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.EditThreadDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatMessageService;
+import com.ksptool.ql.biz.service.ChatThreadService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -26,6 +27,9 @@ public class ChatMessageController {
     @Autowired
     private ChatMessageService service;
 
+    @Autowired
+    private ChatThreadService chatThreadService;
+
 
     //获取对话Thread列表
     @PostMapping("/getThreadList")
@@ -36,7 +40,7 @@ public class ChatMessageController {
             return Result.error("NpcId不可为空");
         }
 
-        return Result.success(service.getThreadList(dto));
+        return Result.success(chatThreadService.getThreadList(dto));
     }
 
     //编辑Thread
@@ -49,7 +53,7 @@ public class ChatMessageController {
     //移除聊天Thread
     @PostMapping("/removeThread")
     public Result<String> removeThread(@RequestBody @Valid CommonIdDto dto) throws BizException {
-        service.removeThread(dto.getId());
+        chatThreadService.removeThread(dto.getId());
         return Result.success("操作成功");
     }
 

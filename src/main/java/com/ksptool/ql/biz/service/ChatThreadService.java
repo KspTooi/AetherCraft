@@ -1,26 +1,32 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
+import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
+import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.model.po.ChatMessagePo;
-import com.ksptool.ql.biz.model.po.ChatThreadPo;
-import com.ksptool.ql.biz.model.po.PlayerPo;
-import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.po.*;
+import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
+import com.ksptool.ql.commons.web.RestPageableView;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.ksptool.entities.Entities.as;
 
 @Slf4j
 @Service
@@ -46,6 +52,61 @@ public class ChatThreadService {
     private ModelGrokService modelGrokService;
     @Autowired
     private ModelGeminiService modelGeminiService;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+
+    //获取对话历史列表
+    public RestPageableView<GetThreadListVo> getThreadList(GetThreadListDto dto){
+
+        var query = new ChatThreadPo();
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+        query.setNpc(Any.of().val("id",dto.getNpcId()).as(NpcPo.class));
+        query.setType(dto.getType());
+
+        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(query, dto.pageRequest());
+        List<GetThreadListVo> vos = new ArrayList<>();
+
+        for(var po : pPos.getContent()){
+            GetThreadListVo vo = as(po,GetThreadListVo.class);
+
+            // 获取最后一条消息（如果有）作为预览
+            vo.setLastMessage("无消息……");
+
+            if(po.getLastMessage() != null){
+                //截取前50个字符作为预览
+                String content = css.decryptForCurUser(po.getLastMessage().getContent());
+                vo.setLastMessage(content.length() > 50 ?
+                        content.substring(0, 50) + "..." :
+                        content);
+            }
+
+            vos.add(vo);
+        }
+
+        return new RestPageableView<>(vos, pPos.getTotalElements());
+    }
+
+    @Transactional
+    public void removeThread(Long threadId)throws BizException{
+
+        //查询当前玩家下的Thread
+        var query = new ChatThreadPo();
+        query.setId(threadId);
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+
+        ChatThreadPo po = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("消息记录不存在或无权访问"));
+
+        //移除关联记录
+        chatMessageRepository.removeByThreadId(po.getId());
+
+        //移除Thread
+        repository.delete(po);
+    }
+
 
     public ChatThreadPo getSelfThread(long threadId) throws BizException{
         var query = new ChatThreadPo();

@@ -119,7 +119,7 @@ public class ModelChatController {
     public Result<String> removeThread(@Valid @RequestBody RemoveThreadDto dto) {
         try {
 
-            chatMessageService.removeThread(dto.getThreadId());
+            chatThreadService.removeThread(dto.getThreadId());
 
             //如移除的角色是用户最后选择的那一个Thread 需清空用户保存的配置
             Long userLastSelect = playerConfigService.getLong(UserConfigEnum.MODEL_CHAT_CURRENT_THREAD.key(),-1L);
@@ -165,7 +165,7 @@ public class ModelChatController {
 
         var dto = new GetThreadListDto();
         dto.setType(0);
-        RestPageableView<GetThreadListVo> threadList = chatMessageService.getThreadList(dto);
+        RestPageableView<GetThreadListVo> threadList = chatThreadService.getThreadList(dto);
         List<GetThreadListVo> rows = threadList.getRows();
         var vos = new ArrayList<ThreadListItemVo>();
 
