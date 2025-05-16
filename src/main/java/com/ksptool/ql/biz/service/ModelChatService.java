@@ -57,7 +57,7 @@ public class ModelChatService {
     
     @Autowired
     private GlobalConfigService globalConfigService;
-    
+
     @Autowired
     private ModelChatSegmentRepository modelSegmentRepository;
     
