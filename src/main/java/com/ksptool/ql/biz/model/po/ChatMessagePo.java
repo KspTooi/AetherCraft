@@ -40,15 +40,15 @@ public class ChatMessagePo {
 
     @Column(name = "token_input", nullable = false)
     @Comment("TOKEN使用量(用户输入)")
-    private Long tokenInput;
+    private Integer tokenInput;
 
     @Column(name = "token_output", nullable = false)
     @Comment("TOKEN使用量(模型输出)")
-    private Long tokenOutput;
+    private Integer tokenOutput;
 
     @Column(name = "token_thoughts", nullable = false)
     @Comment("TOKEN使用量(模型思考)")
-    private Long tokenThoughts;
+    private Integer tokenThoughts;
 
     @Column(name = "create_time", nullable = false)
     @Comment("创建时间")
@@ -62,15 +62,16 @@ public class ChatMessagePo {
     @PrePersist
     protected void onCreate() {
         createTime = new Date();
+        updateTime = new Date();
 
         if(tokenInput == null){
-            tokenInput = 0L;
+            tokenInput = 0;
         }
         if(tokenOutput == null){
-            tokenOutput = 0L;
+            tokenOutput = 0;
         }
         if(tokenThoughts == null){
-            tokenThoughts = 0L;
+            tokenThoughts = 0;
         }
 
     }

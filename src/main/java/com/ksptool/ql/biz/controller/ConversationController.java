@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.dto.SendMessageDto;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.ConversationService;
+import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +26,8 @@ public class ConversationController {
     private ConversationService service;
 
     @PostMapping("/sendMessage")
-    public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) {
-        return null;
+    public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {
+        return Result.success(service.sendMessage(dto));
     }
 
     @PostMapping("/regenerate")

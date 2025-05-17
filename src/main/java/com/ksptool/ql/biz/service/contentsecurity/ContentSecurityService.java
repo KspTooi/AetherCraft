@@ -58,6 +58,14 @@ public class ContentSecurityService {
         return encrypt(content, dek);
     }
 
+    public String encrypt(String content,Long uid) throws BizException {
+        if(StringUtils.isBlank(content)) {
+            return null;
+        }
+        String dek = getPlainUserDek(uid);
+        return encrypt(content, dek);
+    }
+
     public void encryptEntity(NpcChatSegmentPo po, Long userId) throws BizException{
         if(po == null) {
             return;

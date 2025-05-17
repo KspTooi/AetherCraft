@@ -1,9 +1,12 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
+import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
+import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
@@ -13,8 +16,13 @@ import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import com.ksptool.ql.commons.utils.mccq.ChatFragment;
 import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
 import com.ksptool.ql.commons.web.Result;
+import com.ksptool.ql.restcgi.model.CgiChatMessage;
+import com.ksptool.ql.restcgi.model.CgiChatParam;
+import com.ksptool.ql.restcgi.model.CgiChatResult;
+import com.ksptool.ql.restcgi.service.ModelRestCgi;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +32,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
+@Slf4j
 public class ConversationService {
 
     //线程会话状态跟踪
@@ -44,6 +54,11 @@ public class ConversationService {
 
     @Autowired
     private PlayerConfigService playerConfigService;
+
+    @Autowired
+    private ModelRestCgi restCgi;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
@@ -87,36 +102,26 @@ public class ConversationService {
         List<ChatMessagePo> messagesPos = threadPo.getMessages();
 
         //保存用户发来的消息为一条历史记录
-        var msg = new ChatMessagePo();
-        msg.setThread(threadPo);
-        msg.setSenderRole(0); //发送人角色 0:Player 1:Model
-        msg.setSenderName(playerName);
-        msg.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
-        msg.setSeq(messagesPos.size() + 1);
-        messagesPos.add(msg);
-        threadPo.setLastMessage(msg);
+        var chatMessagePo = new ChatMessagePo();
+        chatMessagePo.setThread(threadPo);
+        chatMessagePo.setSenderRole(0); //发送人角色 0:Player 1:Model
+        chatMessagePo.setSenderName(playerName);
+        chatMessagePo.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
+        chatMessagePo.setSeq(messagesPos.size() + 1);
+        messagesPos.add(chatMessagePo);
+        threadPo.setLastMessage(chatMessagePo);
 
         //需通过CGI发送的历史记录
-        var cgiMessageHistory = new ArrayList<ModelChatParamHistory>();
+        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
 
         //组装需通过CGI发送的聊天历史记录
         for(var item : messagesPos){
-            var cgiItem = new ModelChatParamHistory();
-            cgiItem.setRole(item.getSenderRole());
+            var cgiItem = new CgiChatMessage();
+            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
             cgiItem.setContent(css.decryptForCurUser(item.getContent()));
-            cgiItem.setSequence(item.getSeq());
-            cgiMessageHistory.add(cgiItem);
+            cgiItem.setSeq(item.getSeq());
+            cgiHistoryMessages.add(cgiItem);
         }
-
-
-        OkHttpClient client = HttpClientUtils.createHttpClient(playerConfigService.getSelfProxyUrl(), 60);
-
-        var param = new ModelChatParam();
-        param.setModelCode(model.getCode());
-        param.setMessage(dto.getMessage());
-        param.setApiKey(apikey);
-        param.setHistories(cgiMessageHistory);
-        playerConfigService.readSelfModelParam(param);
 
         //创建起始分片
         var cf = new ChatFragment();
@@ -130,7 +135,27 @@ public class ConversationService {
         mccq.receive(cf);
 
 
-        return null;
+        var msg = new CgiChatMessage();
+        msg.setSenderType(0);
+        msg.setContent(dto.getMessage());
+        msg.setSeq(1);
+
+        CgiChatParam p = new CgiChatParam();
+        p.setModel(model);
+        p.setApikey(apikey);
+        p.setHistoryMessages(cgiHistoryMessages);
+        p.setMessage(msg);
+
+        restCgi.sendMessage(p,onModelMessageRcv(threadPo.getId(), player.getUserId(), player.getPlayerId()));
+
+        var vo = new SendMessageVo();
+        vo.setThreadId(threadPo.getId());
+        vo.setTitle(threadPo.getTitle());
+        vo.setNewThreadCreated(0);
+        if(dto.getThreadId() == -1){
+            vo.setNewThreadCreated(1);
+        }
+        return vo;
     }
 
 
@@ -146,6 +171,86 @@ public class ConversationService {
 
     public String abortConversation(AbortConversationDto dto) {
         return null;
+    }
+
+    private Consumer<CgiChatResult> onModelMessageRcv(long tid, long uid, long pid) {
+        return (ccr)->{
+            try{
+                //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
+                if(track.getStatus(tid) == 11){
+                    // 如果是完成或错误回调，需要关闭Session
+                    if (ccr.getType() == 1 || ccr.getType() == 2) {
+                        track.closeSession(tid);
+                    }
+                    return;
+                }
+
+                //当为正在等待响应状态 首次收到消息时需要转换状态
+                if(track.getStatus(tid) == 0){
+                    track.notifyReceive(tid);
+                }
+
+                //数据类型 - 创建数据片段
+                if (ccr.getType() == 0) {
+                    var cf = new ChatFragment();
+                    cf.setType(0);
+                    cf.setSenderName(ccr.getModel().getCode());
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(pid);
+                    cf.setThreadId(tid);
+                    cf.setContent(ccr.getContent());
+                    mccq.receive(cf);
+                    return;
+                }
+
+                //结束类型
+                if (ccr.getType() == 1) {
+                    var messagePo = new ChatMessagePo();
+                    messagePo.setThread(Any.of().val("id", tid).as(ChatThreadPo.class));
+                    messagePo.setSenderRole(1);
+                    messagePo.setSenderName(ccr.getModel().getSeries());
+                    messagePo.setContent(css.encrypt(ccr.getContent(),uid));
+                    messagePo.setSeq(chatMessageRepository.getCountByThreadId(tid) + 1);
+                    messagePo.setTokenInput(ccr.getTokenInput());
+                    messagePo.setTokenOutput(ccr.getTokenOutput());
+                    messagePo.setTokenThoughts(ccr.getTokenThoughtOutput());
+                    chatMessageRepository.save(messagePo);
+
+                    var cf = new ChatFragment();
+                    cf.setType(2);
+                    cf.setSenderName(ccr.getModel().getCode());
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(pid);
+                    cf.setThreadId(tid);
+                    cf.setContent(ccr.getContent());
+                    mccq.receive(cf);
+
+                    // 通知会话已结束
+                    track.notifyFinished(tid);
+                    track.closeSession(tid);
+                    return;
+                }
+
+                //错误类型 - 创建错误片段
+                if (ccr.getType() == 2) {
+                    var cf = new ChatFragment();
+                    cf.setType(10);
+                    cf.setSenderName(ccr.getModel().getSeries());
+                    cf.setSenderAvatarUrl("");
+                    cf.setPlayerId(pid);
+                    cf.setThreadId(tid);
+                    cf.setContent(ccr.getException() != null ? "AI响应错误: " + ccr.getException().getMessage() : "AI响应错误");
+                    mccq.receive(cf);
+
+                    // 通知会话已失败
+                    track.notifyFailed(tid);
+                    track.closeSession(tid);
+                }
+
+            }catch (Exception e){
+                log.error("处理聊天片段失败!",e);
+            }
+        };
     }
 
 

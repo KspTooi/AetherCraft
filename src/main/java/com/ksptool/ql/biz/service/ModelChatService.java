@@ -516,9 +516,9 @@ public class ModelChatService {
                     messagePo.setSenderName(modelCode);
                     messagePo.setContent(css.encryptForCurUser(context.getContent()));
                     messagePo.setSeq(messageRepository.getCountByThreadId(threadId) + 1);
-                    messagePo.setTokenInput(Long.valueOf(context.getTokenInput()));
-                    messagePo.setTokenOutput(Long.valueOf(context.getTokenOutput()));
-                    messagePo.setTokenThoughts(Long.valueOf(context.getTokenThoughtsOutput()));
+                    messagePo.setTokenInput(context.getTokenInput());
+                    messagePo.setTokenOutput(context.getTokenOutput());
+                    messagePo.setTokenThoughts(context.getTokenThoughtsOutput());
                     messageRepository.save(messagePo);
 
                     var cf = new ChatFragment();

@@ -98,7 +98,7 @@ public class ChatThreadPo {
     @PrePersist
     protected void onCreate() {
         createTime = new Date();
-
+        updateTime = new Date();
         if(tokenInput == null){
             tokenInput = 0L;
         }
