@@ -47,12 +47,16 @@ public class ChatThreadService {
 
     @Autowired
     private ContentSecurityService css;
+
     @Autowired
     private ApiKeyService apiKeyService;
+
     @Autowired
     private ModelGrokService modelGrokService;
+
     @Autowired
     private ModelGeminiService modelGeminiService;
+
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 

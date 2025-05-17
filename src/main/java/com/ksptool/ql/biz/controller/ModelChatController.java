@@ -101,7 +101,7 @@ public class ModelChatController {
      * @return 编辑结果
      */
     @PostMapping("/editThread")
-    public Result<String> editThread(@Valid @RequestBody EditThreadDto dto) {
+    public Result<String> editThread(@Valid @RequestBody EditThreadTitleDto dto) {
         try {
             chatThreadService.editThreadTitle(dto.getThreadId(), dto.getTitle());
             return Result.success("会话标题修改成功");

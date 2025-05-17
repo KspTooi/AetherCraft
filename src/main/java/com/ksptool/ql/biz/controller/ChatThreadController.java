@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.EditThreadDto;
+import com.ksptool.ql.biz.model.dto.EditThreadTitleDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatThreadService;
@@ -24,7 +24,6 @@ public class ChatThreadController {
     @Autowired
     private ChatThreadService service;
 
-    //获取对话Thread列表
     @PostMapping("/getThreadList")
     public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto) throws BizException {
 
@@ -36,12 +35,13 @@ public class ChatThreadController {
         return Result.success(service.getThreadList(dto));
     }
 
-    //编辑Thread
-    public Result<String> editThread(@RequestBody @Valid EditThreadDto dto) throws BizException {
-        return null;
+    @PostMapping("/editThreadTitle")
+    public Result<String> editThreadTitle(@RequestBody @Valid EditThreadTitleDto dto) throws BizException {
+        service.editThreadTitle(dto.getThreadId(),dto.getTitle());
+        return Result.success("操作成功");
     }
 
-    //移除聊天Thread
+
     @PostMapping("/removeThread")
     public Result<String> removeThread(@RequestBody @Valid CommonIdDto dto) throws BizException {
         service.removeThread(dto.getId());

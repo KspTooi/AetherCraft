@@ -2,17 +2,12 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditMessageDto;
-import com.ksptool.ql.biz.model.dto.EditThreadDto;
-import com.ksptool.ql.biz.model.dto.GetThreadListDto;
-import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatMessageService;
 import com.ksptool.ql.biz.service.ChatThreadService;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
