@@ -2,8 +2,8 @@ package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.model.gemini.GeminiRequest;
-import com.ksptool.ql.biz.model.gemini.GeminiResponse;
+import com.ksptool.ql.restcgi.model.provider.GeminiRequest;
+import com.ksptool.ql.restcgi.model.provider.GeminiResponse;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;

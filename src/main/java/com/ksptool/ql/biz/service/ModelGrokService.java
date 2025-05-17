@@ -2,8 +2,8 @@ package com.ksptool.ql.biz.service;
 
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
-import com.ksptool.ql.biz.model.grok.GrokRequest;
-import com.ksptool.ql.biz.model.grok.GrokResponse;
+import com.ksptool.ql.restcgi.model.provider.GrokRequest;
+import com.ksptool.ql.restcgi.model.provider.GrokResponse;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;

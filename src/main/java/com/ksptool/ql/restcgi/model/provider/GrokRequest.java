@@ -1,4 +1,4 @@
-package com.ksptool.ql.biz.model.grok;
+package com.ksptool.ql.restcgi.model.provider;
 
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import lombok.Data;

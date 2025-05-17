@@ -2,6 +2,7 @@ package com.ksptool.ql.restcgi.model;
 
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import lombok.Data;
+import okhttp3.OkHttpClient;
 
 import java.util.List;
 
@@ -17,16 +18,16 @@ public class CgiChatParam {
     //历史对话内容
     private List<CgiChatMessage> historyMessages;
 
-    //温度参数
+    //温度参数       (CGI自动获取)
     private double temperature;
 
-    //TopP参数
+    //TopP参数      (CGI自动获取)
     private double topP;
 
-    //TopK参数
+    //TopK参数      (CGI自动获取)
     private int topK;
 
-    //最大输出令牌数
+    //最大输出令牌数  (CGI自动获取)
     private int maxOutputTokens;
 
     //APIKEY
@@ -34,5 +35,8 @@ public class CgiChatParam {
 
     //系统Prompt
     private String systemPrompt;
+
+    //用于发起REST请求的HttpClient (CGI自动获取 可被覆盖)
+    private OkHttpClient httpClient;
 
 }

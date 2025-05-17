@@ -1,7 +1,9 @@
 package com.ksptool.ql.restcgi.model;
 
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import lombok.Data;
 
+@Data
 public class CgiChatResult {
 
     //模型枚举
