@@ -31,33 +31,6 @@ public class ChatMessageController {
     private ChatThreadService chatThreadService;
 
 
-    //获取对话Thread列表
-    @PostMapping("/getThreadList")
-    public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto){
-
-        //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
-        if(dto.getType() == 1 && dto.getNpcId() == null){
-            return Result.error("NpcId不可为空");
-        }
-
-        return Result.success(chatThreadService.getThreadList(dto));
-    }
-
-    //编辑Thread
-    public Result<String> editThread(@RequestBody @Valid EditThreadDto dto) throws BizException {
-
-
-        return null;
-    }
-
-    //移除聊天Thread
-    @PostMapping("/removeThread")
-    public Result<String> removeThread(@RequestBody @Valid CommonIdDto dto) throws BizException {
-        chatThreadService.removeThread(dto.getId());
-        return Result.success("操作成功");
-    }
-
-
     //编辑对话消息
     @PostMapping("/editMessage")
     public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto) throws BizException {
