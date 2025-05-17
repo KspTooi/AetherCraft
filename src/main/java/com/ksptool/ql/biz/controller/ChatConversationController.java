@@ -6,7 +6,7 @@ import com.ksptool.ql.biz.model.dto.RegenerateDto;
 import com.ksptool.ql.biz.model.dto.SendMessageDto;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
-import com.ksptool.ql.biz.service.ConversationService;
+import com.ksptool.ql.biz.service.ChatConversationService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/conversation")
-public class ConversationController {
+public class ChatConversationController {
 
     @Autowired
-    private ConversationService service;
+    private ChatConversationService service;
 
     @PostMapping("/sendMessage")
     public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {
@@ -39,8 +39,6 @@ public class ConversationController {
     public Result<String> regenerate(@RequestBody @Valid RegenerateDto dto) {
         return null;
     }
-
-
 
     @PostMapping("/abortConversation")
     public Result<String> abortConversation(@RequestBody @Valid AbortConversationDto dto) {

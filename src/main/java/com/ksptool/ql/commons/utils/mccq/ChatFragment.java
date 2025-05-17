@@ -2,6 +2,8 @@ package com.ksptool.ql.commons.utils.mccq;
 
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class ChatFragment {
 
@@ -13,6 +15,9 @@ public class ChatFragment {
 
     //发送人头像URL
     private String senderAvatarUrl;
+
+    //发送时间
+    private Date sendTime;
 
     //玩家ID
     private long playerId;

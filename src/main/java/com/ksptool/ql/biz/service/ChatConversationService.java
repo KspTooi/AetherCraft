@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.service;
 
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
+import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
@@ -23,13 +24,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class ConversationService {
+public class ChatConversationService {
 
     private final MemoryChatControlQueue mccq = new MemoryChatControlQueue();
 
@@ -47,6 +49,9 @@ public class ConversationService {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    private ChatThreadRepository chatThreadRepository;
 
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
@@ -104,6 +109,9 @@ public class ConversationService {
         messagesPos.add(chatMessagePo);
         threadPo.setLastMessage(chatMessagePo);
 
+        chatThreadRepository.save(threadPo);
+        chatMessageRepository.save(chatMessagePo);
+
         //需通过CGI发送的历史记录
         var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
 
@@ -126,6 +134,8 @@ public class ConversationService {
         cf.setSenderName(playerName);
         cf.setSenderAvatarUrl(player.getPlayerAvatarUrl());
         cf.setStreamId(streamId);
+        cf.setMessageId(chatMessagePo.getId());
+        cf.setSendTime(chatMessagePo.getCreateTime());
         mccq.receive(cf);
 
         var msg = new CgiChatMessage();
@@ -191,8 +201,12 @@ public class ConversationService {
                 ret.setType(first.getType());
                 ret.setSenderName(first.getSenderName());
                 ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
+                ret.setSendTime(first.getSendTime());
                 if(first.getType() == 10){
                     ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
+                }
+                if(first.getType() == 2){
+                    ret.setContent("conversation end");
                 }
                 return ret;
             }
@@ -205,6 +219,7 @@ public class ConversationService {
             ret.setType(first.getType());
             ret.setSenderName(first.getSenderName());
             ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
+            ret.setSendTime(first.getSendTime());
 
             StringBuilder content = new StringBuilder(first.getContent());
 
@@ -246,12 +261,13 @@ public class ConversationService {
                 if (ccr.getType() == 0) {
                     var cf = new ChatFragment();
                     cf.setType(1);
-                    cf.setSenderName(ccr.getModel().getCode());
-                    cf.setSenderAvatarUrl("");
+                    cf.setSenderName(ctx.modelName());
+                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
                     cf.setPlayerId(ctx.playerId());
                     cf.setThreadId(ctx.threadId());
                     cf.setStreamId(ctx.streamId());
                     cf.setContent(ccr.getContent());
+                    cf.setSendTime(new Date());
                     mccq.receive(cf);
                     return;
                 }
@@ -271,13 +287,14 @@ public class ConversationService {
 
                     var cf = new ChatFragment();
                     cf.setType(2);
-                    cf.setSenderName(ccr.getModel().getCode());
-                    cf.setSenderAvatarUrl("");
+                    cf.setSenderName(ctx.modelName());
+                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
                     cf.setPlayerId(ctx.playerId());
                     cf.setThreadId(ctx.threadId());
                     cf.setContent(ccr.getContent());
                     cf.setMessageId(messagePo.getId());
                     cf.setStreamId(ctx.streamId());
+                    cf.setSendTime(messagePo.getCreateTime());
                     mccq.receive(cf);
 
                     // 通知会话已结束
@@ -289,12 +306,13 @@ public class ConversationService {
                 if (ccr.getType() == 2) {
                     var cf = new ChatFragment();
                     cf.setType(10);
-                    cf.setSenderName(ccr.getModel().getSeries());
-                    cf.setSenderAvatarUrl("");
+                    cf.setSenderName(ctx.modelName());
+                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
                     cf.setPlayerId(ctx.playerId());
                     cf.setThreadId(ctx.threadId());
                     cf.setContent(ccr.getException() != null ? "AI响应错误: " + ccr.getException().getMessage() : "AI响应错误");
                     cf.setStreamId(ctx.streamId());
+                    cf.setSendTime(new Date());
                     mccq.receive(cf);
 
                     // 通知会话已失败
