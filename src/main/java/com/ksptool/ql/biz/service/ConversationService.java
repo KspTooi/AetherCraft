@@ -121,7 +121,7 @@ public class ConversationService {
         cf.setType(0); //0:起始 1:数据 2:结束 10:错误
         cf.setPlayerId(player.getPlayerId());
         cf.setThreadId(threadPo.getId());
-        cf.setContent(null); //起始消息无内容
+        cf.setContent(dto.getMessage()); //起始消息是用户发送的内容
         cf.setSeq(0);
         cf.setSenderName(playerName);
         cf.setSenderAvatarUrl(player.getPlayerAvatarUrl());
@@ -209,16 +209,16 @@ public class ConversationService {
             StringBuilder content = new StringBuilder(first.getContent());
 
             //处理消息片段
-            while (mccq.hasNext("threadId")){
+            while (mccq.hasNext(dto.getStreamId())){
 
-                ChatFragment next = mccq.next("threadId");
+                ChatFragment next = mccq.next(dto.getStreamId());
 
                 if(next.getType() == 10 || next.getType() == 2){
                     mccq.receive(next);
                     break;
                 }
 
-                content.append(mccq.next("threadId").getContent());
+                content.append(next.getContent());
             }
 
             ret.setContent(content.toString());
@@ -230,7 +230,6 @@ public class ConversationService {
 
     }
 
-
     public String abortConversation(AbortConversationDto dto) {
         return null;
     }
@@ -239,10 +238,14 @@ public class ConversationService {
         return (ccr)->{
             try{
 
+                if(!mccq.isStreamOpen(ctx.threadId(),ctx.streamId())){
+                    return;
+                }
+
                 //数据类型 - 创建数据片段
                 if (ccr.getType() == 0) {
                     var cf = new ChatFragment();
-                    cf.setType(0);
+                    cf.setType(1);
                     cf.setSenderName(ccr.getModel().getCode());
                     cf.setSenderAvatarUrl("");
                     cf.setPlayerId(ctx.playerId());

@@ -62,6 +62,18 @@ public class MemoryChatControlQueue {
     public boolean isStreamOpen(Long tid){
         return threadStreamMap.containsKey(tid);
     }
+    public boolean isStreamOpen(Long tid,String sid){
+        String streamId = threadStreamMap.get(tid);
+
+        if(streamId == null){
+            return false;
+        }
+
+        if(streamId.equals(sid)){
+            return true;
+        }
+        return false;
+    }
 
     /**
      * 处理数据入栈
@@ -73,15 +85,16 @@ public class MemoryChatControlQueue {
             return;
         }
         //判断流ID是否为当前线程正在使用的
-        String streamId = threadStreamMap.get(cf.getThreadId());
+        //String streamId = threadStreamMap.get(cf.getThreadId());
 
-        if(streamId == null){
-            log.error("丢弃分片,该Thread未创建Stream T:{} PID:{} TID:{} SID:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId(),cf.getStreamId());
-            return;
-        }
-        if(!streamId.equals(cf.getStreamId())){
-            log.error("丢弃分片,分片StreamId与Thread当前活跃的StreamId不一致 T:{} PID:{} TID:{} SID:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId(),cf.getStreamId());
-        }
+        //if(streamId == null){
+        //    log.error("丢弃分片,该Thread未创建Stream T:{} PID:{} TID:{} SID:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId(),cf.getStreamId());
+        //    return;
+        //}
+        //if(!streamId.equals(cf.getStreamId())){
+        //    log.error("丢弃分片,分片StreamId与Thread当前活跃的StreamId不一致 T:{} PID:{} TID:{} SID:{}", cf.getType(), cf.getPlayerId(), cf.getThreadId(),cf.getStreamId());
+        //    return;
+        //}
 
         LinkedBlockingQueue<ChatFragment> queue = threadFragmentPool.get(cf.getStreamId());
 
