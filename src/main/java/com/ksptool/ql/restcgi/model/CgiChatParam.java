@@ -10,6 +10,9 @@ import java.util.List;
 @Data
 public class CgiChatParam {
 
+    //对话流ID (流式对话必传)
+    private String streamId;
+
     //模型枚举 必填
     private AIModelEnum model;
 

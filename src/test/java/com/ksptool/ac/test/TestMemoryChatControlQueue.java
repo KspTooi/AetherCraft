@@ -36,7 +36,7 @@ public class TestMemoryChatControlQueue {
 
         while (true){
             Thread.sleep(1000);
-            ChatFragment next = mccq.next(threadId);
+            ChatFragment next = mccq.next("threadId");
             System.out.println("next:" + next);
         }
 

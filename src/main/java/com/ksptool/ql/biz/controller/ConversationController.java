@@ -31,8 +31,8 @@ public class ConversationController {
     }
 
     @PostMapping("/queryStream")
-    public Result<MessageFragmentVo> queryStream(@RequestBody @Valid QueryStreamDto dto) {
-        return null;
+    public Result<MessageFragmentVo> queryStream(@RequestBody @Valid QueryStreamDto dto) throws BizException {
+        return Result.success(service.queryMessage(dto));
     }
 
     @PostMapping("/regenerate")

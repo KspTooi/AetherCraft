@@ -5,12 +5,12 @@ import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
+import com.ksptool.ql.biz.model.record.CgiCallbackContext;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import com.ksptool.ql.commons.utils.mccq.ChatFragment;
 import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
 import com.ksptool.ql.restcgi.model.CgiChatMessage;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 @Service
@@ -124,6 +125,7 @@ public class ConversationService {
         cf.setSeq(0);
         cf.setSenderName(playerName);
         cf.setSenderAvatarUrl(player.getPlayerAvatarUrl());
+        cf.setStreamId(streamId);
         mccq.receive(cf);
 
         var msg = new CgiChatMessage();
@@ -137,7 +139,16 @@ public class ConversationService {
         p.setHistoryMessages(cgiHistoryMessages);
         p.setMessage(msg);
 
-        restCgi.sendMessage(p,onModelMessageRcv(threadPo.getId(), player.getUserId(), player.getPlayerId()));
+        restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
+                threadPo.getId(),
+                player.getUserId(),
+                player.getPlayerId(),
+                streamId,
+                playerName,
+                player.getPlayerAvatarUrl(),
+                model.getSeries(),
+                ""
+        )));
 
         var vo = new SendMessageVo();
         vo.setThreadId(threadPo.getId());
@@ -156,8 +167,67 @@ public class ConversationService {
     }
 
 
-    public MessageFragmentVo queryMessage(QueryStreamDto dto) {
-        return null;
+    public MessageFragmentVo queryMessage(QueryStreamDto dto) throws BizException {
+
+        try{
+            var ret = new MessageFragmentVo();
+
+            //消费消息队列中该Thread的消息片段
+            var first = mccq.next(dto.getStreamId());
+
+            /*
+             * 分片类型 0:起始 1:数据 2:结束 10:错误
+             * 消费逻辑
+             * 1.当首个段`firstFragment`为起始、错误片段时需立即返回内容给客户端
+             * 2.当首个段为数据段,尝试获取尽可能多的数据段并将其组装到一个客户端响应中
+             * 在消费数据片段时获取到"结束"或"错误"片段时立即返回已组装的客户端响应,并将已获取到的"结束"或"错误"片段重新放入队头
+             */
+            if(first.getType() == 0 || first.getType() == 10 || first.getType() == 2){
+                ret.setThreadId(first.getThreadId());
+                ret.setMessageId(first.getMessageId());
+                ret.setSenderRole(1);
+                ret.setSeq(first.getSeq());
+                ret.setContent(first.getContent());
+                ret.setType(first.getType());
+                ret.setSenderName(first.getSenderName());
+                ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
+                if(first.getType() == 10){
+                    ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
+                }
+                return ret;
+            }
+
+            ret.setThreadId(first.getThreadId());
+            ret.setMessageId(-1L);
+            ret.setSenderRole(1);
+            ret.setSeq(first.getSeq());
+            ret.setContent("----");
+            ret.setType(first.getType());
+            ret.setSenderName(first.getSenderName());
+            ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
+
+            StringBuilder content = new StringBuilder(first.getContent());
+
+            //处理消息片段
+            while (mccq.hasNext("threadId")){
+
+                ChatFragment next = mccq.next("threadId");
+
+                if(next.getType() == 10 || next.getType() == 2){
+                    mccq.receive(next);
+                    break;
+                }
+
+                content.append(mccq.next("threadId").getContent());
+            }
+
+            ret.setContent(content.toString());
+            return ret;
+
+        }catch (TimeoutException e){
+            throw new BizException(e.getMessage());
+        }
+
     }
 
 
@@ -165,22 +235,9 @@ public class ConversationService {
         return null;
     }
 
-    private Consumer<CgiChatResult> onModelMessageRcv(long tid, long uid, long pid) {
+    private Consumer<CgiChatResult> onCgiCallback(CgiCallbackContext ctx) {
         return (ccr)->{
             try{
-                //检查该线程是否被终止 0:正在等待响应(Pending) 1:正在回复(Receive) 2:已结束(Finished) 10:已失败(Failed) 11:已终止(Terminated)
-                if(track.getStatus(tid) == 11){
-                    // 如果是完成或错误回调，需要关闭Session
-                    if (ccr.getType() == 1 || ccr.getType() == 2) {
-                        track.closeSession(tid);
-                    }
-                    return;
-                }
-
-                //当为正在等待响应状态 首次收到消息时需要转换状态
-                if(track.getStatus(tid) == 0){
-                    track.notifyReceive(tid);
-                }
 
                 //数据类型 - 创建数据片段
                 if (ccr.getType() == 0) {
@@ -188,8 +245,9 @@ public class ConversationService {
                     cf.setType(0);
                     cf.setSenderName(ccr.getModel().getCode());
                     cf.setSenderAvatarUrl("");
-                    cf.setPlayerId(pid);
-                    cf.setThreadId(tid);
+                    cf.setPlayerId(ctx.playerId());
+                    cf.setThreadId(ctx.threadId());
+                    cf.setStreamId(ctx.streamId());
                     cf.setContent(ccr.getContent());
                     mccq.receive(cf);
                     return;
@@ -198,11 +256,11 @@ public class ConversationService {
                 //结束类型
                 if (ccr.getType() == 1) {
                     var messagePo = new ChatMessagePo();
-                    messagePo.setThread(Any.of().val("id", tid).as(ChatThreadPo.class));
+                    messagePo.setThread(Any.of().val("id", ctx.threadId()).as(ChatThreadPo.class));
                     messagePo.setSenderRole(1);
                     messagePo.setSenderName(ccr.getModel().getSeries());
-                    messagePo.setContent(css.encrypt(ccr.getContent(),uid));
-                    messagePo.setSeq(chatMessageRepository.getCountByThreadId(tid) + 1);
+                    messagePo.setContent(css.encrypt(ccr.getContent(),ctx.userId()));
+                    messagePo.setSeq(chatMessageRepository.getCountByThreadId(ctx.threadId()) + 1);
                     messagePo.setTokenInput(ccr.getTokenInput());
                     messagePo.setTokenOutput(ccr.getTokenOutput());
                     messagePo.setTokenThoughts(ccr.getTokenThoughtOutput());
@@ -212,14 +270,15 @@ public class ConversationService {
                     cf.setType(2);
                     cf.setSenderName(ccr.getModel().getCode());
                     cf.setSenderAvatarUrl("");
-                    cf.setPlayerId(pid);
-                    cf.setThreadId(tid);
+                    cf.setPlayerId(ctx.playerId());
+                    cf.setThreadId(ctx.threadId());
                     cf.setContent(ccr.getContent());
+                    cf.setMessageId(messagePo.getId());
+                    cf.setStreamId(ctx.streamId());
                     mccq.receive(cf);
 
                     // 通知会话已结束
-                    track.notifyFinished(tid);
-                    track.closeSession(tid);
+                    mccq.closeStream(ctx.threadId());
                     return;
                 }
 
@@ -229,14 +288,14 @@ public class ConversationService {
                     cf.setType(10);
                     cf.setSenderName(ccr.getModel().getSeries());
                     cf.setSenderAvatarUrl("");
-                    cf.setPlayerId(pid);
-                    cf.setThreadId(tid);
+                    cf.setPlayerId(ctx.playerId());
+                    cf.setThreadId(ctx.threadId());
                     cf.setContent(ccr.getException() != null ? "AI响应错误: " + ccr.getException().getMessage() : "AI响应错误");
+                    cf.setStreamId(ctx.streamId());
                     mccq.receive(cf);
 
                     // 通知会话已失败
-                    track.notifyFailed(tid);
-                    track.closeSession(tid);
+                    mccq.closeStream(ctx.threadId());
                 }
 
             }catch (Exception e){

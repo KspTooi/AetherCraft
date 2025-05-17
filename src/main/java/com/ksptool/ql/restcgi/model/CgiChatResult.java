@@ -6,6 +6,12 @@ import lombok.Data;
 @Data
 public class CgiChatResult {
 
+
+
+
+
+
+
     //模型枚举
     private AIModelEnum model;
 
