@@ -14,4 +14,7 @@ public class SendMessageVo {
     //是否创建了新Thread 0:否 1:是
     private Integer newThreadCreated;
 
+    //响应流ID
+    private String streamId;
+
 }

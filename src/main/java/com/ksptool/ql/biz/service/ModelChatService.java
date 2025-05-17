@@ -297,7 +297,7 @@ public class ModelChatService {
 
         try{
             //消费消息队列中该Thread的消息片段
-            var first = mccq.next(threadId);
+            var first = mccq.next("streamId");
 
             if(first.getPlayerId() != playerId){
                 mccq.receive(first);
@@ -338,16 +338,16 @@ public class ModelChatService {
             StringBuilder content = new StringBuilder(first.getContent());
 
             //处理消息片段
-            while (mccq.hasNext(threadId)){
+            while (mccq.hasNext("threadId")){
 
-                ChatFragment next = mccq.next(threadId);
+                ChatFragment next = mccq.next("threadId");
 
                 if(next.getType() == 10 || next.getType() == 2){
                     mccq.receive(next);
                     break;
                 }
 
-                content.append(mccq.next(threadId).getContent());
+                content.append(mccq.next("threadId").getContent());
             }
 
             ret.setContent(content.toString());

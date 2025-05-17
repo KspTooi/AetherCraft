@@ -6,30 +6,22 @@ import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
-import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import com.ksptool.ql.commons.utils.mccq.ChatFragment;
 import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
-import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.restcgi.model.CgiChatMessage;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
 import com.ksptool.ql.restcgi.service.ModelRestCgi;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,9 +29,6 @@ import java.util.function.Consumer;
 @Service
 @Slf4j
 public class ConversationService {
-
-    //线程会话状态跟踪
-    private final ThreadStatusTrack track = new ThreadStatusTrack();
 
     private final MemoryChatControlQueue mccq = new MemoryChatControlQueue();
 
@@ -53,10 +42,8 @@ public class ConversationService {
     private ContentSecurityService css;
 
     @Autowired
-    private PlayerConfigService playerConfigService;
-
-    @Autowired
     private ModelRestCgi restCgi;
+
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
@@ -82,8 +69,13 @@ public class ConversationService {
             throw new BizException("没有为模型:"+model.getCode()+"配置APIKEY");
         }
 
+        //检查会话是否已锁定
+        if(mccq.isStreamOpen(threadPo.getId())){
+            throw new BizException("该会话正在处理中,请等待模型响应完成.");
+        }
+
         //锁定会话
-        track.newSession(threadPo.getId());
+        String streamId = mccq.openStream(threadPo.getId());
         threadPo.setModelCode(model.getCode());
 
         /*
@@ -134,7 +126,6 @@ public class ConversationService {
         cf.setSenderAvatarUrl(player.getPlayerAvatarUrl());
         mccq.receive(cf);
 
-
         var msg = new CgiChatMessage();
         msg.setSenderType(0);
         msg.setContent(dto.getMessage());
@@ -152,6 +143,7 @@ public class ConversationService {
         vo.setThreadId(threadPo.getId());
         vo.setTitle(threadPo.getTitle());
         vo.setNewThreadCreated(0);
+        vo.setStreamId(streamId);
         if(dto.getThreadId() == -1){
             vo.setNewThreadCreated(1);
         }
@@ -164,7 +156,7 @@ public class ConversationService {
     }
 
 
-    public MessageFragmentVo queryMessage(QueryMessageDto dto) {
+    public MessageFragmentVo queryMessage(QueryStreamDto dto) {
         return null;
     }
 

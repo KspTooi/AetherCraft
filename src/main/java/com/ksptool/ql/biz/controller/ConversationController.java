@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.AbortConversationDto;
-import com.ksptool.ql.biz.model.dto.QueryMessageDto;
+import com.ksptool.ql.biz.model.dto.QueryStreamDto;
 import com.ksptool.ql.biz.model.dto.RegenerateDto;
 import com.ksptool.ql.biz.model.dto.SendMessageDto;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
@@ -30,15 +30,17 @@ public class ConversationController {
         return Result.success(service.sendMessage(dto));
     }
 
+    @PostMapping("/queryStream")
+    public Result<MessageFragmentVo> queryStream(@RequestBody @Valid QueryStreamDto dto) {
+        return null;
+    }
+
     @PostMapping("/regenerate")
     public Result<String> regenerate(@RequestBody @Valid RegenerateDto dto) {
         return null;
     }
 
-    @PostMapping("/queryMessage")
-    public Result<MessageFragmentVo> queryMessage(@RequestBody @Valid QueryMessageDto dto) {
-        return null;
-    }
+
 
     @PostMapping("/abortConversation")
     public Result<String> abortConversation(@RequestBody @Valid AbortConversationDto dto) {

@@ -20,6 +20,9 @@ public class ChatFragment {
     //对话线程ID
     private long threadId;
 
+    //响应流ID
+    private String streamId;
+
     //分片内容
     private String content;
 
