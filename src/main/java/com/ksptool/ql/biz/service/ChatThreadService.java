@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
@@ -106,7 +107,6 @@ public class ChatThreadService {
         //移除Thread
         repository.delete(po);
     }
-
 
     public ChatThreadPo getSelfThread(long threadId) throws BizException{
         var query = new ChatThreadPo();
@@ -224,6 +224,30 @@ public class ChatThreadService {
 
     }
 
+    @Transactional(rollbackFor = BizException.class)
+    public ChatThreadPo createSelfThread(AIModelEnum model,int type) throws BizException {
+
+        if(type != 0 && type != 2){
+            throw new BizException("对话类型只允许 标准会话、增强会话");
+        }
+
+        var userPo = Any.of().val("id",AuthService.requireUserId()).as(UserPo.class);
+        var playerPo = Any.of().val("id",AuthService.requirePlayerId()).as(PlayerPo.class);
+        var insert = new ChatThreadPo();
+        insert.setType(type); //0:标准会话 1:RP会话 2:标准增强会话
+        insert.setUser(userPo);
+        insert.setPlayer(playerPo);
+        insert.setNpc(null);
+        insert.setTitle("新会话" + getSelfThreadCount(0) + 1);
+        insert.setPublicInfo(null);
+        insert.setDescription(null);
+        insert.setTitleGenerated(0);
+        insert.setModelCode(model.getCode());
+        insert.setActive(1);
+        insert.setMessages(new ArrayList<>());
+        return repository.save(insert);
+    }
+
     //创建新的标准会话
     public ChatThreadPo createThread(long userId,long playerId,String modelCode){
         var user = Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class);
@@ -241,6 +265,14 @@ public class ChatThreadService {
         insert.setActive(1);
         insert.setMessages(new ArrayList<>());
         return repository.save(insert);
+    }
+
+    public int getSelfThreadCount(int type){
+        var query = new ChatThreadPo();
+        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+        query.setType(type);
+        return (int)repository.count(Example.of(query));
     }
 
 

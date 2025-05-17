@@ -38,4 +38,6 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
             """)
     Page<ChatThreadPo> getThreadListWithLastMessage(ChatThreadPo po, Pageable page);
 
+
+
 } 

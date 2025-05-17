@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.QueryMessageDto;
 import com.ksptool.ql.biz.model.dto.RegenerateDto;
 import com.ksptool.ql.biz.model.dto.SendMessageDto;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
+import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.ConversationService;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -24,7 +25,7 @@ public class ConversationController {
     private ConversationService service;
 
     @PostMapping("/sendMessage")
-    public Result<String> sendMessage(@RequestBody @Valid SendMessageDto dto) {
+    public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) {
         return null;
     }
 

@@ -271,6 +271,10 @@ public class PlayerConfigService {
         return Boolean.parseBoolean(value);
     }
 
+    public void readSelfModelParam(ModelChatParam param){
+        readPlayerModelParam(param,null);
+    }
+
     public void readPlayerModelParam(ModelChatParam param, Long inputPlayerId){
 
         var playerId = -1L;

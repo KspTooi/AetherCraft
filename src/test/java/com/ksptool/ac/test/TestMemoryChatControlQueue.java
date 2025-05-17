@@ -6,6 +6,8 @@ import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.TimeoutException;
+
 public class TestMemoryChatControlQueue {
 
     private MemoryChatControlQueue mccq;
@@ -17,7 +19,9 @@ public class TestMemoryChatControlQueue {
 
 
     @Test
-    public void test() throws InterruptedException, BizException {
+    public void test() throws InterruptedException, BizException, TimeoutException {
+
+        mccq.setFragmentTtl(16);
 
         var threadId = 100;
 
@@ -26,7 +30,6 @@ public class TestMemoryChatControlQueue {
             cf.setType(1);
             cf.setPlayerId(1);
             cf.setThreadId(threadId);
-            cf.setMessageId(1);
             cf.setContent("hhh");
             mccq.receive(cf);
         }

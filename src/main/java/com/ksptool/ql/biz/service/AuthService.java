@@ -93,6 +93,14 @@ public class AuthService {
             .getAttribute(SESSION_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
     }
 
+    public static UserSessionVo requirePlayer() throws AuthException {
+        var session = getCurrentUserSession();
+        if(session == null || session.getPlayerId() == null){
+            throw new AuthException("require player login");
+        }
+        return session;
+    }
+
     public static Long requirePlayerId() throws AuthException {
         var playerId = getCurrentPlayerId();
         if(playerId == null){
