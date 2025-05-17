@@ -1,16 +1,15 @@
 package com.ksptool.ql.restcgi.service;
 
 import com.google.gson.Gson;
-import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
+import com.ksptool.ql.restcgi.model.po.RestCgiRequestPo;
 import com.ksptool.ql.restcgi.model.provider.GeminiRequest;
 import com.ksptool.ql.restcgi.model.provider.GeminiResponse;
 import lombok.extern.slf4j.Slf4j;
-import lombok.extern.slf4j.XSlf4j;
 import okhttp3.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -36,6 +35,7 @@ public class GeminiRestCgi implements ModelRestCgi {
                 .url(GEMINI_BASE_URL + p.getModel().getCode() + ":generateContent?key=" + p.getApikey())
                 .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
                 .build();
+
 
         // 发送请求并处理响应
         try (Response response = p.getHttpClient().newCall(request).execute()) {
@@ -89,6 +89,7 @@ public class GeminiRestCgi implements ModelRestCgi {
 
         //进入虚拟线程 处理SSE响应
         Thread.startVirtualThread(() -> {
+
             try (Response response = p.getHttpClient().newCall(request).execute()) {
 
                 if (!response.isSuccessful()) {
@@ -149,6 +150,7 @@ public class GeminiRestCgi implements ModelRestCgi {
 
                     callback.accept(ccr);
                 }
+
 
             } catch (Exception e) {
                 log.error(e.getMessage(),e);

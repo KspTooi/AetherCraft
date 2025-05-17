@@ -38,11 +38,13 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     @Autowired
     private PlayerConfigService playerConfigService;
 
+
     @Override
     public CgiChatResult sendMessage(CgiChatParam param) throws BizException {
         ModelRestCgi selectedCgi = selectModelCgi(param);
         selectHttpClient(param);
         selectModelSettings(param);
+        ensureCgiParamValid(param);
         return selectedCgi.sendMessage(param);
     }
 
@@ -51,6 +53,7 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
         ModelRestCgi selectedCgi = selectModelCgi(param);
         selectHttpClient(param);
         selectModelSettings(param);
+        ensureCgiParamValid(param);
         selectedCgi.sendMessage(param, callback);
     }
 
@@ -122,5 +125,39 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
         }
 
         throw new ModelSeriesNotExistsException("选择模型CGI失败,模型Series不支持.");
+    }
+
+    public void ensureCgiParamValid(CgiChatParam p) throws BizException {
+        /*if (p.getUserId() == null) {
+            throw new BizException("[CGI参数错误] UserId不可为空");
+        }
+
+        if (p.getPlayerId() == null) {
+            throw new BizException("[CGI参数错误] PlayerId不可为空");
+        }
+
+        if (p.getThreadId() == null) {
+            throw new BizException("[CGI参数错误] ThreadId不可为空");
+        }
+
+        if (p.getMessageId() == null) {
+            throw new BizException("[CGI参数错误] MessageId不可为空");
+        }*/
+
+        if (p.getModel() == null) {
+            throw new BizException("[CGI参数错误] 模型枚举不可为空");
+        }
+
+        if (p.getMessage() == null) {
+            throw new BizException("[CGI参数错误] 消息内容不可为空");
+        }
+
+        if (p.getApikey() == null || p.getApikey().trim().isEmpty()) {
+            throw new BizException("[CGI参数错误] ApiKey不可为空");
+        }
+
+        if (p.getHistoryMessages() == null) {
+            throw new BizException("[CGI参数错误] 历史消息不允许为null");
+        }
     }
 }

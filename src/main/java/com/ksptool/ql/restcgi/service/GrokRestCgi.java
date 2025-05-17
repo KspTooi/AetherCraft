@@ -9,7 +9,6 @@ import com.ksptool.ql.restcgi.model.provider.GrokResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -114,6 +113,9 @@ public class GrokRestCgi implements ModelRestCgi {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
+
+                        log.info(line);
+
                         if (line.startsWith("data: ")) {
                             String data = line.substring(6);
                             if ("[DONE]".equals(data)) {

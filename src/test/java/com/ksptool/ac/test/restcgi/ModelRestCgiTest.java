@@ -60,6 +60,11 @@ public class ModelRestCgiTest {
         param.setModel(AIModelEnum.GEMINI_2_FLASH);
         param.setApikey(geminiApiKey);
         param.setHttpClient(httpClient);
+
+        //param.setUserId(-1L);
+        //param.setPlayerId(-1L);
+        //param.setThreadId(-1L);
+        //param.setMessageId(-1L);
         
         var message = new CgiChatMessage();
         message.setSenderType(0);
@@ -89,9 +94,13 @@ public class ModelRestCgiTest {
         }
 
         var param = new CgiChatParam();
-        param.setModel(AIModelEnum.GEMINI_15_PRO);
+        param.setModel(AIModelEnum.GEMINI_2_FLASH);
         param.setApikey(geminiApiKey);
         param.setHttpClient(httpClient);
+        //param.setUserId(-1L);
+        //param.setPlayerId(-1L);
+        //param.setThreadId(-1L);
+        //param.setMessageId(-1L);
         
         var message = new CgiChatMessage();
         message.setSenderType(0);

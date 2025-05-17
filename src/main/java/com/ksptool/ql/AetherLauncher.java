@@ -27,8 +27,8 @@ import java.sql.SQLException;
 @EnableScheduling
 @EnableTransactionManagement
 @SpringBootApplication
-@EntityScan(basePackages = {"com.ksptool.ql.biz.model"})
-@EnableJpaRepositories(basePackages = {"com.ksptool.ql.biz.mapper"})
+@EntityScan(basePackages = {"com.ksptool.ql.**.model.po"})
+@EnableJpaRepositories(basePackages = {"com.ksptool.ql.**.repository","com.ksptool.ql.**.mapper"})
 public class AetherLauncher {
 
     // 从配置文件中读取应用版本号

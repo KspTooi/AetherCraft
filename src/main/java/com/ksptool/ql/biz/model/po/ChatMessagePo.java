@@ -38,15 +38,15 @@ public class ChatMessagePo {
     @Comment("消息序号")
     private Integer seq;
 
-    @Column(name = "total_token_input", nullable = false)
+    @Column(name = "token_input", nullable = false)
     @Comment("TOKEN使用量(用户输入)")
     private Long tokenInput;
 
-    @Column(name = "total_token_output", nullable = false)
+    @Column(name = "token_output", nullable = false)
     @Comment("TOKEN使用量(模型输出)")
     private Long tokenOutput;
 
-    @Column(name = "total_token_thoughts", nullable = false)
+    @Column(name = "token_thoughts", nullable = false)
     @Comment("TOKEN使用量(模型思考)")
     private Long tokenThoughts;
 
