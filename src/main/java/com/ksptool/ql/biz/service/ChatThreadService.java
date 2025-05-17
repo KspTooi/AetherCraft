@@ -58,15 +58,17 @@ public class ChatThreadService {
 
 
     //获取对话历史列表
-    public RestPageableView<GetThreadListVo> getThreadList(GetThreadListDto dto){
+    public RestPageableView<GetThreadListVo> getThreadList(GetThreadListDto dto) throws BizException {
 
-        var query = new ChatThreadPo();
-        query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-        query.setNpc(Any.of().val("id",dto.getNpcId()).as(NpcPo.class));
-        query.setType(dto.getType());
+        Long uid = AuthService.requireUserId();
+        Long pid = AuthService.requirePlayerId();
+        Long nid = null;
 
-        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(query, dto.pageRequest());
+        if(dto.getType() == 1){
+            nid = dto.getNpcId();
+        }
+
+        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(pid,uid,nid,dto.getType(), dto.pageRequest());
         List<GetThreadListVo> vos = new ArrayList<>();
 
         for(var po : pPos.getContent()){

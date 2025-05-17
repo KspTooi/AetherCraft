@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -30,13 +31,17 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
             LEFT JOIN FETCH ctp.lastMessage
             LEFT JOIN ctp.npc npc
             WHERE
-            (ctp.player.id = :#{#po.player.id})
-            AND (ctp.user.id = :#{#po.user.id})
-            AND (ctp.type = :#{#po.type})
-            AND (:#{#po.npc.id} IS NULL OR npc.id = :#{#po.npc.id})
-            ORDER BY ctp.updateTime DESC
+            ctp.player.id = :playerId
+            AND ctp.user.id = :userId
+            AND ctp.type = :type
+            AND (:npcId IS NULL OR npc.id = :npcId)
+            ORDER BY ctp.createTime DESC
             """)
-    Page<ChatThreadPo> getThreadListWithLastMessage(ChatThreadPo po, Pageable page);
+    Page<ChatThreadPo> getThreadListWithLastMessage(@Param("playerId") Long playerId,
+                                                   @Param("userId") Long userId,
+                                                   @Param("npcId") Long npcId,
+                                                   @Param("type") Integer type,
+                                                   Pageable page);
 
 
 

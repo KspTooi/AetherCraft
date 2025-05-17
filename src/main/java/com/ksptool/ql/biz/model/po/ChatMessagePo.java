@@ -81,4 +81,19 @@ public class ChatMessagePo {
         updateTime = new Date();
     }
 
+    @Override
+    public String toString() {
+        return "ChatMessagePo{" +
+                "id=" + id +
+                ", senderRole=" + senderRole +
+                ", senderName='" + senderName + '\'' +
+                ", seq=" + seq +
+                ", tokenInput=" + tokenInput +
+                ", tokenOutput=" + tokenOutput +
+                ", tokenThoughts=" + tokenThoughts +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                '}';
+    }
+
 }

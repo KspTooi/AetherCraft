@@ -26,7 +26,7 @@ public class ChatThreadController {
 
     //获取对话Thread列表
     @PostMapping("/getThreadList")
-    public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto){
+    public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto) throws BizException {
 
         //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
         if(dto.getType() == 1 && dto.getNpcId() == null){

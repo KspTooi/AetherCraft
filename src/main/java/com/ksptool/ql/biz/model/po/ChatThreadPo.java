@@ -121,4 +121,18 @@ public class ChatThreadPo {
         updateTime = new Date();
     }
 
+    @Override
+    public String toString() {
+        return "ChatThreadPo{" +
+                "id=" + id +
+                ", type=" + type +
+                ", title='" + title + '\'' +
+                ", publicInfo='" + publicInfo + '\'' +
+                ", modelCode='" + modelCode + '\'' +
+                ", active=" + active +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                '}';
+    }
+
 }

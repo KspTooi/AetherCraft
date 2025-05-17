@@ -161,7 +161,7 @@ public class ModelChatController {
      * @return 会话列表
      */
     @PostMapping("/getThreadList")
-    public Result<List<ThreadListItemVo>> getThreadList() {
+    public Result<List<ThreadListItemVo>> getThreadList() throws BizException {
 
         var dto = new GetThreadListDto();
         dto.setType(0);
