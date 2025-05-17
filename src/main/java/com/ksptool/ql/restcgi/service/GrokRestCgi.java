@@ -71,7 +71,11 @@ public class GrokRestCgi implements ModelRestCgi {
             if (grokResponse.getUsage() != null) {
                 crr.setTokenInput(grokResponse.getUsage().getPromptTokens());
                 crr.setTokenOutput(grokResponse.getUsage().getCompletionTokens());
-                crr.setTokenThoughtOutput(grokResponse.getUsage().getReasoningTokens());
+                
+                // 从completion_tokens_details中获取reasoning_tokens
+                if (grokResponse.getUsage().getCompletionTokensDetails() != null) {
+                    crr.setTokenThoughtOutput(grokResponse.getUsage().getCompletionTokensDetails().getReasoningTokens());
+                }
             }
 
             return crr;
@@ -122,8 +126,8 @@ public class GrokRestCgi implements ModelRestCgi {
                                 if (grokResponse.getChoices() != null && !grokResponse.getChoices().isEmpty()) {
                                     GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
 
-                                    // 检查是否有finish_reason，如果有且不为null，则跳过
-                                    if (choice.getFinishReason() != null && !choice.getFinishReason().isEmpty()) {
+                                    // 检查是否有finish_reason，如果是stop，则跳过
+                                    if ("stop".equals(choice.getFinishReason())) {
                                         log.debug("接收到完成原因: {}", choice.getFinishReason());
                                         continue;
                                     }
@@ -178,7 +182,11 @@ public class GrokRestCgi implements ModelRestCgi {
                     if (grokResponse != null && grokResponse.getUsage() != null) {
                         ccr.setTokenInput(grokResponse.getUsage().getPromptTokens());
                         ccr.setTokenOutput(grokResponse.getUsage().getCompletionTokens());
-                        ccr.setTokenThoughtOutput(grokResponse.getUsage().getReasoningTokens());
+                        
+                        // 从completion_tokens_details中获取reasoning_tokens
+                        if (grokResponse.getUsage().getCompletionTokensDetails() != null) {
+                            ccr.setTokenThoughtOutput(grokResponse.getUsage().getCompletionTokensDetails().getReasoningTokens());
+                        }
                     }
 
                     callback.accept(ccr);
