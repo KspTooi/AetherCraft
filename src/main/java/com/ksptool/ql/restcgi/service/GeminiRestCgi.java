@@ -33,7 +33,7 @@ public class GeminiRestCgi implements ModelRestCgi {
 
         // 创建请求对象
         Request request = new Request.Builder()
-                .url(GEMINI_BASE_URL + "?key=" + p.getApikey())
+                .url(GEMINI_BASE_URL + p.getModel().getCode() + ":generateContent?key=" + p.getApikey())
                 .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
                 .build();
 
@@ -41,7 +41,7 @@ public class GeminiRestCgi implements ModelRestCgi {
         try (Response response = p.getHttpClient().newCall(request).execute()) {
 
             if (!response.isSuccessful()) {
-                throw new BizException("调用Gemini API失败: " + response.body().string());
+                throw new BizException("调用Gemini API失败: " + response.toString());
             }
 
             String responseBody = response.body().string();
@@ -83,7 +83,7 @@ public class GeminiRestCgi implements ModelRestCgi {
 
         //创建请求对象
         Request request = new Request.Builder()
-                .url(GEMINI_BASE_URL  + "?alt=sse&key=" + p.getApikey())
+                .url(GEMINI_BASE_URL + p.getModel().getCode() + ":streamGenerateContent?alt=sse&key=" + p.getApikey())
                 .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
                 .build();
 

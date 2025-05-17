@@ -120,7 +120,7 @@ public class GrokRestCgi implements ModelRestCgi {
                             try {
                                 grokResponse = gson.fromJson(data, GrokResponse.class);
                                 if (grokResponse.getChoices() != null && !grokResponse.getChoices().isEmpty()) {
-                                    GrokResponse.Choice choice = grokResponse.getChoices().get(0);
+                                    GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
 
                                     // 检查是否有finish_reason，如果有且不为null，则跳过
                                     if (choice.getFinishReason() != null && !choice.getFinishReason().isEmpty()) {

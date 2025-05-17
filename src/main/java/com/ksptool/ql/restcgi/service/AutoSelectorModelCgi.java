@@ -42,6 +42,7 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     public CgiChatResult sendMessage(CgiChatParam param) throws BizException {
         ModelRestCgi selectedCgi = selectModelCgi(param);
         selectHttpClient(param);
+        selectModelSettings(param);
         return selectedCgi.sendMessage(param);
     }
 
@@ -49,34 +50,37 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     public void sendMessage(CgiChatParam param, Consumer<CgiChatResult> callback) throws BizException {
         ModelRestCgi selectedCgi = selectModelCgi(param);
         selectHttpClient(param);
+        selectModelSettings(param);
         selectedCgi.sendMessage(param, callback);
     }
 
-    private void selectModelSettings(CgiChatParam param) throws BizException{
-
+    private void selectModelSettings(CgiChatParam param){
         var modelCode = param.getModel().getCode();
 
-        PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TEMPERATURE.key())
-                .setParameter("modelCode", modelCode);
+        // 只在参数为-1时自动获取配置
+        if (param.getTemperature() == -1) {
+            PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TEMPERATURE.key())
+                    .setParameter("modelCode", modelCode);
+            param.setTemperature(playerConfigService.getDouble(temperatureK.execute(), 0.7));
+        }
 
-        PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_P.key())
-                .setParameter("modelCode", modelCode);
+        if (param.getTopP() == -1) {
+            PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_P.key())
+                    .setParameter("modelCode", modelCode);
+            param.setTopP(playerConfigService.getDouble(topPK.execute(), 1.0));
+        }
 
-        PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_K.key())
-                .setParameter("modelCode", modelCode);
+        if (param.getTopK() == -1) {
+            PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_K.key())
+                    .setParameter("modelCode", modelCode);
+            param.setTopK(playerConfigService.getInt(topKK.execute(), 40));
+        }
 
-        PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_MAX_OUTPUT_TOKENS.key())
-                .setParameter("modelCode", modelCode);
-
-        // 获取配置参数
-        double temperature = playerConfigService.getDouble(temperatureK.execute(), 0.7);
-        double topP = playerConfigService.getDouble(topPK.execute(), 1.0);
-        int topK = playerConfigService.getInt(topKK.execute(), 40);
-        int maxOutputTokens = playerConfigService.getInt(maxOutputTokensK.execute(), 4096);
-        param.setTemperature(temperature);
-        param.setTopP(topP);
-        param.setTopK(topK);
-        param.setMaxOutputTokens(maxOutputTokens);
+        if (param.getMaxOutputTokens() == -1) {
+            PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_MAX_OUTPUT_TOKENS.key())
+                    .setParameter("modelCode", modelCode);
+            param.setMaxOutputTokens(playerConfigService.getInt(maxOutputTokensK.execute(), 4096));
+        }
     }
 
     private void selectHttpClient(CgiChatParam param) throws BizException {
@@ -87,7 +91,6 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     }
 
     private ModelRestCgi selectModelCgi(CgiChatParam param) throws ModelSeriesNotExistsException {
-
         if (param == null || param.getModel() == null) {
             throw new ModelSeriesNotExistsException("选择模型CGI失败,模型Series为空");
         }

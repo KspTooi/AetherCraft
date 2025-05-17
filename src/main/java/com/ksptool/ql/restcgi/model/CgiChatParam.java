@@ -18,17 +18,17 @@ public class CgiChatParam {
     //历史对话内容
     private List<CgiChatMessage> historyMessages;
 
-    //温度参数       (CGI自动获取)
-    private double temperature;
+    //温度参数       (为-1时CGI自动获取)
+    private double temperature = -1;
 
-    //TopP参数      (CGI自动获取)
-    private double topP;
+    //TopP参数      (为-1时CGI自动获取)
+    private double topP = -1;
 
-    //TopK参数      (CGI自动获取)
-    private int topK;
+    //TopK参数      (为-1时CGI自动获取)
+    private int topK = -1;
 
-    //最大输出令牌数  (CGI自动获取)
-    private int maxOutputTokens;
+    //最大输出令牌数  (为-1时CGI自动获取)
+    private int maxOutputTokens = -1;
 
     //APIKEY
     private String apikey;

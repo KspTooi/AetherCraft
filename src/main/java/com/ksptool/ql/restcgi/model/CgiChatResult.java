@@ -33,4 +33,27 @@ public class CgiChatResult {
     //Token计数 - 输出(思考)
     private int tokenThoughtOutput;
 
+    public void setTokenInput(Integer tokenInput) {
+        if (tokenInput == null) {
+            this.tokenInput = 0;
+            return;
+        }
+        this.tokenInput = tokenInput;
+    }
+
+    public void setTokenOutput(Integer tokenOutput) {
+        if (tokenOutput == null) {
+            this.tokenOutput = 0;
+            return;
+        }
+        this.tokenOutput = tokenOutput;
+    }
+
+    public void setTokenThoughtOutput(Integer tokenThoughtOutput) {
+        if (tokenThoughtOutput == null) {
+            this.tokenThoughtOutput = 0;
+            return;
+        }
+        this.tokenThoughtOutput = tokenThoughtOutput;
+    }
 }
