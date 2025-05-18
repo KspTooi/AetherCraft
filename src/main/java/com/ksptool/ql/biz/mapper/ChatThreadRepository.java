@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -43,6 +44,14 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
                                                    @Param("type") Integer type,
                                                    Pageable page);
 
+    @Query("""
+       UPDATE ChatThreadPo ctp SET ctp.active = 0
+       WHERE
+       ctp.type = :type
+       AND ctp.id != :elseThreadId
+    """)
+    @Modifying
+    void deActiveAllThread(@Param("elseThreadId") Long elseThreadId,@Param("type") Integer type);
 
 
 } 

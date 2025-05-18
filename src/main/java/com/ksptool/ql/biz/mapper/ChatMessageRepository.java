@@ -1,6 +1,8 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,4 +24,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessagePo, Long
         WHERE cm.thread.id = :tid
     """)
     int getCountByThreadId(@Param("tid") Long tid);
+
+
+    Page<ChatMessagePo> getByThreadId(@Param("tid") Long tid, Pageable pageable);
 }

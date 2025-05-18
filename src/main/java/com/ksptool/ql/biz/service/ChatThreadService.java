@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.SelectThreadDto;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
+import com.ksptool.ql.biz.model.vo.SelectThreadMessageVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
@@ -26,6 +27,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,13 +66,56 @@ public class ChatThreadService {
 
 
     //玩家选中Thread
+    @Transactional
     public SelectThreadVo selectThread(SelectThreadDto dto) throws BizException {
 
-        ChatThreadPo selfThread = getSelfThread(dto.getThreadId());
+        var player = AuthService.requirePlayer();
+        var ret = new SelectThreadVo();
 
+        ChatThreadPo threadPo = getSelfThread(dto.getThreadId());
+        ret.setThreadId(threadPo.getId());
+        ret.setModelCode(threadPo.getModelCode());
 
+        //分页查询Message
+        Page<ChatMessagePo> pPos = chatMessageRepository.getByThreadId(ret.getThreadId(), dto.pageRequest());
 
-        return null;
+        var msgVos = new ArrayList<SelectThreadMessageVo>();
+        var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+
+        //转换消息为vo
+        for(var po : pPos.getContent()){
+            var vo = new SelectThreadMessageVo();
+            vo.setId(po.getId());
+            vo.setSenderName(po.getSenderName());
+            vo.setSenderAvatarUrl("");
+            vo.setSenderRole(po.getSenderRole());
+            vo.setContent(css.decryptForCurUser(po.getContent()));
+            vo.setCreateTime(sdf.format(po.getCreateTime()));
+
+            //处理头像 发送人角色 0:Player 1:Model
+            if(po.getSenderRole() == 0){
+                vo.setSenderAvatarUrl(player.getPlayerAvatarUrl());
+            }
+
+            //如果Thread是一个RP会话 则需要使用所属NPC的头像
+            //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+            if(po.getSenderRole() == 1 && threadPo.getType() == 1){
+                vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarPath());
+            }
+
+            if(po.getSenderRole() == 1 && threadPo.getType() != 1){
+                vo.setSenderAvatarUrl("");
+            }
+
+            msgVos.add(vo);
+        }
+
+        //激活当前会话并取消其他所有会话的激活
+        repository.deActiveAllThread(threadPo.getId(),threadPo.getType());
+        ret.setMessages(new RestPageableView<>(msgVos, pPos.getTotalElements()));
+        threadPo.setActive(1);
+        repository.save(threadPo);
+        return ret;
     }
 
     //获取对话历史列表
