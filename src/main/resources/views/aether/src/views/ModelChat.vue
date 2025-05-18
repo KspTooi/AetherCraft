@@ -283,7 +283,7 @@ const reloadMessageList = async (threadId: string) => {
     const dto: SelectThreadDto = {
       threadId,
       page: 1,      // 页码，从PageQuery.ts定义
-      pageSize: 100  // 每页数量，从PageQuery.ts定义
+      pageSize: 10000  // 每页数量，从PageQuery.ts定义
     };
 
     const response = await ThreadApi.selectThread(dto);

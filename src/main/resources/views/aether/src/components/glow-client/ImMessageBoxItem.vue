@@ -9,7 +9,7 @@
     <div class="message-content">
       <div class="name">
         {{ props.message.name }}
-        <span class="time">{{ formatTime(props.message.createTime) }}</span>
+        <span class="time">{{ props.message.createTime }}</span>
         <span v-if="props.message.id === '-1'" class="typing-indicator">
           <span>正在输入</span>
           <span class="dot">.</span>
@@ -85,9 +85,7 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY) || {} as GlowThe
 
 // --- State for Editing ---
 const isEditing = ref(false)
-// const editContent = ref('') // No longer needed
-// const editTextareaRef = ref<HTMLTextAreaElement | null>(null) // No longer needed
-const editableContentRef = ref<HTMLDivElement | null>(null) // Ref for the contenteditable div
+const editableContentRef = ref<HTMLDivElement | null>(null)
 
 // 定义组件props
 const props = defineProps<{
@@ -97,10 +95,10 @@ const props = defineProps<{
     avatarPath: string //头像路径
     role: string //消息类型：0-用户消息，1-AI消息
     content: string //消息内容
-    createTime: string //消息时间
+    createTime: string //消息时间（后端已格式化的时间字符串）
   }
   disabled: boolean //如果为true 则无法点击 编辑、删除按钮
-  allowRegenerate?: boolean // New prop
+  allowRegenerate?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -110,27 +108,8 @@ const emit = defineEmits<{
     message: string //更新后的消息
   }): void;
   (e: 'delete-message', msgId: string): void;
-  (e: 'regenerate', msgId: string): void; // New event
+  (e: 'regenerate', msgId: string): void;
 }>()
-
-// 格式化时间
-const formatTime = (timestamp: string) => {
-  if (!timestamp) return ''
-  try {
-    const date = new Date(timestamp)
-    if (isNaN(date.getTime())) return ''
-    
-    const year = date.getFullYear()
-    const month = (date.getMonth() + 1).toString().padStart(2, '0')
-    const day = date.getDate().toString().padStart(2, '0')
-    const hours = date.getHours().toString().padStart(2, '0')
-    const minutes = date.getMinutes().toString().padStart(2, '0')
-    
-    return `${year}年${month}月${day}日 ${hours}:${minutes}`
-  } catch (e) {
-    return ''
-  }
-}
 
 // 渲染Markdown
 const renderMarkdown = (content: string) => {
@@ -142,7 +121,6 @@ const renderMarkdown = (content: string) => {
 const handleEdit = () => {
   if (props.disabled) return; // Prevent editing if disabled
   isEditing.value = true;
-  // editContent.value = props.message.content; // No longer needed
   nextTick(() => {
     // Focus the contenteditable div
     const el = editableContentRef.value;
@@ -156,7 +134,6 @@ const handleEdit = () => {
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
-    // adjustEditTextareaHeight(); // No longer needed
   });
 };
 
