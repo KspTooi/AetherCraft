@@ -41,8 +41,9 @@ public class ChatConversationController {
     }
 
     @PostMapping("/abortConversation")
-    public Result<String> abortConversation(@RequestBody @Valid AbortConversationDto dto) {
-        return null;
+    public Result<String> abortConversation(@RequestBody @Valid AbortConversationDto dto) throws BizException {
+        service.abortConversation(dto);
+        return Result.success("操作成功");
     }
 
 

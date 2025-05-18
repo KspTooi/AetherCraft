@@ -267,7 +267,6 @@ public class ChatConversationService {
         return vo;
     }
 
-
     public MessageFragmentVo queryMessage(QueryStreamDto dto) throws BizException {
 
         try{
@@ -354,8 +353,9 @@ public class ChatConversationService {
 
     }
 
-    public String abortConversation(AbortConversationDto dto) {
-        return null;
+    public void abortConversation(AbortConversationDto dto) throws BizException {
+        ChatThreadPo threadPo = chatThreadService.getSelfThread(dto.getThreadId());
+        mccq.closeStream(threadPo.getId());
     }
 
     private Consumer<CgiChatResult> onCgiCallback(CgiCallbackContext ctx) {
