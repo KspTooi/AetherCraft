@@ -68,6 +68,7 @@ public class ChatConversationService {
 
         //Thread为-1时创建新会话
         if(dto.getThreadId() == -1L){
+            chatThreadRepository.deActiveAllThread(-1L,dto.getType());
             threadPo = chatThreadService.createSelfThread(model,dto.getType());
         }
         if(dto.getThreadId() != -1L){
