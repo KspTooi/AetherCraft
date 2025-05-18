@@ -36,8 +36,8 @@ public class ChatConversationController {
     }
 
     @PostMapping("/regenerate")
-    public Result<SendMessageVo> regenerate(@RequestBody @Valid RegenerateDto dto) {
-        return null;
+    public Result<SendMessageVo> regenerate(@RequestBody @Valid RegenerateDto dto) throws BizException {
+        return Result.success(service.regenerate(dto));
     }
 
     @PostMapping("/abortConversation")
