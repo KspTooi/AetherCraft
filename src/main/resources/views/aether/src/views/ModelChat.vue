@@ -66,6 +66,10 @@ import GlowAlter from "@/components/glow-ui/GlowAlter.vue"
 import type Result from '@/entity/Result';
 import type ChatSegmentVo from '@/entity/vo/ChatSegmentVo.ts';
 import Http from "@/commons/Http";
+import ThreadApi from "@/commons/api/ThreadApi";
+import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
+import type RestPageableView from "@/entity/RestPageableView";
+import type { SelectThreadDto } from "@/commons/api/ThreadApi";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -86,7 +90,7 @@ const threadList = ref<Array<{
   id: string,
   title: string,
   modelCode: string,
-  checked: number
+  active: number
 }>>([])
 
 const messages = ref<Array<{
@@ -275,33 +279,39 @@ const onBatchAbort = async () => {
 //加载聊天消息列表
 const reloadMessageList = async (threadId: string) => {
   try {
-    const data = await Http.postEntity<{
-      threadId: string;
-      modelCode: string;
-      messages: Array<{
-        id: string;
-        name: string;
-        avatarPath: string;
-        role: number;
-        content: string;
-        createTime: string;
-      }>
-    }>('/model/chat/recoverChat', { 
-      threadId: Number(threadId) 
-    });
+    // 准备请求参数
+    const dto: SelectThreadDto = {
+      threadId,
+      page: 1,      // 页码，从PageQuery.ts定义
+      pageSize: 100  // 每页数量，从PageQuery.ts定义
+    };
 
-    currentModelCode.value = data.modelCode || "";
-    currentThreadId.value = data.threadId || "";
+    const response = await ThreadApi.selectThread(dto);
+    
+    // 更新当前会话的模型代码和ID
+    currentModelCode.value = response.modelCode;
+    currentThreadId.value = response.threadId;
 
-    messages.value = data.messages.map(msg => ({
-      ...msg,
-      role: msg.role === 0 ? 'user' : 'model'
+    // 将消息数据转换为本地格式
+    messages.value = response.messages.rows.map(msg => ({
+      id: msg.id,
+      name: msg.senderName,
+      avatarPath: msg.senderAvatarUrl,
+      role: msg.senderRole === 0 ? 'user' : 'model',
+      content: msg.content,
+      createTime: msg.createTime
     }));
     
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
   } catch (error) {
     console.error(`恢复会话 ${threadId} 请求失败:`, error);
+    // 通过alterRef向用户显示错误信息
+    alterRef.value?.showConfirm({
+      title: "加载会话消息失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
     messages.value = [];
   }
 };
@@ -309,18 +319,27 @@ const reloadMessageList = async (threadId: string) => {
 //加载会话列表
 const reloadThreadList = async () => {
   try {
-    const threads = await Http.postEntity<Array<{
-      id: string,
-      title: string,
-      modelCode: string,
-      checked: number
-    }>>('/model/chat/getThreadList', {});
+    // 准备请求参数
+    const dto: GetThreadListDto = {
+      type: 0, // 标准会话类型
+      page: 1,    // 页码，从PageQuery.ts定义
+      pageSize: 100   // 每页数量，从PageQuery.ts定义
+    };
+
+    const response: RestPageableView<GetThreadListVo> = await ThreadApi.getThreadList(dto);
     
-    threadList.value = threads;
+    // 将API返回的分页数据中的rows转换为本地数据格式
+    threadList.value = response.rows.map(thread => ({
+      id: thread.id,
+      title: thread.title,
+      modelCode: thread.modelCode,
+      active: thread.active // 直接使用 active
+    }));
     
-    const defaultThread = threadList.value.find(t => t.checked === 1);
+    const defaultThread = threadList.value.find(t => t.active === 1);
     if (defaultThread) {
       currentThreadId.value = defaultThread.id;
+      // reloadMessageList 将在后续更新为使用新的API
       await reloadMessageList(defaultThread.id);
     } else {
       messages.value = [];
@@ -329,6 +348,12 @@ const reloadThreadList = async () => {
     }
   } catch (error) {
     console.error('加载会话列表失败:', error);
+    // 通过alterRef向用户显示错误信息
+    alterRef.value?.showConfirm({
+        title: "加载会话列表失败",
+        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+        closeText: "好的",
+    });
   }
 };
 
