@@ -10,6 +10,9 @@ public class RegenerateDto {
     private Long threadId;
 
     @NotNull
+    private String modelCode;
+
+    @NotNull
     private Long rootMessageId;
 
 }

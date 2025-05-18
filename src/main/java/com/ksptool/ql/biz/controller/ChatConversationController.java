@@ -36,7 +36,7 @@ public class ChatConversationController {
     }
 
     @PostMapping("/regenerate")
-    public Result<String> regenerate(@RequestBody @Valid RegenerateDto dto) {
+    public Result<SendMessageVo> regenerate(@RequestBody @Valid RegenerateDto dto) {
         return null;
     }
 

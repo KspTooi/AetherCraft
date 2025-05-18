@@ -53,6 +53,9 @@ public class ChatConversationService {
     @Autowired
     private ChatThreadRepository chatThreadRepository;
 
+    @Autowired
+    private ChatMessageService chatMessageService;
+
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
 
@@ -110,7 +113,6 @@ public class ChatConversationService {
         threadPo.setLastMessage(chatMessagePo);
 
         chatThreadRepository.save(threadPo);
-        //chatMessageRepository.save(chatMessagePo);
 
         //需通过CGI发送的历史记录
         var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
@@ -172,8 +174,92 @@ public class ChatConversationService {
     }
 
 
-    public String regenerate(RegenerateDto dto) {
-        return null;
+    @Transactional
+    public SendMessageVo regenerate(RegenerateDto dto) throws BizException {
+
+        //检查会话是否已锁定
+        if(mccq.isStreamOpen(dto.getThreadId())){
+            throw new BizException("该会话正在处理中,请等待模型响应完成.");
+        }
+
+        var model = AIModelEnum.ensureModelCodeExists(dto.getModelCode());
+        ChatThreadPo threadPo = chatThreadService.getSelfThread(dto.getThreadId());
+        threadPo.setModelCode(model.getCode());
+
+        //获取根消息
+        var rootMessagePo = chatMessageService.getSelfMessage(dto.getRootMessageId());
+
+        //发送人角色 0:Player 1:Model
+        if(rootMessagePo.getSenderRole() != 0){
+            throw new BizException("消息发送人类型错误 需为Player");
+        }
+
+        //删除根消息记录之后的所有记录
+        chatMessageRepository.removeMessageAfterSeq(rootMessagePo.getSeq());
+
+        //锁定会话
+        String streamId = mccq.openStream(threadPo.getId());
+
+        //需通过CGI发送的历史记录
+        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
+
+        //组装需通过CGI发送的聊天历史记录
+        for(var item : threadPo.getMessages()){
+            var cgiItem = new CgiChatMessage();
+            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
+            cgiItem.setContent(css.decryptForCurUser(item.getContent()));
+            cgiItem.setSeq(item.getSeq());
+            cgiHistoryMessages.add(cgiItem);
+        }
+
+        var player = AuthService.requirePlayer();
+
+        //创建起始分片
+        var cf = new ChatFragment();
+        cf.setType(0); //0:起始 1:数据 2:结束 10:错误
+        cf.setPlayerId(player.getPlayerId());
+        cf.setThreadId(threadPo.getId());
+        cf.setSeq(0);
+        cf.setStreamId(streamId);
+        mccq.receive(cf);
+
+        var msg = new CgiChatMessage();
+        msg.setSenderType(0);
+        msg.setContent(css.decryptForCurUser(rootMessagePo.getContent()));
+        msg.setSeq(1);
+
+        var apikey = apiKeyService.getApiKey(model.getCode(), player.getPlayerId());
+
+        if (StringUtils.isBlank(apikey)) {
+            throw new BizException("没有为模型:"+model.getCode()+"配置APIKEY");
+        }
+
+        CgiChatParam p = new CgiChatParam();
+        p.setModel(model);
+        p.setApikey(apikey);
+        p.setHistoryMessages(cgiHistoryMessages);
+        p.setMessage(msg);
+
+        restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
+                threadPo.getId(),
+                player.getUserId(),
+                player.getPlayerId(),
+                streamId,
+                rootMessagePo.getSenderName(),
+                player.getPlayerAvatarUrl(),
+                model.getSeries(),
+                ""
+        )));
+
+        var vo = new SendMessageVo();
+        vo.setThreadId(threadPo.getId());
+        vo.setTitle(threadPo.getTitle());
+        vo.setNewThreadCreated(0);
+        vo.setStreamId(streamId);
+        if(dto.getThreadId() == -1){
+            vo.setNewThreadCreated(1);
+        }
+        return vo;
     }
 
 
