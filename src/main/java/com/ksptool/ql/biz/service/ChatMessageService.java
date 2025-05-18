@@ -1,8 +1,6 @@
 package com.ksptool.ql.biz.service;
 
-import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
-import com.ksptool.ql.biz.mapper.ChatSegmentRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
@@ -10,7 +8,8 @@ import com.ksptool.ql.commons.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.ArrayList;
+
+import java.util.Optional;
 
 @Service
 public class ChatMessageService {
@@ -23,9 +22,6 @@ public class ChatMessageService {
 
     @Autowired
     private ChatMessageRepository messageRepository;
-
-    @Autowired
-    private ChatSegmentRepository segmentRepository;
 
 
     //编辑对话历史消息
@@ -49,8 +45,14 @@ public class ChatMessageService {
                 .orElseThrow(() -> new BizException("消息记录不存在"));
 
         ensureHasPermission(messagePo);
-        segmentRepository.removeByMessageId(messageId);
+
+        ChatThreadPo threadPo = messagePo.getThread();
+        threadPo.setLastMessage(null);
         messageRepository.delete(messagePo);
+
+        Optional<ChatMessagePo> topMessageOpt = messageRepository.getTopSeqMessageByThreadId(threadPo.getId());
+        topMessageOpt.ifPresent(threadPo::setLastMessage);
+        threadRepository.save(threadPo);
     }
 
 

@@ -61,9 +61,12 @@ public class ChatMessagePo {
 
     @PrePersist
     protected void onCreate() {
-        createTime = new Date();
-        updateTime = new Date();
-
+        if(createTime == null){
+            createTime = new Date();
+        }
+        if(updateTime == null){
+            updateTime = new Date();
+        }
         if(tokenInput == null){
             tokenInput = 0;
         }
@@ -73,7 +76,6 @@ public class ChatMessagePo {
         if(tokenThoughts == null){
             tokenThoughts = 0;
         }
-
     }
 
     @PreUpdate

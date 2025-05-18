@@ -31,7 +31,7 @@ public class MessageFragmentVo {
     //发送人头像URL
     private String senderAvatarUrl;
 
-    //发送时间
-    private Date sendTime;
+    //发送时间 yyyy年MM月dd日 HH:mm:ss
+    private String sendTime;
 
 }

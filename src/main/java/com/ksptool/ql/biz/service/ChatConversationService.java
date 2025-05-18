@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -103,15 +105,16 @@ public class ChatConversationService {
         List<ChatMessagePo> messagesPos = threadPo.getMessages();
 
         //保存用户发来的消息为一条历史记录
-        var chatMessagePo = new ChatMessagePo();
-        chatMessagePo.setThread(threadPo);
-        chatMessagePo.setSenderRole(0); //发送人角色 0:Player 1:Model
-        chatMessagePo.setSenderName(playerName);
-        chatMessagePo.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
-        chatMessagePo.setSeq(messagesPos.size() + 1);
-        messagesPos.add(chatMessagePo);
-        threadPo.setLastMessage(chatMessagePo);
-
+        var playerMessage = new ChatMessagePo();
+        playerMessage.setThread(threadPo);
+        playerMessage.setSenderRole(0); //发送人角色 0:Player 1:Model
+        playerMessage.setSenderName(playerName);
+        playerMessage.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
+        playerMessage.setSeq(messagesPos.size() + 1);
+        playerMessage.setCreateTime(new Date());
+        chatMessageRepository.save(playerMessage);
+        messagesPos.add(playerMessage);
+        threadPo.setLastMessage(playerMessage);
         chatThreadRepository.save(threadPo);
 
         //需通过CGI发送的历史记录
@@ -131,13 +134,9 @@ public class ChatConversationService {
         cf.setType(0); //0:起始 1:数据 2:结束 10:错误
         cf.setPlayerId(player.getPlayerId());
         cf.setThreadId(threadPo.getId());
-        cf.setContent(dto.getMessage()); //起始消息是用户发送的内容
+        cf.setContent("conversation start"); //起始消息是用户发送的内容
         cf.setSeq(0);
-        cf.setSenderName(playerName);
-        cf.setSenderAvatarUrl(player.getPlayerAvatarUrl());
         cf.setStreamId(streamId);
-        cf.setMessageId(chatMessagePo.getId());
-        cf.setSendTime(chatMessagePo.getCreateTime());
         mccq.receive(cf);
 
         var msg = new CgiChatMessage();
@@ -162,8 +161,14 @@ public class ChatConversationService {
                 ""
         )));
 
+        var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         var vo = new SendMessageVo();
         vo.setThreadId(threadPo.getId());
+        vo.setMessageId(playerMessage.getId());
+        vo.setContent(dto.getMessage());
+        vo.setSenderName(playerName);
+        vo.setSenderAvatarUrl(player.getPlayerAvatarUrl());
+        vo.setSendTime(sdf.format(playerMessage.getCreateTime()));
         vo.setTitle(threadPo.getTitle());
         vo.setNewThreadCreated(0);
         vo.setStreamId(streamId);
@@ -271,6 +276,7 @@ public class ChatConversationService {
             //消费消息队列中该Thread的消息片段
             var first = mccq.next(dto.getStreamId());
 
+            var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
             /*
              * 分片类型 0:起始 1:数据 2:结束 10:错误
              * 消费逻辑
@@ -278,22 +284,40 @@ public class ChatConversationService {
              * 2.当首个段为数据段,尝试获取尽可能多的数据段并将其组装到一个客户端响应中
              * 在消费数据片段时获取到"结束"或"错误"片段时立即返回已组装的客户端响应,并将已获取到的"结束"或"错误"片段重新放入队头
              */
-            if(first.getType() == 0 || first.getType() == 10 || first.getType() == 2){
+            if(first.getType() == 0){
+                ret.setType(0);
+                ret.setThreadId(first.getThreadId());
+                ret.setMessageId(-1L);
+                ret.setContent("conversation start");
+                ret.setSeq(0);
+                ret.setSenderRole(null);
+                ret.setSenderName(null);
+                ret.setSenderAvatarUrl(null);
+                ret.setSendTime(null);
+                return ret;
+            }
+            if(first.getType() == 2){
+                ret.setType(2);
                 ret.setThreadId(first.getThreadId());
                 ret.setMessageId(first.getMessageId());
-                ret.setSenderRole(1);
+                ret.setContent("conversation end");
                 ret.setSeq(first.getSeq());
-                ret.setContent(first.getContent());
-                ret.setType(first.getType());
+                ret.setSenderRole(1);
                 ret.setSenderName(first.getSenderName());
                 ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
-                ret.setSendTime(first.getSendTime());
-                if(first.getType() == 10){
-                    ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
-                }
-                if(first.getType() == 2){
-                    ret.setContent("conversation end");
-                }
+                ret.setSendTime(sdf.format(first.getSendTime()));
+                return ret;
+            }
+            if(first.getType() == 10){
+                ret.setType(10);
+                ret.setThreadId(first.getThreadId());
+                ret.setMessageId(first.getMessageId());
+                ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
+                ret.setSeq(first.getSeq());
+                ret.setSenderRole(1);
+                ret.setSenderName(first.getSenderName());
+                ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
+                ret.setSendTime(sdf.format(first.getSendTime()));
                 return ret;
             }
 
@@ -305,13 +329,12 @@ public class ChatConversationService {
             ret.setType(first.getType());
             ret.setSenderName(first.getSenderName());
             ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
-            ret.setSendTime(first.getSendTime());
+            ret.setSendTime(sdf.format(first.getSendTime()));
 
             StringBuilder content = new StringBuilder(first.getContent());
 
             //处理消息片段
             while (mccq.hasNext(dto.getStreamId())){
-
                 ChatFragment next = mccq.next(dto.getStreamId());
 
                 if(next.getType() == 10 || next.getType() == 2){

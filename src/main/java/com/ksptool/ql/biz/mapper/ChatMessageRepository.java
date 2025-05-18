@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * ChatMessagePo 数据访问接口
  */
@@ -33,5 +35,13 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessagePo, Long
     """)
     @Modifying
     void removeMessageAfterSeq(@Param("seq")Integer seq);
+
+    @Query("""
+        SELECT cm FROM ChatMessagePo cm
+        WHERE cm.thread.id = :tid
+        ORDER BY cm.seq DESC
+        LIMIT 1
+    """)
+    Optional<ChatMessagePo> getTopSeqMessageByThreadId(@Param("tid") Long tid);
 
 }
