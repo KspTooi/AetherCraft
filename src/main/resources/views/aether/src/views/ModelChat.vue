@@ -73,6 +73,8 @@ import type { SendMessageDto, SendMessageVo, QueryStreamDto, MessageFragmentVo, 
 import type RestPageableView from "@/entity/RestPageableView";
 import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
+import MessageApi from "@/commons/api/MessageApi";
+import type { EditMessageDto } from "@/commons/api/MessageApi";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -85,6 +87,8 @@ const chatListRef = ref<ChatListInstance | null>(null);
 const isGenerating = ref(false);
 // 当前是否有临时消息 (移到这里)
 const hasTempMessage = ref<boolean>(false)
+
+const isCreatingThread = ref<boolean>(false)
 
 const currentThreadId = ref<string>("")
 const currentModelCode = ref<string>("")
@@ -112,8 +116,9 @@ const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
 // 输入框引用
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
-onMounted(() => {
-  reloadThreadList()
+onMounted(async () => {
+  await reloadThreadList();
+  await reloadMessageList();
 })
 
 // 定义消息框实例类型
@@ -143,8 +148,9 @@ const onMessageSend = async (message: string) => {
   try {
     // 准备发送消息的参数
     const sendMessageDto: SendMessageDto = {
-      threadId: currentThreadId.value || undefined, // 为空时创建新会话
-      type: 0, // 标准会话类型
+      // 如果是正在创建新会话，则threadId传-1，否则使用当前currentThreadId
+      threadId: isCreatingThread.value ? '-1' : (currentThreadId.value || '-1'), 
+      type: 0, // 标准会话类型, TODO: 后续可能需要根据 RP模式等进行区分
       modelCode: currentModelCode.value,
       message: message
     };
@@ -152,7 +158,15 @@ const onMessageSend = async (message: string) => {
     // 发送消息
     const response = await ConversationApi.sendMessage(sendMessageDto);
 
-    // 更新当前会话ID（可能是新创建的）
+    // 如果之前是在创建新会话模式
+    if (isCreatingThread.value) {
+      isCreatingThread.value = false; // 重置状态
+      if (response.newThreadCreated === 1) {
+        await reloadThreadList(); // 创建了新会话，刷新列表
+      }
+    }
+
+    // 更新当前会话ID（可能是新创建的，也可能是旧的）
     currentThreadId.value = response.threadId;
 
     // 添加用户消息到消息列表
@@ -281,42 +295,63 @@ const onBatchAbort = async () => {
 };
 
 //加载聊天消息列表
-const reloadMessageList = async (threadId: string) => {
-  try {
-    // 准备请求参数
-    const dto: SelectThreadDto = {
-      threadId,
-      page: 1,      // 页码，从PageQuery.ts定义
-      pageSize: 10000  // 每页数量，从PageQuery.ts定义
-    };
+const reloadMessageList = async (threadId?: string) => {
+  if (threadId) {
+    // --- Logic for when a specific threadId is provided ---
+    try {
+      const dto: SelectThreadDto = {
+        threadId,
+        page: 1,
+        pageSize: 100
+      };
+      const response = await ThreadApi.selectThread(dto);
+      currentModelCode.value = response.modelCode;
+      currentThreadId.value = response.threadId;
+      messages.value = response.messages.rows.map(msg => ({
+        id: msg.id,
+        name: msg.senderName,
+        avatarPath: msg.senderAvatarUrl,
+        role: msg.senderRole === 0 ? 'user' : 'model',
+        content: msg.content,
+        createTime: msg.createTime
+      }));
+      isCreatingThread.value = false; // Loaded a specific thread, so not in create mode
+      await nextTick();
+      messageBoxRef.value?.scrollToBottom();
+    } catch (error) {
+      console.error(`加载会话 ${threadId} 的消息列表失败:`, error);
+      alterRef.value?.showConfirm({
+        title: "加载会话消息失败",
+        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+        closeText: "好的",
+      });
+      messages.value = [];
+      // Consider resetting currentThreadId if loading specific thread fails, 
+      // or revert to a known state.
+      // currentThreadId.value = ""; 
+      // currentModelCode.value = "";
+    }
+  } else {
+    // --- Logic for when no threadId is provided (load default or prepare for new) ---
+    if (threadList.value.length === 0) {
+      console.warn("会话列表为空，尝试加载默认会话或准备新会话。可能需要先加载会话列表。");
+      // This case might imply UI should show a very empty state or a prompt to create a model if none exists
+      // For now, we will proceed to check for default, then set to creating new thread.
+    }
 
-    const response = await ThreadApi.selectThread(dto);
-    
-    // 更新当前会话的模型代码和ID
-    currentModelCode.value = response.modelCode;
-    currentThreadId.value = response.threadId;
-
-    // 将消息数据转换为本地格式
-    messages.value = response.messages.rows.map(msg => ({
-      id: msg.id,
-      name: msg.senderName,
-      avatarPath: msg.senderAvatarUrl,
-      role: msg.senderRole === 0 ? 'user' : 'model',
-      content: msg.content,
-      createTime: msg.createTime
-    }));
-    
-    await nextTick();
-    messageBoxRef.value?.scrollToBottom();
-  } catch (error) {
-    console.error(`恢复会话 ${threadId} 请求失败:`, error);
-    // 通过alterRef向用户显示错误信息
-    alterRef.value?.showConfirm({
-      title: "加载会话消息失败",
-      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
-      closeText: "好的",
-    });
-    messages.value = [];
+    const defaultThread = threadList.value.find(t => t.active === 1);
+    if (defaultThread) {
+      currentThreadId.value = defaultThread.id;
+      await reloadMessageList(defaultThread.id); // Recursive call with the specific default thread ID
+    } else {
+      console.log("未找到默认激活的会话。进入新会话创建模式。");
+      isCreatingThread.value = true;
+      messages.value = [];
+      currentThreadId.value = "";
+      // currentModelCode.value should ideally be set or confirmed before this point if isCreatingThread is true
+      // If no model is selected, onMessageSend will likely fail or use a default.
+      // We already have a check in onCreateThread for model selection.
+    }
   }
 };
 
@@ -327,55 +362,58 @@ const reloadThreadList = async () => {
     const dto: GetThreadListDto = {
       type: 0, // 标准会话类型
       page: 1,    // 页码，从PageQuery.ts定义
-      pageSize: 100   // 每页数量，从PageQuery.ts定义
+      pageSize: 100   // 每页数量，从PageQuery.ts定义 // TODO: 或许需要更大的pageSize或完整列表
     };
 
     const response: RestPageableView<GetThreadListVo> = await ThreadApi.getThreadList(dto);
     
-    // 将API返回的分页数据中的rows转换为本地数据格式
     threadList.value = response.rows.map(thread => ({
       id: thread.id,
       title: thread.title,
       modelCode: thread.modelCode,
-      active: thread.active // 直接使用 active
+      active: thread.active
     }));
     
-    const defaultThread = threadList.value.find(t => t.active === 1);
-    if (defaultThread) {
-      currentThreadId.value = defaultThread.id;
-      // reloadMessageList 将在后续更新为使用新的API
-      await reloadMessageList(defaultThread.id);
-    } else {
-      messages.value = [];
-      currentThreadId.value = "";
-      currentModelCode.value = "";
-    }
   } catch (error) {
     console.error('加载会话列表失败:', error);
-    // 通过alterRef向用户显示错误信息
     alterRef.value?.showConfirm({
         title: "加载会话列表失败",
         content: `请检查网络连接或联系管理员。错误详情: ${error}`,
         closeText: "好的",
     });
+    threadList.value = []; // 出错时清空列表
   }
 };
 
 //创建Thread
 const onCreateThread = async () => {
-  try {
-    const { threadId: newThreadId } = await Http.postEntity<{ threadId: string }>('/model/chat/createEmptyThread', {
-      model: currentModelCode.value,
+  // 1. 检查是否已选择模型，如果未选择则提示
+  if (!currentModelCode.value) {
+    alterRef.value?.showConfirm({
+      title: "操作提示",
+      content: "请先选择一个模型后再创建新会话。",
+      closeText: "好的",
     });
-
-    await reloadThreadList();
-    currentThreadId.value = newThreadId;
-    await reloadMessageList(newThreadId);
-    chatListRef.value?.closeMobileMenu();
-  } catch (error) {
-    console.error('创建会话请求失败:', error);
-    alert('创建会话时发生网络错误');
+    return;
   }
+
+  // 2. 设置为"正在创建会话"状态
+  isCreatingThread.value = true;
+  
+  // 3. 清空当前会话ID和消息列表
+  currentThreadId.value = ""; // 标记当前没有选中任何实际会话
+  messages.value = [];
+
+  // 4. (可选) 如果需要，可以在这里重置模型选择或进行其他UI调整
+  // currentModelCode.value = ""; // 例如，如果希望每次新会话都重新选择模型
+
+  // 5. 关闭移动端菜单(如果存在且打开)
+  chatListRef.value?.closeMobileMenu();
+  
+  // 6. 提示用户输入消息以开始新会话
+  // (可以通过placeholder或一个临时提示信息在UI上体现)
+  // 例如，可以在ImMessageInput组件的placeholder中反映这个状态
+  console.log("进入创建新会话模式，等待用户输入第一条消息...");
 };
 
 //选择模型
@@ -550,10 +588,9 @@ const onMessageRemove = async (msgId: string) => {
 
     if (!confirmed) return;
 
-    await Http.postEntity<void>('/model/chat/removeHistory', { 
-      threadId: currentThreadId.value, 
-      historyId: msgId 
-    });
+    // 使用新的 MessageApi.removeMessage
+    const dto: CommonIdDto = { id: msgId };
+    await MessageApi.removeMessage(dto);
 
     const index = messages.value.findIndex(msg => msg.id === msgId);
     if (index === -1) {
@@ -565,7 +602,11 @@ const onMessageRemove = async (msgId: string) => {
     console.log(`Message ${msgId} removed successfully.`);
   } catch (error) {
     console.error(`Error removing message ${msgId}:`, error);
-    alert('删除消息时发生网络错误');
+    alterRef.value?.showConfirm({
+        title: "删除消息失败",
+        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+        closeText: "好的",
+    });
   }
 };
 
@@ -620,10 +661,12 @@ const onMessageRegenerate = async (msgId: string) => {
 // 处理消息更新
 const onMessageEdit = async (params: { msgId: string; message: string }) => {
   try {
-    await Http.postEntity<void>('/model/chat/editHistory', {
-      historyId: params.msgId,
+    // 使用新的 MessageApi.editMessage
+    const dto: EditMessageDto = {
+      messageId: params.msgId,
       content: params.message
-    });
+    };
+    await MessageApi.editMessage(dto);
 
     const messageIndex = messages.value.findIndex(msg => msg.id === params.msgId);
     if (messageIndex !== -1) {
@@ -632,7 +675,11 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
     console.log(`Message ${params.msgId} updated successfully.`);
   } catch (error) {
     console.error(`Error updating message ${params.msgId}:`, error);
-    alert('消息更新时发生网络错误');
+    alterRef.value?.showConfirm({
+        title: "消息更新失败",
+        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+        closeText: "好的",
+    });
   }
 };
 
