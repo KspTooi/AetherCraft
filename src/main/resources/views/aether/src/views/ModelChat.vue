@@ -69,9 +69,10 @@ import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
 import ConversationApi from "@/commons/api/ConversationApi";
 import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
-import type { SendMessageDto, SendMessageVo, QueryStreamDto, MessageFragmentVo, RegenerateDto } from "@/commons/api/ConversationApi";
+import type { SendMessageDto, SendMessageVo, QueryStreamDto, MessageFragmentVo, RegenerateDto, AbortConversationDto } from "@/commons/api/ConversationApi";
 import type RestPageableView from "@/entity/RestPageableView";
-import type { SelectThreadDto } from "@/commons/api/ThreadApi";
+import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadApi";
+import type CommonIdDto from "@/entity/dto/CommonIdDto";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -404,13 +405,18 @@ const onDeleteThread = async (threadId: string) => {
 
     if (!confirmed) return;
 
-    await Http.postEntity<void>('/model/chat/removeThread', {
-      threadId: threadId
-    });
+    // 使用新的API
+    const dto: CommonIdDto = { id: threadId };
+    await ThreadApi.removeThread(dto);
 
-    await reloadThreadList();
+    await reloadThreadList(); // 重新加载列表以反映删除
   } catch (error) {
     console.error('删除会话失败:', error);
+    alterRef.value?.showConfirm({
+      title: "删除会话失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
   }
 };
 
@@ -429,14 +435,21 @@ const onUpdateThreadTitle = async (threadId: string, oldTitle: string) => {
       return;
     }
 
-    await Http.postEntity<void>('/model/chat/editThread', {
+    // 使用新的API
+    const dto: EditThreadTitleDto = {
       threadId: threadId,
       title: result.value
-    });
+    };
+    await ThreadApi.editThreadTitle(dto);
 
-    await reloadThreadList();
+    await reloadThreadList(); // 重新加载列表以反映标题更新
   } catch (error) {
     console.error('更新标题失败:', error);
+    alterRef.value?.showConfirm({
+      title: "更新标题失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
   }
 };
 
