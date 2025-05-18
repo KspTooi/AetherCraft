@@ -114,7 +114,7 @@ public class GrokRestCgi implements ModelRestCgi {
                     String line;
                     while ((line = reader.readLine()) != null) {
 
-                        log.info(line);
+                        //log.info(line);
 
                         if (line.startsWith("data: ")) {
                             String data = line.substring(6);

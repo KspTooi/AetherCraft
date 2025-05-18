@@ -20,11 +20,17 @@ public class MemoryChatControlQueue {
     //对话分片生存时间TTL(秒)
     private int FRAGMENT_TTL = 120;
 
+    //Stream队列生存时间TTL(秒)
+    private int STREAM_TTL = 32;
+
     //对话分片获取超时时间(MS)
     private int FRAGMENT_NEXT_TIMEOUT = 1000 * 60;
 
     //响应流MAP ThreadId -> StreamId
     private final ConcurrentHashMap<Long,String> threadStreamMap = new ConcurrentHashMap<>();
+
+    //记录每个StreamQueue的TTL
+    private final ConcurrentHashMap<String, Integer> streamTtlMap = new ConcurrentHashMap<>();
 
     //对话分片池
     private final ConcurrentHashMap<String, LinkedBlockingQueue<ChatFragment>> threadFragmentPool = new ConcurrentHashMap<>();
@@ -100,13 +106,15 @@ public class MemoryChatControlQueue {
 
         if (queue == null) {
             queue = new LinkedBlockingQueue<>(FRAGMENT_POOL_SIZE);
-            log.info("为Stream:{}创建队列...", cf.getThreadId());
+            log.info("为Stream:{}创建队列...", cf.getStreamId());
             threadFragmentPool.put(cf.getStreamId(), queue);
+            streamTtlMap.put(cf.getStreamId(), STREAM_TTL);
         }
 
         cf.setSeq(queue.size() + 1);
         cf.setTtl(FRAGMENT_TTL);
         queue.offer(cf);
+        log.info("MCCQ入栈 tid:{} pid:{} stream:{} 队列大小:{}", cf.getThreadId(), cf.getPlayerId() ,cf.getStreamId(),queue.size() );
     }
 
     /**
@@ -145,29 +153,57 @@ public class MemoryChatControlQueue {
      */
     private void cleanExpiredFragments() {
         try {
-            log.debug("开始执行 TTL 清理任务，池中线程数: {}", threadFragmentPool.size());
-            for (var entry : threadFragmentPool.entrySet()) {
+            log.debug("开始执行 TTL 清理任务，池中Stream数量: {}", threadFragmentPool.size());
+            Iterator<java.util.Map.Entry<String, LinkedBlockingQueue<ChatFragment>>> poolIterator = threadFragmentPool.entrySet().iterator();
+
+            while (poolIterator.hasNext()) {
+                java.util.Map.Entry<String, LinkedBlockingQueue<ChatFragment>> entry = poolIterator.next();
                 String streamId = entry.getKey();
                 LinkedBlockingQueue<ChatFragment> queue = entry.getValue();
+
                 if (queue.isEmpty()) {
-                    // 如果队列为空，考虑移除线程池中的 key（可选）
-                    threadFragmentPool.remove(streamId);
-                    log.debug("移除空队列，ThreadId: {}", streamId);
-                    continue;
+                    // 队列为空，处理 Stream的TTL
+                    int currentStreamTtl = streamTtlMap.getOrDefault(streamId, STREAM_TTL);
+                    currentStreamTtl--;
+
+                    if (currentStreamTtl < 1) {
+                        // Stream TTL耗尽，移除Stream
+                        poolIterator.remove(); // 从 threadFragmentPool 移除
+                        streamTtlMap.remove(streamId); // 从 streamTtlMap 移除
+                        log.info("移除空队列且TTL耗尽，StreamId: {}", streamId);
+                    }
+                    // 如果TTL仍然有效 (currentStreamTtl >= 1)
+                    if (currentStreamTtl >= 1) {
+                        streamTtlMap.put(streamId, currentStreamTtl);
+                        log.debug("空队列StreamId: {} TTL扣减为: {}", streamId, currentStreamTtl);
+                    }
+                    continue; // 处理下一个Stream
                 }
-                // 遍历队列并更新 TTL
-                Iterator<ChatFragment> iterator = queue.iterator();
-                while (iterator.hasNext()) {
-                    ChatFragment fragment = iterator.next();
-                    int newTtl = fragment.getTtl() - 1;
-                    fragment.setTtl(newTtl);
-                    if (newTtl <= 0) {
-                        // 如果 TTL <= 0，移除元素
-                        iterator.remove();
-                        log.debug("移除过期分片，ThreadId: {}", streamId);
+
+                // 队列不为空，重置Stream的TTL为最大值，并处理分片TTL
+                streamTtlMap.put(streamId, STREAM_TTL); // 回满Stream TTL
+                log.debug("非空队列StreamId: {} TTL已重置为: {}", streamId, STREAM_TTL);
+
+                // 遍历队列并更新分片 TTL
+                Iterator<ChatFragment> fragmentIterator = queue.iterator();
+                while (fragmentIterator.hasNext()) {
+                    ChatFragment fragment = fragmentIterator.next();
+                    int newFragmentTtl = fragment.getTtl() - 1;
+                    fragment.setTtl(newFragmentTtl);
+                    if (newFragmentTtl <= 0) {
+                        // 如果分片 TTL <= 0，移除分片
+                        fragmentIterator.remove();
+                        log.debug("移除过期分片，StreamId: {}, Fragment Seq: {}", streamId, fragment.getSeq());
                     }
                 }
-                log.debug("TTL 清理完成，ThreadId: {}, 队列大小: {}", streamId, queue.size());
+
+                // 记录分片清理后的状态
+                if (queue.isEmpty()) {
+                    // 如果清理后队列变空，其Stream TTL已在本轮设置为最大值，将在下一轮开始递减
+                    log.debug("队列在清理分片后变为空，StreamId: {}. 其Stream TTL已重置.", streamId);
+                } else {
+                    log.debug("分片TTL清理完成，StreamId: {}, 队列当前大小: {}", streamId, queue.size());
+                }
             }
         } catch (Exception e) {
             log.error("TTL 清理任务执行出错: {}", e.getMessage(), e);

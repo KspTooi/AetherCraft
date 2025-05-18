@@ -50,7 +50,7 @@ public class ModelChatService {
     //线程会话状态跟踪
     private final ThreadStatusTrack track = new ThreadStatusTrack();
 
-    private final MemoryChatControlQueue mccq = new MemoryChatControlQueue();
+    private final MemoryChatControlQueue mccq = null;
 
     @Autowired
     private PlayerConfigService playerConfigService;

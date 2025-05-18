@@ -67,7 +67,9 @@ import type Result from '@/entity/Result';
 import type ChatSegmentVo from '@/entity/vo/ChatSegmentVo.ts';
 import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
+import ConversationApi from "@/commons/api/ConversationApi";
 import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
+import type { SendMessageDto, SendMessageVo, QueryStreamDto, MessageFragmentVo, RegenerateDto } from "@/commons/api/ConversationApi";
 import type RestPageableView from "@/entity/RestPageableView";
 import type { SelectThreadDto } from "@/commons/api/ThreadApi";
 
@@ -133,47 +135,47 @@ interface ChatListInstance {
 
 // 处理发送消息
 const onMessageSend = async (message: string) => {
-  if (isGenerating.value) return
+  if (isGenerating.value) return;
 
   isGenerating.value = true;
 
   try {
-    const backendUserMessageData = await Http.postEntity<ChatSegmentVo>('/model/chat/completeBatch', {
-      threadId: currentThreadId.value,
-      model: currentModelCode.value,
-      message: message,
-      queryKind: 0
+    // 准备发送消息的参数
+    const sendMessageDto: SendMessageDto = {
+      threadId: currentThreadId.value || undefined, // 为空时创建新会话
+      type: 0, // 标准会话类型
+      modelCode: currentModelCode.value,
+      message: message
+    };
+
+    // 发送消息
+    const response = await ConversationApi.sendMessage(sendMessageDto);
+
+    // 更新当前会话ID（可能是新创建的）
+    currentThreadId.value = response.threadId;
+
+    // 添加用户消息到消息列表
+    messages.value.push({
+      id: response.messageId,
+      name: response.senderName,
+      avatarPath: response.senderAvatarUrl,
+      role: 'user',
+      content: response.content || message,
+      createTime: response.sendTime
     });
 
-    if (backendUserMessageData && typeof backendUserMessageData.historyId === 'string' && backendUserMessageData.historyId) {
-      const userMessage = {
-        id: backendUserMessageData.historyId,
-        name: backendUserMessageData.name || 'User',
-        avatarPath: backendUserMessageData.avatarPath || '',
-        role: 'user' as const,
-        content: backendUserMessageData.content || message,
-        createTime: new Date().toISOString()
-      };
-      messages.value.push(userMessage);
-      await nextTick(); 
-      messageBoxRef.value?.scrollToBottom();
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
 
-      await createTempMsg(); 
-      await pollMessage();
-    } else {
-      console.error('发送消息失败: 未收到有效的用户消息数据');
-      alterRef.value?.showConfirm({
-        title: "回复消息时发生错误",
-        content: "发送消息失败或未收到有效的用户消息数据",
-        closeText: "好的",
-      });
-      isGenerating.value = false;
-    }
+    // 创建临时消息并开始轮询
+    await createTempMsg();
+    await pollMessage(response.streamId);
+
   } catch (error) {
-    console.error('发送消息请求失败:', error);
+    console.error('发送消息失败:', error);
     alterRef.value?.showConfirm({
-      title: "发送消息请求失败",
-      content: `${error}`,
+      title: "发送消息失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
     isGenerating.value = false;
@@ -181,28 +183,29 @@ const onMessageSend = async (message: string) => {
 };
 
 //轮询拉取响应流
-const pollMessage = async () => {
+const pollMessage = async (streamId: string) => {
   let hasReceivedData = false;
 
   while (isGenerating.value) {
     try {
-      const segment = await Http.postEntity<ChatSegmentVo>('/model/chat/completeBatch', {
-        threadId: currentThreadId.value,
-        queryKind: 1
-      });
+      const queryStreamDto: QueryStreamDto = {
+        streamId: streamId // 使用传入的 streamId
+      };
+
+      const segment = await ConversationApi.queryStream(queryStreamDto);
 
       if (!segment || segment.type === 0) {
         await new Promise(resolve => setTimeout(resolve, 500));
         continue;
       }
-      
+
       await updateTempMsg({
-        id: segment.historyId,
-        name: segment.name,
-        avatarPath: segment.avatarPath
+        id: segment.messageId,
+        name: segment.senderName,
+        avatarPath: segment.senderAvatarUrl
       });
 
-      if (segment.type === 1) {
+      if (segment.type === 1) { // 数据片段
         if (!hasReceivedData) {
           const tempMessage = messages.value.find(msg => msg.id === '-1');
           if (tempMessage) tempMessage.content = '';
@@ -211,18 +214,18 @@ const pollMessage = async () => {
         } else {
           await appendTempMsg(segment.content || '');
         }
-      } else if (segment.type === 2) {
+      } else if (segment.type === 2) { // 结束
         if (segment.content) {
           if (!hasReceivedData) {
             const tempMessage = messages.value.find(msg => msg.id === '-1');
-            if(tempMessage) tempMessage.content = segment.content;
+            if (tempMessage) tempMessage.content = segment.content;
           } else {
             await appendTempMsg(segment.content);
           }
         }
         isGenerating.value = false;
         break;
-      } else if (segment.type === 10) {
+      } else if (segment.type === 10) { // 错误
         console.error('AI生成错误:', segment.content);
         alterRef.value?.showConfirm({
           title: "回复消息时发生错误",
@@ -237,7 +240,7 @@ const pollMessage = async () => {
       console.error('轮询AI响应请求失败:', error);
       alterRef.value?.showConfirm({
         title: "轮询AI响应失败",
-        content: `${error}`,
+        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
         closeText: "好的",
       });
       removeTempMsg();
@@ -576,14 +579,23 @@ const onMessageRegenerate = async (msgId: string) => {
 
     await createTempMsg();
 
-    await Http.postEntity<ChatSegmentVo>('/model/chat/completeBatch', {
+    // 调用 regenerate API
+    const regenerateDto: RegenerateDto = {
       threadId: currentThreadId.value,
-      model: currentModelCode.value,
-      queryKind: 3
-    });
+      modelCode: currentModelCode.value, 
+      rootMessageId: msgId // 传递需要重新生成的消息的ID
+    };
+    const regenerateResponse = await ConversationApi.regenerate(regenerateDto);
 
     console.log('后端已确认重新生成请求，开始轮询...');
-    await pollMessage();
+    // 从 regenerateResponse 中获取 streamId
+    if (regenerateResponse && regenerateResponse.streamId) {
+      await pollMessage(regenerateResponse.streamId);
+    } else {
+      console.error('重新生成消息失败: 未收到有效的 streamId');
+      throw new Error('重新生成消息失败: 未收到有效的 streamId');
+    }
+
   } catch (error) {
     console.error('消息重新生成过程中出错:', error);
     alert('重新生成消息时发生网络错误');
