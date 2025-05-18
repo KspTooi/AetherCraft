@@ -25,15 +25,6 @@ public class ChatMessageController {
     private ChatMessageService service;
 
 
-    @PostMapping("/getMessageList")
-    public Result<RestPageableView<SelectThreadVo>> getMessageList(@RequestBody @Valid SelectThreadDto dto) throws BizException {
-
-
-
-        return null;
-    }
-
-
     //编辑对话消息
     @PostMapping("/editMessage")
     public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto) throws BizException {
