@@ -2,7 +2,9 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditThreadTitleDto;
+import com.ksptool.ql.biz.model.dto.SelectThreadDto;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
+import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatThreadService;
 import com.ksptool.ql.commons.exception.BizException;
@@ -23,6 +25,12 @@ public class ChatThreadController {
 
     @Autowired
     private ChatThreadService service;
+
+
+    @PostMapping("/selectThread")
+    public Result<SelectThreadVo> selectThread(@RequestBody @Valid SelectThreadDto dto) throws BizException {
+        return Result.success(service.selectThread(dto));
+    }
 
     @PostMapping("/getThreadList")
     public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto) throws BizException {

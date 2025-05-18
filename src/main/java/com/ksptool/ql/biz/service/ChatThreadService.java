@@ -5,8 +5,10 @@ import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
+import com.ksptool.ql.biz.model.dto.SelectThreadDto;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
+import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
@@ -61,6 +63,16 @@ public class ChatThreadService {
     private ChatMessageRepository chatMessageRepository;
 
 
+    //玩家选中Thread
+    public SelectThreadVo selectThread(SelectThreadDto dto) throws BizException {
+
+        ChatThreadPo selfThread = getSelfThread(dto.getThreadId());
+
+
+
+        return null;
+    }
+
     //获取对话历史列表
     public RestPageableView<GetThreadListVo> getThreadList(GetThreadListDto dto) throws BizException {
 
@@ -114,15 +126,6 @@ public class ChatThreadService {
         repository.delete(po);
     }
 
-    public ChatThreadPo getSelfThread(long threadId) throws BizException{
-        var query = new ChatThreadPo();
-        query.setId(threadId);
-        query.setUser(Any.of().val("id",AuthService.requireUserId()).as(UserPo.class));
-        query.setPlayer(Any.of().val("id",AuthService.requirePlayerId()).as(PlayerPo.class));
-        return repository.findOne(Example.of(query))
-                .orElseThrow(() -> new BizException("会话不存在或无权访问"));
-    }
-
     @Transactional(rollbackFor = BizException.class)
     public void editThreadTitle(long threadId, String newTitle) throws BizException {
 
@@ -137,6 +140,17 @@ public class ChatThreadService {
         threadPo.setTitleGenerated(1);
         repository.save(threadPo);
     }
+
+
+    public ChatThreadPo getSelfThread(long threadId) throws BizException{
+        var query = new ChatThreadPo();
+        query.setId(threadId);
+        query.setUser(Any.of().val("id",AuthService.requireUserId()).as(UserPo.class));
+        query.setPlayer(Any.of().val("id",AuthService.requirePlayerId()).as(PlayerPo.class));
+        return repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("会话不存在或无权访问"));
+    }
+
 
     @Async
     @Transactional(rollbackFor = BizException.class)
@@ -244,7 +258,7 @@ public class ChatThreadService {
         insert.setUser(userPo);
         insert.setPlayer(playerPo);
         insert.setNpc(null);
-        insert.setTitle("新会话" + getSelfThreadCount(0) + 1);
+        insert.setTitle("新会话" + (getSelfThreadCount(0) + 1));
         insert.setPublicInfo(null);
         insert.setDescription(null);
         insert.setTitleGenerated(0);
