@@ -110,7 +110,7 @@ public class ChatConversationService {
         threadPo.setLastMessage(chatMessagePo);
 
         chatThreadRepository.save(threadPo);
-        chatMessageRepository.save(chatMessagePo);
+        //chatMessageRepository.save(chatMessagePo);
 
         //需通过CGI发送的历史记录
         var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
