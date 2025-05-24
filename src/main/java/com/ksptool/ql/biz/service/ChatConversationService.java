@@ -430,6 +430,9 @@ public class ChatConversationService {
 
                     // 通知会话已结束
                     mccq.closeStream(ctx.threadId());
+
+                    //自动生成会话标题
+                    chatThreadService.generateThreadTitleAsync(chatThreadPo.getId());
                     return;
                 }
 

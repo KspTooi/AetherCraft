@@ -18,6 +18,10 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.web.RestPageableView;
+import com.ksptool.ql.restcgi.model.CgiChatMessage;
+import com.ksptool.ql.restcgi.model.CgiChatParam;
+import com.ksptool.ql.restcgi.model.CgiChatResult;
+import com.ksptool.ql.restcgi.service.ModelRestCgi;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +67,9 @@ public class ChatThreadService {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    private ModelRestCgi restCgi;
 
 
     //玩家选中Thread
@@ -208,7 +215,8 @@ public class ChatThreadService {
                 return; // 配置为不生成标题，直接返回
             }
 
-            ChatThreadPo threadPo = this.getSelfThread(threadId);
+            ChatThreadPo threadPo = repository.getThread(threadId);
+            Long playerId = threadPo.getPlayer().getId();
 
             if(threadPo.getTitleGenerated() != 0){
                 return;
@@ -239,37 +247,43 @@ public class ChatThreadService {
                 return;
             }
 
-            // 从配置获取提示语模板
-            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
-                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
-
-            //组合Prompt
-            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
-            prompt.setParameter("userContent", css.decryptForCurUser(playerMessage.getContent()));
-            prompt.setParameter("modelContent", css.decryptForCurUser(modelMessage.getContent()));
-
-            var param = new ModelChatParam();
-            param.setMessage(prompt.execute());
-
-            var proxyUrl = playerConfigService.getSelfProxyUrl();
-            var apikey = apiKeyService.getSelfApiKey(model.getCode());
+            String apikey = apiKeyService.getApiKey(model.getCode(), playerId);
 
             if(StringUtils.isBlank(apikey)){
                 log.warn("无法为会话 {} 生成标题 原因:未配置APIKEY", threadId);
                 return;
             }
 
-            param.setApiKey(apikey);
+            // 从配置获取提示语模板
+            String promptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getKey(),
+                    GlobalConfigEnum.MODEL_CHAT_GEN_THREAD_PROMPT.getDefaultValue());
 
-            var title = "";
+            String plainUserDek = css.getPlainUserDek(threadPo.getUser().getId());
 
-            //根据模型类型选择不同的服务发送请求
-            if (model.getSeries().contains("Grok")) {
-                param.setUrl(GROK_BASE_URL);
-                title = modelGrokService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), param);
-            } else {
-                param.setUrl(GEMINI_BASE_URL + model + ":generateContent");
-                title = modelGeminiService.sendMessageSync(HttpClientUtils.createHttpClient(proxyUrl, 30), param);
+            //组合Prompt
+            PreparedPrompt prompt = PreparedPrompt.prepare(promptTemplate);
+            prompt.setParameter("userContent", css.decryptForCurUser(playerMessage.getContent(),plainUserDek));
+            prompt.setParameter("modelContent", css.decryptForCurUser(modelMessage.getContent(),plainUserDek));
+
+            var param = new ModelChatParam();
+            param.setMessage(prompt.execute());
+
+            var p = new CgiChatParam();
+            p.setModel(model);
+            p.setApikey(apiKeyService.getApiKey(model.getCode(),playerId));
+            p.setHttpClient(HttpClientUtils.createHttpClient(playerConfigService.getSelfProxyUrl(playerId), 30));
+            p.setTemperature(0.7);
+            p.setTopP(1);
+            p.setTopK(40);
+            p.setMaxOutputTokens(128);
+            p.setMessage(new CgiChatMessage(prompt.execute()));
+            CgiChatResult result = restCgi.sendMessage(p);
+
+            var title = result.getContent();
+
+            if(StringUtils.isBlank(title)){
+                log.warn("无法为会话 {} 生成标题 原因:模型返回空内容:{}", threadPo.getId(),title);
+                return;
             }
 
             // 处理标题（去除引号和多余空格，限制长度）

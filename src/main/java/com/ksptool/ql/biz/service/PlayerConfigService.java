@@ -318,9 +318,16 @@ public class PlayerConfigService {
      * 获取玩家自身或全局的代理配置
      * @return 代理url
      */
-    public String getSelfProxyUrl() throws AuthException {
+    public String getSelfProxyUrl(Long pid) throws AuthException {
+
+        var playerId = pid;
+
+        if(playerId == null){
+            playerId = AuthService.requirePlayerId();
+        }
+
         // 获取代理配置 - 首先检查用户级别的代理配置
-        String proxyConfig = this.getString("model.proxy.config", null,AuthService.requirePlayerId());
+        String proxyConfig = this.getString("model.proxy.config", null,playerId);
 
         // 如果用户未配置代理，则使用全局代理配置
         if (StringUtils.isBlank(proxyConfig)) {
@@ -330,6 +337,10 @@ public class PlayerConfigService {
             }
         }
         return proxyConfig;
+    }
+
+    public String getSelfProxyUrl() throws AuthException {
+        return getSelfProxyUrl(null);
     }
 
 }
