@@ -54,4 +54,7 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
     void deActiveAllThread(@Param("elseThreadId") Long elseThreadId,@Param("type") Integer type);
 
 
+    @Query("SELECT ctp FROM ChatThreadPo ctp WHERE ctp.id = :id")
+    ChatThreadPo getThread(@Param("id") Long id);
+
 } 

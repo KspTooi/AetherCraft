@@ -63,13 +63,11 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue"
-import type Result from '@/entity/Result';
-import type ChatSegmentVo from '@/entity/vo/ChatSegmentVo.ts';
 import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
 import ConversationApi from "@/commons/api/ConversationApi";
 import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
-import type { SendMessageDto, SendMessageVo, QueryStreamDto, MessageFragmentVo, RegenerateDto, AbortConversationDto } from "@/commons/api/ConversationApi";
+import type { SendMessageDto, QueryStreamDto, RegenerateDto } from "@/commons/api/ConversationApi";
 import type RestPageableView from "@/entity/RestPageableView";
 import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
@@ -87,9 +85,7 @@ const chatListRef = ref<ChatListInstance | null>(null);
 const isGenerating = ref(false);
 // 当前是否有临时消息 (移到这里)
 const hasTempMessage = ref<boolean>(false)
-
 const isCreatingThread = ref<boolean>(false)
-
 const currentThreadId = ref<string>("")
 const currentModelCode = ref<string>("")
 
@@ -637,7 +633,7 @@ const onMessageRegenerate = async (msgId: string) => {
     const regenerateDto: RegenerateDto = {
       threadId: currentThreadId.value,
       modelCode: currentModelCode.value, 
-      rootMessageId: msgId // 传递需要重新生成的消息的ID
+      rootMessageId: "-1" // 传递需要重新生成的消息的ID
     };
     const regenerateResponse = await ConversationApi.regenerate(regenerateDto);
 

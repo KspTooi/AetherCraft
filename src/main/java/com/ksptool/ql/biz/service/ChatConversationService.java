@@ -193,7 +193,14 @@ public class ChatConversationService {
         threadPo.setModelCode(model.getCode());
 
         //获取根消息
-        var rootMessagePo = chatMessageService.getSelfMessage(dto.getRootMessageId());
+        ChatMessagePo rootMessagePo = null;
+
+        if(dto.getRootMessageId() == -1){
+            rootMessagePo = chatMessageService.getSelfLastMessage(threadPo.getId(),0);
+        }
+        if(dto.getRootMessageId() != -1){
+            rootMessagePo = chatMessageService.getSelfMessage(dto.getRootMessageId());
+        }
 
         //发送人角色 0:Player 1:Model
         if(rootMessagePo.getSenderRole() != 0){
@@ -384,8 +391,17 @@ public class ChatConversationService {
 
                 //结束类型
                 if (ccr.getType() == 1) {
+
+                    ChatThreadPo chatThreadPo = chatThreadRepository.getThread(ctx.threadId());
+
+                    if(chatThreadPo == null){
+                        log.warn("消息创建失败,消息所属的Thread不存在: {}",ctx.threadId());
+                        mccq.closeStream(ctx.threadId());
+                        return;
+                    }
+
                     var messagePo = new ChatMessagePo();
-                    messagePo.setThread(Any.of().val("id", ctx.threadId()).as(ChatThreadPo.class));
+                    messagePo.setThread(chatThreadPo);
                     messagePo.setSenderRole(1);
                     messagePo.setSenderName(ccr.getModel().getSeries());
                     messagePo.setContent(css.encrypt(ccr.getContent(),ctx.userId()));
@@ -394,6 +410,9 @@ public class ChatConversationService {
                     messagePo.setTokenOutput(ccr.getTokenOutput());
                     messagePo.setTokenThoughts(ccr.getTokenThoughtOutput());
                     chatMessageRepository.save(messagePo);
+                    chatThreadPo.setLastMessage(messagePo);
+                    chatThreadRepository.save(chatThreadPo);
+                    log.info("为Thread:{} 创建新的消息:{}",ctx.threadId(),messagePo.getId());
 
                     var cf = new ChatFragment();
                     cf.setType(2);

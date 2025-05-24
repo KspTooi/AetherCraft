@@ -88,6 +88,19 @@ public class ChatMessageService {
         return messagePo;
     }
 
+    /**
+     * 获取玩家的最后一条消息
+     * @Param threadId 线程ID
+     * @param senderRole 发送人角色 0:Player 1:Model
+     */
+    public ChatMessagePo getSelfLastMessage(Long threadId,Integer senderRole) throws BizException {
+        ChatMessagePo selfLastMessage = messageRepository.getSelfLastMessage(threadId,senderRole);
+        if(selfLastMessage == null){
+            throw new BizException("消息记录不存在或无权访问");
+        }
+        return selfLastMessage;
+    }
+
 
 
 

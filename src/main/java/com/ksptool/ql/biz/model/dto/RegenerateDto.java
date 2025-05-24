@@ -12,6 +12,7 @@ public class RegenerateDto {
     @NotNull
     private String modelCode;
 
+    //根消息(只能是用户消息) -1为最后一条用户消息
     @NotNull
     private Long rootMessageId;
 

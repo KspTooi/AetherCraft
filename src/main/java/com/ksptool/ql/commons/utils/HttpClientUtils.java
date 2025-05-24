@@ -50,7 +50,8 @@ public class HttpClientUtils {
                 clientBuilder.proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxyHost, proxyPort)));
             }
         }
-        
+
+        clientBuilder.readTimeout(timeout, TimeUnit.SECONDS);
         return clientBuilder.build();
     }
 } 
