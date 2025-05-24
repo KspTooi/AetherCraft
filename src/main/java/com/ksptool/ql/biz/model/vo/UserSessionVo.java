@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.ksptool.ql.biz.model.po.UserSessionPo;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Date;
 import java.util.Set;
 import java.util.HashSet;
@@ -38,4 +40,12 @@ public class UserSessionVo {
             this.permissions = new HashSet<>();
         }
     }
+
+    public String getPlayerAvatarUrl(){
+        if(StringUtils.isBlank(playerAvatarUrl)){
+            return null;
+        }
+        return "/res/"+playerAvatarUrl;
+    }
+
 } 
