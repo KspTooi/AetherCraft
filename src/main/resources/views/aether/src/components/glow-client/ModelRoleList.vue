@@ -28,7 +28,7 @@
         <GlowButton
           @click="handleRoleManage" 
           class="manage-role-btn"
-          :corners="['bottom-right','bottom-left']"
+          :corners="['bottom-right']"
         >
           NPC设计器
         </GlowButton>

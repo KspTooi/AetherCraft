@@ -28,7 +28,7 @@
         <GlowButton
           @click="handleCreateNewThread"
           class="create-chat-btn"
-          :corners="['bottom-right','bottom-left']"
+          :corners="['bottom-right']"
         >
           新建会话
         </GlowButton>
