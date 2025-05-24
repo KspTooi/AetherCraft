@@ -36,7 +36,7 @@ interface Message {
   avatarPath: string //头像路径
   role: string //消息类型：0-用户消息，1-AI消息
   content: string //消息内容
-  createTime: string //消息时间
+  createTime: string | null//消息时间
 }
 
 // 获取 glow 主题
@@ -93,18 +93,17 @@ const handleSelectMessage = (msgId: string) => {
   emit('select-message', msgId)
 }
 
-// 处理消息删除 (改为直接向上转发)
+// 处理消息删除
 const handleDeleteMessage = (msgId: string) => {
-  // emit('delete-message', msgId)
   emit('delete-message', msgId); // Re-emit the event upwards
 }
 
-// 处理消息更新转发 (New function)
+// 处理消息更新转发
 const handleUpdateMessageForward = (params: { msgId: string; message: string }) => {
   emit('update-message', params); // Re-emit the event upwards
 };
 
-// 处理重新生成转发 (New function)
+// 处理重新生成转发
 const handleRegenerateForward = (msgId: string) => {
   emit('regenerate', msgId); // Re-emit the event upwards
 };

@@ -95,7 +95,7 @@ const props = defineProps<{
     avatarPath: string //头像路径
     role: string //消息类型：0-用户消息，1-AI消息
     content: string //消息内容
-    createTime: string //消息时间（后端已格式化的时间字符串）
+    createTime: string | null //消息时间（后端已格式化的时间字符串）
   }
   disabled: boolean //如果为true 则无法点击 编辑、删除按钮
   allowRegenerate?: boolean
@@ -516,17 +516,18 @@ defineExpose({
 .message .message-regenerate-btn {
   background: transparent;
   border: none;
-  color: rgba(79, 172, 254, 0.7); /* Bluish color */
+  color: v-bind("theme.boxGlowColor"); /* Bluish color */
   cursor: pointer;
   padding: 4px;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   transition: all 0.2s;
 }
 
 .message .message-regenerate-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  color: rgba(79, 172, 254, 1);
+  background: rgba(255, 255, 255, 0.1);
+  color: v-bind("theme.mainColorActive");
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.13);
 }
 
 .message-regenerate-btn:disabled {

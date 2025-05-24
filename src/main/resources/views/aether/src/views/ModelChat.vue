@@ -102,7 +102,7 @@ const messages = ref<Array<{
   avatarPath: string //头像路径
   role: string //消息类型：0-用户消息，1-AI消息
   content: string //消息内容
-  createTime: string //消息时间
+  createTime: string | null//消息时间
 }>>([]);
 
 // 确认框引用
@@ -213,7 +213,8 @@ const pollMessage = async (streamId: string) => {
       await updateTempMsg({
         id: segment.messageId,
         name: segment.senderName,
-        avatarPath: segment.senderAvatarUrl
+        avatarPath: segment.senderAvatarUrl,
+        createTime: segment.sendTime
       });
 
       if (segment.type === 1) { // 数据片段
@@ -497,7 +498,7 @@ const createTempMsg = async () => {
     avatarPath: '', 
     role: 'model',
     content: '正在输入...',
-    createTime: new Date().toISOString()
+    createTime: null
   };
   messages.value.push(tempAiMessage);
   hasTempMessage.value = true;
@@ -528,6 +529,7 @@ const updateTempMsg = async (data: {
   id?: string; // 消息ID (可选, 如果提供则表示转为永久)
   name?: string; // 名称 (可选)
   avatarPath?: string; // 头像路径 (可选)
+  createTime: string
 }) => {
 
   if (!hasTempMessage.value) return;
@@ -554,6 +556,11 @@ const updateTempMsg = async (data: {
     if (data.id && data.id !== '-1') {
       tempMessage.id = data.id; // 将临时消息ID更新为永久ID
       hasTempMessage.value = false; // 标记不再有临时消息
+      updated = true;
+    }
+
+    if(data.createTime){
+      tempMessage.createTime = data.createTime;
       updated = true;
     }
     
