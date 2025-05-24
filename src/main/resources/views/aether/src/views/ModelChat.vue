@@ -394,37 +394,25 @@ const onCreateThread = async () => {
     return;
   }
 
-  // 2. 设置为"正在创建会话"状态
+  //设置为"正在创建会话"状态 // 标记当前没有选中任何实际会话
   isCreatingThread.value = true;
-  
-  // 3. 清空当前会话ID和消息列表
-  currentThreadId.value = ""; // 标记当前没有选中任何实际会话
   messages.value = [];
+  currentThreadId.value = "";
 
-  // 4. (可选) 如果需要，可以在这里重置模型选择或进行其他UI调整
-  // currentModelCode.value = ""; // 例如，如果希望每次新会话都重新选择模型
-
-  // 5. 关闭移动端菜单(如果存在且打开)
   chatListRef.value?.closeMobileMenu();
-  
-  // 6. 提示用户输入消息以开始新会话
-  // (可以通过placeholder或一个临时提示信息在UI上体现)
-  // 例如，可以在ImMessageInput组件的placeholder中反映这个状态
+
   console.log("进入创建新会话模式，等待用户输入第一条消息...");
 };
 
 //选择模型
 const onSelectMode = (modeCode:string)=>{
   currentModelCode.value = modeCode;
-  // 可以在这里添加逻辑：如果切换了模型，是否要影响当前会话？
-  // 比如：如果当前有会话，提示用户切换模型会新建会话，或者只是更新下次新建会话的模型？
 }
 
 //选择会话
 const onSelectThread = async (threadId: string) => {
   currentThreadId.value = threadId;
-  chatListRef.value?.closeMobileMenu(); 
-  // 传入 threadId
+  chatListRef.value?.closeMobileMenu();
   await reloadMessageList(threadId); 
 };
 
@@ -443,8 +431,12 @@ const onDeleteThread = async (threadId: string) => {
     // 使用新的API
     const dto: CommonIdDto = { id: threadId };
     await ThreadApi.removeThread(dto);
-
     await reloadThreadList(); // 重新加载列表以反映删除
+
+    isCreatingThread.value = true;
+    messages.value = [];
+    currentThreadId.value = "";
+
   } catch (error) {
     console.error('删除会话失败:', error);
     alterRef.value?.showConfirm({
@@ -567,19 +559,13 @@ const updateTempMsg = async (data: {
     // 如果有任何更新，触发Vue的响应式更新
     if (updated) {
        messages.value = [...messages.value];
-       // 一般更新元数据不需要滚动，除非UI布局因此改变
-       // await nextTick(); 
-       // messageBoxRef.value?.scrollToBottom();
     }
   }
 }
 
-
 const onMessageRemove = async (msgId: string) => {
-  if (!confirmRef.value) {
-    console.error('GlowConfirm component reference is not available.');
-    return;
-  }
+
+  if(!confirmRef.value) return;
 
   try {
     const confirmed = await confirmRef.value.showConfirm({
@@ -602,12 +588,12 @@ const onMessageRemove = async (msgId: string) => {
     }
     
     messages.value.splice(index, 1);
-    console.log(`Message ${msgId} removed successfully.`);
+
   } catch (error) {
     console.error(`Error removing message ${msgId}:`, error);
     alterRef.value?.showConfirm({
         title: "删除消息失败",
-        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+        content: `${error}`,
         closeText: "好的",
     });
   }
