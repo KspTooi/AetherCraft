@@ -209,6 +209,8 @@ public class ChatConversationService {
 
         //删除根消息记录之后的所有记录
         chatMessageRepository.removeMessageAfterSeq(rootMessagePo.getSeq());
+        threadPo.setLastMessage(rootMessagePo);
+        chatThreadRepository.save(threadPo);
 
         //锁定会话
         String streamId = mccq.openStream(threadPo.getId());
