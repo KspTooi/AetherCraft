@@ -497,6 +497,11 @@ public class ChatConversationService {
                     messagePo.setThread(chatThreadPo);
                     messagePo.setSenderRole(1);
                     messagePo.setSenderName(ccr.getModel().getSeries());
+
+                    if(chatThreadPo.getType() == 1){
+                        messagePo.setSenderName(ctx.modelName());
+                    }
+
                     messagePo.setContent(css.encrypt(ccr.getContent(),ctx.userId()));
                     messagePo.setSeq(chatMessageRepository.getCountByThreadId(ctx.threadId()) + 1);
                     messagePo.setTokenInput(ccr.getTokenInput());

@@ -204,7 +204,7 @@ const pollMessage = async (streamId: string) => {
       };
 
       const segment = await ConversationApi.queryStream(queryStreamDto);
-      
+
       await updateTempMsg({
         id: segment.messageId,
         name: segment.senderName,

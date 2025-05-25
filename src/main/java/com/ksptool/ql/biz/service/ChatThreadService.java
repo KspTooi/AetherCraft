@@ -124,7 +124,7 @@ public class ChatThreadService {
                 vo.setSenderAvatarUrl(player.getPlayerAvatarUrl());
             }
 
-            //如果Thread是一个RP会话 则需要使用所属NPC的头像
+            //如果Thread是一个RP会话 则需要使用所属NPC的头像与名称
             //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
             if(po.getSenderRole() == 1 && threadPo.getType() == 1){
                 vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarUrlPt(css));
