@@ -1,6 +1,24 @@
 <template>
   <div class="message-input-container" border="top">
-    <div class="message-input-wrapper">
+    <div class="message-input-wrapper" :class="{ focused: isFocused, generating: props.isGenerating }">
+      <!-- 顶部发光装饰条 -->
+      <div class="top-glow-line" :class="{ active: isFocused }"></div>
+      
+      <!-- 左侧装饰线 -->
+      <div class="side-accent-line left" :class="{ active: isFocused }"></div>
+      
+      <!-- 右侧装饰线 -->
+      <div class="side-accent-line right" :class="{ active: isFocused }"></div>
+      
+      <!-- 底部发光装饰条 -->
+      <div class="bottom-glow-line" :class="{ active: isFocused }"></div>
+      
+      <!-- 角落装饰点 -->
+      <div class="corner-dot top-left" :class="{ active: isFocused }"></div>
+      <div class="corner-dot top-right" :class="{ active: isFocused }"></div>
+      <div class="corner-dot bottom-left" :class="{ active: isFocused }"></div>
+      <div class="corner-dot bottom-right" :class="{ active: isFocused }"></div>
+      
       <textarea 
         v-model="messageInput"
         ref="messageTextarea"
@@ -10,8 +28,6 @@
         @input="adjustTextareaHeight"
         @focus="isFocused = true"
         @blur="isFocused = false"></textarea>
-      <div class="focus-border" :class="{ active: isFocused }"></div>
-      <div class="corner-fill bottom-left" :class="{ active: isFocused }"></div>
     </div>
     
     <GlowButton 
@@ -20,7 +36,8 @@
       @click="handleSend"
       :corners="[`bottom-right`]"
       class="send-button">
-      发送
+      <i class="bi bi-send"></i>
+      <span>发送</span>
     </GlowButton>
     
     <GlowButton 
@@ -29,7 +46,8 @@
       :corners="[`bottom-right`]"
       theme="danger"
       class="abort-button danger">
-      停止生成
+      <i class="bi bi-stop-circle"></i>
+      <span>停止</span>
     </GlowButton>
 
   </div>
@@ -127,10 +145,11 @@ onMounted(() => {
   padding: 12px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 12px;
   backdrop-filter: blur(v-bind('theme.boxBlur + "px"'));
   -webkit-backdrop-filter: blur(v-bind('theme.boxBlur + "px"'));
   border-top: 1px solid v-bind('theme.boxBorderColor');
+  position: relative;
 }
 
 .message-input-wrapper {
@@ -138,111 +157,292 @@ onMounted(() => {
   position: relative;
   display: flex;
   align-items: center;
-  background: v-bind('theme.boxColor');
-  border: 1px solid v-bind('theme.boxBorderColorHover');
-  min-height: 40px;
+  background: v-bind('theme.boxAccentColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  min-height: 42px;
   max-height: 150px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  background-color: v-bind('theme.boxAccentColor');
+  border-radius: 2px;
 }
 
 .message-input-wrapper:hover {
   border-color: v-bind('theme.boxBorderColorHover');
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.1);
 }
 
-.message-input-wrapper:focus-within {
+.message-input-wrapper.focused {
   border-color: v-bind('theme.mainBorderColorHover');
+  box-shadow: 
+    0 0 30px rgba(0, 150, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.message-input-wrapper.generating {
+  border-color: v-bind('theme.boxGlowColor');
+  box-shadow: 
+    0 0 25px v-bind('theme.boxGlowColor + "40"'),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 顶部发光装饰条 */
+.top-glow-line {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    v-bind('theme.mainBorderColorHover') 20%, 
+    v-bind('theme.boxGlowColor') 50%, 
+    v-bind('theme.mainBorderColorHover') 80%, 
+    transparent 100%);
+  opacity: 0;
+  transform: scaleX(0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+.top-glow-line.active {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* 底部发光装饰条 */
+.bottom-glow-line {
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  right: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    v-bind('theme.mainBorderColorHover') 30%, 
+    v-bind('theme.boxGlowColor') 50%, 
+    v-bind('theme.mainBorderColorHover') 70%, 
+    transparent 100%);
+  opacity: 0;
+  transform: scaleX(0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+  z-index: 2;
+}
+
+.bottom-glow-line.active {
+  opacity: 0.8;
+  transform: scaleX(1);
+}
+
+/* 侧边装饰线 */
+.side-accent-line {
+  position: absolute;
+  width: 1px;
+  top: -1px;
+  bottom: -1px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    v-bind('theme.mainBorderColorHover') 30%, 
+    v-bind('theme.boxGlowColor') 50%, 
+    v-bind('theme.mainBorderColorHover') 70%, 
+    transparent 100%);
+  opacity: 0;
+  transform: scaleY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+  z-index: 2;
+}
+
+.side-accent-line.left {
+  left: -1px;
+}
+
+.side-accent-line.right {
+  right: -1px;
+}
+
+.side-accent-line.active {
+  opacity: 0.6;
+  transform: scaleY(1);
+}
+
+/* 角落装饰点 */
+.corner-dot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: v-bind('theme.boxGlowColor');
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 3;
+}
+
+.corner-dot.top-left {
+  top: -1px;
+  left: -1px;
+  transition-delay: 0.3s;
+}
+
+.corner-dot.top-right {
+  top: -1px;
+  right: -1px;
+  transition-delay: 0.35s;
+}
+
+.corner-dot.bottom-left {
+  bottom: -1px;
+  left: -1px;
+  transition-delay: 0.4s;
+}
+
+.corner-dot.bottom-right {
+  bottom: -1px;
+  right: -1px;
+  transition-delay: 0.45s;
+}
+
+.corner-dot.active {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 0 6px v-bind('theme.boxGlowColor');
 }
 
 .message-input-wrapper textarea {
   flex: 1;
   width: 100%;
   min-height: 40px;
-  padding: 10px 12px;
+  padding: 11px 16px;
   background: transparent;
   border: none;
   color: v-bind('theme.boxTextColor');
   resize: none;
   font-size: 14px;
   line-height: 1.5;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: hidden;
   max-height: 120px;
   display: block;
   margin: 0;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  z-index: 1;
+  position: relative;
 }
 
 .message-input-wrapper textarea::placeholder {
   color: v-bind('theme.boxTextColorNoActive');
   opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.message-input-wrapper.focused textarea::placeholder {
+  opacity: 0.5;
 }
 
 .message-input-wrapper textarea:focus {
   outline: none;
 }
 
-/* 上边框焦点效果 */
-.focus-border {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
+/* 自定义滚动条样式 */
+.message-input-wrapper textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-input-wrapper textarea::-webkit-scrollbar-track {
   background: transparent;
-  transform: translateY(-100%);
-  opacity: 0;
-  transition: all 0.3s ease;
+  border-radius: 3px;
 }
 
-.focus-border.active {
-  transform: translateY(0);
-  opacity: 1;
-  background: linear-gradient(15deg, transparent, v-bind('theme.mainBorderColorHover'), transparent);
+.message-input-wrapper textarea::-webkit-scrollbar-thumb {
+  background: v-bind('theme.boxBorderColorHover');
+  border-radius: 3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 角落填充效果 */
-.corner-fill {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1;
+.message-input-wrapper textarea::-webkit-scrollbar-thumb:hover {
+  background: v-bind('theme.mainBorderColorHover');
+  box-shadow: 0 0 8px v-bind('theme.boxGlowColor + "60"');
 }
 
-.corner-fill.bottom-left {
-  left: 0;
-  bottom: 0;
-  border-width: 15px 0 0 15px;
-  border-color: transparent transparent transparent v-bind('theme.mainBorderColorHover');
+.message-input-wrapper.focused textarea::-webkit-scrollbar-thumb {
+  background: v-bind('theme.mainBorderColorHover');
+  box-shadow: 0 0 6px v-bind('theme.boxGlowColor + "40"');
 }
 
-.corner-fill.active {
-  opacity: 1;
+.message-input-wrapper.generating textarea::-webkit-scrollbar-thumb {
+  background: v-bind('theme.boxGlowColor');
+  box-shadow: 0 0 10px v-bind('theme.boxGlowColor + "80"');
+  animation: scrollbarPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollbarPulse {
+  0%, 100% { 
+    opacity: 0.8;
+    box-shadow: 0 0 6px v-bind('theme.boxGlowColor + "40"');
+  }
+  50% { 
+    opacity: 1;
+    box-shadow: 0 0 12px v-bind('theme.boxGlowColor + "80"');
+  }
+}
+
+/* Firefox滚动条样式 */
+.message-input-wrapper textarea {
+  scrollbar-width: thin;
+  scrollbar-color: v-bind('theme.boxBorderColorHover') transparent;
 }
 
 .send-button, .abort-button {
   align-self: stretch;
-  min-width: 80px;
-  padding: 0 15px;
+  min-width: 90px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.send-button i, .abort-button i {
+  font-size: 14px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.send-button:hover i {
+  transform: translateX(2px);
+}
+
+.abort-button:hover i {
+  transform: rotate(90deg);
+}
+
+.send-button span, .abort-button span {
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
 /* 移动端适配 */
 @media (max-width: 768px) {
   .message-input-container {
     padding: 10px;
+    gap: 10px;
   }
   
   .send-button, .abort-button {
-    min-width: 60px;
-    padding: 0 10px;
+    min-width: 70px;
+    padding: 0 12px;
+    gap: 4px;
+  }
+  
+  .send-button span, .abort-button span {
+    font-size: 13px;
+  }
+  
+  .send-button i, .abort-button i {
+    font-size: 13px;
   }
 }
 
@@ -250,17 +450,35 @@ onMounted(() => {
 @media (max-width: 480px) {
   .message-input-container {
     padding: 8px;
+    gap: 8px;
   }
   
   .message-input-wrapper textarea {
     font-size: 13px;
-    padding: 8px 10px;
+    padding: 10px 14px;
   }
   
   .send-button, .abort-button {
-    min-width: 50px;
-    padding: 0 8px;
-    font-size: 13px;
+    min-width: 60px;
+    padding: 0 10px;
+    gap: 3px;
+  }
+  
+  .send-button span, .abort-button span {
+    font-size: 12px;
+  }
+  
+  .send-button i, .abort-button i {
+    font-size: 12px;
+  }
+  
+  /* 在超小屏幕上隐藏文字，只显示图标 */
+  .send-button span, .abort-button span {
+    display: none;
+  }
+  
+  .send-button, .abort-button {
+    min-width: 44px;
   }
 }
 </style>

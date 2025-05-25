@@ -218,12 +218,14 @@ defineExpose({
   background-color: transparent;
   margin: 0;
   padding-right: 60px; /* 为操作按钮预留空间 */
+  user-select: none; /* 默认整个消息区域不可选中 */
 }
 
 .message .message-header {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  user-select: none; /* 头像区域不可选中 */
 }
 
 .message .message-header .avatar {
@@ -235,17 +237,21 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none; /* 头像不可选中 */
 }
 
 .message .message-header .avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  user-select: none; /* 头像图片不可选中 */
+  pointer-events: none; /* 防止拖拽 */
 }
 
 .message .message-header .avatar.no-image {
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
+  user-select: none; /* 默认头像图标不可选中 */
 }
 
 .message .message-content {
@@ -260,17 +266,21 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 8px;
+  user-select: none; /* 名称和时间区域不可选中 */
 }
 
 .message .message-content .name .time {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.4);
+  user-select: none; /* 时间不可选中 */
 }
 
 .message .message-content .text {
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
   word-break: break-word;
+  user-select: text; /* 只有消息内容可以选中 */
+  cursor: text; /* 显示文本光标表示可选中 */
 }
 
 /* Markdown 内容样式 */
@@ -330,6 +340,7 @@ defineExpose({
   display: flex; /* 保持display:flex但默认不可见 */
   gap: 4px;
   transition: visibility 0.2s, opacity 0.2s; /* 添加过渡效果 */
+  user-select: none; /* 操作按钮区域不可选中 */
 }
 
 .message:hover .message-actions {
@@ -347,6 +358,7 @@ defineExpose({
   font-size: 16px;
   line-height: 1;
   transition: all 0.2s;
+  user-select: none; /* 编辑和删除按钮不可选中 */
 }
 
 .message .message-delete-btn:hover,
@@ -394,15 +406,18 @@ defineExpose({
   margin-left: 8px;
   display: inline-flex;
   align-items: baseline;
+  user-select: none; /* 正在输入指示器不可选中 */
 }
 
 .typing-indicator span {
   opacity: 0.7;
+  user-select: none;
 }
 
 .typing-indicator .dot {
   display: inline-block;
   animation: blink 1.4s infinite both;
+  user-select: none;
 }
 
 .typing-indicator .dot:nth-child(2) {
@@ -463,6 +478,7 @@ defineExpose({
   word-break: break-word; /* Ensure long words break */
   box-sizing: border-box;
   cursor: text; /* Indicate text is editable */
+  user-select: text; /* 编辑模式下内容可选中 */
 }
 
 .editable-content:focus {
@@ -482,6 +498,7 @@ defineExpose({
   font-size: 16px;
   line-height: 1;
   transition: all 0.2s;
+  user-select: none; /* 按钮不可选中 */
 }
 
 .message .message-confirm-btn:hover,
@@ -522,6 +539,7 @@ defineExpose({
   font-size: 18px;
   line-height: 1;
   transition: all 0.2s;
+  user-select: none; /* 重新生成按钮不可选中 */
 }
 
 .message .message-regenerate-btn:hover {
