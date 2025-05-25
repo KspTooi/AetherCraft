@@ -12,7 +12,7 @@
     <GlowDiv class="chat-content" border="none">
 
       <div class="model-selector-container">
-        <ModelSelector :selected="currentModelCode" @select-model="onSelectMode"/>
+        <ModelSelector :selected="curModelCode" @select-model="onSelectMode"/>
       </div>
 
       <div class="message-box-container">
@@ -82,6 +82,7 @@ const router = useRouter();
 
 const isCreatingThread = ref<boolean>(false)
 
+
 const messageData = ref<MessageBoxItem[]>([])
 const selectThreadData = ref<SelectThreadVo | null>(null)
 const selectThreadTotal = ref(0)
@@ -91,6 +92,9 @@ const selectThreadQuery = ref<SelectThreadDto>({
   pageSize: 1000
 })
 
+const curNpcId = ref<string>("")   //当前选择的NPC ID
+const curThreadId = ref<string>("") //当前聊天Thread的ID
+const curModelCode = ref<string>("")//当前选择的模型代码
 
 // 定义 ChatMessageBox 需要的消息项类型
 interface MessageBoxItem {
@@ -111,9 +115,7 @@ const isGenerating = ref(false);
 // 当前是否有临时消息
 const hasTempMessage = ref<boolean>(false)
 
-const currentNpcId = ref<string>("")   //当前选择的NPC ID
-const currentThreadId = ref<string>("") //当前聊天Thread的ID
-const currentModelCode = ref<string>("")//当前选择的模型代码
+
 
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 // 确认框引用
@@ -144,9 +146,8 @@ const getNpcMessageList = async (npcId: string) => {
   try {
     // 设置查询参数
     selectThreadQuery.value.npcId = npcId;
+    selectThreadQuery.value.modelCode = curModelCode.value; // 添加 modelCode 参数
 
-    console.log(selectThreadQuery.value)
-    
     // 调用ThreadApi获取消息列表，返回SelectThreadVo
     const response: SelectThreadVo = await ThreadApi.selectThread(selectThreadQuery.value);
     
@@ -154,8 +155,8 @@ const getNpcMessageList = async (npcId: string) => {
     selectThreadData.value = response;
     
     // 更新当前模型代码和线程ID
-    currentModelCode.value = response.modelCode;
-    currentThreadId.value = response.threadId;
+    curModelCode.value = response.modelCode;
+    curThreadId.value = response.threadId;
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
@@ -194,9 +195,6 @@ const sendMessage = async (message: string) => {
 
 
 
-
-
-  
 }
 
 
@@ -216,8 +214,8 @@ const onMessageSend = async (message: string) => {
   try {
     // 4. 调用后端接口发送消息 (queryKind = 0) - 更新接口地址和响应类型
     const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
-      threadId: currentThreadId.value, // 使用当前的聊天线程ID
-      model: currentModelCode.value,
+      threadId: curThreadId.value, // 使用当前的聊天线程ID
+      model: curModelCode.value,
       message: message,
       queryKind: 0
     });
@@ -277,7 +275,7 @@ const pollMessage = async () => {
     try {
       // 使用 Result<RpSegmentVo> 作为响应类型 - 更新接口地址
       const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
-        threadId: currentThreadId.value, // 使用当前的聊天线程ID
+        threadId: curThreadId.value, // 使用当前的聊天线程ID
         queryKind: 1 // 1: 查询响应流
       });
 
@@ -372,7 +370,7 @@ const onBatchAbort = async () => { // 改为 async
   try {
     // 调用后端接口中止 - 更新接口地址
     await http.postEntity<void>('/model/rp/rpCompleteBatch', { 
-      threadId: currentThreadId.value, // 使用当前的聊天线程ID
+      threadId: curThreadId.value, // 使用当前的聊天线程ID
       queryKind: 2 // 2: 终止AI响应
     });
 
@@ -394,14 +392,13 @@ const onBatchAbort = async () => { // 改为 async
 
 //选择模型
 const onSelectMode = (modeCode:string)=>{
-  currentModelCode.value = modeCode;
+  curModelCode.value = modeCode;
   // 可以在这里添加逻辑：如果切换了模型，是否要影响当前会话？
   // 比如：如果当前有会话，提示用户切换模型会新建会话，或者只是更新下次新建会话的模型？
 }
 
 //选择NPC
 const onSelectNpc = async (npc: GetNpcListVo) => {
-  // When user manually selects a npc, always load the latest/new thread for that npc
   npcListRef.value?.closeMobileMenu(); 
   await getNpcMessageList(npc.id); 
 };
@@ -415,21 +412,21 @@ const onCreateThread = async (npc: GetNpcListVo) => {
   messageData.value = []; 
   isGenerating.value = false;
   hasTempMessage.value = false; 
-  currentNpcId.value = npc.id; // 设置当前NPC ID
+  curNpcId.value = npc.id; // 设置当前NPC ID
   // currentThreadId.value 会在请求成功后被设置
 
   try {
     const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', { 
       modelRoleId: npc.id, 
-      modelCode: currentModelCode.value, 
+      modelCode: curModelCode.value,
       newThread: 0 // 明确指示创建新线程
     });
 
     console.log('新会话创建成功:', chatData);
 
     // 更新当前线程ID和模型代码
-    currentThreadId.value = chatData.threadId || ""; 
-    currentModelCode.value = chatData.modelCode || currentModelCode.value; // 如果后端没返回，保持当前选择
+    curThreadId.value = chatData.threadId || "";
+    curModelCode.value = chatData.modelCode || curModelCode.value; // 如果后端没返回，保持当前选择
 
     // 处理可能返回的初始消息 (通常新会话是空的)
     const backendMessages = chatData.messages || []; 
@@ -456,9 +453,9 @@ const onCreateThread = async (npc: GetNpcListVo) => {
     
     // 清空聊天相关状态
     messageData.value = [];
-    currentNpcId.value = "";
-    currentThreadId.value = "";
-    currentModelCode.value = "";
+    curNpcId.value = "";
+    curThreadId.value = "";
+    curModelCode.value = "";
   }
 }
 
@@ -496,9 +493,9 @@ const handleActivateThread = async (npcId: string, threadId: string, modelCode: 
     selectThreadData.value = response;
     
     // 更新当前状态
-    currentNpcId.value = npcId;
-    currentModelCode.value = response.modelCode;
-    currentThreadId.value = response.threadId;
+    curNpcId.value = npcId;
+    curModelCode.value = response.modelCode;
+    curThreadId.value = response.threadId;
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
@@ -636,7 +633,7 @@ const onMessageRemove = async (msgId: string) => {
 
     // 调用后端 API 删除消息 - 更新接口地址和 threadId 参数
     await http.postEntity<void>('/model/rp/removeHistory', { 
-      threadId: currentThreadId.value, // 使用当前的聊天线程ID
+      threadId: curThreadId.value, // 使用当前的聊天线程ID
       historyId: msgId 
     });
 
@@ -698,9 +695,9 @@ const onMessageRegenerate = async (msgId: string) => {
 
     // 7. 调用后端API触发重新生成 (queryKind = 3) - 更新接口地址和响应类型
     const segment = await http.postEntity<RpSegmentVo>('/model/rp/rpCompleteBatch', { 
-      threadId: currentThreadId.value, // 使用当前的聊天线程ID
+      threadId: curThreadId.value, // 使用当前的聊天线程ID
       // 传递当前模型
-      model: currentModelCode.value, 
+      model: curModelCode.value,
       // 3: 重新生成最后一条响应
       queryKind: 3 
     });

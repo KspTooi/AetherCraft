@@ -7,6 +7,7 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts"; // 假设已存在
 export interface SelectThreadDto extends PageQuery {
     npcId?: string;         // NPC_ID 用于获取该NPC下最近的一次会话, JavaType: Long
     threadId?: string;      // ThreadId 直接获取该Thread下的所有会话, JavaType: Long
+    modelCode?: string;      // 模型代码
 }
 
 export interface GetThreadListDto extends PageQuery {

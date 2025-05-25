@@ -1,7 +1,11 @@
 package com.ksptool.ql.biz.model.po;
 
+import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
+import com.ksptool.ql.commons.exception.AuthException;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Comment;
 import java.util.Date;
 
@@ -90,4 +94,17 @@ public class NpcPo {
     public void preUpdate() {
         updateTime = new Date();
     }
+
+    public String getAvatarUrlPt(ContentSecurityService css) {
+
+        String urlPt = css.decryptForCurUser(avatarUrl);
+
+        if(StringUtils.isBlank(urlPt)){
+            return "";
+        }
+
+        return "/res/"+urlPt;
+    }
+
+
 } 

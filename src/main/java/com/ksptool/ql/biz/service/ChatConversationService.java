@@ -63,10 +63,10 @@ public class ChatConversationService {
     private ChatMessageService chatMessageService;
 
     @Autowired
-    private NpcService npcService;
+    private GlobalConfigService globalConfigService;
 
     @Autowired
-    private GlobalConfigService globalConfigService;
+    private NpcScriptService npcScriptService;
 
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
@@ -194,12 +194,16 @@ public class ChatConversationService {
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+            npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
             p.setSystemPrompt(systemPrompt.executeNested());
 
             PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
+
+
+
         }
 
         restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
@@ -324,6 +328,7 @@ public class ChatConversationService {
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+            npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
             p.setSystemPrompt(systemPrompt.executeNested());
 
             PreparedPrompt msgPrompt = new PreparedPrompt(rootMessagePo.getContent());

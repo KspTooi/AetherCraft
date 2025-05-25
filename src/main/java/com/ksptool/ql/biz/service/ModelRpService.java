@@ -86,7 +86,7 @@ public class ModelRpService {
     private ModelRpCastService castService;
 
     @Autowired
-    private ModelRpScriptService scriptService;
+    private NpcScriptService scriptService;
 
     /**
      * 获取模型角色列表（按 sortOrder 升序排序）

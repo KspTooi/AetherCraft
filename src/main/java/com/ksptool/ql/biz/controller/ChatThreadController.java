@@ -1,12 +1,13 @@
 package com.ksptool.ql.biz.controller;
 
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.EditThreadTitleDto;
-import com.ksptool.ql.biz.model.dto.SelectThreadDto;
-import com.ksptool.ql.biz.model.dto.GetThreadListDto;
+import com.ksptool.ql.biz.model.dto.*;
+import com.ksptool.ql.biz.model.po.ChatThreadPo;
+import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
+import com.ksptool.ql.biz.model.vo.CreateThreadVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatThreadService;
+import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -25,6 +26,22 @@ public class ChatThreadController {
 
     @Autowired
     private ChatThreadService service;
+
+    //创建新的空NPC对话
+    @PostMapping("/createThread")
+    public Result<CreateThreadVo> createThread(@RequestBody @Valid CreateThreadDto dto) throws BizException {
+
+        if(dto.getType() != 1){
+            throw new BizException("type错误");
+        }
+
+        AIModelEnum model = AIModelEnum.ensureModelCodeExists(dto.getModelCode());
+        ChatThreadPo threadPo = service.createSelfNpcThread(model, dto.getNpcId());
+
+        var vo = new CreateThreadVo();
+        vo.setThreadId(threadPo.getId());
+        return Result.success(vo);
+    }
 
 
     @PostMapping("/selectThread")

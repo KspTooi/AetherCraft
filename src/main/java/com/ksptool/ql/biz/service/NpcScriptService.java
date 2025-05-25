@@ -23,7 +23,7 @@ import java.util.List;
  * 模型RP剧本与场景服务
  */
 @Service
-public class ModelRpScriptService {
+public class NpcScriptService {
 
     @Autowired
     private NpcChatThreadRepository threadRepository;

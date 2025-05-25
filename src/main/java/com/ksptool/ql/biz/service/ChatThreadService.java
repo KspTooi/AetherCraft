@@ -35,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
@@ -86,8 +88,16 @@ public class ChatThreadService {
         if(dto.getNpcId() != null){
             threadPo = repository.getActiveThreadByNpcId(dto.getNpcId(),AuthService.requirePlayerId(),AuthService.requireUserId());
         }
+
         if(threadPo == null){
-            throw new BizException("未能找到活跃会话");
+
+            //如果是NPC会话 则后端自动创建新会话
+            if(dto.getNpcId() != null){
+                threadPo = createSelfNpcThread(AIModelEnum.ensureModelCodeExists(dto.getModelCode()),dto.getNpcId());
+            }
+            if(dto.getNpcId() == null){
+                throw new BizException("未能找到活跃会话");
+            }
         }
 
         ret.setThreadId(threadPo.getId());
@@ -117,7 +127,7 @@ public class ChatThreadService {
             //如果Thread是一个RP会话 则需要使用所属NPC的头像
             //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
             if(po.getSenderRole() == 1 && threadPo.getType() == 1){
-                vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarUrl());
+                vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarUrlPt(css));
             }
 
             if(po.getSenderRole() == 1 && threadPo.getType() != 1){
@@ -365,6 +375,26 @@ public class ChatThreadService {
         insert.setModelCode(model.getCode());
         insert.setActive(1);
         insert.setMessages(new ArrayList<>());
+        insert.setLastMessage(null);
+
+        //如果NPC有开场白 需要解析开场白并创建历史消息
+        String firstMessage = css.decryptForCurUser(npcPo.getFirstMessage());
+        ArrayList<ChatMessagePo> messagePos = new ArrayList<>();
+
+        if(StringUtils.isNotBlank(firstMessage)){
+            var cmp = new ChatMessagePo();
+            cmp.setThread(insert);
+            cmp.setSenderRole(1); //发送人角色 0:Player 1:Model
+            cmp.setSenderName(npcPo.getName());
+            var fmp = PreparedPrompt.prepare(firstMessage);
+            fmp.setParameter("player",playerPo.getName());
+            fmp.setParameter("npc",npcPo.getName());
+            cmp.setContent(fmp.executeNested(false));
+            cmp.setSeq(0);
+            messagePos.add(cmp);
+            insert.setMessages(messagePos);
+        }
+
         return repository.save(insert);
     }
 
