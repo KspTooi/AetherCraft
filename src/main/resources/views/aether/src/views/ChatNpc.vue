@@ -72,7 +72,8 @@ import { useRouter } from 'vue-router';
 import type { SelectThreadDto, SelectThreadVo, CreateThreadDto, CreateThreadVo } from '@/commons/api/ThreadApi';
 import ThreadApi from '@/commons/api/ThreadApi';
 import ConversationService from '@/views/service/ConversationService';
-import type { SendMessageDto, MessageFragmentVo, RegenerateDto } from '@/commons/api/ConversationApi';
+import type { SendMessageDto, MessageFragmentVo, RegenerateDto, AbortConversationDto } from '@/commons/api/ConversationApi';
+import ConversationApi from '@/commons/api/ConversationApi';
 import MessageApi, { type EditMessageDto } from '@/commons/api/MessageApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
@@ -309,18 +310,6 @@ const handleMessageFragment = async (fragment: MessageFragmentVo) => {
 // 处理发送消息
 const onMessageSend = async (message: string) => {
   await sendMessage(message);
-};
-
-// 处理中止生成
-const onBatchAbort = async () => {
-  if (!isGenerating.value) return;
-  
-  // 简单的前端状态清理
-  isGenerating.value = false;
-  removeTempMsg();
-  
-  await nextTick();
-  messageBoxRef.value?.scrollToBottom();
 };
 
 //选择模型
@@ -667,6 +656,37 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
       content: `${error}`,
       closeText: "关闭",
     })
+  }
+};
+
+// 处理中止生成
+const onBatchAbort = async () => {
+  if (!isGenerating.value) return; // 如果没有在生成，则不需要中止
+
+  if (!curThreadId.value) {
+    console.warn('没有当前会话ID，无法中止生成');
+    return;
+  }
+
+  try {
+    // 调用后端接口中止会话
+    const abortDto: AbortConversationDto = {
+      threadId: curThreadId.value
+    };
+    
+    await ConversationApi.abortConversation(abortDto);
+    console.log('会话中止请求已发送');
+    
+  } catch (error) {
+    console.error('中止会话失败:', error);
+    // 即使后端调用失败，也要清理前端状态
+  } finally {
+    // 清理前端状态
+    isGenerating.value = false;
+    removeTempMsg();
+    
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
   }
 };
 
