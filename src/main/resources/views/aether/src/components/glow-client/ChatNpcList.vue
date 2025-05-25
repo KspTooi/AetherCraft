@@ -68,6 +68,7 @@
             </div>
             <div class="npc-content">
               <div class="npc-title">{{ npc.name }}</div>
+              <div class="npc-thread-count">{{ npc.threadCount }} 个对话</div>
             </div>
             <!-- 三点菜单按钮 -->
             <div class="menu-wrapper">
@@ -403,7 +404,7 @@ defineExpose({
 .npc-title {
   font-size: 14px;
   color: v-bind('theme.boxTextColorNoActive');
-  margin-bottom: 0;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -415,8 +416,24 @@ defineExpose({
   color: v-bind('theme.boxTextColor');
 }
 
+.npc-item:hover .npc-thread-count,
+.npc-item.active .npc-thread-count {
+  color: v-bind('theme.boxTextColor');
+  opacity: 0.8;
+}
+
 .npc-item.active .npc-title {
   font-weight: 500;
+}
+
+.npc-thread-count {
+  font-size: 12px;
+  color: v-bind('theme.boxTextColorNoActive');
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
 
 /* 新增 role-avatar 样式 */
