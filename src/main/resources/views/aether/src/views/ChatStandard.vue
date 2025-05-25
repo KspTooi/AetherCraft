@@ -143,6 +143,7 @@ const onMessageSend = async (message: string) => {
   if (isGenerating.value) return;
 
   isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
 
   try {
     // 准备发送消息的参数
@@ -193,6 +194,7 @@ const onMessageSend = async (message: string) => {
       closeText: "好的",
     });
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
   }
 };
 
@@ -234,6 +236,7 @@ const pollMessage = async (streamId: string) => {
           }
         }
         isGenerating.value = false;
+        isLoadingMessages.value = false; // 关闭发光条
         break;
       } else if (segment.type === 10) { // 错误
         console.error('AI生成错误:', segment.content);
@@ -244,6 +247,7 @@ const pollMessage = async (streamId: string) => {
         });
         removeTempMsg();
         isGenerating.value = false;
+        isLoadingMessages.value = false; // 关闭发光条
         break;
       }
     } catch (error) {
@@ -255,6 +259,7 @@ const pollMessage = async (streamId: string) => {
       });
       removeTempMsg();
       isGenerating.value = false;
+      isLoadingMessages.value = false; // 关闭发光条
       break;
     }
 
@@ -290,6 +295,7 @@ const onBatchAbort = async () => {
   } finally {
     // 清理前端状态
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
     removeTempMsg();
     
     await nextTick();
@@ -620,6 +626,7 @@ const onMessageRegenerate = async (msgId: string) => {
   
   console.log(`根据消息上下文重新生成，结束ID为 ${msgId}`);
   isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
 
   try {
     const lastMessageIndex = messages.value.length - 1;
@@ -654,6 +661,7 @@ const onMessageRegenerate = async (msgId: string) => {
     alert('重新生成消息时发生网络错误');
     removeTempMsg();
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
   }
 };
 

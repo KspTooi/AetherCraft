@@ -206,6 +206,7 @@ const sendMessage = async (message: string) => {
 
   // 设置加载状态
   isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
 
   try {
     // 构建发送消息的参数
@@ -256,6 +257,7 @@ const sendMessage = async (message: string) => {
     // 清理临时消息和状态
     removeTempMsg();
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
   }
 };
 
@@ -299,6 +301,7 @@ const handleMessageFragment = async (fragment: MessageFragmentVo) => {
     
     // 结束生成状态
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
     
   } else if (fragment.type === 10) { // 错误片段
     console.error('AI生成错误:', fragment.content);
@@ -311,6 +314,7 @@ const handleMessageFragment = async (fragment: MessageFragmentVo) => {
     // 清理临时消息和状态
     removeTempMsg();
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
   }
 };
 
@@ -602,6 +606,7 @@ const onMessageRegenerate = async (msgId: string) => {
   try {
     // 设置生成状态
     isGenerating.value = true;
+    isLoadingMessages.value = true; // 启用发光条
 
     // 检查最后一条消息是否为AI消息，如果是则删除
     if (messageData.value.length > 0) {
@@ -640,6 +645,7 @@ const onMessageRegenerate = async (msgId: string) => {
     // 清理临时消息和状态
     removeTempMsg();
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
   }
 };
 
@@ -694,6 +700,7 @@ const onBatchAbort = async () => {
   } finally {
     // 清理前端状态
     isGenerating.value = false;
+    isLoadingMessages.value = false; // 关闭发光条
     removeTempMsg();
     
     await nextTick();
