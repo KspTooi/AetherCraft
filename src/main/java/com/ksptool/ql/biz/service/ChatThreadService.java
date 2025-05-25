@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadMessageVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
+import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
@@ -120,10 +121,11 @@ public class ChatThreadService {
             msgVos.add(vo);
         }
 
-        //激活当前会话并取消其他所有会话的激活
-        repository.deActiveAllThread(threadPo.getId(),threadPo.getType());
+        //取消其他所有会话的激活
+        repository.deActiveAllStandardThread(player.getPlayerId(),player.getUserId());
+
         ret.setMessages(new RestPageableView<>(msgVos, pPos.getTotalElements()));
-        threadPo.setActive(1);
+        threadPo.setActive(1); //激活当前会话
         repository.save(threadPo);
         return ret;
     }
@@ -330,6 +332,30 @@ public class ChatThreadService {
         return repository.save(insert);
     }
 
+    @Transactional(rollbackFor = BizException.class)
+    public ChatThreadPo createSelfNpcThread(AIModelEnum model,NpcPo npc) throws BizException {
+        UserSessionVo player = AuthService.requirePlayer();
+        var userPo = Any.of().val("id",player.getUserId()).as(UserPo.class);
+        var playerPo = Any.of().val("id",player.getPlayerId()).as(PlayerPo.class);
+        var insert = new ChatThreadPo();
+        insert.setType(1); //0:标准会话 1:RP会话 2:标准增强会话
+        insert.setUser(userPo);
+        insert.setPlayer(playerPo);
+        insert.setNpc(npc);
+        var prompt = new PreparedPrompt("#{player}与#{npc}的对话");
+        prompt.setParameter("player",player.getPlayerName());
+        prompt.setParameter("npc",npc.getName());
+        insert.setTitle(prompt.execute());
+        insert.setPublicInfo(prompt.execute());
+        insert.setDescription(null);
+        insert.setTitleGenerated(1);
+        insert.setModelCode(model.getCode());
+        insert.setActive(1);
+        insert.setMessages(new ArrayList<>());
+        return repository.save(insert);
+    }
+
+
     //创建新的标准会话
     public ChatThreadPo createThread(long userId,long playerId,String modelCode){
         var user = Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class);
@@ -357,6 +383,20 @@ public class ChatThreadService {
         return (int)repository.count(Example.of(query));
     }
 
+    //将玩家下的所有会话设定为不活跃
+    public void deActiveAllSelfThread(){
+
+
+
+    }
+
+    //将玩家下某一个NPC下的所有会话设置为不活跃
+    public void deActiveAllNpcSelfThread(long npcId){
+
+
+
+
+    }
 
 
 

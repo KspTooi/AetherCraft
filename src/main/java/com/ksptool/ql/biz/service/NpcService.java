@@ -15,6 +15,7 @@ import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -166,6 +167,14 @@ public class NpcService {
         // 使用精确匹配，SimpleExample默认就是精确匹配
         
         return repository.exists(example.get());
+    }
+
+    public NpcPo getSelfNpc(Long id) throws BizException{
+        NpcPo query = new NpcPo();
+        query.setId(id);
+        query.setPlayer(Any.of().val("id",AuthService.requirePlayerId()).as(PlayerPo.class));
+        return repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("NPC不存在或无权限访问"));
     }
 
 }

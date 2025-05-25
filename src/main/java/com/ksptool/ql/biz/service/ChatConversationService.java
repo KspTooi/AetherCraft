@@ -6,12 +6,16 @@ import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatMessagePo;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
+import com.ksptool.ql.biz.model.po.NpcPo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.record.CgiCallbackContext;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.utils.mccq.ChatFragment;
 import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
 import com.ksptool.ql.restcgi.model.CgiChatMessage;
@@ -57,6 +61,9 @@ public class ChatConversationService {
 
     @Autowired
     private ChatMessageService chatMessageService;
+    private NpcService npcService;
+    @Autowired
+    private GlobalConfigService globalConfigService;
 
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
@@ -68,11 +75,27 @@ public class ChatConversationService {
 
         //Thread为-1时创建新会话
         if(dto.getThreadId() == -1L){
-            chatThreadRepository.deActiveAllThread(-1L,dto.getType());
-            threadPo = chatThreadService.createSelfThread(model,dto.getType());
+
+            //创建NPC会话
+            if(dto.getType() == 1){
+                NpcPo selfNpc = npcService.getSelfNpc(dto.getNpcId());
+                threadPo = chatThreadService.createSelfNpcThread(model,selfNpc);
+            }
+
+            //创建标准会话
+            if(dto.getType() == 0){
+                chatThreadRepository.deActiveAllStandardThread(player.getPlayerId(),player.getUserId());
+                threadPo = chatThreadService.createSelfThread(model,dto.getType());
+            }
+
         }
+
         if(dto.getThreadId() != -1L){
             threadPo = chatThreadService.getSelfThread(dto.getThreadId());
+        }
+
+        if(threadPo == null){
+            throw new BizException("创建或获取会话失败!");
         }
 
         var apikey = apiKeyService.getApiKey(model.getCode(), player.getPlayerId());
@@ -150,6 +173,31 @@ public class ChatConversationService {
         p.setApikey(apikey);
         p.setHistoryMessages(cgiHistoryMessages);
         p.setMessage(msg);
+
+        //当为NPC会话时需注入增强Prompt上下文
+        if(dto.getType() == 1){
+
+            NpcPo npc = threadPo.getNpc();
+            PlayerPo playerPo = threadPo.getPlayer();
+
+            var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+            var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
+
+            PreparedPrompt systemPrompt = new PreparedPrompt(mainPromptTemplate).union(rolePromptTemplate);
+            systemPrompt.setParameter("npc", npc.getName());
+            systemPrompt.setParameter("player", playerPo.getName());
+            systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
+            systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
+            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+            systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+            p.setSystemPrompt(systemPrompt.execute());
+
+            PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
+            systemPrompt.setParameter("npc", npc.getName());
+            systemPrompt.setParameter("player", playerPo.getName());
+            msg.setContent(msgPrompt.execute());
+        }
 
         restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
                 threadPo.getId(),
@@ -254,6 +302,33 @@ public class ChatConversationService {
         p.setApikey(apikey);
         p.setHistoryMessages(cgiHistoryMessages);
         p.setMessage(msg);
+
+
+        //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+        if(threadPo.getType() == 1){
+
+            NpcPo npc = threadPo.getNpc();
+            PlayerPo playerPo = threadPo.getPlayer();
+
+            var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+            var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
+
+            PreparedPrompt systemPrompt = new PreparedPrompt(mainPromptTemplate).union(rolePromptTemplate);
+            systemPrompt.setParameter("npc", npc.getName());
+            systemPrompt.setParameter("player", playerPo.getName());
+            systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
+            systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
+            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+            systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+            p.setSystemPrompt(systemPrompt.execute());
+
+            PreparedPrompt msgPrompt = new PreparedPrompt(rootMessagePo.getContent());
+            systemPrompt.setParameter("npc", npc.getName());
+            systemPrompt.setParameter("player", playerPo.getName());
+            msg.setContent(msgPrompt.execute());
+        }
+
 
         restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
                 threadPo.getId(),

@@ -27,6 +27,13 @@ public class ChatConversationController {
 
     @PostMapping("/sendMessage")
     public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {
+
+        if(dto.getThreadId() == -1 && dto.getType() == 1){
+            if(dto.getNpcId() == null){
+                return Result.error("创建Npc会话失败 原因:缺少NpcId!");
+            }
+        }
+
         return Result.success(service.sendMessage(dto));
     }
 

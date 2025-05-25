@@ -78,9 +78,19 @@ import ThreadApi from '@/commons/api/ThreadApi';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
-
-// 获取路由实例
 const router = useRouter();
+
+const isCreatingThread = ref<boolean>(false)
+
+const messageData = ref<MessageBoxItem[]>([])
+const selectThreadData = ref<SelectThreadVo | null>(null)
+const selectThreadTotal = ref(0)
+const selectThreadQuery = ref<SelectThreadDto>({
+  npcId: "",
+  page: 1,
+  pageSize: 1000
+})
+
 
 // 定义 ChatMessageBox 需要的消息项类型
 interface MessageBoxItem {
@@ -91,15 +101,6 @@ interface MessageBoxItem {
   content: string; 
   createTime: string;
 }
-
-const messageData = ref<MessageBoxItem[]>([])
-const selectThreadData = ref<SelectThreadVo | null>(null)
-const selectThreadTotal = ref(0)
-const selectThreadQuery = ref<SelectThreadDto>({
-  npcId: "",
-  page: 1,
-  pageSize: 1000
-})
 
 // 消息框引用
 const messageBoxRef = ref<MessageBoxInstance | null>(null);
@@ -187,6 +188,22 @@ const getNpcMessageList = async (npcId: string) => {
     });
   }
 }
+
+const sendMessage = async (message: string) => {
+
+
+
+
+
+
+  
+}
+
+
+
+
+
+
 
 // 处理发送消息
 const onMessageSend = async (message: string) => {
