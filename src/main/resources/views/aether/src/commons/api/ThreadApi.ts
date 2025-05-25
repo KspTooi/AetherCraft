@@ -4,6 +4,12 @@ import type RestPageableView from "@/entity/RestPageableView.ts"; // 假设已�
 import type CommonIdDto from "@/entity/dto/CommonIdDto.ts"; // 假设已存在
 
 // --- DTOs ---
+export interface CreateThreadDto {
+    modelCode: string;      // 模型代码, JavaType: String
+    type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话, JavaType: Integer
+    npcId: string;          // NpcId, JavaType: Long
+}
+
 export interface SelectThreadDto extends PageQuery {
     npcId?: string;         // NPC_ID 用于获取该NPC下最近的一次会话, JavaType: Long
     threadId?: string;      // ThreadId 直接获取该Thread下的所有会话, JavaType: Long
@@ -21,6 +27,10 @@ export interface EditThreadTitleDto {
 }
 
 // --- VOs ---
+export interface CreateThreadVo {
+    threadId: string;           // JavaType: Long
+}
+
 export interface SelectThreadMessageVo {
     id: string;                 // JavaType: Long
     senderName: string;         // 发送人名称, JavaType: String
@@ -49,6 +59,13 @@ export interface GetThreadListVo {
 
 
 export default {
+    /**
+     * 创建新的空NPC对话
+     */
+    createThread: async (dto: CreateThreadDto): Promise<CreateThreadVo> => {
+        return await Http.postEntity<CreateThreadVo>('/thread/createThread', dto);
+    },
+
     /**
      * 选择会话 (获取会话消息列表)
      */
