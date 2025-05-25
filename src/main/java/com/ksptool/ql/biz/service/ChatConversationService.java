@@ -200,7 +200,7 @@ public class ChatConversationService {
                 systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
                 systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
                 systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-                npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
+                systemPrompt = npcScriptService.appendExamplePrompt(npc.getId(), systemPrompt);
                 p.setSystemPrompt(systemPrompt.executeNested());
 
                 PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
@@ -344,7 +344,7 @@ public class ChatConversationService {
                 systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
                 systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
                 systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-                npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
+                systemPrompt = npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
                 p.setSystemPrompt(systemPrompt.executeNested());
 
                 PreparedPrompt msgPrompt = new PreparedPrompt(css.decryptForCurUser(rootMessagePo.getContent()));
