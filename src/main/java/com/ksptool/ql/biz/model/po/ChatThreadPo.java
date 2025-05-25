@@ -18,7 +18,7 @@ public class ChatThreadPo {
     @Comment("主键ID")
     private Long id;
 
-    @Column(name = "type")
+    @Column(name = "type",nullable = false)
     @Comment("Thread类型 0:标准会话 1:RP会话 2:标准增强会话")
     private Integer type;
 
