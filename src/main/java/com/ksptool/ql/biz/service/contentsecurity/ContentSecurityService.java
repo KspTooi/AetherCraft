@@ -116,7 +116,7 @@ public class ContentSecurityService {
             return;
         }
         String dek = getPlainUserDek(AuthService.getCurrentUserId());
-        po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+        po.setAvatarUrl(encrypt(po.getAvatarUrl(), dek));
         po.setDescription(encrypt(po.getDescription(), dek));
         po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
         po.setScenario(encrypt(po.getScenario(), dek));
@@ -146,7 +146,7 @@ public class ContentSecurityService {
             
             if(encrypt) {
                 for(NpcPo po : roleList) {
-                    po.setAvatarPath(encrypt(po.getAvatarPath(), dek));
+                    po.setAvatarUrl(encrypt(po.getAvatarUrl(), dek));
                     po.setDescription(encrypt(po.getDescription(), dek));
                     po.setRoleSummary(encrypt(po.getRoleSummary(), dek));
                     po.setScenario(encrypt(po.getScenario(), dek));
@@ -157,7 +157,7 @@ public class ContentSecurityService {
             }
             
             for(NpcPo po : roleList) {
-                po.setAvatarPath(decrypt(po.getAvatarPath(), dek));
+                po.setAvatarUrl(decrypt(po.getAvatarUrl(), dek));
                 po.setDescription(decrypt(po.getDescription(), dek));
                 po.setRoleSummary(decrypt(po.getRoleSummary(), dek));
                 po.setScenario(decrypt(po.getScenario(), dek));

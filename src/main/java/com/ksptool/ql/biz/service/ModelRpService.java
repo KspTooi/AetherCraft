@@ -119,10 +119,10 @@ public class ModelRpService {
         // 对结果列表中的每个 VO 对象进行后处理
         for (GetNpcListVo vo : pageableView.getRows()) {
             // 解密头像路径
-            vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+            vo.setAvatarUrl(css.decryptForCurUser(vo.getAvatarUrl()));
             // 如果头像路径不为空，则添加资源访问前缀
-            if (StringUtils.isNotBlank(vo.getAvatarPath())) {
-                vo.setAvatarPath("/res/" + vo.getAvatarPath());
+            if (StringUtils.isNotBlank(vo.getAvatarUrl())) {
+                vo.setAvatarUrl("/res/" + vo.getAvatarUrl());
             }
         }
 
@@ -208,8 +208,8 @@ public class ModelRpService {
             if(history.getType() == 1){
                 hisVo.setName(modelPlayRoleCt.getName());
                 hisVo.setAvatarPath("");
-                if(StringUtils.isNotBlank(modelPlayRoleCt.getAvatarPath())){
-                    hisVo.setAvatarPath("/res/"+css.decryptForCurUser(modelPlayRoleCt.getAvatarPath()));
+                if(StringUtils.isNotBlank(modelPlayRoleCt.getAvatarUrl())){
+                    hisVo.setAvatarPath("/res/"+css.decryptForCurUser(modelPlayRoleCt.getAvatarUrl()));
                 }
             }
 
@@ -352,7 +352,7 @@ public class ModelRpService {
         var roleCache = new ThreadModelRoleVo();
         roleCache.setRoleId(npcCt.getId());
         roleCache.setRoleName(npcCt.getName());
-        roleCache.setRoleAvatarPath(css.decryptForCurUser(npcCt.getAvatarPath()));
+        roleCache.setRoleAvatarPath(css.decryptForCurUser(npcCt.getAvatarUrl()));
         threadModelRoleMap.put(threadCt.getId(),roleCache);
 
         try {

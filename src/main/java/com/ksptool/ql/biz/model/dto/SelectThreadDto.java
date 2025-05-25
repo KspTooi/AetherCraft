@@ -9,7 +9,10 @@ import lombok.EqualsAndHashCode;
 @Data
 public class SelectThreadDto extends PageQuery {
 
-    @NotNull
+    //NPC_ID 用于获取该NPC下最近的一次会话
+    private Long npcId;
+
+    //ThreadId 直接获取该Thread下的所有会话
     private Long threadId;
 
 }

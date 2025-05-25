@@ -29,6 +29,14 @@ public class ChatThreadController {
 
     @PostMapping("/selectThread")
     public Result<SelectThreadVo> selectThread(@RequestBody @Valid SelectThreadDto dto) throws BizException {
+
+        if(dto.getThreadId() != null && dto.getNpcId() != null){
+            return Result.error("参数过多, threadId与npcId仅可选填一项.");
+        }
+        if(dto.getThreadId() == null && dto.getNpcId() == null){
+            return Result.error("参数不足, threadId与npcId必填一项");
+        }
+
         return Result.success(service.selectThread(dto));
     }
 

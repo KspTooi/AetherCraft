@@ -37,13 +37,14 @@ public interface NpcRepository extends JpaRepository<NpcPo, Long> {
             SELECT new com.ksptool.ql.biz.model.vo.GetNpcListVo(
                 n.id,
                 n.name,
-                n.avatarPath,
-                (SELECT COUNT(t) FROM ChatThreadPo t WHERE t.npc.id = n.id)
+                n.avatarUrl,
+                CAST((SELECT COUNT(t) FROM ChatThreadPo t WHERE t.npc.id = n.id) AS Integer),
+                n.active
             )
             FROM NpcPo n
             WHERE n.player.id = :playerId
             AND (:keyword IS NULL OR :keyword = '' OR n.name LIKE CONCAT('%', :keyword, '%'))
-            ORDER BY n.sortOrder ASC
+            ORDER BY n.seq ASC
             """)
     Page<GetNpcListVo> getNpcList(@Param("keyword") String keyword,
                            @Param("playerId") Long playerId,

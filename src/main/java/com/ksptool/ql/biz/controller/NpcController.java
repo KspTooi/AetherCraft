@@ -33,8 +33,8 @@ public class NpcController {
     private PanelNpcService panelNpcService;
 
 
-    @PostMapping("/getNpcListVo")
-    public Result<RestPageableView<GetNpcListVo>> getNpcListVo(@RequestBody @Valid GetNpcListDto dto){
+    @PostMapping("/getNpcList")
+    public Result<RestPageableView<GetNpcListVo>> getNpcList(@RequestBody @Valid GetNpcListDto dto){
         return Result.success(service.getNpcList(dto));
     }
 

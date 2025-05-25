@@ -13,7 +13,6 @@ import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
-import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
@@ -41,9 +40,6 @@ import static com.ksptool.entities.Entities.as;
 @Service
 public class ChatThreadService {
 
-    private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
-    private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
-
     @Autowired
     private ChatThreadRepository repository;
 
@@ -60,12 +56,6 @@ public class ChatThreadService {
     private ApiKeyService apiKeyService;
 
     @Autowired
-    private ModelGrokService modelGrokService;
-
-    @Autowired
-    private ModelGeminiService modelGeminiService;
-
-    @Autowired
     private ChatMessageRepository chatMessageRepository;
 
     @Autowired
@@ -79,7 +69,20 @@ public class ChatThreadService {
         var player = AuthService.requirePlayer();
         var ret = new SelectThreadVo();
 
-        ChatThreadPo threadPo = getSelfThread(dto.getThreadId());
+        ChatThreadPo threadPo = null;
+
+        //根据直接指定的ThreadId获取
+        if(dto.getThreadId() != null){
+            threadPo = getSelfThread(dto.getThreadId());
+        }
+        //根据NPC指定
+        if(dto.getNpcId() != null){
+            threadPo = repository.getActiveThreadByNpcId(dto.getNpcId(),AuthService.requirePlayerId(),AuthService.requireUserId());
+        }
+        if(threadPo == null){
+            throw new BizException("未能找到活跃会话");
+        }
+
         ret.setThreadId(threadPo.getId());
         ret.setModelCode(threadPo.getModelCode());
 
@@ -107,7 +110,7 @@ public class ChatThreadService {
             //如果Thread是一个RP会话 则需要使用所属NPC的头像
             //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
             if(po.getSenderRole() == 1 && threadPo.getType() == 1){
-                vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarPath());
+                vo.setSenderAvatarUrl(threadPo.getNpc().getAvatarUrl());
             }
 
             if(po.getSenderRole() == 1 && threadPo.getType() != 1){

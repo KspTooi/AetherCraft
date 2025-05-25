@@ -30,9 +30,9 @@ public class NpcPo {
     @Comment("(明文)NPC名称")
     private String name;
     
-    @Column(name = "avatar_path", length = 255)
+    @Column(name = "avatar_url", length = 255)
     @Comment("(加密)头像路径")
-    private String avatarPath;
+    private String avatarUrl;
 
     @Column(length = 50000)
     @Comment("(加密)NPC描述")
@@ -50,17 +50,21 @@ public class NpcPo {
     @Comment("(加密)首次对话内容")
     private String firstMessage;
 
-    @Column(length = 50)
+    @Column(name = "tags", length = 50)
     @Comment("(加密)NPC标签，多个标签用逗号分隔")
     private String tags;
 
-    @Column(nullable = false)
+    @Column(name = "seq", nullable = false)
     @Comment("排序号")
-    private Integer sortOrder;
+    private Integer seq;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Comment("状态：0-禁用，1-启用")
     private Integer status;
+
+    @Column(name = "active", nullable = false)
+    @Comment("当前是否激活 0:否 1:是")
+    private Integer active;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
@@ -72,8 +76,8 @@ public class NpcPo {
 
     @PrePersist
     public void prePersist() {
-        if (sortOrder == null) {
-            sortOrder = 0;
+        if (seq == null) {
+            seq = 0;
         }
         if (status == null) {
             status = 1;

@@ -43,10 +43,10 @@ public class NpcService {
         // 对结果列表中的每个 VO 对象进行后处理
         for (GetNpcListVo vo : ret.getRows()) {
             // 解密头像路径
-            vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+            vo.setAvatarUrl(css.decryptForCurUser(vo.getAvatarUrl()));
             // 如果头像路径不为空，则添加资源访问前缀
-            if (StringUtils.isNotBlank(vo.getAvatarPath())) {
-                vo.setAvatarPath("/res/" + vo.getAvatarPath());
+            if (StringUtils.isNotBlank(vo.getAvatarUrl())) {
+                vo.setAvatarUrl("/res/" + vo.getAvatarUrl());
             }
         }
 
