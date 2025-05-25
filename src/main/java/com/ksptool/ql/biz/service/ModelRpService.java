@@ -3,7 +3,7 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
-import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
+import com.ksptool.ql.biz.model.dto.GetNpcListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
@@ -94,7 +94,7 @@ public class ModelRpService {
      * @param dto 查询参数 DTO
      * @return 分页视图对象
      */
-    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto) {
+    public PageableView<GetNpcListVo> getModelRoleList(GetNpcListDto dto) {
 
         var query = new NpcPo();
         query.setName(dto.getKeyword()); // 设置名称关键字查询条件
@@ -114,10 +114,10 @@ public class ModelRpService {
         Page<NpcPo> page = npcRepository.findAll(example.get(), pageable);
 
         // 将查询结果 Page<ModelRolePo> 转换为 PageableView<GetModelRoleListVo>
-        PageableView<GetModelRoleListVo> pageableView = new PageableView<>(page, GetModelRoleListVo.class);
+        PageableView<GetNpcListVo> pageableView = new PageableView<>(page, GetNpcListVo.class);
 
         // 对结果列表中的每个 VO 对象进行后处理
-        for (GetModelRoleListVo vo : pageableView.getRows()) {
+        for (GetNpcListVo vo : pageableView.getRows()) {
             // 解密头像路径
             vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
             // 如果头像路径不为空，则添加资源访问前缀

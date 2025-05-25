@@ -9,7 +9,7 @@ import lombok.Data;
  * 保存模型角色的数据传输对象
  */
 @Data
-public class SaveModelRoleDto {
+public class SaveNpcDto {
     
     /**
      * 角色ID，新建时为null

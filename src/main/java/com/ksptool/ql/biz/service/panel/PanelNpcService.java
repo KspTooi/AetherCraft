@@ -4,7 +4,7 @@ import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
 import com.ksptool.ql.biz.mapper.NpcRepository;
 import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
-import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
+import com.ksptool.ql.biz.model.dto.SaveNpcDto;
 import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.ListModelRoleItemVo;
@@ -104,7 +104,7 @@ public class PanelNpcService {
      * @throws BizException 业务异常
      */
     @Transactional(rollbackFor = BizException.class)
-    public NpcPo saveModelRole(SaveModelRoleDto dto) throws BizException {
+    public NpcPo saveNpc(SaveNpcDto dto) throws BizException {
 
         var createMode = dto.getId() == null;
 
@@ -154,7 +154,7 @@ public class PanelNpcService {
      * @throws BizException 业务异常
      */
     @Transactional
-    public void removeModelRole(Long id) throws BizException {
+    public void removeNpc(Long id) throws BizException {
         if (id == null) {
             throw new BizException("角色ID不能为空");
         }

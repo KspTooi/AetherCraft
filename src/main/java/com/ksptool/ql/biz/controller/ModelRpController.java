@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.BatchRpCompleteDto;
-import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
+import com.ksptool.ql.biz.model.dto.GetNpcListDto;
 import com.ksptool.ql.biz.model.dto.RecoverRpChatDto;
 import com.ksptool.ql.biz.model.dto.RemoveRpHistoryDto;
 import com.ksptool.ql.biz.model.dto.EditRpHistoryDto;
@@ -60,7 +60,7 @@ public class ModelRpController {
     }
 
     @PostMapping("/getRoleList")
-    public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto queryDto) throws BizException {
+    public Result<PageableView<GetNpcListVo>> getModelRoleList(@RequestBody @Valid GetNpcListDto queryDto) throws BizException {
         return Result.success(modelRpService.getModelRoleList(queryDto));
     }
 

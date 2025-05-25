@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class GetModelRoleListDto extends PageQuery {
+public class GetNpcListDto extends PageQuery {
     // 关键字搜索(角色名称或描述)
     private String keyword;
 } 

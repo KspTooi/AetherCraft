@@ -3,7 +3,7 @@ package com.ksptool.ql.biz.model.vo;
 import lombok.Data;
 
 @Data
-public class GetModelRoleDetailsVo {
+public class GetNpcDetailsVo {
 
     // 角色ID
     private Long id;

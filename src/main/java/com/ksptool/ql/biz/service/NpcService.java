@@ -3,15 +3,16 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
 import com.ksptool.ql.biz.mapper.NpcRepository;
-import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
+import com.ksptool.ql.biz.model.dto.GetNpcListDto;
 import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.NpcChatExamplePo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
-import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
-import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
+import com.ksptool.ql.biz.model.vo.GetNpcDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetNpcListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.SimpleExample;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,29 +37,15 @@ public class NpcService {
     private NpcChatExampleRepository chatExampleRepository;
 
 
-    public PageableView<GetModelRoleListVo> getModelRoleList(GetModelRoleListDto dto){
+    public RestPageableView<GetNpcListVo> getNpcList(GetNpcListDto dto){
 
-        var query = new NpcPo();
-        query.setName(dto.getKeyword()); // 设置名称关键字查询条件
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class)); // 按当前人物过滤
-
-        // 创建 SimpleExample 用于构建查询条件
-        SimpleExample<NpcPo> example = SimpleExample.of(query);
-        example.like("name"); // 添加名称的模糊查询
-
-        // 显式定义排序规则：按 "sortOrder" 字段升序排列
-        Sort sort = Sort.by(Sort.Direction.ASC, "sortOrder");
-
-        Pageable pageable = PageRequest.of(dto.getPage() - 1, dto.getPageSize(), sort);
-
-        // 使用 example 条件和 pageable（包含排序）从 repository 获取分页数据
-        Page<NpcPo> page = repository.findAll(example.get(), pageable);
-
-        // 将查询结果 Page<ModelRolePo> 转换为 PageableView<GetModelRoleListVo>
-        PageableView<GetModelRoleListVo> pageableView = new PageableView<>(page, GetModelRoleListVo.class);
+        Page<GetNpcListVo> page = repository.getNpcList(dto.getKeyword(), AuthService.getCurrentPlayerId(), dto.pageRequest());
+        
+        // 创建PageableView，不需要类型转换因为已经是GetNpcListVo
+        RestPageableView<GetNpcListVo> ret = new RestPageableView<>(page);
 
         // 对结果列表中的每个 VO 对象进行后处理
-        for (GetModelRoleListVo vo : pageableView.getRows()) {
+        for (GetNpcListVo vo : ret.getRows()) {
             // 解密头像路径
             vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
             // 如果头像路径不为空，则添加资源访问前缀
@@ -67,11 +54,10 @@ public class NpcService {
             }
         }
 
-        // 返回处理后的分页视图
-        return pageableView;
+        return ret;
     }
 
-    public GetModelRoleDetailsVo getModelRoleDetails(long id) throws BizException {
+    public GetNpcDetailsVo getNpcDetails(long id) throws BizException {
         
         // 创建查询条件
         NpcPo query = new NpcPo();
@@ -86,7 +72,7 @@ public class NpcService {
                 .orElseThrow(() -> new BizException("NPC不存在或无权限访问"));
         
         // 创建VO对象并映射属性
-        GetModelRoleDetailsVo vo = new GetModelRoleDetailsVo();
+        GetNpcDetailsVo vo = new GetNpcDetailsVo();
         assign(modelRole, vo);
         
         // 解密需要解密的字段
@@ -105,7 +91,7 @@ public class NpcService {
         return vo;
     }
 
-    public void copyModelRole(long sourceId) throws BizException{
+    public void copyNpc(long sourceId) throws BizException{
 
         // 查询要复制的NPC
         NpcPo query = new NpcPo();

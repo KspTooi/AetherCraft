@@ -2,16 +2,17 @@ package com.ksptool.ql.biz.controller;
 
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
-import com.ksptool.ql.biz.model.dto.GetModelRoleListDto;
-import com.ksptool.ql.biz.model.dto.SaveModelRoleDto;
+import com.ksptool.ql.biz.model.dto.GetNpcListDto;
+import com.ksptool.ql.biz.model.dto.SaveNpcDto;
 import com.ksptool.ql.biz.model.po.NpcPo;
-import com.ksptool.ql.biz.model.vo.GetModelRoleDetailsVo;
-import com.ksptool.ql.biz.model.vo.GetModelRoleListVo;
+import com.ksptool.ql.biz.model.vo.GetNpcDetailsVo;
+import com.ksptool.ql.biz.model.vo.GetNpcListVo;
 import com.ksptool.ql.biz.service.NpcService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelNpcService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
+import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,21 +33,21 @@ public class NpcController {
     private PanelNpcService panelNpcService;
 
 
-    @PostMapping("/getModelRoleList")
-    public Result<PageableView<GetModelRoleListVo>> getModelRoleList(@RequestBody @Valid GetModelRoleListDto dto){
-        return Result.success(service.getModelRoleList(dto));
+    @PostMapping("/getNpcListVo")
+    public Result<RestPageableView<GetNpcListVo>> getNpcListVo(@RequestBody @Valid GetNpcListDto dto){
+        return Result.success(service.getNpcList(dto));
     }
 
-    @PostMapping("getModelRoleDetails")
-    public Result<GetModelRoleDetailsVo> getModelRoleDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
-        return Result.success(service.getModelRoleDetails(dto.getId()));
+    @PostMapping("getNpcDetails")
+    public Result<GetNpcDetailsVo> getNpcDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        return Result.success(service.getNpcDetails(dto.getId()));
     }
 
-    @PostMapping("copyModelRole")
-    public Result<String> copyModelRole(@RequestBody @Valid CommonIdDto dto){
+    @PostMapping("copyNpc")
+    public Result<String> copyNpc(@RequestBody @Valid CommonIdDto dto){
 
         try{
-            service.copyModelRole(dto.getId());
+            service.copyNpc(dto.getId());
             return Result.success("success");
         }catch (BizException ex){
             return Result.error(ex.getMessage());
@@ -54,20 +55,20 @@ public class NpcController {
     }
 
 
-    @PostMapping("/saveModelRole")
-    public Result<String> saveModelRole(@RequestBody @Valid SaveModelRoleDto dto){
+    @PostMapping("/saveNpc")
+    public Result<String> saveNpc(@RequestBody @Valid SaveNpcDto dto){
         try{
-            NpcPo npcPo = panelNpcService.saveModelRole(dto);
+            NpcPo npcPo = panelNpcService.saveNpc(dto);
             return Result.success(npcPo.getId()+"");
         }catch (BizException ex){
             return Result.error(ex.getMessage());
         }
     }
 
-    @PostMapping("/removeModelRole")
-    public Result<String> removeModelRole(@RequestBody @Valid CommonIdDto dto){
+    @PostMapping("/removeNpc")
+    public Result<String> removeNpc(@RequestBody @Valid CommonIdDto dto){
         try{
-            panelNpcService.removeModelRole(dto.getId());
+            panelNpcService.removeNpc(dto.getId());
             return Result.success("success");
         }catch (BizException ex){
             return Result.error(ex.getMessage());
