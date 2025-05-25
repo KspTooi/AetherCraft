@@ -31,10 +31,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessagePo, Long
     Page<ChatMessagePo> getByThreadId(@Param("tid") Long tid, Pageable pageable);
 
     @Query("""
-        DELETE ChatMessagePo cmp WHERE cmp.seq > :seq
+        DELETE ChatMessagePo cmp
+        WHERE cmp.thread.id = :threadId AND cmp.seq > :seq
     """)
     @Modifying
-    void removeMessageAfterSeq(@Param("seq")Integer seq);
+    void removeMessageAfterSeq(@Param("threadId")Long threadId,@Param("seq")Integer seq);
 
     @Query("""
         SELECT cm FROM ChatMessagePo cm
