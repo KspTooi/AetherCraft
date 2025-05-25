@@ -26,7 +26,7 @@
                  :key="thread.id"
                  @click="handleThreadSelect(thread.id)"
                  class="thread-item"
-                 :class="{ 'active': currentThreadId === String(thread.id) }">
+                 :class="{ 'active': currentThreadId === thread.id }">
               <div class="thread-content">
                 <div class="thread-title">
                   {{ thread.title || '未命名会话' }}
@@ -66,12 +66,11 @@
 
 <script setup lang="ts">
 import { ref, inject } from 'vue'
-import http from '@/commons/Http'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../glow-ui/GlowTheme'
 import type { GlowThemeColors } from '../glow-ui/GlowTheme'
-import type { ModelRoleThreadListVo } from '../../entity/vo/ModelRoleThreadListVo.ts'
-import type Result from '../../entity/Result'
+import ThreadApi, { type GetThreadListDto, type GetThreadListVo } from '@/commons/api/ThreadApi'
+import type CommonIdDto from '@/entity/dto/CommonIdDto'
 
 // 当组件单独运行时，如果没有注入主题，则使用默认主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -86,7 +85,7 @@ const emit = defineEmits<{
 const visible = ref(false)
 const selectedRoleId = ref('')
 const selectedRoleName = ref('')
-const threads = ref<ModelRoleThreadListVo[]>([])
+const threads = ref<GetThreadListVo[]>([])
 const loading = ref(false)
 const currentThreadId = ref('')
 const confirmModalRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
@@ -97,11 +96,15 @@ const loadThreadList = async () => {
   
   loading.value = true
   try {
-    const threadList = await http.postEntity<ModelRoleThreadListVo[]>('/model/rp/getModelRoleThreadList', {
-      modelRoleId: selectedRoleId.value
-    })
+    const dto: GetThreadListDto = {
+      type: 1, // RP会话
+      npcId: selectedRoleId.value,
+      page: 1,
+      pageSize: 1000
+    }
     
-    threads.value = threadList || []
+    const response = await ThreadApi.getThreadList(dto)
+    threads.value = response.rows || []
     
     // 获取当前活动的会话ID
     const activeThread = threads.value.find(t => t.active === 1)
@@ -137,7 +140,7 @@ const formatTime = (timestamp: string) => {
   }
 }
 
-const handleThreadSelect = (threadId: number) => {
+const handleThreadSelect = (threadId: string) => {
   // 点击整个列表项时，调用激活并关闭模态框
   const thread = threads.value.find(t => t.id === threadId);
   if (!thread) {
@@ -146,19 +149,19 @@ const handleThreadSelect = (threadId: number) => {
   }
   
   // 触发激活事件由父组件处理
-  emit('activate-thread', selectedRoleId.value, String(threadId), thread.modelCode || 'gemini-pro');
+  emit('activate-thread', selectedRoleId.value, threadId, thread.modelCode || 'gemini-pro');
   
   // 本地更新UI状态
   threads.value.forEach(t => {
     t.active = t.id === threadId ? 1 : 0;
   });
-  currentThreadId.value = String(threadId);
+  currentThreadId.value = threadId;
   
   // 关闭模态框
   closeModal();
 }
 
-const handleActivateThread = (threadId: number) => {
+const handleActivateThread = (threadId: string) => {
   // 只点击激活按钮时，只激活但不关闭模态框
   const thread = threads.value.find(t => t.id === threadId);
   if (!thread) {
@@ -167,18 +170,18 @@ const handleActivateThread = (threadId: number) => {
   }
   
   // 触发激活事件由父组件处理
-  emit('activate-thread', selectedRoleId.value, String(threadId), thread.modelCode || 'gemini-pro');
+  emit('activate-thread', selectedRoleId.value, threadId, thread.modelCode || 'gemini-pro');
   
   // 本地更新UI状态
   threads.value.forEach(t => {
     t.active = t.id === threadId ? 1 : 0;
   });
-  currentThreadId.value = String(threadId);
+  currentThreadId.value = threadId;
   
   // 不关闭模态框
 }
 
-const handleDeleteThread = async (threadId: number) => {
+const handleDeleteThread = async (threadId: string) => {
   if (!confirmModalRef.value) return
   
   // 检查是否为最后一个会话
@@ -198,22 +201,21 @@ const handleDeleteThread = async (threadId: number) => {
   if (!confirmed) return
   
   try {
-    await http.postEntity<boolean>('/model/rp/removeThread', {
-      threadId: threadId
-    })
+    const dto: CommonIdDto = { id: threadId }
+    await ThreadApi.removeThread(dto)
     
     threads.value = threads.value.filter(t => t.id !== threadId)
     console.log('会话删除成功')
 
     // 如果当前激活的会话被删除，更新当前会话ID
-    if (currentThreadId.value === String(threadId) && threads.value.length > 0) {
+    if (currentThreadId.value === threadId && threads.value.length > 0) {
       const firstThread = threads.value[0]
-      currentThreadId.value = String(firstThread.id)
+      currentThreadId.value = firstThread.id
       
       // 如果没有激活的会话，自动激活第一个会话
       if (!threads.value.find(t => t.active === 1)) {
         firstThread.active = 1
-        emit('activate-thread', selectedRoleId.value, String(firstThread.id), firstThread.modelCode || 'gemini-pro')
+        emit('activate-thread', selectedRoleId.value, firstThread.id, firstThread.modelCode || 'gemini-pro')
       }
     }
   } catch (error) {

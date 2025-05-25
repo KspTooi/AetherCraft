@@ -139,14 +139,14 @@ public class ChatThreadService {
 
         ret.setMessages(new RestPageableView<>(msgVos, pPos.getTotalElements()));
 
-        if(dto.getNpcId() == null){
+        if(threadPo.getNpc() == null){
             //取消其他所有会话的激活
             repository.deActiveAllStandardThread(player.getPlayerId(),player.getUserId());
             //直接激活当前会话
             repository.activeThread(threadPo.getId());
         }
 
-        if(dto.getNpcId() != null){
+        if(threadPo.getNpc() != null){
             Long npcId = threadPo.getNpc().getId();
             repository.deActiveThreadByNpc(npcId);
             repository.activeThread(threadPo.getId());

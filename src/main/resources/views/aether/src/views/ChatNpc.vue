@@ -133,10 +133,6 @@ interface MessageBoxInstance {
 
 // 定义NPC列表实例类型
 interface NpcListInstance {
-  loadThreadList: () => Promise<any>;
-  setActiveThread: (threadId: string) => void;
-  getActiveThreadId: () => string;
-  threads: any[];
   closeMobileMenu: () => void;
   setSelectedNpc: (npcId: string) => void;
   loadNpcList: () => Promise<void>;
@@ -415,13 +411,16 @@ const handleActivateThread = async (npcId: string, threadId: string, modelCode: 
   
   isLoadingMessages.value = true; // 开始加载
   
-  // 设置查询参数以获取指定的线程
-  selectThreadQuery.value.npcId = undefined;
-  selectThreadQuery.value.threadId = threadId;
-  
   try {
+    // 创建新的查询对象，只包含threadId
+    const threadQuery: SelectThreadDto = {
+      threadId: threadId,
+      page: 1,
+      pageSize: 1000
+    };
+    
     // 调用ThreadApi获取指定线程的消息列表
-    const response: SelectThreadVo = await ThreadApi.selectThread(selectThreadQuery.value);
+    const response: SelectThreadVo = await ThreadApi.selectThread(threadQuery);
     
     // 存储完整的SelectThreadVo响应
     selectThreadData.value = response;
