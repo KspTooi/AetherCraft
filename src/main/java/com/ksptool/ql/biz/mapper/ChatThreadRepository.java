@@ -79,6 +79,8 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
           AND ctp.user.id = :userId
           AND ctp.npc.id = :npcId
           AND ctp.active = 1
+        ORDER BY ctp.id DESC
+        LIMIT 1
     """)
     ChatThreadPo getActiveThreadByNpcId(@Param("npcId")Long npcId,
                                         @Param("playerId")Long playerId,

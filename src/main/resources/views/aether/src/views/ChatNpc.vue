@@ -138,6 +138,8 @@ interface NpcListInstance {
   getActiveThreadId: () => string;
   threads: any[];
   closeMobileMenu: () => void;
+  setSelectedNpc: (npcId: string) => void;
+  loadNpcList: () => Promise<void>;
 }
 
 const getNpcMessageList = async (npcId: string) => {
@@ -333,6 +335,8 @@ const onSelectMode = (modeCode:string)=>{
 //选择NPC
 const onSelectNpc = async (npc: GetNpcListVo) => {
   npcListRef.value?.closeMobileMenu(); 
+  // 更新父组件的当前NPC ID
+  curNpcId.value = npc.id;
   await getNpcMessageList(npc.id); 
 };
 
@@ -340,6 +344,9 @@ const onSelectNpc = async (npc: GetNpcListVo) => {
 const onCreateThread = async (npc: GetNpcListVo) => {
 
   npcListRef.value?.closeMobileMenu(); // 关闭移动端菜单
+
+  // 父组件主动设定子组件的选中状态
+  npcListRef.value?.setSelectedNpc(npc.id);
 
   // 清空当前消息列表和状态
   messageData.value = []; 
@@ -364,6 +371,9 @@ const onCreateThread = async (npc: GetNpcListVo) => {
     
     // 会话创建完毕后获取消息列表
     await getNpcMessageList(npc.id);
+    
+    // 调用loadNpcList方法重新加载NPC列表
+    await npcListRef.value?.loadNpcList();
     
   } catch (error) {
     console.error(`为NPC ${npc.name} 创建新会话请求失败:`, error);

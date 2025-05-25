@@ -409,6 +409,9 @@ public class ChatThreadService {
             insert.setMessages(messagePos);
         }
 
+        //取消其他NPC的选中
+        npcRepository.deActiveAllNpc(playerPo.getId());
+        npcRepository.activeNpc(npcPo.getId());
         return repository.save(insert);
     }
 

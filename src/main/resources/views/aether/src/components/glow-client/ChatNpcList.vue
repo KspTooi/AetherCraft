@@ -70,9 +70,14 @@
               <div class="npc-title">{{ npc.name }}</div>
               <div class="npc-thread-count">{{ npc.threadCount }} 个对话</div>
             </div>
-            <!-- 三点菜单按钮 -->
-            <div class="menu-wrapper">
-              <button class="menu-btn" @click.stop="toggleContextMenu(npc, $event)">
+            <!-- 操作按钮组 -->
+            <div class="action-buttons">
+              <!-- 开始新会话按钮 -->
+              <button class="new-thread-btn" @click.stop="handleNewThread(npc)" title="开始新会话">
+                <i class="bi bi-chat"></i>
+              </button>
+              <!-- 三点菜单按钮 -->
+              <button class="menu-btn" @click.stop="toggleContextMenu(npc, $event)" title="更多选项">
                 <i class="bi bi-three-dots-vertical"></i>
               </button>
             </div>
@@ -167,6 +172,12 @@ const handleRoleManage = () => {
   closeMobileMenu()
 }
 
+// 处理新会话按钮点击
+const handleNewThread = (npc: GetNpcListVo) => {
+  emit('create-thread', npc)
+  closeMobileMenu()
+}
+
 // 监听窗口大小变化
 const handleResize = () => {
   isMobile.value = window.innerWidth <= 768
@@ -254,7 +265,8 @@ onBeforeUnmount(() => {
 // 暴露方法给父组件
 defineExpose({
   closeMobileMenu,
-  setSelectedNpc
+  setSelectedNpc,
+  loadNpcList
 })
 </script>
 
@@ -468,22 +480,48 @@ defineExpose({
   box-shadow: 0 0 8px v-bind('theme.boxGlowColor');
 }
 
-/* 菜单按钮相关样式 */
-.menu-wrapper {
+/* 操作按钮组样式 */
+.action-buttons {
   position: absolute; /* 绝对定位到 npc-item 右侧 */
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
+  gap: 4px; /* 按钮之间的间距 */
   opacity: 0; /* 默认隐藏 */
   transition: opacity 0.2s ease;
 }
 
-.npc-item:hover .menu-wrapper {
+.npc-item:hover .action-buttons {
   opacity: 1; /* 悬浮时显示 */
 }
 
+/* 新会话按钮样式 */
+.new-thread-btn {
+  background: transparent;
+  border: none;
+  color: v-bind('theme.boxGlowColor'); /* 使用主题发光色 */
+  padding: 4px 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-thread-btn:hover {
+  color: v-bind('theme.mainColorActive');
+  background: v-bind('theme.boxAccentColorHover');
+  transform: scale(1.1);
+}
+
+.new-thread-btn i {
+  font-size: 14px;
+}
+
+/* 三点菜单按钮样式 */
 .menu-btn {
   background: transparent;
   border: none;
@@ -532,15 +570,30 @@ defineExpose({
     height: 100vh;
     transition: transform 0.3s ease;
     box-shadow: none;
-    /* 移动端菜单总是显示 */
-    .menu-wrapper {
-      opacity: 1;
-    }
   }
   
   .chat-list-container.mobile-open {
     transform: translateX(240px);
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* 移动端操作按钮总是显示 */
+  .action-buttons {
+    opacity: 1;
+  }
+  
+  /* 调整移动端按钮大小 */
+  .new-thread-btn,
+  .menu-btn {
+    padding: 6px 8px;
+  }
+  
+  .new-thread-btn i {
+    font-size: 16px;
+  }
+  
+  .menu-btn i {
+    font-size: 18px;
   }
 }
 </style>
