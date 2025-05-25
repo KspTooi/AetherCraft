@@ -33,7 +33,7 @@ public class SaveNpcDto {
      * 头像路径
      */
     @Size(max = 255, message = "头像路径最多255个字符")
-    private String avatarPath;
+    private String avatarUrl;
     
     /**
      * 角色设定摘要

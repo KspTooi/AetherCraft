@@ -1,33 +1,30 @@
 <template>
-  <div class="role-manager-layout">
-    <ChatNpcCreator
-      ref="roleListRef"
-      class="role-sidebar"
-      :data="roleList"
-      :selected="selectedRoleId"
-      :loading="loading"
-      @select-role="onSelectRole"
-      @create-role="onCreateRole"
+  <div class="npc-manager-layout">
+    <ChatNpcListCreator
+      ref="npcListRef"
+      class="npc-sidebar"
+      @select-npc="onSelectNpc"
+      @create-npc="onCreateNpc"
     />
 
-    <GlowDiv class="role-content" border="none">
-        <div v-if="!selectedRoleId" class="empty-detail">
+    <GlowDiv class="npc-content" border="none">
+        <div v-if="!selectedNpcId" class="empty-detail">
           <i class="bi bi-person-bounding-box"></i>
           <p>请从左侧选择一个NPC进行设计</p>
         </div>
       
       <GlowTab
         v-else
-        :items="roleTabItems"
+        :items="npcTabItems"
         v-model:activeTab="currentTab"
       >
         <!-- NPC基本信息 -->
-        <div v-if="currentTab === 'base-info'" class="role-tab-panel">
-          <div class="role-panel">
+        <div v-if="currentTab === 'base-info'" class="npc-tab-panel">
+          <div class="npc-panel">
             <!-- 操作按钮区域（顶部） -->
             <div class="action-buttons">
               <GlowButton 
-                @click="removeModelRole(selectedRoleId)"
+                @click="removeNpc(selectedNpcId)"
                 :disabled="loading"
                 class="action-button danger-button"
                 title="移除NPC"
@@ -35,7 +32,7 @@
                 移除
               </GlowButton>
               <GlowButton 
-                @click="copyCurrentRole"
+                @click="copyCurrentNpc"
                 :disabled="loading"
                 class="action-button"
                 title="复制NPC"
@@ -43,7 +40,7 @@
                 复制
               </GlowButton>
               <GlowButton 
-                @click="saveRoleChanges" 
+                @click="saveNpcChanges" 
                 :disabled="loading"
                 class="action-button save-button"
                 title="保存NPC"
@@ -52,10 +49,10 @@
               </GlowButton>
             </div>
             
-            <div class="role-detail-form">
+            <div class="npc-detail-form">
               <div class="form-row">
                 <GlowInput
-                  v-model="currentRoleDetails.name"
+                  v-model="currentNpcDetails.name"
                   title="NPC名称"
                   :maxLength="50"
                   showLength
@@ -66,7 +63,7 @@
               <div class="form-row">
                 <div class="input-group">
                   <GlowInput
-                    v-model="currentRoleDetails.tags"
+                    v-model="currentNpcDetails.tags"
                     title="NPC标签"
                     :maxLength="50"
                     showLength
@@ -76,7 +73,7 @@
                 <div class="input-group status-group">
                   <div class="status-wrapper">
                     <GlowCheckBox 
-                      v-model="roleEnabled"
+                      v-model="npcEnabled"
                       tip="被禁用的NPC在聊天界面将不可见">
                       启用NPC
                     </GlowCheckBox>
@@ -86,7 +83,7 @@
               
               <div class="form-row">
                 <GlowInputArea
-                  v-model="currentRoleDetails.description"
+                  v-model="currentNpcDetails.description"
                   title="NPC描述"
                   :maxLength="50000"
                   showLength
@@ -96,7 +93,7 @@
               
               <div class="form-row">
                 <GlowInputArea
-                  v-model="currentRoleDetails.roleSummary"
+                  v-model="currentNpcDetails.roleSummary"
                   title="NPC设定摘要"
                   :maxLength="50000"
                   showLength
@@ -106,7 +103,7 @@
               
               <div class="form-row">
                 <GlowInputArea
-                  v-model="currentRoleDetails.scenario"
+                  v-model="currentNpcDetails.scenario"
                   title="情景"
                   :maxLength="50000"
                   showLength
@@ -116,7 +113,7 @@
               
               <div class="form-row">
                 <GlowInputArea
-                  v-model="currentRoleDetails.firstMessage"
+                  v-model="currentNpcDetails.firstMessage"
                   title="首次对话内容"
                   :maxLength="50000"
                   showLength
@@ -128,7 +125,7 @@
               <div class="avatar-section">
                 <p class="section-title">NPC头像</p>
                 <div class="avatar-container">
-                  <img v-if="currentRoleDetails.avatarPath" :src="currentRoleDetails.avatarPath" class="avatar-preview" alt="NPC头像" />
+                  <img v-if="currentNpcDetails.avatarUrl" :src="currentNpcDetails.avatarUrl" class="avatar-preview" alt="NPC头像" />
                   <div v-else class="avatar-placeholder">
                     <i class="bi bi-person"></i>
                   </div>
@@ -156,9 +153,9 @@
         </div>
         
         <!-- 对话示例 -->
-        <div v-if="currentTab === 'chat-examples'" class="role-tab-panel">
-          <div class="role-panel">
-            <NpcChatExampleTab v-if="selectedRoleId" :npcId="selectedRoleId" />
+        <div v-if="currentTab === 'chat-examples'" class="npc-tab-panel">
+          <div class="npc-panel">
+            <NpcChatExampleTab v-if="selectedNpcId" :npcId="selectedNpcId" />
             <div v-else class="chat-examples-placeholder">
               <i class="bi bi-chat-dots"></i>
               <p>请先选择一个NPC以查看和编辑对话示例</p>
@@ -184,12 +181,7 @@ import {ref, onMounted, reactive, watch} from 'vue';
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme';
 import { inject } from 'vue';
-import http from '@/commons/Http';
-import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
-import type PageableView from '@/entity/PageableView';
-import ChatNpcCreator from '@/components/glow-client/ChatNpcCreator.vue';
-import type GetModelRoleDetailsVo from "@/entity/vo/GetModelRoleDetailsVo.ts";
-import type SaveModelRoleDto from "@/entity/dto/SaveModelRoleDto.ts";
+import ChatNpcListCreator from '@/components/glow-client/ChatNpcListCreator.vue';
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
@@ -201,6 +193,8 @@ import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue";
 import { usePreferencesStore } from '@/stores/preferences';
 import NpcChatExampleTab from '@/components/glow-client/NpcChatExampleTab.vue';
 import { useRoute } from 'vue-router';
+import NpcApi, { type GetNpcDetailsVo, type SaveNpcDto, type GetNpcListVo } from '@/commons/api/NpcApi';
+import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
@@ -212,20 +206,19 @@ const route = useRoute();
 const preferencesStore = usePreferencesStore();
 
 // NPC列表引用
-const roleListRef = ref<any>(null);
+const npcListRef = ref<any>(null);
 const alterRef = ref<any>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 const confirmInputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null);
 
-// NPC列表数据
-const roleList = ref<GetModelRoleListVo[]>([]);
-const loading = ref(true);
-const selectedRoleId = ref<string>(""); //当前选择的NPC_ID
+// 加载状态
+const loading = ref(false);
+const selectedNpcId = ref<string>(""); //当前选择的NPC_ID
 
 // 定义标签项
-const roleTabItems = [
+const npcTabItems = [
   { title: 'NPC基本', action: 'base-info' },
   { title: '对话示例', action: 'chat-examples' },
 ];
@@ -240,13 +233,13 @@ watch(currentTab, (newValue) => {
   }
 });
 
-// 先初始化currentRoleDetails
-const currentRoleDetails = reactive<GetModelRoleDetailsVo>({
+// 先初始化currentNpcDetails
+const currentNpcDetails = reactive<GetNpcDetailsVo>({
   id:"",
   name:"",
   status:1,
   sortOrder:0,
-  avatarPath:"",
+  avatarUrl:"",
   description:"",
   roleSummary:"",
   scenario:"",
@@ -254,23 +247,21 @@ const currentRoleDetails = reactive<GetModelRoleDetailsVo>({
   tags:""
 });
 
-// 然后初始化roleEnabled并设置监听
-const roleEnabled = ref(currentRoleDetails.status === 1);
+// 然后初始化npcEnabled并设置监听
+const npcEnabled = ref(currentNpcDetails.status === 1);
 
 // 监听NPC启用状态变化
-watch(roleEnabled, (newValue) => {
-  currentRoleDetails.status = newValue ? 1 : 0;
+watch(npcEnabled, (newValue) => {
+  currentNpcDetails.status = newValue ? 1 : 0;
 });
 
 // 监听NPC详情中的status变化
-watch(() => currentRoleDetails.status, (newValue) => {
-  roleEnabled.value = newValue === 1;
+watch(() => currentNpcDetails.status, (newValue) => {
+  npcEnabled.value = newValue === 1;
 });
 
 // 生命周期钩子
 onMounted(async () => {
-  await loadRoleList();
-  
   // 优先检查URL中的roleId参数
   const urlRoleId = route.query.roleId as string;
   
@@ -282,59 +273,42 @@ onMounted(async () => {
     currentTab.value = savedTab;
   }
   
+  // 等待NPC列表组件加载完成
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
   // 如果URL中有roleId，优先使用它
-  if (urlRoleId && roleList.value.some(role => role.id === urlRoleId)) {
-    selectedRoleId.value = urlRoleId;
+  if (urlRoleId) {
+    selectedNpcId.value = urlRoleId;
     // 保存到偏好设置中，以便下次访问时记住
     preferencesStore.saveModelRoleEditCurrentId(urlRoleId);
-    await loadModelRoleDetails();
+    // 同步子组件的选中状态
+    npcListRef.value?.selectNpc(urlRoleId);
+    await loadNpcDetails();
   } 
   // 否则，尝试使用保存的roleId
   else if (savedRoleId) {
     // 检查保存的NPCID是否在列表中存在
-    const roleExists = roleList.value.some(role => role.id === savedRoleId);
-    if (roleExists) {
-      selectedRoleId.value = savedRoleId;
-      await loadModelRoleDetails();
+    const npcExists = npcListRef.value?.listData?.some((npc: any) => npc.id === savedRoleId);
+    if (npcExists) {
+      selectedNpcId.value = savedRoleId;
+      // 同步子组件的选中状态
+      npcListRef.value?.selectNpc(savedRoleId);
+      await loadNpcDetails();
     }
   }
 });
 
-// 加载NPC列表
-const loadRoleList = async () => {
-  try {
-    loading.value = true;
-    const data = await http.postEntity<PageableView<GetModelRoleListVo>>('/model/role/getModelRoleList', {
-      page: 1,
-      pageSize: 20,
-      keyword: ''
-    });
-    roleList.value = data.rows || [];
-    loading.value = false;
-  } catch (error) {
-    roleList.value = [];
-    loading.value = false;
-    
-    // 使用GlowAlter显示错误提示
-    alterRef.value?.showConfirm({
-      title: '加载失败',
-      content: error instanceof Error ? error.message : '无法加载NPC列表，请稍后重试',
-      closeText: '确定'
-    });
-  }
-};
-
-const loadModelRoleDetails = async () => {
-  if (!selectedRoleId.value) {
+// 加载NPC详情
+const loadNpcDetails = async () => {
+  if (!selectedNpcId.value) {
     return;
   }
   
   try {
-    const response = await http.postEntity<GetModelRoleDetailsVo>('/model/role/getModelRoleDetails', {
-      id: selectedRoleId.value
-    });
+    const dto: CommonIdDto = { id: selectedNpcId.value };
+    const response = await NpcApi.getNpcDetails(dto);
     
-    Object.assign(currentRoleDetails, response);
+    Object.assign(currentNpcDetails, response);
   } catch (error) {
     alterRef.value?.showConfirm({
       title: '加载失败',
@@ -344,7 +318,8 @@ const loadModelRoleDetails = async () => {
   }
 }
 
-const removeModelRole = async (roleId: string) => {
+// 移除NPC
+const removeNpc = async (roleId: string) => {
   if (!confirmRef.value) return;
   
   // 显示确认对话框
@@ -364,26 +339,16 @@ const removeModelRole = async (roleId: string) => {
   
   try {
     loading.value = true;
-    const response = await http.postEntity<string>('/model/role/removeModelRole', {
-      id: roleId
-    });
+    const dto: CommonIdDto = { id: roleId };
+    await NpcApi.removeNpc(dto);
     
-    if (response === 'success') {
-      // 如果删除的是当前选中的NPC，清空选择
-      if (roleId === selectedRoleId.value) {
-        selectedRoleId.value = '';
-      }
-      
-      // 刷新NPC列表
-      await loadRoleList();
-    } else {
-      // 使用GlowAlter显示错误提示
-      alterRef.value?.showConfirm({
-        title: '操作失败',
-        content: '删除NPC失败：' + (response || '未知错误'),
-        closeText: '确定'
-      });
+    // 如果删除的是当前选中的NPC，清空选择
+    if (roleId === selectedNpcId.value) {
+      selectedNpcId.value = '';
     }
+    
+    // 刷新NPC列表
+    await npcListRef.value?.loadNpcList();
     
     loading.value = false;
   } catch (error) {
@@ -398,21 +363,24 @@ const removeModelRole = async (roleId: string) => {
   }
 }
 
-const saveModelRole = async (roleData: SaveModelRoleDto) => {
+// 保存NPC
+const saveNpc = async (npcData: SaveNpcDto) => {
   try {
     loading.value = true;
-    const response = await http.postEntity<string>('/model/role/saveModelRole', roleData);
+    const response = await NpcApi.saveNpc(npcData);
     
     // 返回的是新NPC的ID
     if (response) {
       // 刷新NPC列表
-      await loadRoleList();
+      await npcListRef.value?.loadNpcList();
       
       // 如果是新创建的NPC，选中它
-      if (!roleData.id) {
-        selectedRoleId.value = response;
+      if (!npcData.id) {
+        selectedNpcId.value = response;
+        // 同步子组件的选中状态
+        npcListRef.value?.selectNpc(response);
         // 加载新创建NPC的详情
-        await loadModelRoleDetails();
+        await loadNpcDetails();
       }
     } else {
       // 使用GlowAlter显示错误提示
@@ -437,26 +405,25 @@ const saveModelRole = async (roleData: SaveModelRoleDto) => {
 }
 
 // 选择NPC
-const onSelectRole = async (roleId: string) => {
-  selectedRoleId.value = roleId;
+const onSelectNpc = async (npc: GetNpcListVo) => {
+  selectedNpcId.value = npc.id;
   
   // 保存选中的NPCID到偏好设置
-  preferencesStore.saveModelRoleEditCurrentId(roleId);
+  preferencesStore.saveModelRoleEditCurrentId(npc.id);
   
   // 加载选中NPC的详情
-  await loadModelRoleDetails();
+  await loadNpcDetails();
 };
 
-// 复制NPC - 空实现
-const onCopyRole = async (roleId: string) => {
+// 复制NPC
+const onCopyNpc = async (roleId: string) => {
   try {
     loading.value = true;
-    await http.postEntity<string>('/model/role/copyModelRole', {
-      id: roleId
-    });
+    const dto: CommonIdDto = { id: roleId };
+    await NpcApi.copyNpc(dto);
     
     // 刷新NPC列表
-    await loadRoleList();
+    await npcListRef.value?.loadNpcList();
     loading.value = false;
     
     // 显示成功提示
@@ -478,14 +445,14 @@ const onCopyRole = async (roleId: string) => {
 };
 
 // 复制当前NPC
-const copyCurrentRole = () => {
-  if (selectedRoleId.value) {
-    onCopyRole(selectedRoleId.value);
+const copyCurrentNpc = () => {
+  if (selectedNpcId.value) {
+    onCopyNpc(selectedNpcId.value);
   }
 };
 
 // 创建新NPC
-const onCreateRole = async () => {
+const onCreateNpc = async () => {
   if (!confirmInputRef.value) return;
   
   // 弹出输入框让用户输入NPC名称
@@ -504,15 +471,15 @@ const onCreateRole = async () => {
   // 用户确认创建且输入了NPC名称
   if (result.value.trim()) {
     // 清空当前选中的NPCID
-    selectedRoleId.value = "";
+    selectedNpcId.value = "";
     
     // 初始化一个新的NPC详情对象
-    Object.assign(currentRoleDetails, {
+    Object.assign(currentNpcDetails, {
       id: "",
       name: result.value.trim(), // 使用用户输入的NPC名称
       status: 1,
       sortOrder: 0,
-      avatarPath: "",
+      avatarUrl: "",
       description: "",
       roleSummary: "",
       scenario: "",
@@ -523,7 +490,7 @@ const onCreateRole = async () => {
     // 等待下一个事件循环，确保表单已重置
     setTimeout(() => {
       // 自动保存新NPC
-      saveRoleChanges();
+      saveNpcChanges();
     }, 0);
   } else {
     // 用户输入为空，显示提示
@@ -536,9 +503,9 @@ const onCreateRole = async () => {
 };
 
 // 保存NPC更改
-const saveRoleChanges = async () => {
+const saveNpcChanges = async () => {
   // 验证必填字段
-  if (!currentRoleDetails.name.trim()) {
+  if (!currentNpcDetails.name.trim()) {
     alterRef.value?.showConfirm({
       title: '验证失败',
       content: 'NPC名称不能为空',
@@ -548,28 +515,28 @@ const saveRoleChanges = async () => {
   }
   
   // 处理头像路径，移除所有"/res/"前缀
-  let avatarPath = currentRoleDetails.avatarPath;
-  if (avatarPath) {
+  let avatarUrl = currentNpcDetails.avatarUrl;
+  if (avatarUrl) {
     // 使用正则表达式移除所有/res/前缀
-    while (avatarPath.includes('/res/')) {
-      avatarPath = avatarPath.replace('/res/', '');
+    while (avatarUrl.includes('/res/')) {
+      avatarUrl = avatarUrl.replace('/res/', '');
     }
   }
   
-  const roleData: SaveModelRoleDto = {
-    id: currentRoleDetails.id,
-    name: currentRoleDetails.name,
-    description: currentRoleDetails.description,
-    roleSummary: currentRoleDetails.roleSummary,
-    scenario: currentRoleDetails.scenario,
-    firstMessage: currentRoleDetails.firstMessage,
-    tags: currentRoleDetails.tags,
-    status: currentRoleDetails.status,
-    sortOrder: currentRoleDetails.sortOrder,
-    avatarPath: avatarPath
+  const npcData: SaveNpcDto = {
+    id: currentNpcDetails.id,
+    name: currentNpcDetails.name,
+    description: currentNpcDetails.description,
+    roleSummary: currentNpcDetails.roleSummary,
+    scenario: currentNpcDetails.scenario,
+    firstMessage: currentNpcDetails.firstMessage,
+    tags: currentNpcDetails.tags,
+    status: currentNpcDetails.status,
+    sortOrder: currentNpcDetails.sortOrder,
+    avatarUrl: avatarUrl
   };
   
-  await saveModelRole(roleData);
+  await saveNpc(npcData);
 };
 
 // 触发文件上传对话框
@@ -611,28 +578,11 @@ const handleFileUpload = async (event: Event) => {
   try {
     uploading.value = true;
     
-    // 创建FormData对象
-    const formData = new FormData();
-    formData.append('file', file);
+    // 使用NpcApi上传头像
+    const avatarUrl = await NpcApi.uploadAvatar(file);
     
-    // 使用原生fetch API调用上传接口
-    const response = await fetch('/model/role/uploadAvatar', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      throw new Error('上传失败：' + response.statusText);
-    }
-    
-    const data = await response.json();
-    
-    // 更新头像路径 (假设响应格式为 { data: 文件路径 })
-    if (data && data.data) {
-      currentRoleDetails.avatarPath = '/res/' + data.data;
-    } else {
-      throw new Error('上传失败：服务器返回数据格式不正确');
-    }
+    // 更新头像路径
+    currentNpcDetails.avatarUrl = '/res/' + avatarUrl;
     
     uploading.value = false;
     
@@ -651,30 +601,21 @@ const handleFileUpload = async (event: Event) => {
     target.value = '';
   }
 };
-
-// 跳转到旧版控制台NPC管理页面
-const goToOldPanel = () => {
-  if (selectedRoleId.value) {
-    window.location.href = `/panel/model/role/list?id=${selectedRoleId.value}`;
-  } else {
-    window.location.href = '/panel/model/role/list';
-  }
-};
 </script>
 
 <style scoped>
-.role-manager-layout {
+.npc-manager-layout {
   display: flex;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-.role-sidebar {
+.npc-sidebar {
   flex-shrink: 0;
 }
 
-.role-content {
+.npc-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -682,27 +623,27 @@ const goToOldPanel = () => {
   overflow: hidden;
 }
 
-.role-tab-panel {
+.npc-tab-panel {
   height: 100%;
   overflow: hidden;
 }
 
-.role-panel {
+.npc-panel {
   padding: 20px;
   height: 100%;
   overflow-y: auto;
   max-height: calc(100vh - 135px);
 }
 
-.role-panel::-webkit-scrollbar {
+.npc-panel::-webkit-scrollbar {
   width: 8px;
 }
 
-.role-panel::-webkit-scrollbar-thumb {
+.npc-panel::-webkit-scrollbar-thumb {
   background: v-bind('theme.boxBorderColor');
 }
 
-.role-panel::-webkit-scrollbar-track {
+.npc-panel::-webkit-scrollbar-track {
   background: v-bind('theme.boxSecondColor');
 }
 
@@ -743,7 +684,7 @@ const goToOldPanel = () => {
   font-size: 16px;
 }
 
-.role-detail-form {
+.npc-detail-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -882,13 +823,13 @@ const goToOldPanel = () => {
 }
 
 @media (max-width: 768px) {
-  .role-manager-layout {
+  .npc-manager-layout {
     flex-direction: column;
     height: 100%;
     position: relative;
   }
 
-  .role-content {
+  .npc-content {
     position: absolute;
     top: 0;
     left: 0;

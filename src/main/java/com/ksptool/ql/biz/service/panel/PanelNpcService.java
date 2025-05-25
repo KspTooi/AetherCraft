@@ -123,6 +123,7 @@ public class PanelNpcService {
             NpcPo insert = new NpcPo();
             assign(dto, insert);
             insert.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
+            insert.setActive(0);
 
             css.encryptEntity(insert);
             return npcRepository.save(insert);

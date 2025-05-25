@@ -18,7 +18,7 @@ export interface GetNpcListVo {
 export interface GetNpcDetailsVo {
     id: string;             // 角色ID
     name: string;           // 角色名称
-    avatarPath: string;     // 头像路径
+    avatarUrl: string;      // 头像路径
     description: string;    // 角色描述
     roleSummary: string;    // 角色设定摘要
     scenario: string;       // 情景
@@ -32,7 +32,7 @@ export interface SaveNpcDto {
     id?: string;            // 角色ID，新建时为null
     name: string;           // 角色名称
     description?: string;   // 角色描述
-    avatarPath?: string;    // 头像路径
+    avatarUrl?: string;     // 头像路径
     roleSummary?: string;   // 角色设定摘要
     scenario?: string;      // 情景
     firstMessage?: string;  // 首次对话内容

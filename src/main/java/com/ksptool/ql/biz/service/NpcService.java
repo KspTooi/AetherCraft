@@ -73,7 +73,7 @@ public class NpcService {
         assign(modelRole, vo);
         
         // 解密需要解密的字段
-        vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
+        vo.setAvatarUrl(css.decryptForCurUser(vo.getAvatarUrl()));
         vo.setDescription(css.decryptForCurUser(vo.getDescription()));
         vo.setRoleSummary(css.decryptForCurUser(vo.getRoleSummary()));
         vo.setScenario(css.decryptForCurUser(vo.getScenario()));
@@ -81,8 +81,8 @@ public class NpcService {
         vo.setTags(css.decryptForCurUser(vo.getTags()));
         
         // 处理头像路径
-        if (StringUtils.isNotBlank(vo.getAvatarPath())) {
-            vo.setAvatarPath("/res/" + vo.getAvatarPath());
+        if (StringUtils.isNotBlank(vo.getAvatarUrl())) {
+            vo.setAvatarUrl("/res/" + vo.getAvatarUrl());
         }
         
         return vo;

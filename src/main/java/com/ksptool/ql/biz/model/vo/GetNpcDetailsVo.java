@@ -12,7 +12,7 @@ public class GetNpcDetailsVo {
     private String name;
 
     // 头像路径
-    private String avatarPath;
+    private String avatarUrl;
 
     // 角色描述
     private String description;

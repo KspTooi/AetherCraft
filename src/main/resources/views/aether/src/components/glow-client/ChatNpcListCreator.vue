@@ -24,10 +24,10 @@
     >
 
       <!-- 管理NPC按钮 -->
-      <div class="manage-role-btn-wrapper"> 
+      <div class="manage-npc-btn-wrapper"> 
         <GlowButton
-          @click="handleRoleManage" 
-          class="manage-role-btn"
+          @click="handleNpcManage" 
+          class="manage-npc-btn"
           :corners="['bottom-right','bottom-left']"
         >
           返回
@@ -43,11 +43,11 @@
         </div>
         
         <!-- 空列表状态 -->
-        <div v-else-if="threads.length === 0" class="empty-list">
+        <div v-else-if="listData.length === 0" class="empty-list">
           <i class="bi bi-person-plus"></i>
           <div class="empty-text">您还未拥有模型NPC</div>
           <GlowButton
-            @click="handleCreateRole($event)" 
+            @click="handleCreateNpc($event)" 
             class="empty-create-btn"
           >
             创建新NPC
@@ -58,10 +58,10 @@
         <div v-else class="thread-list">
           <!-- 新增NPC按钮 -->
           <div 
-            class="thread-item new-role-item"
-            @click="handleCreateRole($event)"
+            class="thread-item new-npc-item"
+            @click="handleCreateNpc($event)"
           >
-            <div class="role-avatar new-role-avatar">
+            <div class="npc-avatar new-npc-avatar">
               <i class="bi bi-plus-lg"></i>
             </div>
             <div class="thread-content">
@@ -71,17 +71,17 @@
           
           <!-- 现有NPC列表 -->
           <div 
-            v-for="thread in threads" 
-            :key="thread.id"
-            @click="handleRoleClick(thread.id)"
-            :class="['thread-item', { active: thread.id == activeThreadId }]"
+            v-for="npc in listData" 
+            :key="npc.id"
+            @click="handleNpcClick(npc)"
+            :class="['thread-item', { active: npc.id == selectedNpcId }]"
           >
-            <div class="role-avatar" :class="{ 'no-image': !thread.avatarPath }">
-              <img v-if="thread.avatarPath" :src="thread.avatarPath" :alt="thread.name">
+            <div class="npc-avatar" :class="{ 'no-image': !npc.avatarUrl }">
+              <img v-if="npc.avatarUrl" :src="npc.avatarUrl" :alt="npc.name">
               <i v-else class="bi bi-person"></i>
             </div>
             <div class="thread-content">
-              <div class="thread-title">{{ thread.name }}</div>
+              <div class="thread-title">{{ npc.name }}</div>
             </div>
           </div>
         </div>
@@ -91,13 +91,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
+import { ref, inject, onMounted, watch, onBeforeUnmount, computed, reactive, readonly } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
-import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts'; // 导入 GetModelRoleListVo 类型
-import { useRouter } from 'vue-router' // 导入 router
-import { usePreferencesStore } from '@/stores/preferences' // 导入 preferences store
+import { useRouter } from 'vue-router'
+import { usePreferencesStore } from '@/stores/preferences'
+import NpcApi, { type GetNpcListDto, type GetNpcListVo } from '@/commons/api/NpcApi'
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -106,41 +106,62 @@ const router = useRouter()
 // 获取偏好设置存储
 const preferencesStore = usePreferencesStore()
 
+// NPC列表数据
+const listData = ref<GetNpcListVo[]>([])
+const listTotal = ref(0)
+const listQuery = reactive<GetNpcListDto>({
+  keyword: null,
+  page: 1,
+  pageSize: 1000
+})
+
+// 加载状态
+const loading = ref(false)
+
+// 当前选中的NPC ID
+const selectedNpcId = ref<string>("")
+
 // 事件定义
 const emit = defineEmits<{
-  (e: 'select-role', roleId: string): void;
-  (e: 'create-role'): void; // 添加创建NPC事件
+  (e: 'select-npc', npc: GetNpcListVo): void;
+  (e: 'create-npc'): void;
 }>()
-
-const props = defineProps<{
-  data: GetModelRoleListVo[] // 使用 GetModelRoleListVo 数组类型
-  selected: string //当前选择的会话ID
-  loading?: boolean
-}>()
-
-// 状态
-const loading = computed(() => props.loading ?? false)
-const threads = computed(() => props.data)
-
-// 计算属性：活动会话ID
-const activeThreadId = computed(() => props.selected)
 
 // 移动端相关状态
 const isMobile = ref(window.innerWidth <= 768)
 const mobileMenuOpen = ref(false)
 
+// 加载NPC列表
+const loadNpcList = async () => {
+  try {
+    loading.value = true
+    const response = await NpcApi.getNpcListVo(listQuery)
+    listData.value = response.rows || []
+    listTotal.value = response.count || 0
+  } catch (error) {
+    console.error('加载NPC列表失败:', error)
+    listData.value = []
+    listTotal.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
 // 处理点击会话
-const handleRoleClick = (roleId: string) => {
-  if (roleId === activeThreadId.value) {
+const handleNpcClick = (npc: GetNpcListVo) => {
+  if (npc.id === selectedNpcId.value) {
     closeMobileMenu(); // 点击当前选中项时也关闭移动菜单
     return; 
   }
-  emit('select-role', roleId)
+  selectedNpcId.value = npc.id
+  // 保存选中的NPC ID到偏好设置
+  preferencesStore.saveModelRoleEditCurrentId(npc.id)
+  emit('select-npc', npc)
   closeMobileMenu()
 }
 
 // 处理管理NPC按钮点击
-const handleRoleManage = async () => {
+const handleNpcManage = async () => {
   // 在跳转前先将clientRpPath设置为/rp-main，防止循环重定向
   await preferencesStore.saveClientRpPath('/rp')
   router.push('/rp')
@@ -148,9 +169,9 @@ const handleRoleManage = async () => {
 }
 
 // 处理创建NPC点击
-const handleCreateRole = (event: Event) => {
+const handleCreateNpc = (event: Event) => {
   event.stopPropagation()
-  emit('create-role')
+  emit('create-npc')
   closeMobileMenu()
 }
 
@@ -173,9 +194,26 @@ const closeMobileMenu = () => {
   }
 }
 
-// 组件挂载时设置窗口大小监听
-onMounted(() => {
+// 选择指定ID的NPC
+const selectNpc = (id: string) => {
+  const npc = listData.value.find(n => n.id === id)
+  if (npc) {
+    handleNpcClick(npc)
+  }
+}
+
+// 组件挂载时设置窗口大小监听和加载数据
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
+  
+  // 加载NPC列表
+  await loadNpcList()
+  
+  // 从偏好设置中加载上次选择的NPC ID
+  const savedNpcId = preferencesStore.getModelRoleEditCurrentId
+  if (savedNpcId && listData.value.some(npc => npc.id === savedNpcId)) {
+    selectedNpcId.value = savedNpcId
+  }
 })
 
 onBeforeUnmount(() => {
@@ -184,7 +222,9 @@ onBeforeUnmount(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  closeMobileMenu
+  closeMobileMenu,
+  loadNpcList,
+  selectNpc
 })
 </script>
 
@@ -232,12 +272,12 @@ defineExpose({
   z-index: 1000;
 }
 
-.manage-role-btn-wrapper { 
+.manage-npc-btn-wrapper { 
   padding: 12px;
   flex-shrink: 0;
 }
 
-.manage-role-btn { 
+.manage-npc-btn { 
   width: 100%;
   padding: 10px 0;
   font-size: 14px;
@@ -351,7 +391,7 @@ defineExpose({
 }
 
 /* 新增 role-avatar 样式 */
-.role-avatar {
+.npc-avatar {
   width: 36px;
   height: 36px;
   overflow: hidden;
@@ -366,18 +406,18 @@ defineExpose({
   border-radius: 0; /* 直角 */
 }
 
-.role-avatar img {
+.npc-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.role-avatar.no-image i {
+.npc-avatar.no-image i {
   font-size: 18px;
   color: rgba(255, 255, 255, 0.7);
 }
 
-.thread-item.active .role-avatar {
+.thread-item.active .npc-avatar {
   border-color: v-bind('theme.boxGlowColor');
   box-shadow: 0 0 8px v-bind('theme.boxGlowColor');
 }
@@ -459,27 +499,27 @@ defineExpose({
 }
 
 /* 新NPC按钮样式 */
-.new-role-item {
+.new-npc-item {
   border-left: 3px solid v-bind('theme.mainColor');
   background-color: rgba(255, 255, 255, 0.05);
   margin: 4px 0; /* 与其他NPC项目保持一致的边距 */
 }
 
-.new-role-item:hover {
+.new-npc-item:hover {
   background-color: v-bind('theme.mainColorHover');
 }
 
-.new-role-avatar {
+.new-npc-avatar {
   background: v-bind('theme.mainColor');
   border-color: v-bind('theme.mainBorderColor');
 }
 
-.new-role-avatar i {
+.new-npc-avatar i {
   font-size: 18px; /* 调整图标大小与其他NPC头像图标一致 */
   color: v-bind('theme.mainTextColor');
 }
 
-.new-role-item .thread-title {
+.new-npc-item .thread-title {
   color: v-bind('theme.boxTextColor');
 }
 </style>
