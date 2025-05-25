@@ -25,7 +25,21 @@
                  :key="model.modelCode"
                  :class="{ 'active': selected === model.modelCode }"
                  @click="selectModel(model)">
-              {{ model.modelName }}
+              <span class="model-name-text">{{ model.modelName }}</span>
+              <div class="model-tags">
+                <span v-if="model.thinking === 1" class="tag thinking-tag">
+                  思考
+                </span>
+                <span class="tag size-tag" :class="getSizeClass(model.size)">
+                  {{ getSizeDisplay(model.size) }}
+                </span>
+                <span class="tag speed-tag" :class="getSpeedClass(model.speed)">
+                  {{ model.speed }}
+                </span>
+                <span class="tag intelligence-tag" :class="getIntelligenceClass(model.intelligence)">
+                  {{ model.intelligence }}
+                </span>
+              </div>
             </div>
           </div>
         </template>
@@ -47,6 +61,10 @@ interface ModelData {
   modelCode: string // 模型代码(不展示)
   modelName: string // 模型名称(展示)
   series: string    // 模型系列(分组)
+  size: string      // 模型规模
+  speed: string     // 模型速度
+  intelligence: string // 智能程度
+  thinking: number  // 思考能力
 }
 
 const props = defineProps<{
@@ -135,6 +153,47 @@ const loadModelList = async () => {
 onMounted(() => {
   loadModelList()
 })
+
+// 获取模型大小显示文本
+const getSizeDisplay = (size: string): string => {
+  return size // 直接返回原始文字
+}
+
+// 获取模型大小样式类
+const getSizeClass = (size: string): string => {
+  const sizeMap: Record<string, string> = {
+    '大型': 'size-l',
+    '中型': 'size-m',
+    '小型': 'size-s'
+  }
+  return sizeMap[size] || 'size-m'
+}
+
+// 获取模型速度样式类
+const getSpeedClass = (speed: string): string => {
+  const speedMap: Record<string, string> = {
+    '极速': 'speed-fastest',
+    '快速': 'speed-fast',
+    '中速': 'speed-medium',
+    '慢速': 'speed-slow',
+    '最慢': 'speed-slowest'
+  }
+  return speedMap[speed] || 'speed-medium'
+}
+
+// 获取智能程度样式类
+const getIntelligenceClass = (intelligence: string): string => {
+  const intelligenceMap: Record<string, string> = {
+    '精英': 'intelligence-elite',
+    '钻石': 'intelligence-diamond',
+    '铂金': 'intelligence-platinum',
+    '黄金': 'intelligence-gold',
+    '白银': 'intelligence-silver',
+    '青铜': 'intelligence-bronze',
+    '木制': 'intelligence-wood'
+  }
+  return intelligenceMap[intelligence] || 'intelligence-bronze'
+}
 
 // 指令定义
 const vClickOutside = {
@@ -256,6 +315,10 @@ const vClickOutside = {
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .model-item:hover {
@@ -267,6 +330,187 @@ const vClickOutside = {
   background: v-bind('theme.mainColor');
   color: v-bind('theme.boxTextColor');
   font-weight: 500;
+}
+
+.model-name-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 0; /* 直角风格 */
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 18px;
+  height: 16px;
+  text-align: center;
+  border: 1px solid;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* 大小标签样式 */
+.size-tag.size-l {
+  background: v-bind('theme.dangerColor');
+  border-color: v-bind('theme.dangerBorderColor');
+  color: v-bind('theme.dangerTextColor');
+  box-shadow: 0 0 4px v-bind('theme.dangerBorderColor');
+}
+
+.size-tag.size-m,
+.size-tag.size-s {
+  background: v-bind('theme.boxAccentColor');
+  border-color: v-bind('theme.boxBorderColor');
+  color: v-bind('theme.boxTextColor');
+  box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
+}
+
+/* 速度标签样式 */
+.speed-tag.speed-fastest {
+  background: v-bind('theme.mainColor');
+  border-color: v-bind('theme.mainBorderColor');
+  color: v-bind('theme.mainTextColor');
+  box-shadow: 0 0 4px v-bind('theme.mainBorderColor');
+}
+
+.speed-tag.speed-fast,
+.speed-tag.speed-medium,
+.speed-tag.speed-slow,
+.speed-tag.speed-slowest {
+  background: v-bind('theme.boxAccentColor');
+  border-color: v-bind('theme.boxBorderColor');
+  color: v-bind('theme.boxTextColor');
+  box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
+}
+
+/* 智能程度标签样式 */
+.intelligence-tag.intelligence-elite {
+  background: rgba(52, 14, 115, 0.5);
+  border-color: rgba(112, 40, 230, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(92, 25, 191, 0.8);
+}
+
+.intelligence-tag.intelligence-diamond {
+  background: rgba(159, 58, 3, 0.6);
+  border-color: rgb(159, 58, 3);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(159, 58, 3, 0.8);
+}
+
+.intelligence-tag.intelligence-platinum {
+  background: rgba(158, 97, 1, 0.6);
+  border-color: rgba(158, 97, 1, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(158, 97, 1, 0.8);
+}
+
+.intelligence-tag.intelligence-gold,
+.intelligence-tag.intelligence-silver,
+.intelligence-tag.intelligence-bronze,
+.intelligence-tag.intelligence-wood {
+  background: v-bind('theme.boxAccentColor');
+  border-color: v-bind('theme.boxBorderColor');
+  color: v-bind('theme.boxTextColor');
+  box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
+}
+
+/* 思考标签样式 */
+.thinking-tag {
+  background: v-bind('theme.boxGlowColor');
+  border-color: v-bind('theme.boxGlowColor');
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 6px v-bind('theme.boxGlowColor');
+  padding: 2px 6px;
+  min-width: 24px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* 激活状态下的标签样式调整 */
+.model-item.active .size-tag.size-l {
+  background: v-bind('theme.dangerColorActive');
+  border-color: v-bind('theme.dangerBorderColorActive');
+  color: v-bind('theme.dangerTextColorActive');
+  box-shadow: 0 0 8px v-bind('theme.dangerBorderColorActive');
+}
+
+.model-item.active .size-tag.size-m,
+.model-item.active .size-tag.size-s {
+  background: v-bind('theme.boxColorActive');
+  border-color: v-bind('theme.boxBorderColorHover');
+  color: v-bind('theme.boxTextColor');
+  box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
+}
+
+.model-item.active .speed-tag.speed-fastest {
+  background: v-bind('theme.mainColorActive');
+  border-color: v-bind('theme.mainBorderColorActive');
+  color: v-bind('theme.mainTextColorActive');
+  box-shadow: 0 0 8px v-bind('theme.mainBorderColorActive');
+}
+
+.model-item.active .speed-tag.speed-fast,
+.model-item.active .speed-tag.speed-medium,
+.model-item.active .speed-tag.speed-slow,
+.model-item.active .speed-tag.speed-slowest {
+  background: v-bind('theme.boxColorActive');
+  border-color: v-bind('theme.boxBorderColorHover');
+  box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
+}
+
+.model-item.active .intelligence-tag.intelligence-elite {
+  background: rgba(52, 14, 115, 0.5);
+  border-color: rgba(112, 40, 230, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(92, 25, 191, 0.8);
+}
+
+.model-item.active .intelligence-tag.intelligence-diamond {
+  background: rgba(159, 58, 3, 0.6);
+  border-color: rgb(159, 58, 3);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(159, 58, 3, 0.8);
+}
+
+.model-item.active .intelligence-tag.intelligence-platinum {
+  background: rgba(158, 97, 1, 0.6);
+  border-color: rgba(158, 97, 1, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px rgba(158, 97, 1, 0.8);
+}
+
+.model-item.active .intelligence-tag.intelligence-gold,
+.model-item.active .intelligence-tag.intelligence-silver,
+.model-item.active .intelligence-tag.intelligence-bronze,
+.model-item.active .intelligence-tag.intelligence-wood {
+  background: v-bind('theme.boxColorActive');
+  border-color: v-bind('theme.boxBorderColorHover');
+  box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
+}
+
+.model-item.active .thinking-tag {
+  background: v-bind('theme.boxGlowColor');
+  border-color: v-bind('theme.boxGlowColor');
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 10px v-bind('theme.boxGlowColor');
 }
 
 /* 自定义滚动条样式 */

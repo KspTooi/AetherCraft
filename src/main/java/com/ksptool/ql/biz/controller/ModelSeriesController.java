@@ -24,6 +24,10 @@ public class ModelSeriesController {
             vo.setModelCode(model.getCode());
             vo.setModelName(model.getName());
             vo.setSeries(model.getSeries());
+            vo.setSize(model.getSize());
+            vo.setSpeed(model.getSpeed());
+            vo.setIntelligence(model.getIntelligence());
+            vo.setThinking(model.getThinking());
             seriesList.add(vo);
         }
         

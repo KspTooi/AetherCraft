@@ -19,7 +19,7 @@
         :key="msg.id"
         :message="msg"
         :disabled="props.isGenerating"
-        :allow-regenerate="index === messages.length - 1"
+        :allow-regenerate="shouldAllowRegenerate(msg, index)"
         @select-message="handleSelectMessage"
         @delete-message="handleDeleteMessage"
         @update-message="handleUpdateMessageForward"
@@ -140,6 +140,22 @@ defineExpose({
   selectMessageId,
   scrollToBottom
 })
+
+// 添加一个新的函数来判断是否应该显示重新生成按钮
+const shouldAllowRegenerate = (msg: Message, index: number): boolean => {
+  // 只有最后一条消息才可能显示重新生成按钮
+  if (index !== messages.value.length - 1) {
+    return false;
+  }
+  
+  // 如果只有一条消息且这条消息是NPC消息，则不显示重新生成按钮
+  if (messages.value.length === 1 && (msg.role === 'model' || msg.role === '1')) {
+    return false;
+  }
+  
+  // 其他情况下，最后一条消息可以显示重新生成按钮
+  return true;
+}
 </script>
 
 <style scoped>
