@@ -24,7 +24,7 @@
                 class="glow-input-field" 
                 :type="type"
                 :placeholder="placeholder"
-                @keyup.enter="handleConfirm"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div v-if="message" class="glow-input-message">{{ message }}</div>
@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, inject, computed } from 'vue'
+import { ref, nextTick, inject, computed, onMounted, onUnmounted } from 'vue'
 import GlowButton from './GlowButton.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from './GlowTheme.ts'
 import type { GlowThemeColors } from './GlowTheme.ts'
@@ -96,6 +96,25 @@ const modalStyle = computed(() => ({
   width: props.width,
   // 可以添加 maxHeight 等其他样式
 }));
+
+// --- 键盘事件处理 ---
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!visible.value) return
+  
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    handleCancel()
+  }
+  // 注意：回车键的处理在输入框的 @keyup.enter 中处理，避免冲突
+}
+
+// 输入框键盘事件处理
+const handleInputKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    handleConfirm()
+  }
+}
 
 // --- 方法 (合并和调整) ---
 
@@ -173,6 +192,16 @@ const showInput = async (options?: {
     resolvePromise.value = resolve
   })
 }
+
+// 组件挂载时添加键盘事件监听
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+// 组件卸载时移除键盘事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 
 // 暴露方法
 defineExpose({

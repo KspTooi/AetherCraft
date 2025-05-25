@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import GlowModal from './GlowModal.vue'
 import GlowButton from './GlowButton.vue'
 import { inject } from 'vue'
@@ -22,6 +22,19 @@ const confirmBtnBg = computed(() => theme.boxAccentColorHover)
 const confirmBtnBorder = computed(() => theme.boxBorderColorHover)
 const cancelBtnBg = computed(() => 'rgba(60, 60, 60, 0.5)')
 const cancelBtnBorder = computed(() => 'rgba(120, 120, 120, 0.5)')
+
+// 键盘事件处理
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!visible.value) return
+  
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    handleConfirm()
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    handleCancel()
+  }
+}
 
 // 处理确认
 const handleConfirm = () => {
@@ -68,6 +81,16 @@ const showConfirm = (options?: {
     resolvePromise.value = resolve
   })
 }
+
+// 组件挂载时添加键盘事件监听
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+// 组件卸载时移除键盘事件监听
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 
 // 暴露方法
 defineExpose({
