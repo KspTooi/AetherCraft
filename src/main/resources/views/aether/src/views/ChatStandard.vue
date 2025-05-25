@@ -22,6 +22,7 @@
            ref="messageBoxRef" 
            :data="messages" 
            :isGenerating="isGenerating"
+           :loading="isLoadingMessages"
            @update-message="onMessageEdit"
            @delete-message="onMessageRemove"
            @regenerate="onMessageRegenerate"
@@ -85,6 +86,8 @@ const chatListRef = ref<ChatListInstance | null>(null);
 const isGenerating = ref(false);
 // 当前是否有临时消息 (移到这里)
 const hasTempMessage = ref<boolean>(false)
+// 是否正在加载消息
+const isLoadingMessages = ref<boolean>(false)
 const isCreatingThread = ref<boolean>(false)
 const currentThreadId = ref<string>("")
 const currentModelCode = ref<string>("")
@@ -298,6 +301,8 @@ const onBatchAbort = async () => {
 const reloadMessageList = async (threadId?: string) => {
   if (threadId) {
     // --- Logic for when a specific threadId is provided ---
+    isLoadingMessages.value = true; // 开始加载
+    
     try {
       const dto: SelectThreadDto = {
         threadId,
@@ -330,6 +335,8 @@ const reloadMessageList = async (threadId?: string) => {
       // or revert to a known state.
       // currentThreadId.value = ""; 
       // currentModelCode.value = "";
+    } finally {
+      isLoadingMessages.value = false; // 结束加载
     }
   } else {
     // --- Logic for when no threadId is provided (load default or prepare for new) ---

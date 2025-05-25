@@ -20,6 +20,7 @@
            ref="messageBoxRef" 
            :data="messageData" 
            :isGenerating="isGenerating"
+           :loading="isLoadingMessages"
            @update-message="onMessageEdit"
            @delete-message="onMessageRemove"
            @regenerate="onMessageRegenerate"
@@ -111,6 +112,8 @@ const npcListRef = ref<NpcListInstance | null>(null);
 const isGenerating = ref(false);
 // 当前是否有临时消息
 const hasTempMessage = ref<boolean>(false)
+// 是否正在加载消息
+const isLoadingMessages = ref<boolean>(false)
 
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 // 确认框引用
@@ -138,6 +141,8 @@ interface NpcListInstance {
 }
 
 const getNpcMessageList = async (npcId: string) => {
+  isLoadingMessages.value = true; // 开始加载
+  
   try {
     // 设置查询参数
     selectThreadQuery.value.npcId = npcId;
@@ -182,6 +187,8 @@ const getNpcMessageList = async (npcId: string) => {
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
+  } finally {
+    isLoadingMessages.value = false; // 结束加载
   }
 }
 
@@ -392,6 +399,8 @@ const onManageThreads = async (npc: GetNpcListVo) => {
 const handleActivateThread = async (npcId: string, threadId: string, modelCode: string) => {
   console.log(`准备激活会话: npcId=${npcId}, threadId=${threadId}, modelCode=${modelCode}`)
   
+  isLoadingMessages.value = true; // 开始加载
+  
   // 设置查询参数以获取指定的线程
   selectThreadQuery.value.npcId = undefined;
   selectThreadQuery.value.threadId = threadId;
@@ -437,6 +446,8 @@ const handleActivateThread = async (npcId: string, threadId: string, modelCode: 
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
+  } finally {
+    isLoadingMessages.value = false; // 结束加载
   }
 }
 

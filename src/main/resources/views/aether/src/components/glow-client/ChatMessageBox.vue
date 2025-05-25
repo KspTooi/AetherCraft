@@ -1,5 +1,10 @@
 <template>
   <GlowDiv class="im-message-box" border="none">
+    <!-- 加载状态 - 顶部发光装饰条 -->
+    <Transition name="glow-fade">
+      <div v-if="internalLoading" class="loading-glow-border"></div>
+    </Transition>
+    
     <!-- 空状态提示 -->
     <div v-if="messages.length === 0" class="empty-state">
       <i class="bi bi-chat-dots"></i>
@@ -48,10 +53,14 @@ const messagesContainer = ref<HTMLDivElement | null>(null)
 // 消息列表数据 (内部状态)
 const messages = ref<Message[]>([])
 
+// 内部loading状态，用于控制发光条的延迟消失
+const internalLoading = ref<boolean>(false)
+
 // 定义组件props
 const props = defineProps<{
   data?: Message[];
   isGenerating?: boolean;
+  loading?: boolean;
 }>()
 
 // 滚动到底部 (定义移到 watch 之前)
@@ -72,6 +81,19 @@ watch(() => props.data, (newData) => {
   immediate: true, // 立即执行一次，处理初始数据
   deep: true // 深度监听，如果 Message 对象内部可能变化 (通常不需要)
 });
+
+// --- 监听loading状态变化，实现延迟消失效果 ---
+watch(() => props.loading, (newLoading) => {
+  if (newLoading) {
+    // 开始加载时立即显示
+    internalLoading.value = true;
+  } else {
+    // 加载完成时延迟0.5秒后消失，确保有足够时间显示完成状态
+    setTimeout(() => {
+      internalLoading.value = false;
+    }, 500);
+  }
+}, { immediate: true });
 
 //当前选择的消息ID
 const selectMessageId = ref<string>()
@@ -190,6 +212,43 @@ defineExpose({
   font-size: 14px;
   color: rgba(255, 255, 255, 0.5);
   line-height: 1.5;
+}
+
+/* 加载状态样式 */
+.loading-glow-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: v-bind('theme.boxGlowColor');
+  box-shadow: 0 0 15px 2px v-bind('theme.boxGlowColor');
+  z-index: 10;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    box-shadow: 0 0 15px 2px v-bind('theme.boxGlowColor');
+  }
+  50% { 
+    box-shadow: 0 0 25px 4px v-bind('theme.boxGlowColor');
+  }
+}
+
+/* Transition动画样式 - 确保渐隐效果明显 */
+.glow-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.glow-fade-leave-active {
+  transition: all 0.8s ease-out;
+}
+
+.glow-fade-enter-from,
+.glow-fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0);
 }
 
 /* 移动端适配 */
