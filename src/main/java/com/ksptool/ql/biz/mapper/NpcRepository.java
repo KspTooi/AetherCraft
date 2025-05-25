@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.vo.GetNpcListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -50,5 +51,18 @@ public interface NpcRepository extends JpaRepository<NpcPo, Long> {
                            @Param("playerId") Long playerId,
                            Pageable pageable);
 
+    @Query("""
+        UPDATE NpcPo SET active = 1
+        WHERE id = :npcId
+    """)
+    @Modifying
+    void activeNpc(@Param("npcId")Long npcId);
+
+    @Query("""
+        UPDATE NpcPo SET active = 0
+        WHERE player.id = :playerId
+    """)
+    @Modifying
+    void deActiveAllNpc(@Param("playerId")Long playerId);
 
 } 
