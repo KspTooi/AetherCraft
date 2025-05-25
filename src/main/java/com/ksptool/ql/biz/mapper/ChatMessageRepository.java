@@ -48,7 +48,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessagePo, Long
     @Query("""
         SELECT cm FROM ChatMessagePo cm
         WHERE cm.senderRole = :senderRole AND cm.thread.id = :threadId
-        ORDER BY cm.seq ASC
+        ORDER BY cm.seq DESC
         LIMIT 1
     """)
     ChatMessagePo getSelfLastMessage(@Param("threadId")Long threadId,@Param("senderRole") Integer senderRole);
