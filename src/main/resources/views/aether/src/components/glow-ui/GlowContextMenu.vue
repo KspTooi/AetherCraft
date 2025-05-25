@@ -51,7 +51,7 @@ const contextData = ref('')
 const menuTitle = ref('')
 
 // 显示菜单
-const show = (context: string, event?: MouseEvent, title?: string) => {
+const show = (context: any, event?: MouseEvent, title?: string) => {
   contextData.value = context
   
   if (title) {

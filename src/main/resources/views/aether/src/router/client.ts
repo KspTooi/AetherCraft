@@ -50,7 +50,7 @@ const router = createRouter({
     {
       path: '/model-role-manager',
       name: 'model-role-manager',
-      component: () => import('../views/ChatNpcManager.vue'),
+      component: () => import('../views/ChatNpcCreator.vue'),
       beforeEnter: async (to, from, next) => {
         const preferences = usePreferencesStore()
         // 当进入角色设计器页面时，更新角色扮演路径为角色设计器

@@ -3,9 +3,7 @@
 
     <ChatNpcList ref="roleListRef"
                    class="chat-sidebar"
-                   :data="roleList"
-                   :selected="currentRoleId"
-                   @select-role="onSelectRole"
+                   @select-npc="onSelectNpc"
                    @create-thread="onCreateThread"
                    @edit-role="onEditRole"
                    @manageThreads="onManageThreads"
@@ -68,8 +66,7 @@ import http from '@/commons/Http';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import ChatNpcList from "@/components/glow-client/ChatNpcList.vue";
-import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
-import type PageableView from '@/entity/PageableView';
+import type { GetNpcListVo } from '@/commons/api/NpcApi.ts';
 import type RecoverRpChatVo from '@/entity/vo/RecoverRpChatVo.ts';
 import type RecoverRpChatHistoryVo from '@/entity/vo/RecoverRpChatHistoryVo.ts';
 import type GetRpLastStatusVo from '@/entity/vo/GetRpLastStatusVo.ts';
@@ -107,9 +104,6 @@ const currentRoleId = ref<string>("")   //当前选择的角色ID
 const currentThreadId = ref<string>("") //当前聊天Thread的ID
 const currentModelCode = ref<string>("")//当前选择的模型代码
 
-// 更新 roleList 的类型为 GetModelRoleListVo[]
-const roleList = ref<GetModelRoleListVo[]>([])
-
 // 使用 MessageBoxItem 类型定义 messages
 const messages = ref<MessageBoxItem[]>([]);
 
@@ -122,7 +116,6 @@ const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 const roleThreadsModalRef = ref<InstanceType<typeof ChatNpcThreadsModal> | null>(null)
 
 onMounted(async () => {
-  await reloadRoleList();
   await resumeLastStatus();
 })
 
@@ -386,22 +379,6 @@ const reloadMessageList = async (roleId: string, threadId?: string) => {
   }
 };
 
-//重命名函数并更新逻辑
-const reloadRoleList = async () => {
-  try {
-    // 更新接口地址和期望的响应类型，并添加空的JSON对象作为请求体
-    const data = await http.postEntity<PageableView<GetModelRoleListVo>>('/model/rp/getRoleList', {
-      page: 1,
-      pageSize: 1000
-    });
-    // 从 PageableView 中提取 rows
-    roleList.value = data.rows || []; 
-  } catch (error) {
-    console.error('加载角色列表失败:', error);
-    roleList.value = []; // 清空列表
-  }
-}
-
 //选择模型
 const onSelectMode = (modeCode:string)=>{
   currentModelCode.value = modeCode;
@@ -409,29 +386,29 @@ const onSelectMode = (modeCode:string)=>{
   // 比如：如果当前有会话，提示用户切换模型会新建会话，或者只是更新下次新建会话的模型？
 }
 
-//选择会话
-const onSelectRole = async (roleId: string) => {
+//选择NPC
+const onSelectNpc = async (npc: GetNpcListVo) => {
   // When user manually selects a role, always load the latest/new thread for that role
   // Do not pass threadId here, let reloadMessageList handle the newThread=1 logic
   roleListRef.value?.closeMobileMenu(); 
-  await reloadMessageList(roleId); 
+  await reloadMessageList(npc.id); 
 };
 
 //开始新会话
-const onCreateThread = async (role:GetModelRoleListVo) => {
-  console.log(`开始为角色 ${role.name} (ID: ${role.id}) 创建新会话`);
+const onCreateThread = async (npc: GetNpcListVo) => {
+  console.log(`开始为NPC ${npc.name} (ID: ${npc.id}) 创建新会话`);
   roleListRef.value?.closeMobileMenu(); // 关闭移动端菜单
 
   // 清空当前消息列表和状态
   messages.value = []; 
   isGenerating.value = false;
   hasTempMessage.value = false; 
-  currentRoleId.value = role.id; // 设置当前角色ID
+  currentRoleId.value = npc.id; // 设置当前角色ID
   // currentThreadId.value 会在请求成功后被设置
 
   try {
     const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', { 
-      modelRoleId: role.id, 
+      modelRoleId: npc.id, 
       modelCode: currentModelCode.value, 
       newThread: 0 // 明确指示创建新线程
     });
@@ -457,7 +434,7 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
     messageBoxRef.value?.scrollToBottom();
     
   } catch (error) {
-    console.error(`为角色 ${role.name} 创建新会话请求失败:`, error);
+    console.error(`为NPC ${npc.name} 创建新会话请求失败:`, error);
 
     alterRef.value?.showConfirm({
       title: "故障",
@@ -468,21 +445,21 @@ const onCreateThread = async (role:GetModelRoleListVo) => {
   }
 }
 
-//编辑角色(修改为使用Vue Router导航到ModelRoleManager)
-const onEditRole = async (role:GetModelRoleListVo) => {
-  if (!role.id) {
+//编辑NPC(修改为使用Vue Router导航到ModelRoleManager)
+const onEditRole = async (npc: GetNpcListVo) => {
+  if (!npc.id) {
     return
   }
   // 使用Vue Router导航到ModelRoleManager.vue并携带roleId参数
   router.push({
     path: '/model-role-manager',
-    query: { roleId: role.id }
+    query: { roleId: npc.id }
   });
 }
 
-const onManageThreads = async (role:GetModelRoleListVo) => {
+const onManageThreads = async (npc: GetNpcListVo) => {
   if (roleThreadsModalRef.value) {
-    roleThreadsModalRef.value.show(role.id, role.name);
+    roleThreadsModalRef.value.show(npc.id, npc.name);
   }
 }
 

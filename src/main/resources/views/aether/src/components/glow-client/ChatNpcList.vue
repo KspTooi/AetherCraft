@@ -34,8 +34,8 @@
         </GlowButton>
       </div>
       
-      <!-- 会话列表内容 -->
-      <div class="threads-wrapper">
+      <!-- NPC列表内容 -->
+      <div class="npcs-wrapper">
         <!-- 加载中状态 -->
         <div v-if="loading" class="loading-indicator">
           <i class="bi bi-arrow-repeat spinning"></i> 
@@ -54,24 +54,24 @@
           </GlowButton>
         </div>
         
-        <!-- 会话列表 -->
-        <div v-else class="thread-list">
+        <!-- NPC列表 -->
+        <div v-else class="npc-list">
           <div 
-            v-for="thread in threads" 
-            :key="thread.id"
-            @click="handleRoleClick(thread.id)"
-            :class="['thread-item', { active: thread.id == activeThreadId }]"
+            v-for="npc in threads" 
+            :key="npc.id"
+            @click="handleRoleClick(npc)"
+            :class="['npc-item', { active: npc.id == activeThreadId }]"
           >
-            <div class="role-avatar" :class="{ 'no-image': !thread.avatarPath }">
-              <img v-if="thread.avatarPath" :src="thread.avatarPath" :alt="thread.name">
+            <div class="role-avatar" :class="{ 'no-image': !npc.avatarPath }">
+              <img v-if="npc.avatarPath" :src="npc.avatarPath" :alt="npc.name">
               <i v-else class="bi bi-person"></i>
             </div>
-            <div class="thread-content">
-              <div class="thread-title">{{ thread.name }}</div>
+            <div class="npc-content">
+              <div class="npc-title">{{ npc.name }}</div>
             </div>
             <!-- 三点菜单按钮 -->
             <div class="menu-wrapper">
-              <button class="menu-btn" @click.stop="toggleContextMenu(thread.id, thread.name, $event)">
+              <button class="menu-btn" @click.stop="toggleContextMenu(npc, $event)">
                 <i class="bi bi-three-dots-vertical"></i>
               </button>
             </div>
@@ -91,39 +91,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
+import { ref, inject, onMounted, watch, onBeforeUnmount, computed, reactive } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import GlowContextMenu from '../glow-ui/GlowContextMenu.vue' // 导入上下文菜单组件
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
-import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts'; // 导入 GetModelRoleListVo 类型
 import { useRouter } from 'vue-router' // 导入 router
+import type { GetNpcListVo, GetNpcListDto } from '@/commons/api/NpcApi.ts';
+import NpcApi from '@/commons/api/NpcApi.ts'; // 导入NpcApi
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 获取路由器
 const router = useRouter()
 
+const listData = ref<GetNpcListVo[]>([])
+const listTotal = ref(0)
+const listQuery = reactive<GetNpcListDto>({
+  keyword: null,
+  page: 1,
+  pageSize: 1000
+})
+const selectedNpc = ref<GetNpcListVo | null>(null)
+
 // 事件定义
 const emit = defineEmits<{
-  (e: 'select-role', roleId: string): void;
-  (e: 'create-thread', role: GetModelRoleListVo): void;
-  (e: 'edit-role', role: GetModelRoleListVo): void;
-  (e: 'manage-threads', role: GetModelRoleListVo): void;
+  (e: 'select-npc', npc: GetNpcListVo): void;
+  (e: 'create-thread', role: GetNpcListVo): void;
+  (e: 'edit-role', role: GetNpcListVo): void;
+  (e: 'manage-threads', role: GetNpcListVo): void;
 }>()
 
 const props = defineProps<{
-  data: GetModelRoleListVo[] // 使用 GetModelRoleListVo 数组类型
-  selected: string //当前选择的会话ID
   loading?: boolean
 }>()
 
 // 状态
 const loading = computed(() => props.loading ?? false)
-const threads = computed(() => props.data)
+const threads = computed(() => listData.value)
 
 // 计算属性：活动会话ID
-const activeThreadId = computed(() => props.selected)
+const activeThreadId = computed(() => selectedNpc.value?.id || "")
 
 // 移动端相关状态
 const isMobile = ref(window.innerWidth <= 768)
@@ -139,13 +147,14 @@ const menuActions = ref([
   { name: '编辑NPC', action: 'edit-role' },
 ])
 
-// 处理点击会话
-const handleRoleClick = (roleId: string) => {
-  if (roleId === activeThreadId.value) {
+// 处理点击NPC
+const handleRoleClick = (npc: GetNpcListVo) => {
+  if (npc.id === activeThreadId.value) {
     closeMobileMenu(); // 点击当前选中项时也关闭移动菜单
     return; 
   }
-  emit('select-role', roleId)
+  selectedNpc.value = npc; // 更新内部选中状态
+  emit('select-npc', npc)
   closeMobileMenu()
 }
 
@@ -175,33 +184,64 @@ const closeMobileMenu = () => {
 }
 
 // 打开/关闭上下文菜单
-const toggleContextMenu = (roleId: string, roleName: string, event: MouseEvent) => {
+const toggleContextMenu = (npc: GetNpcListVo, event: MouseEvent) => {
   if (contextMenu.value) {
-    contextMenu.value.show(roleId, event, roleName) // 将NPC名作为标题传递
+    contextMenu.value.show(npc, event, npc.name) // 直接传递NPC对象
   }
 }
 
 // 处理上下文菜单点击事件
-const onContextMenuClick = (roleId: string, action: string) => {
-  const role = threads.value.find(t => t.id === roleId)
-  if (!role) return
-
+const onContextMenuClick = (context: any, action: string) => {
+  const npc = context as GetNpcListVo;
+  
   if (action === 'new-thread') {
-    emit('create-thread', role)
+    emit('create-thread', npc)
   }
   if (action === 'manage-threads') {
-    emit('manage-threads', role)
+    emit('manage-threads', npc)
   }
   if (action === 'edit-role') {
-    emit('edit-role', role)
+    emit('edit-role', npc)
   }
 
   closeMobileMenu() // 操作菜单后也关闭移动菜单
 }
 
+//加载NPC列表
+const loadNpcList = async () => {
+  try {
+    const response = await NpcApi.getNpcListVo(listQuery);
+    listData.value = response.rows || [];
+    listTotal.value = response.count || 0;
+  } catch (error) {
+    console.error('获取NPC列表失败:', error);
+    listData.value = [];
+    listTotal.value = 0;
+  }
+}
+
+//选中默认的NPC
+const selectDefaultNpc = () => {
+  const activeNpc = listData.value.find(npc => npc.active === 1);
+  if (activeNpc) {
+    selectedNpc.value = activeNpc; // 更新内部选中状态
+    emit('select-npc', activeNpc);
+  }
+}
+
+//设置选中的NPC
+const setSelectedNpc = (npcId: string) => {
+  const npc = listData.value.find(item => item.id === npcId);
+  if (npc) {
+    selectedNpc.value = npc;
+  }
+}
+
 // 组件挂载时设置窗口大小监听
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
+  await loadNpcList();
+  await selectDefaultNpc();
 })
 
 onBeforeUnmount(() => {
@@ -210,7 +250,8 @@ onBeforeUnmount(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  closeMobileMenu
+  closeMobileMenu,
+  setSelectedNpc
 })
 </script>
 
@@ -269,7 +310,7 @@ defineExpose({
   font-size: 14px;
 }
 
-.threads-wrapper {
+.npcs-wrapper {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -322,12 +363,12 @@ defineExpose({
   max-width: 160px;
 }
 
-/* 会话列表 */
-.thread-list {
+/* NPC列表 */
+.npc-list {
   padding: 1px 0;
 }
 
-.thread-item {
+.npc-item {
   display: flex;
   align-items: center; /* 垂直居中对齐 */
   padding: 10px 8px 10px 20px; /* 调整右边距给菜单按钮空间 */
@@ -338,11 +379,11 @@ defineExpose({
   position: relative; /* 为菜单按钮定位 */
 }
 
-.thread-item:hover {
+.npc-item:hover {
   background-color: v-bind('theme.boxAccentColor');
 }
 
-.thread-item.active {
+.npc-item.active {
   background-color: v-bind('theme.boxColorActive');
   border-left-color: v-bind('theme.boxGlowColor');
   box-shadow: inset 5px 0 8px -2px v-bind('theme.boxGlowColor');
@@ -350,14 +391,14 @@ defineExpose({
   -webkit-backdrop-filter: blur(v-bind('theme.boxBlurActive') + 'px');
 }
 
-.thread-content {
+.npc-content {
   flex: 1;
   min-width: 0;
   /* align-self: center; */ /* 移除，因为父级已居中 */
   margin-right: 24px; /* 给菜单按钮留出空间 */
 }
 
-.thread-title {
+.npc-title {
   font-size: 14px;
   color: v-bind('theme.boxTextColorNoActive');
   margin-bottom: 0;
@@ -367,12 +408,12 @@ defineExpose({
   transition: color 0.2s ease;
 }
 
-.thread-item:hover .thread-title,
-.thread-item.active .thread-title {
+.npc-item:hover .npc-title,
+.npc-item.active .npc-title {
   color: v-bind('theme.boxTextColor');
 }
 
-.thread-item.active .thread-title {
+.npc-item.active .npc-title {
   font-weight: 500;
 }
 
@@ -403,14 +444,14 @@ defineExpose({
   color: rgba(255, 255, 255, 0.7);
 }
 
-.thread-item.active .role-avatar {
+.npc-item.active .role-avatar {
   border-color: v-bind('theme.boxGlowColor');
   box-shadow: 0 0 8px v-bind('theme.boxGlowColor');
 }
 
 /* 菜单按钮相关样式 */
 .menu-wrapper {
-  position: absolute; /* 绝对定位到 thread-item 右侧 */
+  position: absolute; /* 绝对定位到 npc-item 右侧 */
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
@@ -420,7 +461,7 @@ defineExpose({
   transition: opacity 0.2s ease;
 }
 
-.thread-item:hover .menu-wrapper {
+.npc-item:hover .menu-wrapper {
   opacity: 1; /* 悬浮时显示 */
 }
 
@@ -447,19 +488,19 @@ defineExpose({
 }
 
 /* 滚动条样式 */
-.threads-wrapper::-webkit-scrollbar {
+.npcs-wrapper::-webkit-scrollbar {
   width: 3px;
 }
 
-.threads-wrapper::-webkit-scrollbar-track {
+.npcs-wrapper::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.threads-wrapper::-webkit-scrollbar-thumb {
+.npcs-wrapper::-webkit-scrollbar-thumb {
   background: v-bind('theme.boxBorderColor');
 }
 
-.threads-wrapper::-webkit-scrollbar-thumb:hover {
+.npcs-wrapper::-webkit-scrollbar-thumb:hover {
   background: v-bind('theme.boxBorderColorHover');
 }
 

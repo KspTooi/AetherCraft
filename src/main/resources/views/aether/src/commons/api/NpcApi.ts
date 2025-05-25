@@ -46,7 +46,7 @@ export default {
      * 获取NPC列表
      */
     getNpcListVo: async (dto: GetNpcListDto): Promise<RestPageableView<GetNpcListVo>> => {
-        return await Http.postEntity<RestPageableView<GetNpcListVo>>('/npc/getNpcListVo', dto);
+        return await Http.postEntity<RestPageableView<GetNpcListVo>>('/npc/getNpcList', dto);
     },
 
     /**
