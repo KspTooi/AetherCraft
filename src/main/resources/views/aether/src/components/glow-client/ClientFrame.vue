@@ -9,7 +9,7 @@ import PlayerApi from "@/commons/api/PlayerApi"
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 
-const brandName = ref('AetherCraft')
+const brandName = ref('Project Glow 1.2X')
 const logoutModal = ref<InstanceType<typeof GlowConfirm> | null>(null)
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
 const router = useRouter()

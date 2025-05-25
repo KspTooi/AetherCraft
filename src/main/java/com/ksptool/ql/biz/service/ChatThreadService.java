@@ -403,7 +403,7 @@ public class ChatThreadService {
             var fmp = PreparedPrompt.prepare(firstMessage);
             fmp.setParameter("player",playerPo.getName());
             fmp.setParameter("npc",npcPo.getName());
-            cmp.setContent(fmp.executeNested(false));
+            cmp.setContent(css.encryptForCurUser(fmp.executeNested(false)));
             cmp.setSeq(0);
             messagePos.add(cmp);
             insert.setMessages(messagePos);
