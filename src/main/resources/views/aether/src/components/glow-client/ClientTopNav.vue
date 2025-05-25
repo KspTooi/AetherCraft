@@ -379,6 +379,7 @@ const updateNavbarHeight = () => {
   width: 100%;
   padding: 0;
   z-index: 100;
+  user-select: none; /* 整个导航栏不可选中 */
 }
 
 .container-fluid {
@@ -388,6 +389,7 @@ const updateNavbarHeight = () => {
   width: 100%;
   padding: 0 0.8rem;
   margin: 0;
+  user-select: none; /* 容器内容不可选中 */
 }
 
 /* 品牌样式 */
@@ -403,6 +405,7 @@ const updateNavbarHeight = () => {
   color: v-bind('theme.boxGlowColor') !important;
   letter-spacing: 0.8px;
   transition: color 0.2s ease;
+  user-select: none; /* 品牌名称不可选中 */
 }
 
 .navbar-brand:hover {
@@ -415,6 +418,7 @@ const updateNavbarHeight = () => {
   list-style: none;
   margin: 0;
   padding: 0;
+  user-select: none; /* 导航列表不可选中 */
 }
 
 .nav-left {
@@ -430,6 +434,7 @@ const updateNavbarHeight = () => {
   display: flex;
   align-items: center;
   padding: 0 0.3rem;
+  user-select: none; /* 导航项不可选中 */
 }
 
 .nav-link {
@@ -441,6 +446,7 @@ const updateNavbarHeight = () => {
   padding: 0.5rem 0.6rem;
   transition: all 0.2s ease;
   white-space: nowrap;
+  user-select: none; /* 导航链接不可选中 */
 }
 
 .nav-link:hover {
@@ -463,6 +469,7 @@ const updateNavbarHeight = () => {
   overflow: visible;
   pointer-events: none;
   z-index: 10;
+  user-select: none; /* 高亮线不可选中 */
 }
 
 .nav-highlight-line {
@@ -472,6 +479,7 @@ const updateNavbarHeight = () => {
   background: v-bind('theme.boxGlowColor');
   box-shadow: 0 0 10px 2px v-bind('theme.boxGlowColor');
   transition: all 0.3s ease;
+  user-select: none; /* 高亮线不可选中 */
 }
 
 /* 移动菜单样式 */
@@ -492,6 +500,7 @@ const updateNavbarHeight = () => {
   border-top: 0 solid transparent;
   border-bottom: 0 solid transparent;
   box-shadow: none;
+  user-select: none; /* 移动菜单不可选中 */
 }
 
 .menu-expanded {
@@ -509,6 +518,7 @@ const updateNavbarHeight = () => {
   opacity: 0;
   transform: translateY(-10px);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  user-select: none; /* 移动导航列表不可选中 */
 }
 
 .menu-expanded .mobile-nav-left,
@@ -522,6 +532,7 @@ const updateNavbarHeight = () => {
   width: 100%;
   padding: 0;
   border-bottom: 1px solid v-bind('theme.boxBorderColor');
+  user-select: none; /* 移动导航项不可选中 */
 }
 
 .mobile-nav-item:last-child {
@@ -537,6 +548,7 @@ const updateNavbarHeight = () => {
   text-align: left;
   transition: background-color 0.2s ease, color 0.2s ease;
   font-size: 1rem;
+  user-select: none; /* 移动导航链接不可选中 */
 }
 
 .mobile-nav-link:hover {
