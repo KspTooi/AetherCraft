@@ -178,6 +178,8 @@ public class ChatConversationService {
         p.setHistoryMessages(cgiHistoryMessages);
         p.setMessage(msg);
 
+        var modelAvatarUrl = "";
+
         //当为NPC会话时需注入增强Prompt上下文
         if(dto.getType() == 1){
 
@@ -202,10 +204,9 @@ public class ChatConversationService {
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
-
-
-
+            modelAvatarUrl = npc.getAvatarUrlPt(css);
         }
+
 
         restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
                 threadPo.getId(),
@@ -215,7 +216,7 @@ public class ChatConversationService {
                 playerName,
                 player.getPlayerAvatarUrl(),
                 model.getSeries(),
-                ""
+                modelAvatarUrl
         )));
 
         var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
@@ -311,6 +312,7 @@ public class ChatConversationService {
         p.setHistoryMessages(cgiHistoryMessages);
         p.setMessage(msg);
 
+        var modelAvatarUrl = "";
 
         //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
         if(threadPo.getType() == 1){
@@ -336,6 +338,7 @@ public class ChatConversationService {
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
+            modelAvatarUrl = npc.getAvatarUrlPt(css);
         }
 
 
@@ -347,7 +350,7 @@ public class ChatConversationService {
                 rootMessagePo.getSenderName(),
                 player.getPlayerAvatarUrl(),
                 model.getSeries(),
-                ""
+                modelAvatarUrl
         )));
 
         var vo = new SendMessageVo();

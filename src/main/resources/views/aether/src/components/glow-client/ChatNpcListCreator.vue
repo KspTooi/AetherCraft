@@ -213,6 +213,11 @@ onMounted(async () => {
   const savedNpcId = preferencesStore.getModelRoleEditCurrentId
   if (savedNpcId && listData.value.some(npc => npc.id === savedNpcId)) {
     selectedNpcId.value = savedNpcId
+    // 找到对应的NPC对象并通知父组件
+    const savedNpc = listData.value.find(npc => npc.id === savedNpcId)
+    if (savedNpc) {
+      emit('select-npc', savedNpc)
+    }
   }
 })
 
