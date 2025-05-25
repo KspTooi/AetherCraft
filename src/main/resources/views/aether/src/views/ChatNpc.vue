@@ -600,18 +600,17 @@ const onMessageRegenerate = async (msgId: string) => {
   }
 
   try {
-    // 找到要重新生成的消息
-    const messageIndex = messageData.value.findIndex(msg => msg.id === msgId);
-    if (messageIndex === -1) {
-      console.warn(`未找到消息 ${msgId}`);
-      return;
-    }
-
     // 设置生成状态
     isGenerating.value = true;
 
-    // 删除从目标AI消息开始的所有后续消息
-    messageData.value = messageData.value.slice(0, messageIndex);
+    // 检查最后一条消息是否为AI消息，如果是则删除
+    if (messageData.value.length > 0) {
+      const lastMessage = messageData.value[messageData.value.length - 1];
+      if (lastMessage.role === 'model') {
+        // 删除最后一条AI消息
+        messageData.value.pop();
+      }
+    }
 
     // 创建AI临时消息
     await createTempMsg();
