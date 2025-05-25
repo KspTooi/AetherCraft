@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 public enum AIModelEnum {
 
     /*正式模型*/
+    GEMINI_2_5_FLASH_PREVIEW_0520("gemini-2.5-flash-preview-05-20", "Gemini 2.5 Flash Preview 2025-05-20", "Gemini", "大型", "中速", "精英", 1),
     GEMINI_2_5_FLASH_PREVIEW_0417("gemini-2.5-flash-preview-04-17", "Gemini 2.5 Flash Preview 2025-04-17", "Gemini", "大型", "中速", "精英", 1),
     GEMINI_2_FLASH("gemini-2.0-flash", "Gemini 2.0 Flash", "Gemini", "中型", "极速", "铂金", 0),
     GEMINI_2_5_PRO_PREVIEW_0325("gemini-2.5-pro-preview-03-25", "Gemini 2.5 Pro Preview 2025-03-25", "Gemini", "大型", "慢速", "精英", 1),
@@ -44,10 +45,16 @@ public enum AIModelEnum {
     GEMINI_15_FLASH_002("gemini-1.5-flash-002", "Gemini 1.5 Flash #002", "Gemini", "中型", "中速", "青铜", 0),
 
 
+    GROK_3("grok-3", "Grok-3", "Grok", "大型", "中速", "精英", 0),
+    GROK_3_FAST("grok-3-fast", "Grok-3 Fast", "Grok", "大型", "快速", "精英", 0),
+    GROK_3_MINI("grok-3-mini", "Grok-3 Mini", "Grok", "中型", "快速", "铂金", 1),
+    GROK_3_MINI_FAST("grok-3-mini-fast", "Grok-3 Mini Fast", "Grok", "中型", "极速", "铂金", 1),
+
+
     GROK_3_BETA("grok-3-beta", "Grok 3 Beta", "Grok", "大型", "中速", "精英", 0),
-    GROK_3_FAST_BETA("grok-3-fast-beta", "Grok 3 Fast Beta", "Grok", "大型", "快速", "钻石", 0),
-    GROK_3_MINI_BETA("grok-3-mini-beta", "Grok 3 Mini Beta", "Grok", "小型", "快速", "铂金", 0),
-    GROK_3_MINI_FAST_BETA("grok-3-mini-fast-beta", "Grok 3 Mini Fast Beta", "Grok", "小型", "快速", "铂金", 0),
+    GROK_3_FAST_BETA("grok-3-fast-beta", "Grok 3 Fast Beta", "Grok", "大型", "快速", "精英", 0),
+    GROK_3_MINI_BETA("grok-3-mini-beta", "Grok 3 Mini Beta", "Grok", "中型", "快速", "铂金", 1),
+    GROK_3_MINI_FAST_BETA("grok-3-mini-fast-beta", "Grok 3 Mini Fast Beta", "Grok", "中型", "快速", "铂金", 1),
     GROK_2_1212("grok-2-1212", "Grok 2 #1212", "Grok", "大型", "中速", "白银", 0),
     //GROK_2_VISION_1212("grok-2-vision-1212", "Grok 2 Vision #1212", "Grok"),
 
