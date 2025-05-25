@@ -179,6 +179,7 @@ public class ChatConversationService {
         p.setMessage(msg);
 
         var modelAvatarUrl = "";
+        var modelName = model.getSeries();
 
         //当为NPC会话时需注入增强Prompt上下文
         if(dto.getType() == 1){
@@ -205,6 +206,7 @@ public class ChatConversationService {
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
             modelAvatarUrl = npc.getAvatarUrlPt(css);
+            modelName = npc.getName();
         }
 
 
@@ -215,7 +217,7 @@ public class ChatConversationService {
                 streamId,
                 playerName,
                 player.getPlayerAvatarUrl(),
-                model.getSeries(),
+                modelName,
                 modelAvatarUrl
         )));
 
@@ -313,6 +315,7 @@ public class ChatConversationService {
         p.setMessage(msg);
 
         var modelAvatarUrl = "";
+        var modelName = model.getSeries();
 
         //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
         if(threadPo.getType() == 1){
@@ -339,6 +342,7 @@ public class ChatConversationService {
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
             modelAvatarUrl = npc.getAvatarUrlPt(css);
+            modelName = npc.getName();
         }
 
 
@@ -349,7 +353,7 @@ public class ChatConversationService {
                 streamId,
                 rootMessagePo.getSenderName(),
                 player.getPlayerAvatarUrl(),
-                model.getSeries(),
+                modelName,
                 modelAvatarUrl
         )));
 
