@@ -3,7 +3,7 @@ import { ref, reactive } from 'vue'
 import ClientSidePanel from '@/components/glow-client/ClientSidePanel.vue'
 import GlowTheme from '@/components/glow-ui/GlowTheme.vue'
 import GlowDiv from '@/components/glow-ui/GlowDiv.vue'
-import ModelChatList from "@/components/glow-client/ModelChatList.vue";
+import ChatThreadList from "@/components/glow-client/ChatThreadList.vue";
 import GlowSidePanel from "@/components/glow-ui/GlowSidePanel.vue";
 
 // 侧边栏配置

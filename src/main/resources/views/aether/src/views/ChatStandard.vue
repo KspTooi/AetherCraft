@@ -1,7 +1,7 @@
 <template>
   <div class="chat-layout">
 
-    <ModelChatList ref="chatListRef"
+    <ChatThreadList ref="chatListRef"
                    class="chat-sidebar"
                    :data="threadList"
                    :selected="currentThreadId"
@@ -18,7 +18,7 @@
       </div>
 
       <div class="message-box-container">
-        <ImMessageBox 
+        <ChatMessageBox
            ref="messageBoxRef" 
            :data="messages" 
            :isGenerating="isGenerating"
@@ -54,8 +54,8 @@
 
 <script setup lang="ts">
 import { ref, inject, onMounted, nextTick } from 'vue';
-import ImMessageBox from "@/components/glow-client/ImMessageBox.vue";
-import ModelChatList from "@/components/glow-client/ModelChatList.vue";
+import ChatMessageBox from "@/components/glow-client/ChatMessageBox.vue";
+import ChatThreadList from "@/components/glow-client/ChatThreadList.vue";
 import ImMessageInput from "@/components/glow-client/ImMessageInput.vue";
 import ModelSelector from "@/components/glow-client/ModelSelector.vue";
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";

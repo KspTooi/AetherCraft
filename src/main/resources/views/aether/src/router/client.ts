@@ -9,7 +9,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('../views/ModelChat.vue'),
+      component: () => import('../views/ChatStandard.vue'),
       beforeEnter: async (to, from, next) => {
         const preferences = usePreferencesStore()
         await preferences.loadPreferences()
@@ -25,12 +25,12 @@ const router = createRouter({
     {
       path: '/chat',
       name: 'model-chat',
-      component: () => import('../views/ModelChat.vue'),
+      component: () => import('../views/ChatStandard.vue'),
     },
     {
       path: '/rp',
       name: 'model-rp',
-      component: () => import('../views/ModelRolePlay.vue'),
+      component: () => import('../views/ChatNpc.vue'),
       beforeEnter: async (to, from, next) => {
         const preferences = usePreferencesStore()
         await preferences.loadPreferences()
@@ -50,18 +50,13 @@ const router = createRouter({
     {
       path: '/model-role-manager',
       name: 'model-role-manager',
-      component: () => import('../views/ModelRoleManager.vue'),
+      component: () => import('../views/ChatNpcManager.vue'),
       beforeEnter: async (to, from, next) => {
         const preferences = usePreferencesStore()
         // 当进入角色设计器页面时，更新角色扮演路径为角色设计器
         preferences.saveClientRpPath('/model-role-manager')
         next()
       }
-    },
-    {
-      path: '/agent',
-      name: 'model-agent',
-      component: () => import('../views/model-agent.vue'),
     },
     {
       path: '/customize',
@@ -86,7 +81,7 @@ const router = createRouter({
     {
       path: '/modelChat',
       name: 'modelChat',
-      component: () => import('../views/ModelChat.vue'),
+      component: () => import('../views/ChatStandard.vue'),
     },
     {
       path: '/playLobby',

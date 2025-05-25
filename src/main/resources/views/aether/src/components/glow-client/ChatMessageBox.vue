@@ -9,7 +9,7 @@
     
     <!-- 消息列表 -->
     <div v-else class="messages-container" ref="messagesContainer">
-      <ImMessageBoxItem
+      <ChatMessageItem
         v-for="(msg, index) in messages"
         :key="msg.id"
         :message="msg"
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { ref, inject, onMounted, nextTick, watch } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
-import ImMessageBoxItem from "@/components/glow-client/ImMessageBoxItem.vue"
+import ChatMessageItem from "@/components/glow-client/ChatMessageItem.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 
 interface Message {

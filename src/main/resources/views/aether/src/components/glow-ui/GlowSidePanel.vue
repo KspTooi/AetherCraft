@@ -153,8 +153,8 @@ defineExpose({
 
 .mobile-menu-btn {
   position: fixed; /* 改为 fixed 定位 */
-  top: 8px; /* 与 ModelChatList 一致 */
-  left: 10px; /* 与 ModelChatList 一致 */
+  top: 8px; /* 与 ChatThreadList 一致 */
+  left: 10px; /* 与 ChatThreadList 一致 */
   z-index: 1003; /* Highest */
   height: 32px;
   min-height: 32px;

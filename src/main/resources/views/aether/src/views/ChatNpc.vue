@@ -1,7 +1,7 @@
 <template>
   <div class="chat-layout">
 
-    <ModelRoleList ref="roleListRef"
+    <ChatNpcList ref="roleListRef"
                    class="chat-sidebar"
                    :data="roleList"
                    :selected="currentRoleId"
@@ -18,7 +18,7 @@
       </div>
 
       <div class="message-box-container">
-        <ImMessageBox 
+        <ChatMessageBox
            ref="messageBoxRef" 
            :data="messages" 
            :isGenerating="isGenerating"
@@ -49,7 +49,7 @@
     <GlowConfirmInput ref="inputRef" />
 
     <!-- 会话管理模态框 -->
-    <RoleThreadsModal 
+    <ChatNpcThreadsModal
       ref="roleThreadsModalRef"
       @activate-thread="handleActivateThread"
     />
@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, inject, onMounted, nextTick } from 'vue';
-import ImMessageBox from "@/components/glow-client/ImMessageBox.vue";
+import ChatMessageBox from "@/components/glow-client/ChatMessageBox.vue";
 import ImMessageInput from "@/components/glow-client/ImMessageInput.vue";
 import ModelSelector from "@/components/glow-client/ModelSelector.vue";
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
@@ -67,14 +67,14 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/
 import http from '@/commons/Http';
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
-import ModelRoleList from "@/components/glow-client/ModelRoleList.vue";
+import ChatNpcList from "@/components/glow-client/ChatNpcList.vue";
 import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
 import type PageableView from '@/entity/PageableView';
 import type RecoverRpChatVo from '@/entity/vo/RecoverRpChatVo.ts';
 import type RecoverRpChatHistoryVo from '@/entity/vo/RecoverRpChatHistoryVo.ts';
 import type GetRpLastStatusVo from '@/entity/vo/GetRpLastStatusVo.ts';
 import type RpSegmentVo from '@/entity/vo/RpSegmentVo.ts';
-import RoleThreadsModal from "@/components/glow-client/RoleThreadsModal.vue";
+import ChatNpcThreadsModal from "@/components/glow-client/ChatNpcThreadsModal.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import { useRouter } from 'vue-router';
 
@@ -84,7 +84,7 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 获取路由实例
 const router = useRouter();
 
-// 定义 ImMessageBox 需要的消息项类型
+// 定义 ChatMessageBox 需要的消息项类型
 interface MessageBoxItem {
   id: string; 
   name: string; 
@@ -119,7 +119,7 @@ const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 // 会话管理模态框引用
-const roleThreadsModalRef = ref<InstanceType<typeof RoleThreadsModal> | null>(null)
+const roleThreadsModalRef = ref<InstanceType<typeof ChatNpcThreadsModal> | null>(null)
 
 onMounted(async () => {
   await reloadRoleList();

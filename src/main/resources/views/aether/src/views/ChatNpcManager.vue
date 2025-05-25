@@ -1,6 +1,6 @@
 <template>
   <div class="role-manager-layout">
-    <ModelRoleManagerList 
+    <ChatNpcCreator
       ref="roleListRef"
       class="role-sidebar"
       :data="roleList"
@@ -187,7 +187,7 @@ import { inject } from 'vue';
 import http from '@/commons/Http';
 import type GetModelRoleListVo from '@/entity/vo/GetModelRoleListVo.ts';
 import type PageableView from '@/entity/PageableView';
-import ModelRoleManagerList from '@/components/glow-client/ModelRoleManagerList.vue';
+import ChatNpcCreator from '@/components/glow-client/ChatNpcCreator.vue';
 import type GetModelRoleDetailsVo from "@/entity/vo/GetModelRoleDetailsVo.ts";
 import type SaveModelRoleDto from "@/entity/dto/SaveModelRoleDto.ts";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
