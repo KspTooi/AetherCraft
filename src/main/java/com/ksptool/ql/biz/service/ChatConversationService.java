@@ -117,125 +117,133 @@ public class ChatConversationService {
         String streamId = mccq.openStream(threadPo.getId());
         threadPo.setModelCode(model.getCode());
 
-        /*
-         * 0:标准会话 1:RP会话 2:增强会话
-         * 标准会话为匿名会话 不会注入Player信息到聊天上下文
-         * RP会话为具名会话 会注入对话双方Npc+Player的全部个人信息
-         * 增强会话介于之间 只注入Player的个人信息到聊天上下文
-         */
-        var playerName = AuthService.requirePlayerName();
+        try{
 
-        if(threadPo.getType() == 0){
-            playerName = "User";
+            /*
+             * 0:标准会话 1:RP会话 2:增强会话
+             * 标准会话为匿名会话 不会注入Player信息到聊天上下文
+             * RP会话为具名会话 会注入对话双方Npc+Player的全部个人信息
+             * 增强会话介于之间 只注入Player的个人信息到聊天上下文
+             */
+            var playerName = AuthService.requirePlayerName();
+
+            if(threadPo.getType() == 0){
+                playerName = "User";
+            }
+
+            //获取该Thread下全部聊天记录
+            List<ChatMessagePo> messagesPos = threadPo.getMessages();
+
+            //需通过CGI发送的历史记录
+            var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
+
+            //组装需通过CGI发送的聊天历史记录
+            for(var item : messagesPos){
+                var cgiItem = new CgiChatMessage();
+                cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
+                cgiItem.setContent(css.decryptForCurUser(item.getContent()));
+                cgiItem.setSeq(item.getSeq());
+                cgiHistoryMessages.add(cgiItem);
+            }
+
+            //保存用户发来的消息为一条历史记录
+            var playerMessage = new ChatMessagePo();
+            playerMessage.setThread(threadPo);
+            playerMessage.setSenderRole(0); //发送人角色 0:Player 1:Model
+            playerMessage.setSenderName(playerName);
+            playerMessage.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
+            playerMessage.setSeq(messagesPos.size() + 1);
+            playerMessage.setCreateTime(new Date());
+            chatMessageRepository.save(playerMessage);
+            messagesPos.add(playerMessage);
+            threadPo.setLastMessage(playerMessage);
+            chatThreadRepository.save(threadPo);
+
+            //创建起始分片
+            var cf = new ChatFragment();
+            cf.setType(0); //0:起始 1:数据 2:结束 10:错误
+            cf.setPlayerId(player.getPlayerId());
+            cf.setThreadId(threadPo.getId());
+            cf.setContent("conversation start"); //起始消息是用户发送的内容
+            cf.setSeq(0);
+            cf.setStreamId(streamId);
+            mccq.receive(cf);
+
+            var msg = new CgiChatMessage();
+            msg.setSenderType(0);
+            msg.setContent(dto.getMessage());
+            msg.setSeq(1);
+
+            CgiChatParam p = new CgiChatParam();
+            p.setModel(model);
+            p.setApikey(apikey);
+            p.setHistoryMessages(cgiHistoryMessages);
+            p.setMessage(msg);
+
+            var modelAvatarUrl = "";
+            var modelName = model.getSeries();
+
+            //当为NPC会话时需注入增强Prompt上下文
+            if(dto.getType() == 1){
+
+                NpcPo npc = threadPo.getNpc();
+                PlayerPo playerPo = threadPo.getPlayer();
+
+                var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+                var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
+
+                PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
+                systemPrompt.setParameter("npc", npc.getName());
+                systemPrompt.setParameter("player", playerPo.getName());
+                systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
+                systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
+                systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+                systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+                systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+                npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
+                p.setSystemPrompt(systemPrompt.executeNested());
+
+                PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
+                systemPrompt.setParameter("npc", npc.getName());
+                systemPrompt.setParameter("player", playerPo.getName());
+                msg.setContent(msgPrompt.executeNested());
+                modelAvatarUrl = npc.getAvatarUrlPt(css);
+                modelName = npc.getName();
+            }
+
+
+            restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
+                    threadPo.getId(),
+                    player.getUserId(),
+                    player.getPlayerId(),
+                    streamId,
+                    playerName,
+                    player.getPlayerAvatarUrl(),
+                    modelName,
+                    modelAvatarUrl
+            )));
+
+            var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+            var vo = new SendMessageVo();
+            vo.setThreadId(threadPo.getId());
+            vo.setMessageId(playerMessage.getId());
+            vo.setContent(dto.getMessage());
+            vo.setSenderName(playerName);
+            vo.setSenderAvatarUrl(player.getPlayerAvatarUrl());
+            vo.setSendTime(sdf.format(playerMessage.getCreateTime()));
+            vo.setTitle(threadPo.getTitle());
+            vo.setNewThreadCreated(0);
+            vo.setStreamId(streamId);
+            if(dto.getThreadId() == -1){
+                vo.setNewThreadCreated(1);
+            }
+            return vo;
+
+        }catch (BizException ex){
+            mccq.closeStream(threadPo.getId());
+            throw ex;
         }
 
-        //获取该Thread下全部聊天记录
-        List<ChatMessagePo> messagesPos = threadPo.getMessages();
-
-        //需通过CGI发送的历史记录
-        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
-
-        //组装需通过CGI发送的聊天历史记录
-        for(var item : messagesPos){
-            var cgiItem = new CgiChatMessage();
-            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
-            cgiItem.setContent(css.decryptForCurUser(item.getContent()));
-            cgiItem.setSeq(item.getSeq());
-            cgiHistoryMessages.add(cgiItem);
-        }
-
-        //保存用户发来的消息为一条历史记录
-        var playerMessage = new ChatMessagePo();
-        playerMessage.setThread(threadPo);
-        playerMessage.setSenderRole(0); //发送人角色 0:Player 1:Model
-        playerMessage.setSenderName(playerName);
-        playerMessage.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
-        playerMessage.setSeq(messagesPos.size() + 1);
-        playerMessage.setCreateTime(new Date());
-        chatMessageRepository.save(playerMessage);
-        messagesPos.add(playerMessage);
-        threadPo.setLastMessage(playerMessage);
-        chatThreadRepository.save(threadPo);
-
-        //创建起始分片
-        var cf = new ChatFragment();
-        cf.setType(0); //0:起始 1:数据 2:结束 10:错误
-        cf.setPlayerId(player.getPlayerId());
-        cf.setThreadId(threadPo.getId());
-        cf.setContent("conversation start"); //起始消息是用户发送的内容
-        cf.setSeq(0);
-        cf.setStreamId(streamId);
-        mccq.receive(cf);
-
-        var msg = new CgiChatMessage();
-        msg.setSenderType(0);
-        msg.setContent(dto.getMessage());
-        msg.setSeq(1);
-
-        CgiChatParam p = new CgiChatParam();
-        p.setModel(model);
-        p.setApikey(apikey);
-        p.setHistoryMessages(cgiHistoryMessages);
-        p.setMessage(msg);
-
-        var modelAvatarUrl = "";
-        var modelName = model.getSeries();
-
-        //当为NPC会话时需注入增强Prompt上下文
-        if(dto.getType() == 1){
-
-            NpcPo npc = threadPo.getNpc();
-            PlayerPo playerPo = threadPo.getPlayer();
-
-            var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
-            var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
-
-            PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
-            systemPrompt.setParameter("npc", npc.getName());
-            systemPrompt.setParameter("player", playerPo.getName());
-            systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
-            systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
-            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
-            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
-            systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-            npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
-            p.setSystemPrompt(systemPrompt.executeNested());
-
-            PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
-            systemPrompt.setParameter("npc", npc.getName());
-            systemPrompt.setParameter("player", playerPo.getName());
-            msg.setContent(msgPrompt.executeNested());
-            modelAvatarUrl = npc.getAvatarUrlPt(css);
-            modelName = npc.getName();
-        }
-
-
-        restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
-                threadPo.getId(),
-                player.getUserId(),
-                player.getPlayerId(),
-                streamId,
-                playerName,
-                player.getPlayerAvatarUrl(),
-                modelName,
-                modelAvatarUrl
-        )));
-
-        var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
-        var vo = new SendMessageVo();
-        vo.setThreadId(threadPo.getId());
-        vo.setMessageId(playerMessage.getId());
-        vo.setContent(dto.getMessage());
-        vo.setSenderName(playerName);
-        vo.setSenderAvatarUrl(player.getPlayerAvatarUrl());
-        vo.setSendTime(sdf.format(playerMessage.getCreateTime()));
-        vo.setTitle(threadPo.getTitle());
-        vo.setNewThreadCreated(0);
-        vo.setStreamId(streamId);
-        if(dto.getThreadId() == -1){
-            vo.setNewThreadCreated(1);
-        }
-        return vo;
     }
 
 
@@ -274,98 +282,108 @@ public class ChatConversationService {
         //锁定会话
         String streamId = mccq.openStream(threadPo.getId());
 
-        //需通过CGI发送的历史记录
-        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
+        try{
 
-        //组装需通过CGI发送的聊天历史记录
-        for(var item : threadPo.getMessages()){
-            var cgiItem = new CgiChatMessage();
-            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
-            cgiItem.setContent(css.decryptForCurUser(item.getContent()));
-            cgiItem.setSeq(item.getSeq());
-            cgiHistoryMessages.add(cgiItem);
+            //需通过CGI发送的历史记录
+            var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
+
+            //组装需通过CGI发送的聊天历史记录
+            for(var item : threadPo.getMessages()){
+                var cgiItem = new CgiChatMessage();
+                cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
+                cgiItem.setContent(css.decryptForCurUser(item.getContent()));
+                cgiItem.setSeq(item.getSeq());
+                cgiHistoryMessages.add(cgiItem);
+            }
+
+            var player = AuthService.requirePlayer();
+
+            //创建起始分片
+            var cf = new ChatFragment();
+            cf.setType(0); //0:起始 1:数据 2:结束 10:错误
+            cf.setPlayerId(player.getPlayerId());
+            cf.setThreadId(threadPo.getId());
+            cf.setSeq(0);
+            cf.setStreamId(streamId);
+            mccq.receive(cf);
+
+            var msg = new CgiChatMessage();
+            msg.setSenderType(0);
+            msg.setContent(css.decryptForCurUser(rootMessagePo.getContent()));
+            msg.setSeq(1);
+
+            var apikey = apiKeyService.getApiKey(model.getCode(), player.getPlayerId());
+
+            if (StringUtils.isBlank(apikey)) {
+                throw new BizException("没有为模型:"+model.getCode()+"配置APIKEY");
+            }
+
+            CgiChatParam p = new CgiChatParam();
+            p.setModel(model);
+            p.setApikey(apikey);
+            p.setHistoryMessages(cgiHistoryMessages);
+            p.setMessage(msg);
+
+            var modelAvatarUrl = "";
+            var modelName = model.getSeries();
+
+            //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+            if(threadPo.getType() == 1){
+
+                NpcPo npc = threadPo.getNpc();
+                PlayerPo playerPo = threadPo.getPlayer();
+
+                var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
+                var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
+
+                PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
+                systemPrompt.setParameter("npc", npc.getName());
+                systemPrompt.setParameter("player", playerPo.getName());
+                systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
+                systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
+                systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+                systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
+                systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
+                npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
+                p.setSystemPrompt(systemPrompt.executeNested());
+
+                PreparedPrompt msgPrompt = new PreparedPrompt(css.decryptForCurUser(rootMessagePo.getContent()));
+                systemPrompt.setParameter("npc", npc.getName());
+                systemPrompt.setParameter("player", playerPo.getName());
+                msg.setContent(msgPrompt.executeNested());
+                modelAvatarUrl = npc.getAvatarUrlPt(css);
+                modelName = npc.getName();
+            }
+
+
+            restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
+                    threadPo.getId(),
+                    player.getUserId(),
+                    player.getPlayerId(),
+                    streamId,
+                    rootMessagePo.getSenderName(),
+                    player.getPlayerAvatarUrl(),
+                    modelName,
+                    modelAvatarUrl
+            )));
+
+            var vo = new SendMessageVo();
+            vo.setThreadId(threadPo.getId());
+            vo.setTitle(threadPo.getTitle());
+            vo.setNewThreadCreated(0);
+            vo.setStreamId(streamId);
+            if(dto.getThreadId() == -1){
+                vo.setNewThreadCreated(1);
+            }
+            return vo;
+
+
+        }catch (BizException ex){
+            mccq.closeStream(threadPo.getId());
+            throw ex;
         }
 
-        var player = AuthService.requirePlayer();
 
-        //创建起始分片
-        var cf = new ChatFragment();
-        cf.setType(0); //0:起始 1:数据 2:结束 10:错误
-        cf.setPlayerId(player.getPlayerId());
-        cf.setThreadId(threadPo.getId());
-        cf.setSeq(0);
-        cf.setStreamId(streamId);
-        mccq.receive(cf);
-
-        var msg = new CgiChatMessage();
-        msg.setSenderType(0);
-        msg.setContent(css.decryptForCurUser(rootMessagePo.getContent()));
-        msg.setSeq(1);
-
-        var apikey = apiKeyService.getApiKey(model.getCode(), player.getPlayerId());
-
-        if (StringUtils.isBlank(apikey)) {
-            throw new BizException("没有为模型:"+model.getCode()+"配置APIKEY");
-        }
-
-        CgiChatParam p = new CgiChatParam();
-        p.setModel(model);
-        p.setApikey(apikey);
-        p.setHistoryMessages(cgiHistoryMessages);
-        p.setMessage(msg);
-
-        var modelAvatarUrl = "";
-        var modelName = model.getSeries();
-
-        //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
-        if(threadPo.getType() == 1){
-
-            NpcPo npc = threadPo.getNpc();
-            PlayerPo playerPo = threadPo.getPlayer();
-
-            var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
-            var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
-
-            PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
-            systemPrompt.setParameter("npc", npc.getName());
-            systemPrompt.setParameter("player", playerPo.getName());
-            systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
-            systemPrompt.setParameter("npcRoleSummary", css.decryptForCurUser(npc.getRoleSummary()));
-            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
-            systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
-            systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-            npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
-            p.setSystemPrompt(systemPrompt.executeNested());
-
-            PreparedPrompt msgPrompt = new PreparedPrompt(css.decryptForCurUser(rootMessagePo.getContent()));
-            systemPrompt.setParameter("npc", npc.getName());
-            systemPrompt.setParameter("player", playerPo.getName());
-            msg.setContent(msgPrompt.executeNested());
-            modelAvatarUrl = npc.getAvatarUrlPt(css);
-            modelName = npc.getName();
-        }
-
-
-        restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
-                threadPo.getId(),
-                player.getUserId(),
-                player.getPlayerId(),
-                streamId,
-                rootMessagePo.getSenderName(),
-                player.getPlayerAvatarUrl(),
-                modelName,
-                modelAvatarUrl
-        )));
-
-        var vo = new SendMessageVo();
-        vo.setThreadId(threadPo.getId());
-        vo.setTitle(threadPo.getTitle());
-        vo.setNewThreadCreated(0);
-        vo.setStreamId(streamId);
-        if(dto.getThreadId() == -1){
-            vo.setNewThreadCreated(1);
-        }
-        return vo;
     }
 
     public MessageFragmentVo queryMessage(QueryStreamDto dto) throws BizException {

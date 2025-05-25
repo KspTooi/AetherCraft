@@ -30,9 +30,9 @@
                 <span v-if="model.thinking === 1" class="tag thinking-tag">
                   思考
                 </span>
-                <span class="tag size-tag" :class="getSizeClass(model.size)">
+<!--                <span class="tag size-tag" :class="getSizeClass(model.size)">
                   {{ getSizeDisplay(model.size) }}
-                </span>
+                </span>-->
                 <span class="tag speed-tag" :class="getSpeedClass(model.speed)">
                   {{ model.speed }}
                 </span>
@@ -370,7 +370,7 @@ const vClickOutside = {
 .size-tag.size-l {
   background: v-bind('theme.dangerColor');
   border-color: v-bind('theme.dangerBorderColor');
-  color: v-bind('theme.dangerTextColor');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 4px v-bind('theme.dangerBorderColor');
 }
 
@@ -378,26 +378,47 @@ const vClickOutside = {
 .size-tag.size-s {
   background: v-bind('theme.boxAccentColor');
   border-color: v-bind('theme.boxBorderColor');
-  color: v-bind('theme.boxTextColor');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
 }
 
 /* 速度标签样式 */
 .speed-tag.speed-fastest {
-  background: v-bind('theme.mainColor');
-  border-color: v-bind('theme.mainBorderColor');
-  color: v-bind('theme.mainTextColor');
-  box-shadow: 0 0 4px v-bind('theme.mainBorderColor');
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+  font-weight: 600;
 }
 
-.speed-tag.speed-fast,
-.speed-tag.speed-medium,
-.speed-tag.speed-slow,
+.speed-tag.speed-fast {
+  background: rgba(22, 163, 74, 0.2);
+  border-color: rgba(22, 163, 74, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(22, 163, 74, 0.5);
+  font-weight: 600;
+}
+
+.speed-tag.speed-medium {
+  background: rgba(21, 128, 61, 0.2);
+  border-color: rgba(21, 128, 61, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(21, 128, 61, 0.5);
+  font-weight: 600;
+}
+
+.speed-tag.speed-slow {
+  background: rgba(20, 83, 45, 0.2);
+  border-color: rgba(20, 83, 45, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(20, 83, 45, 0.5);
+}
+
 .speed-tag.speed-slowest {
-  background: v-bind('theme.boxAccentColor');
-  border-color: v-bind('theme.boxBorderColor');
-  color: v-bind('theme.boxTextColor');
-  box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
+  background: rgba(14, 59, 32, 0.2);
+  border-color: rgba(14, 59, 32, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(14, 59, 32, 0.5);
 }
 
 /* 智能程度标签样式 */
@@ -428,7 +449,7 @@ const vClickOutside = {
 .intelligence-tag.intelligence-wood {
   background: v-bind('theme.boxAccentColor');
   border-color: v-bind('theme.boxBorderColor');
-  color: v-bind('theme.boxTextColor');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 4px v-bind('theme.boxBorderColor');
 }
 
@@ -448,7 +469,7 @@ const vClickOutside = {
 .model-item.active .size-tag.size-l {
   background: v-bind('theme.dangerColorActive');
   border-color: v-bind('theme.dangerBorderColorActive');
-  color: v-bind('theme.dangerTextColorActive');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 8px v-bind('theme.dangerBorderColorActive');
 }
 
@@ -456,24 +477,43 @@ const vClickOutside = {
 .model-item.active .size-tag.size-s {
   background: v-bind('theme.boxColorActive');
   border-color: v-bind('theme.boxBorderColorHover');
-  color: v-bind('theme.boxTextColor');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
 }
 
 .model-item.active .speed-tag.speed-fastest {
-  background: v-bind('theme.mainColorActive');
-  border-color: v-bind('theme.mainBorderColorActive');
-  color: v-bind('theme.mainTextColorActive');
-  box-shadow: 0 0 8px v-bind('theme.mainBorderColorActive');
+  background: rgba(34, 197, 94, 0.4);
+  border-color: rgba(34, 197, 94, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
 }
 
-.model-item.active .speed-tag.speed-fast,
-.model-item.active .speed-tag.speed-medium,
-.model-item.active .speed-tag.speed-slow,
+.model-item.active .speed-tag.speed-fast {
+  background: rgba(22, 163, 74, 0.4);
+  border-color: rgba(22, 163, 74, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.7);
+}
+
+.model-item.active .speed-tag.speed-medium {
+  background: rgba(21, 128, 61, 0.4);
+  border-color: rgba(21, 128, 61, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 8px rgba(21, 128, 61, 0.7);
+}
+
+.model-item.active .speed-tag.speed-slow {
+  background: rgba(20, 83, 45, 0.4);
+  border-color: rgba(20, 83, 45, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 8px rgba(20, 83, 45, 0.7);
+}
+
 .model-item.active .speed-tag.speed-slowest {
-  background: v-bind('theme.boxColorActive');
-  border-color: v-bind('theme.boxBorderColorHover');
-  box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
+  background: rgba(14, 59, 32, 0.4);
+  border-color: rgba(14, 59, 32, 1);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 8px rgba(14, 59, 32, 0.7);
 }
 
 .model-item.active .intelligence-tag.intelligence-elite {
@@ -503,6 +543,7 @@ const vClickOutside = {
 .model-item.active .intelligence-tag.intelligence-wood {
   background: v-bind('theme.boxColorActive');
   border-color: v-bind('theme.boxBorderColorHover');
+  color: rgb(255, 255, 255);
   box-shadow: 0 0 8px v-bind('theme.boxBorderColorHover');
 }
 
