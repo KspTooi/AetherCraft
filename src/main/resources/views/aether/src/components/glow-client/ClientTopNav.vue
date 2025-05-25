@@ -623,6 +623,7 @@ const updateNavbarHeight = () => {
 .player-info-container {
   position: relative; /* Needed for dropdown positioning */
   padding: 0; /* Remove default nav-item padding */
+  user-select: none; /* 玩家信息容器不可选中 */
 }
 
 .player-info-item {
@@ -633,6 +634,7 @@ const updateNavbarHeight = () => {
   cursor: pointer;
   border-radius: 3px; /* Optional: slight rounding */
   transition: background-color 0.2s ease;
+  user-select: none; /* 玩家信息项不可选中 */
 }
 
 .player-info-item:hover {
@@ -649,12 +651,15 @@ const updateNavbarHeight = () => {
   display: flex; /* Center icon */
   align-items: center;
   justify-content: center;
+  user-select: none; /* 玩家头像不可选中 */
 }
 
 .player-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  user-select: none; /* 头像图片不可选中 */
+  pointer-events: none; /* 防止拖拽 */
 }
 
 .player-name {
@@ -666,16 +671,19 @@ const updateNavbarHeight = () => {
   max-width: 100px; /* Adjust max-width */
   font-weight: 500;
   margin-right: 0.3rem; /* Space before arrow */
+  user-select: none; /* 玩家名称不可选中 */
 }
 
 .player-dropdown-arrow {
   color: v-bind('theme.boxTextColorNoActive');
   transition: transform 0.3s ease, color 0.3s ease;
+  user-select: none; /* 下拉箭头不可选中 */
 }
 
 .player-dropdown-arrow i {
   font-size: 14px;
   display: block;
+  user-select: none; /* 箭头图标不可选中 */
 }
 
 .player-dropdown-arrow i.rotated {
@@ -698,6 +706,7 @@ const updateNavbarHeight = () => {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   padding: 5px 0;
   backdrop-filter: blur(v-bind('theme.boxBlur + "px"'));
+  user-select: none; /* 下拉菜单不可选中 */
 }
 
 .dropdown-item {
@@ -707,6 +716,7 @@ const updateNavbarHeight = () => {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  user-select: none; /* 下拉菜单项不可选中 */
 }
 
 .dropdown-item:hover {
@@ -737,6 +747,7 @@ const updateNavbarHeight = () => {
 .nav-link-like {
     color: v-bind('theme.boxTextColorNoActive');
     transition: color 0.2s ease;
+    user-select: none; /* 类似导航链接的元素不可选中 */
     /* Inherit other relevant styles if needed, like padding, but likely not needed here */
 }
 
@@ -761,6 +772,7 @@ const updateNavbarHeight = () => {
 .disconnected-icon i {
     font-size: 18px; /* Adjust icon size */
     color: v-bind('theme.boxTextColorNoActive');
+    user-select: none; /* 断连图标不可选中 */
 }
 
 /* Mobile Styles Adjustments */
@@ -783,12 +795,14 @@ const updateNavbarHeight = () => {
     padding: 10px 1.5rem; /* Consistent padding with nav links */
     border-bottom: 1px solid v-bind('theme.boxBorderColor');
     background-color: rgba(0, 0, 0, 0.1); /* Slight background difference */
+    user-select: none; /* 移动端玩家头部不可选中 */
 }
 
 .mobile-player-header .player-info-item {
     margin-left: 0; /* Reset margin */
     padding: 0; /* Reset padding */
     cursor: default; /* Not clickable */
+    user-select: none; /* 移动端玩家信息项不可选中 */
 }
 
 .mobile-player-header .player-info-item:hover {
@@ -798,12 +812,14 @@ const updateNavbarHeight = () => {
 .mobile-player-header .player-avatar {
     width: 32px; /* Slightly larger avatar */
     height: 32px;
+    user-select: none; /* 移动端玩家头像不可选中 */
 }
 
 .mobile-player-header .player-name {
     max-width: none; /* Allow full name display */
     font-size: 1rem;
     color: v-bind('theme.boxTextColor'); /* Ensure name is visible */
+    user-select: none; /* 移动端玩家名称不可选中 */
 }
 
 .mobile-player-header.loading-placeholder {
@@ -811,6 +827,7 @@ const updateNavbarHeight = () => {
     color: v-bind('theme.boxTextColorNoActive');
     font-style: italic;
     font-size: 0.9rem;
+    user-select: none; /* 加载占位符不可选中 */
 }
 
 /* Ensure nav lists take up remaining space if needed, and enable scrolling within */
@@ -823,6 +840,7 @@ const updateNavbarHeight = () => {
     opacity: 0;
     transform: translateY(-10px);
     transition: opacity 0.3s ease, transform 0.3s ease;
+    user-select: none; /* 移动端导航上下文不可选中 */
     /* Remove flex: 1 if causing issues, manage height via max-height on .mobile-menu */
 }
 
@@ -832,6 +850,7 @@ const updateNavbarHeight = () => {
     background-color: v-bind('theme.boxBorderColor');
     margin: 5px 0;
     padding: 0 !important; /* Override item padding */
+    user-select: none; /* 分隔线不可选中 */
 }
 
 .menu-expanded .mobile-nav-left,
@@ -845,9 +864,11 @@ const updateNavbarHeight = () => {
 .mobile-nav-context .mobile-nav-link {
     /* Add specific styling if needed, e.g., different color */
     /* color: v-bind('theme.mainColor'); */
+    user-select: none; /* 移动端上下文链接不可选中 */
 }
 
 .cursor-pointer {
   cursor: pointer;
+  user-select: none; /* 指针样式元素不可选中 */
 }
 </style>
