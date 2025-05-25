@@ -67,7 +67,7 @@ import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
 import ConversationApi from "@/commons/api/ConversationApi";
 import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
-import type { SendMessageDto, QueryStreamDto, RegenerateDto } from "@/commons/api/ConversationApi";
+import type { SendMessageDto, QueryStreamDto, RegenerateDto, AbortConversationDto } from "@/commons/api/ConversationApi";
 import type RestPageableView from "@/entity/RestPageableView";
 import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
@@ -260,25 +260,36 @@ const pollMessage = async (streamId: string) => {
 
 // 处理中止生成
 const onBatchAbort = async () => {
-  if (!isGenerating.value) return;
+  if (!isGenerating.value) return; // 如果没有在生成，则不需要中止
+
+  if (!currentThreadId.value) {
+    console.warn('没有当前会话ID，无法中止生成');
+    return;
+  }
 
   try {
-    await Http.postEntity<void>('/model/chat/completeBatch', {
-      threadId: currentThreadId.value,
-      queryKind: 2
-    });
-    console.log('已中止AI响应');
+    // 调用后端接口中止会话
+    const abortDto: AbortConversationDto = {
+      threadId: currentThreadId.value
+    };
+    
+    await ConversationApi.abortConversation(abortDto);
+    console.log('会话中止请求已发送');
+    
   } catch (error) {
-    console.error('中止AI响应请求失败:', error);
+    console.error('中止会话失败:', error);
     alterRef.value?.showConfirm({
       title: "中止AI响应失败",
       content: `${error}`,
       closeText: "好的",
     });
+    // 即使后端调用失败，也要清理前端状态
   } finally {
+    // 清理前端状态
     isGenerating.value = false;
     removeTempMsg();
-    await nextTick(); 
+    
+    await nextTick();
     messageBoxRef.value?.scrollToBottom();
   }
 };
