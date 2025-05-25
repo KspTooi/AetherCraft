@@ -204,12 +204,7 @@ const pollMessage = async (streamId: string) => {
       };
 
       const segment = await ConversationApi.queryStream(queryStreamDto);
-
-      if (!segment || segment.type === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        continue;
-      }
-
+      
       await updateTempMsg({
         id: segment.messageId,
         name: segment.senderName,
@@ -260,9 +255,6 @@ const pollMessage = async (streamId: string) => {
       break;
     }
 
-    if (isGenerating.value) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
   }
 };
 
