@@ -57,6 +57,7 @@
                   :maxLength="50"
                   showLength
                   notBlank
+                  placeholder="例如：艾莉娅、小助手、智能导师等，给你的NPC起一个有特色的名字"
                 />
               </div>
               
@@ -67,7 +68,7 @@
                     title="NPC标签"
                     :maxLength="50"
                     showLength
-                    placeholder="使用逗号分隔多个标签"
+                    placeholder="例如：助手,友善,专业 或 二次元,可爱,活泼 (用逗号分隔多个标签)"
                   />
                 </div>
                 <div class="input-group status-group">
@@ -88,6 +89,9 @@
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
+                  placeholder="简要描述这个NPC的特点和用途，例如：
+一个温柔体贴的AI助手，擅长倾听和提供建议。她总是以积极的态度面对问题，善于从不同角度分析情况，帮助用户找到最佳解决方案。
+提示：这里的描述会影响NPC的整体性格基调。"
                 />
               </div>
               
@@ -98,9 +102,18 @@
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
+                  placeholder="详细描述NPC的身份、性格、背景等核心设定，例如：
+
+【身份】：资深心理咨询师，拥有10年从业经验
+【性格】：温和耐心、善于倾听、逻辑清晰、富有同理心
+【专长】：情感疏导、人际关系咨询、压力管理
+【说话风格】：温柔而专业，会使用恰当的心理学术语，但不会过于生硬
+【行为特点】：喜欢通过提问引导对方思考，善于发现问题的根源
+
+提示：这是NPC的核心设定，越详细越能让AI更好地扮演这个角色。"
                 />
               </div>
-              
+
               <div class="form-row">
                 <GlowInputArea
                   v-model="currentNpcDetails.scenario"
@@ -108,6 +121,10 @@
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
+                  placeholder="描述NPC所处的环境和背景情景，例如：
+你现在在一间温馨的心理咨询室里，柔和的灯光洒在舒适的沙发上。墙上挂着几幅宁静的风景画，书架上摆满了心理学相关的书籍。空气中弥漫着淡淡的薰衣草香味，让人感到放松和安全。
+作为这里的心理咨询师，你刚刚为下一位来访者准备好了茶水，正等待着他们的到来。
+提示：好的情景设定能让对话更有沉浸感，让用户感觉真的在与NPC互动。"
                 />
               </div>
               
@@ -118,6 +135,11 @@
                   :maxLength="50000"
                   showLength
                   :auto-resize="true"
+                  placeholder="NPC在对话开始时会说的第一句话，例如：
+你好，欢迎来到我的咨询室。我是艾莉娅，很高兴能在这里与你相遇。请随意坐下，不用紧张。
+我注意到你今天看起来有些疲惫，是工作上遇到了什么困扰吗？还是有其他的事情想要聊聊？无论是什么，我都会认真倾听的。
+想要喝点什么吗？我这里有温水、花茶，还有咖啡。
+提示：第一句话很重要，它设定了整个对话的基调。建议体现NPC的性格特点，并给用户一个自然的对话开端。"
                 />
               </div>
               
@@ -149,6 +171,37 @@
                 </div>
               </div>
             </div>
+
+                          <!-- 占位符使用提示 -->
+              <div class="placeholder-tip-section">
+                <div class="tip-header">
+                  <i class="bi bi-lightbulb"></i>
+                  <span class="tip-title">💡 高级技巧：动态占位符</span>
+                </div>
+                <div class="tip-content">
+                  <p>在NPC设定中，你可以使用以下占位符来动态引用名称：</p>
+                  <div class="placeholder-examples">
+                    <div class="placeholder-item">
+                      <code class="placeholder-code">#{npc}</code>
+                      <span class="placeholder-desc">→ 自动替换为当前NPC的名称</span>
+                    </div>
+                    <div class="placeholder-item">
+                      <code class="placeholder-code">#{player}</code>
+                      <span class="placeholder-desc">→ 自动替换为玩家的名称</span>
+                    </div>
+                  </div>
+                  <div class="tip-example">
+                    <strong>示例：</strong>
+                    <div class="example-text">
+                      "我是#{npc}，很高兴认识你，#{player}。作为你的专属助手，我会竭尽全力帮助你解决问题。"
+                    </div>
+                  </div>
+                  <div class="tip-note">
+                    <i class="bi bi-info-circle"></i>
+                    <span>这些占位符在所有文本字段中都可以使用，包括设定摘要、情景描述和首次对话内容。</span>
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
         
@@ -854,5 +907,126 @@ const handleFileUpload = async (event: Event) => {
   margin-top: 15px;
   min-width: 150px;
   background-color: v-bind('theme.boxSecondColor');
+}
+
+/* 占位符提示区域样式 */
+.placeholder-tip-section {
+  background: v-bind('theme.boxSecondColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  padding: 16px;
+  margin: 15px 0;
+  position: relative;
+}
+
+.tip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tip-header i {
+  color: v-bind('theme.boxGlowColor');
+  font-size: 16px;
+}
+
+.tip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: v-bind('theme.boxTextColor');
+}
+
+.tip-content {
+  font-size: 13px;
+  line-height: 1.5;
+  color: v-bind('theme.boxTextColorNoActive');
+}
+
+.tip-content p {
+  margin: 0 0 12px 0;
+}
+
+.placeholder-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  background: v-bind('theme.boxColor');
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+}
+
+.placeholder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.placeholder-code {
+  background: v-bind('theme.boxAccentColor');
+  color: v-bind('theme.boxGlowColor');
+  padding: 4px 8px;
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid v-bind('theme.boxBorderColorHover');
+  min-width: 80px;
+  text-align: center;
+}
+
+.placeholder-desc {
+  color: v-bind('theme.boxTextColor');
+  font-size: 12px;
+}
+
+.tip-example {
+  margin: 12px 0;
+  padding: 12px;
+  background: v-bind('theme.boxAccentColor');
+  border-left: 3px solid v-bind('theme.boxGlowColor');
+}
+
+.tip-example strong {
+  color: v-bind('theme.boxTextColor');
+  font-size: 12px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.example-text {
+  font-style: italic;
+  color: v-bind('theme.boxTextColorNoActive');
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px;
+  background: v-bind('theme.boxColor');
+  border-radius: 0;
+  border: 1px solid v-bind('theme.boxBorderColor');
+}
+
+.tip-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px;
+  background: v-bind('theme.boxAccentColorHover');
+  border-radius: 0;
+}
+
+.tip-note i {
+  color: v-bind('theme.boxGlowColor');
+  font-size: 14px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.tip-note span {
+  font-size: 11px;
+  color: v-bind('theme.boxTextColorNoActive');
+  line-height: 1.4;
 }
 </style>
