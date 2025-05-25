@@ -38,12 +38,12 @@ public class NpcController {
         return Result.success(service.getNpcList(dto));
     }
 
-    @PostMapping("getNpcDetails")
+    @PostMapping("/getNpcDetails")
     public Result<GetNpcDetailsVo> getNpcDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
         return Result.success(service.getNpcDetails(dto.getId()));
     }
 
-    @PostMapping("copyNpc")
+    @PostMapping("/copyNpc")
     public Result<String> copyNpc(@RequestBody @Valid CommonIdDto dto){
 
         try{
