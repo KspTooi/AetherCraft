@@ -38,6 +38,12 @@
               </div>
               <div class="thread-actions">
                 <button 
+                  class="thread-action-btn edit-btn"
+                  @click.stop="handleEditThreadTitle(thread.id, thread.title)"
+                  title="编辑标题">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button 
                   v-if="thread.active !== 1"
                   class="thread-action-btn activate-btn"
                   @click.stop="handleActivateThread(thread.id)"
@@ -62,14 +68,18 @@
   
   <!-- 确认模态框 -->
   <GlowConfirm ref="confirmModalRef" />
+  
+  <!-- 输入模态框 -->
+  <GlowConfirmInput ref="inputModalRef" />
 </template>
 
 <script setup lang="ts">
 import { ref, inject } from 'vue'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
+import GlowConfirmInput from '../glow-ui/GlowConfirmInput.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../glow-ui/GlowTheme'
 import type { GlowThemeColors } from '../glow-ui/GlowTheme'
-import ThreadApi, { type GetThreadListDto, type GetThreadListVo } from '@/commons/api/ThreadApi'
+import ThreadApi, { type GetThreadListDto, type GetThreadListVo, type EditThreadTitleDto } from '@/commons/api/ThreadApi'
 import type CommonIdDto from '@/entity/dto/CommonIdDto'
 
 // 当组件单独运行时，如果没有注入主题，则使用默认主题
@@ -89,6 +99,7 @@ const threads = ref<GetThreadListVo[]>([])
 const loading = ref(false)
 const currentThreadId = ref('')
 const confirmModalRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
+const inputModalRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
 // Methods for component
 const loadThreadList = async () => {
@@ -240,6 +251,36 @@ const show = (roleId: string, roleName: string) => {
   
   // 直接在内部加载列表
   loadThreadList()
+}
+
+const handleEditThreadTitle = async (threadId: string, currentTitle: string) => {
+  if (!inputModalRef.value) return
+  
+  const result = await inputModalRef.value.showInput({
+    title: '编辑会话标题',
+    defaultValue: currentTitle,
+    placeholder: '请输入新的会话标题'
+  })
+  
+  if (result.confirmed && result.value.trim()) {
+    try {
+      const dto: EditThreadTitleDto = {
+        threadId: threadId,
+        title: result.value.trim()
+      }
+      await ThreadApi.editThreadTitle(dto)
+      
+      // 更新本地状态
+      threads.value.forEach(t => {
+        if (t.id === threadId) {
+          t.title = result.value.trim()
+        }
+      })
+      console.log('会话标题更新成功')
+    } catch (error) {
+      console.error('编辑会话标题失败:', error)
+    }
+  }
 }
 
 // 暴露方法
@@ -548,6 +589,11 @@ defineExpose({
 
 .thread-item.active .thread-action-btn {
   color: v-bind('theme.boxTextColor');
+}
+
+.edit-btn:hover {
+  color: v-bind('theme.boxGlowColor');
+  background-color: v-bind('theme.boxAccentColorHover');
 }
 
 .activate-btn:hover {
