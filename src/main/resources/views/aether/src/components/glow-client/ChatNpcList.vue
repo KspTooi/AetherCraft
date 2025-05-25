@@ -109,6 +109,7 @@ const listData = ref<GetNpcListVo[]>([])
 const listTotal = ref(0)
 const listQuery = reactive<GetNpcListDto>({
   keyword: null,
+  status: 1,
   page: 1,
   pageSize: 1000
 })

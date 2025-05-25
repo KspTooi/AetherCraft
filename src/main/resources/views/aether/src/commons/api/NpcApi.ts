@@ -5,6 +5,7 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts";
 
 export interface GetNpcListDto extends PageQuery {
     keyword?: string | null;    // 关键字搜索(角色名称或描述)
+    status?: number | null;    // 关键字搜索(角色名称或描述)
 }
 
 export interface GetNpcListVo {

@@ -45,10 +45,12 @@ public interface NpcRepository extends JpaRepository<NpcPo, Long> {
             FROM NpcPo n
             WHERE n.player.id = :playerId
             AND (:keyword IS NULL OR :keyword = '' OR n.name LIKE CONCAT('%', :keyword, '%'))
+            AND (:status IS NULL OR n.status = :status)
             ORDER BY n.seq ASC
             """)
     Page<GetNpcListVo> getNpcList(@Param("keyword") String keyword,
                            @Param("playerId") Long playerId,
+                           @Param("status") Integer status,
                            Pageable pageable);
 
     @Query("""

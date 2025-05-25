@@ -36,7 +36,7 @@ public class NpcService {
 
     public RestPageableView<GetNpcListVo> getNpcList(GetNpcListDto dto){
 
-        Page<GetNpcListVo> page = repository.getNpcList(dto.getKeyword(), AuthService.getCurrentPlayerId(), dto.pageRequest());
+        Page<GetNpcListVo> page = repository.getNpcList(dto.getKeyword(), AuthService.getCurrentPlayerId(),dto.getStatus(), dto.pageRequest());
         
         // 创建PageableView，不需要类型转换因为已经是GetNpcListVo
         RestPageableView<GetNpcListVo> ret = new RestPageableView<>(page);
