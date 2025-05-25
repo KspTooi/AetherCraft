@@ -607,18 +607,6 @@ const onMessageRegenerate = async (msgId: string) => {
       return;
     }
 
-    const targetMessage = messageData.value[messageIndex];
-    
-    // 只能对AI消息进行重新生成
-    if (targetMessage.role !== 'model') {
-      alterRef.value?.showConfirm({
-        title: "操作错误",
-        content: "只能重新生成AI回复消息",
-        closeText: "好的",
-      });
-      return;
-    }
-
     // 设置生成状态
     isGenerating.value = true;
 

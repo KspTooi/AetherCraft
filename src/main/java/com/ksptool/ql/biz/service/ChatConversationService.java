@@ -337,7 +337,7 @@ public class ChatConversationService {
             npcScriptService.appendExamplePrompt(npc.getId(),systemPrompt);
             p.setSystemPrompt(systemPrompt.executeNested());
 
-            PreparedPrompt msgPrompt = new PreparedPrompt(rootMessagePo.getContent());
+            PreparedPrompt msgPrompt = new PreparedPrompt(css.decryptForCurUser(rootMessagePo.getContent()));
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             msg.setContent(msgPrompt.executeNested());
