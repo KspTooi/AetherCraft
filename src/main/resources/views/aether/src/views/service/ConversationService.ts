@@ -1,4 +1,4 @@
-import type {MessageFragmentVo, SendMessageDto, SendMessageVo, QueryStreamDto} from "@/commons/api/ConversationApi.ts";
+import type {MessageFragmentVo, SendMessageDto, SendMessageVo, QueryStreamDto, RegenerateDto} from "@/commons/api/ConversationApi.ts";
 import ConversationApi from "@/commons/api/ConversationApi.ts";
 
 // 私有轮询方法
@@ -48,6 +48,21 @@ export default {
             return response;
         } catch (error) {
             console.error('发送消息失败:', error);
+            throw error;
+        }
+    },
+    
+    async regenerate(param: RegenerateDto, callback: (fragment: MessageFragmentVo) => void): Promise<SendMessageVo> {
+        try {
+            // 重新生成消息
+            const response = await ConversationApi.regenerate(param);
+            
+            // 开始轮询响应流
+            pollMessage(response.streamId, callback);
+            
+            return response;
+        } catch (error) {
+            console.error('重新生成消息失败:', error);
             throw error;
         }
     }

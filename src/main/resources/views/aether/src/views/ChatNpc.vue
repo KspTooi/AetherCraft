@@ -72,7 +72,7 @@ import { useRouter } from 'vue-router';
 import type { SelectThreadDto, SelectThreadVo, CreateThreadDto, CreateThreadVo } from '@/commons/api/ThreadApi';
 import ThreadApi from '@/commons/api/ThreadApi';
 import ConversationService from '@/views/service/ConversationService';
-import type { SendMessageDto, MessageFragmentVo } from '@/commons/api/ConversationApi';
+import type { SendMessageDto, MessageFragmentVo, RegenerateDto } from '@/commons/api/ConversationApi';
 import MessageApi, { type EditMessageDto } from '@/commons/api/MessageApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
@@ -186,8 +186,13 @@ const getNpcMessageList = async (npcId: string) => {
 
 const sendMessage = async (message: string) => {
   if (isGenerating.value) return // 如果正在生成，则不处理新的发送请求
+
   if (!curThreadId.value) {
-    console.error('没有选择的会话线程');
+    alterRef.value?.showConfirm({
+      title: "未选择NPC",
+      content: `请先选择一个NPC`,
+      closeText: "好的",
+    });
     return;
   }
 
@@ -254,7 +259,8 @@ const handleMessageFragment = async (fragment: MessageFragmentVo) => {
   await updateTempMsg({
     id: fragment.messageId !== '-1' ? fragment.messageId : undefined,
     name: fragment.senderName,
-    avatarPath: fragment.senderAvatarUrl
+    avatarPath: fragment.senderAvatarUrl,
+    createTime: fragment.sendTime
   });
 
   if (fragment.type === 0) { // 起始片段
@@ -454,14 +460,13 @@ const createTempMsg = async () => {
     name: '-----', // 调整名称以区分
     avatarPath: '', 
     role: 'model', // 类型已明确为 'model'
-    content: '正在输入...',
-    createTime: new Date().toISOString()
+    content: '',
+    createTime: ""
   };
   messageData.value.push(tempAiMessage);
   hasTempMessage.value = true;
   await nextTick();
   messageBoxRef.value?.scrollToBottom();
-  console.log(messageData.value)
 }
 
 const appendTempMsg = async (content: string) => {
@@ -487,6 +492,7 @@ const updateTempMsg = async (data: {
   id?: string; // 消息ID (可选, 如果提供则表示转为永久)
   name?: string; // 名称 (可选)
   avatarPath?: string; // 头像路径 (可选)
+  createTime?: string; // 时间 可选
 }) => {
 
   if (!hasTempMessage.value) return;
@@ -505,6 +511,12 @@ const updateTempMsg = async (data: {
     // 更新头像 (如果提供了有效的头像路径)
     if (data.avatarPath) {
       tempMessage.avatarPath = data.avatarPath;
+      updated = true;
+    }
+
+    // 更新时间
+    if (data.createTime) {
+      tempMessage.createTime = data.createTime;
       updated = true;
     }
 
@@ -576,13 +588,72 @@ const onMessageRemove = async (msgId: string) => {
 
 // 处理消息重新生成
 const onMessageRegenerate = async (msgId: string) => {
-  // 暂时禁用重新生成功能
-  console.log('重新生成功能暂未实现');
-  alterRef.value?.showConfirm({
-    title: "功能暂未实现",
-    content: "重新生成功能正在开发中",
-    closeText: "好的",
-  });
+  if (isGenerating.value) return; // 如果正在生成，则不处理重新生成请求
+
+  if (!curThreadId.value) {
+    alterRef.value?.showConfirm({
+      title: "未选择会话",
+      content: "请先选择一个会话",
+      closeText: "好的",
+    });
+    return;
+  }
+
+  try {
+    // 找到要重新生成的消息
+    const messageIndex = messageData.value.findIndex(msg => msg.id === msgId);
+    if (messageIndex === -1) {
+      console.warn(`未找到消息 ${msgId}`);
+      return;
+    }
+
+    const targetMessage = messageData.value[messageIndex];
+    
+    // 只能对AI消息进行重新生成
+    if (targetMessage.role !== 'model') {
+      alterRef.value?.showConfirm({
+        title: "操作错误",
+        content: "只能重新生成AI回复消息",
+        closeText: "好的",
+      });
+      return;
+    }
+
+    // 设置生成状态
+    isGenerating.value = true;
+
+    // 删除从目标AI消息开始的所有后续消息
+    messageData.value = messageData.value.slice(0, messageIndex);
+
+    // 创建AI临时消息
+    await createTempMsg();
+
+    // 构建重新生成的参数
+    const regenerateDto: RegenerateDto = {
+      threadId: curThreadId.value,
+      modelCode: curModelCode.value,
+      rootMessageId: "-1" // 使用-1表示最后一条用户消息
+    };
+
+    // 使用ConversationService重新生成消息
+    const response = await ConversationService.regenerate(regenerateDto, (fragment: MessageFragmentVo) => {
+      handleMessageFragment(fragment);
+    });
+
+    console.log('重新生成请求已发送:', response);
+
+  } catch (error) {
+    console.error('重新生成消息失败:', error);
+    alterRef.value?.showConfirm({
+      title: "重新生成失败",
+      content: `${error}`,
+      closeText: "好的",
+    });
+    
+    // 清理临时消息和状态
+    removeTempMsg();
+    isGenerating.value = false;
+  }
 };
 
 // 处理消息更新
