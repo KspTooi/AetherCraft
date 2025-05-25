@@ -19,6 +19,7 @@ export interface SelectThreadDto extends PageQuery {
 export interface GetThreadListDto extends PageQuery {
     type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话, JavaType: Integer
     npcId?: string;         // NpcID 当type为1时必填, JavaType: Long
+    title?: string;         // 标题 模糊查询, JavaType: String
 }
 
 export interface EditThreadTitleDto {

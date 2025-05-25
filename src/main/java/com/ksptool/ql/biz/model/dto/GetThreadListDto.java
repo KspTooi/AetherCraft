@@ -18,4 +18,7 @@ public class GetThreadListDto extends PageQuery {
     //NpcID 当type为1时必填
     private Long npcId;
 
+    //标题 模糊查询
+    private String title;
+
 }

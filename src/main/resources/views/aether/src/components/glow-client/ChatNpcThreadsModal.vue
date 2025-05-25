@@ -8,11 +8,38 @@
         <!-- 模态框头部 -->
         <div class="thread-modal-header">
           <h3 class="thread-modal-title">{{ selectedRoleName }} 的会话列表</h3>
+          
+          <!-- 搜索框 -->
+          <div class="thread-search-container">
+            <div class="search-input-wrapper">
+              <i class="bi bi-search search-icon"></i>
+              <input 
+                v-model="searchKeyword"
+                @input="handleSearch"
+                class="search-input"
+                type="text"
+                placeholder="搜索标题..."
+              />
+              <button 
+                v-if="searchKeyword"
+                @click="clearSearch"
+                class="clear-search-btn"
+                title="清除搜索">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </div>
+          
           <button class="thread-modal-close" @click="closeModal">×</button>
         </div>
 
         <div class="thread-modal-body">
-          <div v-if="loading" class="loading-state">
+          <!-- 加载状态 - 顶部发光装饰条 -->
+          <Transition name="glow-fade">
+            <div v-if="internalLoading" class="loading-glow-border"></div>
+          </Transition>
+          
+          <div v-if="loading && !internalLoading" class="loading-state">
             <i class="bi bi-arrow-repeat spinning"></i>
             加载中...
           </div>
@@ -74,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue'
+import { ref, inject, watch } from 'vue'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
 import GlowConfirmInput from '../glow-ui/GlowConfirmInput.vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from '../glow-ui/GlowTheme'
@@ -100,9 +127,25 @@ const loading = ref(false)
 const currentThreadId = ref('')
 const confirmModalRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 const inputModalRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
+const searchKeyword = ref('')
+const searchTimer = ref<number | null>(null)
+const internalLoading = ref(false)
+
+// --- 监听loading状态变化，实现延迟消失效果 ---
+watch(() => loading.value, (newLoading) => {
+  if (newLoading) {
+    // 开始加载时立即显示
+    internalLoading.value = true;
+  } else {
+    // 加载完成时延迟0.5秒后消失，确保有足够时间显示完成状态
+    setTimeout(() => {
+      internalLoading.value = false;
+    }, 500);
+  }
+}, { immediate: true });
 
 // Methods for component
-const loadThreadList = async () => {
+const loadThreadList = async (title?: string) => {
   if (!selectedRoleId.value) return;
   
   loading.value = true
@@ -110,6 +153,7 @@ const loadThreadList = async () => {
     const dto: GetThreadListDto = {
       type: 1, // RP会话
       npcId: selectedRoleId.value,
+      title: title || undefined, // 添加标题搜索参数
       page: 1,
       pageSize: 1000
     }
@@ -120,9 +164,9 @@ const loadThreadList = async () => {
     // 获取当前活动的会话ID
     const activeThread = threads.value.find(t => t.active === 1)
     if (activeThread) {
-      currentThreadId.value = String(activeThread.id)
+      currentThreadId.value = activeThread.id
     } else if (threads.value.length > 0) {
-      currentThreadId.value = String(threads.value[0].id)
+      currentThreadId.value = threads.value[0].id
     }
   } catch (error) {
     console.error('加载会话列表失败:', error)
@@ -283,6 +327,23 @@ const handleEditThreadTitle = async (threadId: string, currentTitle: string) => 
   }
 }
 
+// 搜索处理（防抖）
+const handleSearch = () => {
+  if (searchTimer.value) {
+    clearTimeout(searchTimer.value)
+  }
+  
+  searchTimer.value = setTimeout(() => {
+    loadThreadList(searchKeyword.value.trim())
+  }, 300) // 300ms 防抖
+}
+
+// 清除搜索
+const clearSearch = () => {
+  searchKeyword.value = ''
+  loadThreadList() // 重新加载所有数据
+}
+
 // 暴露方法
 defineExpose({
   show
@@ -312,6 +373,7 @@ defineExpose({
 .thread-modal-container {
   width: 800px;
   max-width: 90%;
+  height: 600px;
   max-height: 80vh;
   background: v-bind('theme.boxAccentColor');
   backdrop-filter: blur(v-bind('theme.boxBlur + "px"'));
@@ -362,7 +424,8 @@ defineExpose({
   padding: 16px 20px 16px;
   border-bottom: 1px solid v-bind('theme.boxBorderColor');
   position: relative;
-  margin-bottom: 8px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
 .thread-modal-title {
@@ -371,6 +434,7 @@ defineExpose({
   margin: 0;
   font-weight: 500;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .thread-modal-close {
@@ -397,11 +461,11 @@ defineExpose({
   flex: 1;
   padding: 0;
   overflow-y: auto;
-  min-height: 200px;
-  max-height: calc(80vh - 56px);
+  min-height: 0;
+  position: relative;
 }
 
-/* 自定义滚动条 */
+/* 自定义滚动条样式 */
 .thread-modal-body::-webkit-scrollbar {
   width: 4px;
 }
@@ -419,12 +483,49 @@ defineExpose({
   background: v-bind('theme.boxBorderColor');
 }
 
+/* 加载状态 - 顶部发光装饰条 */
+.loading-glow-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: v-bind('theme.boxGlowColor');
+  box-shadow: 0 0 15px 2px v-bind('theme.boxGlowColor');
+  z-index: 10;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    box-shadow: 0 0 15px 2px v-bind('theme.boxGlowColor');
+  }
+  50% { 
+    box-shadow: 0 0 25px 4px v-bind('theme.boxGlowColor');
+  }
+}
+
+/* Transition动画样式 */
+.glow-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.glow-fade-leave-active {
+  transition: all 0.8s ease-out;
+}
+
+.glow-fade-enter-from,
+.glow-fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0);
+}
+
 /* 加载状态 */
 .loading-state {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100px;
+  height: 100%;
   color: rgba(255, 255, 255, 0.6);
   gap: 10px;
 }
@@ -446,6 +547,7 @@ defineExpose({
   justify-content: center;
   padding: 30px 20px;
   text-align: center;
+  height: 100%;
 }
 
 .empty-state i {
@@ -615,5 +717,81 @@ defineExpose({
 .thread-action-btn.disabled:hover {
   background: transparent;
   color: v-bind('theme.boxTextColorNoActive');
+}
+
+/* 搜索框 */
+.thread-search-container {
+  flex: 1;
+  max-width: 300px;
+  min-width: 200px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: v-bind('theme.boxTextColorNoActive');
+  font-size: 12px;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 28px 6px 24px;
+  border: 1px solid v-bind('theme.boxBorderColor');
+  border-radius: 0;
+  background: v-bind('theme.boxColor');
+  color: v-bind('theme.boxTextColor');
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+  height: 28px;
+}
+
+.search-input:focus {
+  border-color: v-bind('theme.boxGlowColor');
+}
+
+.search-input:hover:not(:focus) {
+  border-color: v-bind('theme.boxBorderColorHover');
+}
+
+.search-input::placeholder {
+  color: v-bind('theme.boxTextColorNoActive');
+  opacity: 0.7;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: v-bind('theme.boxTextColorNoActive');
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 0;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.clear-search-btn:hover {
+  color: v-bind('theme.boxTextColor');
+  background-color: v-bind('theme.boxAccentColorHover');
 }
 </style>

@@ -168,7 +168,7 @@ public class ChatThreadService {
             nid = dto.getNpcId();
         }
 
-        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(pid,uid,nid,dto.getType(), dto.pageRequest());
+        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(pid,uid,nid,dto.getType(),dto.getTitle(), dto.pageRequest());
         List<GetThreadListVo> vos = new ArrayList<>();
 
         for(var po : pPos.getContent()){

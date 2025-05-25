@@ -36,12 +36,14 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
             AND ctp.user.id = :userId
             AND ctp.type = :type
             AND (:npcId IS NULL OR npc.id = :npcId)
+            AND (:title IS NULL OR ctp.title LIKE CONCAT('%',:title,'%') )
             ORDER BY ctp.createTime DESC
             """)
     Page<ChatThreadPo> getThreadListWithLastMessage(@Param("playerId") Long playerId,
                                                    @Param("userId") Long userId,
                                                    @Param("npcId") Long npcId,
                                                    @Param("type") Integer type,
+                                                   @Param("title") String title,
                                                    Pageable page);
 
     @Query("""
