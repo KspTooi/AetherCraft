@@ -62,8 +62,8 @@
             @click="handleRoleClick(npc)"
             :class="['npc-item', { active: npc.id == activeThreadId }]"
           >
-            <div class="role-avatar" :class="{ 'no-image': !npc.avatarPath }">
-              <img v-if="npc.avatarPath" :src="npc.avatarPath" :alt="npc.name">
+            <div class="role-avatar" :class="{ 'no-image': !npc.avatarUrl }">
+              <img v-if="npc.avatarUrl" :src="npc.avatarUrl" :alt="npc.name">
               <i v-else class="bi bi-person"></i>
             </div>
             <div class="npc-content">
@@ -113,6 +113,7 @@ const listQuery = reactive<GetNpcListDto>({
   pageSize: 1000
 })
 const selectedNpc = ref<GetNpcListVo | null>(null)
+
 
 // 事件定义
 const emit = defineEmits<{

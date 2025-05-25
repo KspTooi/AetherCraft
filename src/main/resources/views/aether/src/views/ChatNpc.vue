@@ -1,7 +1,7 @@
 <template>
   <div class="chat-layout">
 
-    <ChatNpcList ref="roleListRef"
+    <ChatNpcList ref="npcListRef"
                    class="chat-sidebar"
                    @select-npc="onSelectNpc"
                    @create-thread="onCreateThread"
@@ -18,7 +18,7 @@
       <div class="message-box-container">
         <ChatMessageBox
            ref="messageBoxRef" 
-           :data="messages" 
+           :data="messageData" 
            :isGenerating="isGenerating"
            @update-message="onMessageEdit"
            @delete-message="onMessageRemove"
@@ -69,11 +69,12 @@ import ChatNpcList from "@/components/glow-client/ChatNpcList.vue";
 import type { GetNpcListVo } from '@/commons/api/NpcApi.ts';
 import type RecoverRpChatVo from '@/entity/vo/RecoverRpChatVo.ts';
 import type RecoverRpChatHistoryVo from '@/entity/vo/RecoverRpChatHistoryVo.ts';
-import type GetRpLastStatusVo from '@/entity/vo/GetRpLastStatusVo.ts';
 import type RpSegmentVo from '@/entity/vo/RpSegmentVo.ts';
 import ChatNpcThreadsModal from "@/components/glow-client/ChatNpcThreadsModal.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import { useRouter } from 'vue-router';
+import type { SelectThreadDto, SelectThreadVo } from '@/commons/api/ThreadApi';
+import ThreadApi from '@/commons/api/ThreadApi';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -91,21 +92,27 @@ interface MessageBoxItem {
   createTime: string;
 }
 
+const messageData = ref<MessageBoxItem[]>([])
+const selectThreadData = ref<SelectThreadVo | null>(null)
+const selectThreadTotal = ref(0)
+const selectThreadQuery = ref<SelectThreadDto>({
+  npcId: "",
+  page: 1,
+  pageSize: 1000
+})
+
 // 消息框引用
 const messageBoxRef = ref<MessageBoxInstance | null>(null);
-// 角色列表引用
-const roleListRef = ref<RoleListInstance | null>(null);
+// NPC列表引用
+const npcListRef = ref<NpcListInstance | null>(null);
 // 是否正在生成回复
 const isGenerating = ref(false);
 // 当前是否有临时消息
 const hasTempMessage = ref<boolean>(false)
 
-const currentRoleId = ref<string>("")   //当前选择的角色ID
+const currentNpcId = ref<string>("")   //当前选择的NPC ID
 const currentThreadId = ref<string>("") //当前聊天Thread的ID
 const currentModelCode = ref<string>("")//当前选择的模型代码
-
-// 使用 MessageBoxItem 类型定义 messages
-const messages = ref<MessageBoxItem[]>([]);
 
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 // 确认框引用
@@ -115,10 +122,6 @@ const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 // 会话管理模态框引用
 const roleThreadsModalRef = ref<InstanceType<typeof ChatNpcThreadsModal> | null>(null)
 
-onMounted(async () => {
-  await resumeLastStatus();
-})
-
 // 定义消息框实例类型
 interface MessageBoxInstance {
   createTempMessage: (msg: any) => void;
@@ -127,8 +130,8 @@ interface MessageBoxInstance {
   scrollToBottom: () => void;
 }
 
-// 定义角色列表实例类型
-interface RoleListInstance {
+// 定义NPC列表实例类型
+interface NpcListInstance {
   loadThreadList: () => Promise<any>;
   setActiveThread: (threadId: string) => void;
   getActiveThreadId: () => string;
@@ -136,6 +139,54 @@ interface RoleListInstance {
   closeMobileMenu: () => void;
 }
 
+const getNpcMessageList = async (npcId: string) => {
+  try {
+    // 设置查询参数
+    selectThreadQuery.value.npcId = npcId;
+
+    console.log(selectThreadQuery.value)
+    
+    // 调用ThreadApi获取消息列表，返回SelectThreadVo
+    const response: SelectThreadVo = await ThreadApi.selectThread(selectThreadQuery.value);
+    
+    // 存储完整的SelectThreadVo响应
+    selectThreadData.value = response;
+    
+    // 更新当前模型代码和线程ID
+    currentModelCode.value = response.modelCode;
+    currentThreadId.value = response.threadId;
+    
+    // 转换消息格式
+    const messageList = response.messages.rows || [];
+    messageData.value = messageList.map((msg): MessageBoxItem => ({
+      id: msg.id,
+      name: msg.senderName,
+      avatarPath: msg.senderAvatarUrl,
+      role: msg.senderRole === 0 ? 'user' : 'model',
+      content: msg.content,
+      createTime: msg.createTime
+    }));
+    
+    // 更新总数
+    selectThreadTotal.value = response.messages.count || 0;
+    
+    // 滚动到底部
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
+    
+  } catch (error) {
+    console.error(`获取NPC ${npcId} 消息列表失败:`, error);
+    messageData.value = [];
+    selectThreadData.value = null;
+    selectThreadTotal.value = 0;
+    
+    alterRef.value?.showConfirm({
+      title: "获取消息失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
+  }
+}
 
 // 处理发送消息
 const onMessageSend = async (message: string) => {
@@ -165,7 +216,7 @@ const onMessageSend = async (message: string) => {
         content: segment.content, // Use the original message content
         createTime: new Date().toISOString() // Always use current frontend time
       };
-      messages.value.push(userMessage);
+      messageData.value.push(userMessage);
       await nextTick(); 
       messageBoxRef.value?.scrollToBottom();
 
@@ -235,7 +286,7 @@ const pollMessage = async () => {
         if (!hasReceivedData) {
           // 第一次收到数据，清空 "正在思考..."
           // 直接修改临时消息的内容 (或者让 appendTempMsg 智能处理第一次追加?)
-          const tempMessage = messages.value.find(msg => msg.id === '-1');
+          const tempMessage = messageData.value.find(msg => msg.id === '-1');
           if (tempMessage) tempMessage.content = ''; // 清空初始内容
           hasReceivedData = true;
           await appendTempMsg(segment.content || ''); // 追加第一次收到的内容
@@ -250,7 +301,7 @@ const pollMessage = async () => {
         if (segment.content) {
           if (!hasReceivedData) {
             // 如果之前没收到数据，但结束时有内容, 直接设置最终内容
-            const tempMessage = messages.value.find(msg => msg.id === '-1');
+            const tempMessage = messageData.value.find(msg => msg.id === '-1');
             if(tempMessage) tempMessage.content = segment.content;
           } else {
             // 如果之前有数据，结束时也有内容，追加 (调用新函数)
@@ -324,61 +375,6 @@ const onBatchAbort = async () => { // 改为 async
   }
 };
 
-//加载聊天消息列表
-const reloadMessageList = async (roleId: string, threadId?: string) => {
-
-  // 清空当前消息列表，准备加载新的
-  messages.value = []; 
-  // 重置生成状态和临时消息标记（如果需要）
-  isGenerating.value = false;
-  hasTempMessage.value = false; 
-  // 将当前角色ID设置为传入的roleId
-  currentRoleId.value = roleId;
-
-  try {
-    // 构建基础请求体，始终包含 newThread: 1
-    let requestBody: any = { 
-      modelRoleId: roleId, 
-      modelCode: currentModelCode.value, 
-      newThread: 1 // 始终包含 newThread: 1
-    };
-
-    // 如果提供了 threadId，则附加它
-    if (threadId) {
-      requestBody.threadId = threadId;
-    }
-
-    // 发送请求
-    const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', requestBody);
-
-    // 更新当前模型代码和聊天线程ID
-    currentModelCode.value = chatData.modelCode || ""; 
-    currentThreadId.value = chatData.threadId || ""; // 获取后端返回的实际 threadId
-    
-    // currentRoleId 已经在本函数开头设置
-
-    // 处理消息列表 - 转换格式
-    const backendMessages = chatData.messages || []; 
-    messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
-      id: msg.id, 
-      name: msg.name,
-      avatarPath: msg.avatarPath,
-      role: msg.type === 0 ? 'user' : 'model', 
-      content: msg.rawContent, 
-      createTime: msg.createTime 
-    }));
-    
-    await nextTick();
-    messageBoxRef.value?.scrollToBottom();
-    return;
-    
-  } catch (error) {
-    console.error(`恢复角色 ${roleId} ${threadId ? '的会话 ' + threadId : '的最新会话'} 请求失败:`, error);
-    messages.value = []; // 确保失败时清空
-    currentThreadId.value = ""; 
-  }
-};
-
 //选择模型
 const onSelectMode = (modeCode:string)=>{
   currentModelCode.value = modeCode;
@@ -388,22 +384,21 @@ const onSelectMode = (modeCode:string)=>{
 
 //选择NPC
 const onSelectNpc = async (npc: GetNpcListVo) => {
-  // When user manually selects a role, always load the latest/new thread for that role
-  // Do not pass threadId here, let reloadMessageList handle the newThread=1 logic
-  roleListRef.value?.closeMobileMenu(); 
-  await reloadMessageList(npc.id); 
+  // When user manually selects a npc, always load the latest/new thread for that npc
+  npcListRef.value?.closeMobileMenu(); 
+  await getNpcMessageList(npc.id); 
 };
 
 //开始新会话
 const onCreateThread = async (npc: GetNpcListVo) => {
   console.log(`开始为NPC ${npc.name} (ID: ${npc.id}) 创建新会话`);
-  roleListRef.value?.closeMobileMenu(); // 关闭移动端菜单
+  npcListRef.value?.closeMobileMenu(); // 关闭移动端菜单
 
   // 清空当前消息列表和状态
-  messages.value = []; 
+  messageData.value = []; 
   isGenerating.value = false;
   hasTempMessage.value = false; 
-  currentRoleId.value = npc.id; // 设置当前角色ID
+  currentNpcId.value = npc.id; // 设置当前NPC ID
   // currentThreadId.value 会在请求成功后被设置
 
   try {
@@ -421,7 +416,7 @@ const onCreateThread = async (npc: GetNpcListVo) => {
 
     // 处理可能返回的初始消息 (通常新会话是空的)
     const backendMessages = chatData.messages || []; 
-    messages.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
+    messageData.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
       id: msg.id, 
       name: msg.name,
       avatarPath: msg.avatarPath,
@@ -441,7 +436,12 @@ const onCreateThread = async (npc: GetNpcListVo) => {
       content: `${error}`,
       closeText: "关闭",
     })
-    clearChatState();
+    
+    // 清空聊天相关状态
+    messageData.value = [];
+    currentNpcId.value = "";
+    currentThreadId.value = "";
+    currentModelCode.value = "";
   }
 }
 
@@ -464,11 +464,55 @@ const onManageThreads = async (npc: GetNpcListVo) => {
 }
 
 // 处理激活会话事件
-const handleActivateThread = async (roleId: string, threadId: string, modelCode: string) => {
-  console.log(`准备激活会话: roleId=${roleId}, threadId=${threadId}, modelCode=${modelCode}`)
-  // 调用现有的 reloadMessageList 函数来加载并切换到选中的会话
-  // reloadMessageList 内部会处理API调用和状态更新
-  await reloadMessageList(roleId, threadId)
+const handleActivateThread = async (npcId: string, threadId: string, modelCode: string) => {
+  console.log(`准备激活会话: npcId=${npcId}, threadId=${threadId}, modelCode=${modelCode}`)
+  
+  // 设置查询参数以获取指定的线程
+  selectThreadQuery.value.npcId = undefined;
+  selectThreadQuery.value.threadId = threadId;
+  
+  try {
+    // 调用ThreadApi获取指定线程的消息列表
+    const response: SelectThreadVo = await ThreadApi.selectThread(selectThreadQuery.value);
+    
+    // 存储完整的SelectThreadVo响应
+    selectThreadData.value = response;
+    
+    // 更新当前状态
+    currentNpcId.value = npcId;
+    currentModelCode.value = response.modelCode;
+    currentThreadId.value = response.threadId;
+    
+    // 转换消息格式
+    const messageList = response.messages.rows || [];
+    messageData.value = messageList.map((msg): MessageBoxItem => ({
+      id: msg.id,
+      name: msg.senderName,
+      avatarPath: msg.senderAvatarUrl,
+      role: msg.senderRole === 0 ? 'user' : 'model',
+      content: msg.content,
+      createTime: msg.createTime
+    }));
+    
+    // 更新总数
+    selectThreadTotal.value = response.messages.count || 0;
+    
+    // 滚动到底部
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
+    
+  } catch (error) {
+    console.error(`激活会话失败: npcId=${npcId}, threadId=${threadId}`, error);
+    messageData.value = [];
+    selectThreadData.value = null;
+    selectThreadTotal.value = 0;
+    
+    alterRef.value?.showConfirm({
+      title: "激活会话失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
+  }
 }
 
 const createTempMsg = async () => {
@@ -483,17 +527,17 @@ const createTempMsg = async () => {
     content: '正在输入...',
     createTime: new Date().toISOString()
   };
-  messages.value.push(tempAiMessage);
+  messageData.value.push(tempAiMessage);
   hasTempMessage.value = true;
   await nextTick();
   messageBoxRef.value?.scrollToBottom();
-  console.log(messages.value)
+  console.log(messageData.value)
 }
 
 const appendTempMsg = async (content: string) => {
   if (!hasTempMessage.value) return;
 
-  const tempMessage = messages.value.find(msg => msg.id === '-1');
+  const tempMessage = messageData.value.find(msg => msg.id === '-1');
   if (tempMessage) {
     tempMessage.content += content;
     await nextTick();
@@ -504,7 +548,7 @@ const appendTempMsg = async (content: string) => {
 const removeTempMsg = () => {
   if (!hasTempMessage.value) return;
 
-  messages.value = messages.value.filter(msg => msg.id !== '-1');
+  messageData.value = messageData.value.filter(msg => msg.id !== '-1');
   hasTempMessage.value = false;
 }
 
@@ -517,7 +561,7 @@ const updateTempMsg = async (data: {
 
   if (!hasTempMessage.value) return;
 
-  const tempMessage = messages.value.find(msg => msg.id === '-1');
+  const tempMessage = messageData.value.find(msg => msg.id === '-1');
 
   if (tempMessage) {
     let updated = false;
@@ -544,7 +588,7 @@ const updateTempMsg = async (data: {
     
     // 如果有任何更新，触发Vue的响应式更新
     if (updated) {
-       messages.value = [...messages.value];
+       messageData.value = [...messageData.value];
        // 一般更新元数据不需要滚动，除非UI布局因此改变
        // await nextTick(); 
        // messageBoxRef.value?.scrollToBottom();
@@ -580,7 +624,7 @@ const onMessageRemove = async (msgId: string) => {
     });
 
     // API 调用成功，从本地消息列表移除
-    const index = messages.value.findIndex(msg => msg.id === msgId);
+    const index = messageData.value.findIndex(msg => msg.id === msgId);
     
     // 未在本地找到消息 (理论上不应发生，除非数据不同步)
     if (index === -1) {
@@ -588,7 +632,7 @@ const onMessageRemove = async (msgId: string) => {
        return;
     }
     
-    messages.value.splice(index, 1);
+    messageData.value.splice(index, 1);
     console.log(`Message ${msgId} removed successfully.`);
 
   } catch (error) {
@@ -608,7 +652,7 @@ const onMessageRegenerate = async (msgId: string) => {
   if (isGenerating.value) return;
 
   // 2. 检查是否有可用于重新生成的消息
-  if (messages.value.length === 0) {
+  if (messageData.value.length === 0) {
     console.warn('没有可用于重新生成的消息。');
     return;
   }
@@ -622,12 +666,12 @@ const onMessageRegenerate = async (msgId: string) => {
   try {
 
     // 4. 获取最后一条消息
-    const lastMessageIndex = messages.value.length - 1;
-    const lastMessage = messages.value[lastMessageIndex];
+    const lastMessageIndex = messageData.value.length - 1;
+    const lastMessage = messageData.value[lastMessageIndex];
 
     // 5. 如果最后一条是AI响应，则先在视觉上移除它
     if (lastMessage.role === 'model') {
-      messages.value.pop();
+      messageData.value.pop();
       // 等待UI更新后再添加临时消息
       await nextTick(); 
     }
@@ -674,9 +718,9 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
     });
 
     // API 调用成功，更新本地消息列表
-    const messageIndex = messages.value.findIndex(msg => msg.id === params.msgId);
+    const messageIndex = messageData.value.findIndex(msg => msg.id === params.msgId);
     if (messageIndex !== -1) {
-      messages.value[messageIndex].content = params.message;
+      messageData.value[messageIndex].content = params.message;
     }
     console.log(`Message ${params.msgId} updated successfully.`);
   } catch (error) {
@@ -689,37 +733,6 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
     })
   }
 };
-
-// 恢复最后状态函数 (移除 else)
-const resumeLastStatus = async () =>{
-  console.log("Attempting to resume last status...");
-  try {
-    const lastStatus = await http.postEntity<GetRpLastStatusVo>('/model/rp/getRpLastStatus', {});
-
-    // 检查是否存在 lastRole
-    if (lastStatus.lastRole) {
-      currentRoleId.value = lastStatus.lastRole;
-    }
-
-    if(lastStatus.lastThread){
-      await reloadMessageList(lastStatus.lastRole,lastStatus.lastThread)
-    }
-
-  } catch (error) {
-    console.error('Error fetching last status:', error);
-    // 网络错误等，不加载任何角色，清空状态
-    console.log("Network error fetching status, clearing state.");
-    clearChatState();
-  }
-}
-
-// 辅助函数：清空聊天相关状态
-const clearChatState = () => {
-  messages.value = [];
-  currentRoleId.value = "";
-  currentThreadId.value = "";
-  currentModelCode.value = "";
-}
 
 </script>
 

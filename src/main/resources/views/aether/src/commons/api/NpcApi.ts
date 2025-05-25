@@ -10,7 +10,7 @@ export interface GetNpcListDto extends PageQuery {
 export interface GetNpcListVo {
     id: string;             // NPC ID
     name: string;           // 角色名称
-    avatarPath: string;     // 头像路径
+    avatarUrl: string;     // 头像路径
     threadCount: number;    // 对话数量
     active: number;         // 是否当前活动 0:否 1:是
 }
