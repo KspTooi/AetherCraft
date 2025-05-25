@@ -73,7 +73,7 @@ import type RpSegmentVo from '@/entity/vo/RpSegmentVo.ts';
 import ChatNpcThreadsModal from "@/components/glow-client/ChatNpcThreadsModal.vue";
 import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
 import { useRouter } from 'vue-router';
-import type { SelectThreadDto, SelectThreadVo } from '@/commons/api/ThreadApi';
+import type { SelectThreadDto, SelectThreadVo, CreateThreadDto, CreateThreadVo } from '@/commons/api/ThreadApi';
 import ThreadApi from '@/commons/api/ThreadApi';
 
 // 获取主题
@@ -399,7 +399,7 @@ const onSelectNpc = async (npc: GetNpcListVo) => {
 
 //开始新会话
 const onCreateThread = async (npc: GetNpcListVo) => {
-  console.log(`开始为NPC ${npc.name} (ID: ${npc.id}) 创建新会话`);
+
   npcListRef.value?.closeMobileMenu(); // 关闭移动端菜单
 
   // 清空当前消息列表和状态
@@ -407,34 +407,24 @@ const onCreateThread = async (npc: GetNpcListVo) => {
   isGenerating.value = false;
   hasTempMessage.value = false; 
   curNpcId.value = npc.id; // 设置当前NPC ID
-  // currentThreadId.value 会在请求成功后被设置
 
   try {
-    const chatData = await http.postEntity<RecoverRpChatVo>('/model/rp/recoverRpChat', { 
-      modelRoleId: npc.id, 
+    // 使用新的 ThreadApi.createThread 接口
+    const createThreadDto: CreateThreadDto = {
       modelCode: curModelCode.value,
-      newThread: 0 // 明确指示创建新线程
-    });
+      type: 1, // RP会话
+      npcId: npc.id
+    };
 
-    console.log('新会话创建成功:', chatData);
-
-    // 更新当前线程ID和模型代码
-    curThreadId.value = chatData.threadId || "";
-    curModelCode.value = chatData.modelCode || curModelCode.value; // 如果后端没返回，保持当前选择
-
-    // 处理可能返回的初始消息 (通常新会话是空的)
-    const backendMessages = chatData.messages || []; 
-    messageData.value = backendMessages.map((msg: RecoverRpChatHistoryVo): MessageBoxItem => ({
-      id: msg.id, 
-      name: msg.name,
-      avatarPath: msg.avatarPath,
-      role: msg.type === 0 ? 'user' : 'model', 
-      content: msg.rawContent, 
-      createTime: msg.createTime 
-    }));
+    const response: CreateThreadVo = await ThreadApi.createThread(createThreadDto);
     
-    await nextTick();
-    messageBoxRef.value?.scrollToBottom();
+    console.log('新会话创建成功:', response);
+
+    // 更新当前线程ID
+    curThreadId.value = response.threadId;
+    
+    // 会话创建完毕后获取消息列表
+    await getNpcMessageList(npc.id);
     
   } catch (error) {
     console.error(`为NPC ${npc.name} 创建新会话请求失败:`, error);
@@ -449,7 +439,6 @@ const onCreateThread = async (npc: GetNpcListVo) => {
     messageData.value = [];
     curNpcId.value = "";
     curThreadId.value = "";
-    curModelCode.value = "";
   }
 }
 
