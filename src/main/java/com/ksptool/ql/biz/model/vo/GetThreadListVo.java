@@ -7,6 +7,18 @@ import java.util.Date;
 @Data
 public class GetThreadListVo {
 
+    public GetThreadListVo(Long id, String title, String lastMessage, String publicInfo, String modelCode, Integer active, Date createTime, Date updateTime, Integer messageCount) {
+        this.id = id;
+        this.title = title;
+        this.lastMessage = lastMessage;
+        this.publicInfo = publicInfo;
+        this.modelCode = modelCode;
+        this.active = active;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+        this.messageCount = messageCount;
+    }
+
     //ThreadId
     private Long id;
 
@@ -30,5 +42,8 @@ public class GetThreadListVo {
 
     //更新时间
     private Date updateTime;
+
+    //消息数量
+    private Integer messageCount;
 
 }

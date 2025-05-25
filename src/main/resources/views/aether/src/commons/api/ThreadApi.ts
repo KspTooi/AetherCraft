@@ -56,6 +56,7 @@ export interface GetThreadListVo {
     active: number;             // 是否为当前激活的对话 0:缓解 1:激活, JavaType: Integer
     createTime: string;         // 创建时间, JavaType: Date (TS string)
     updateTime: string;         // 更新时间, JavaType: Date (TS string)
+    messageCount: number;       // 消息数量, JavaType: Integer
 }
 
 

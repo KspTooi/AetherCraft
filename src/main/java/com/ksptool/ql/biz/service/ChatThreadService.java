@@ -168,21 +168,22 @@ public class ChatThreadService {
             nid = dto.getNpcId();
         }
 
-        Page<ChatThreadPo> pPos = repository.getThreadListWithLastMessage(pid,uid,nid,dto.getType(),dto.getTitle(), dto.pageRequest());
+        Page<GetThreadListVo> pPos = repository.getThreadListWithLastMessage(pid,uid,nid,dto.getType(),dto.getTitle(), dto.pageRequest());
         List<GetThreadListVo> vos = new ArrayList<>();
 
-        for(var po : pPos.getContent()){
-            GetThreadListVo vo = as(po,GetThreadListVo.class);
+        for(var vo : pPos.getContent()){
 
             // 获取最后一条消息（如果有）作为预览
-            vo.setLastMessage("无消息……");
 
-            if(po.getLastMessage() != null){
+            if(vo.getLastMessage() != null){
                 //截取前50个字符作为预览
-                String content = css.decryptForCurUser(po.getLastMessage().getContent());
+                String content = css.decryptForCurUser(vo.getLastMessage());
                 vo.setLastMessage(content.length() > 50 ?
                         content.substring(0, 50) + "..." :
                         content);
+            }
+            if(vo.getLastMessage() == null){
+                vo.setLastMessage("无消息……");
             }
 
             vos.add(vo);

@@ -59,7 +59,10 @@
                   {{ thread.title || '未命名会话' }}
                   <span v-if="thread.active === 1" class="active-badge">当前</span>
                 </div>
-                <div class="thread-time">{{ formatTime(thread.createTime) }}</div>
+                <div class="thread-time">
+                  {{ formatTime(thread.createTime) }}
+                  <span v-if="thread.messageCount > 0" class="message-count-text">· {{ thread.messageCount }}条消息</span>
+                </div>
                 <div class="thread-message" v-if="thread.lastMessage">{{ thread.lastMessage }}</div>
                 <div class="thread-message" v-else>暂无对话内容</div>
               </div>
@@ -793,5 +796,12 @@ defineExpose({
 .clear-search-btn:hover {
   color: v-bind('theme.boxTextColor');
   background-color: v-bind('theme.boxAccentColorHover');
+}
+
+.message-count-text {
+  font-size: 11px;
+  color: v-bind('theme.boxTextColorNoActive');
+  margin-left: 8px;
+  opacity: 0.8;
 }
 </style>

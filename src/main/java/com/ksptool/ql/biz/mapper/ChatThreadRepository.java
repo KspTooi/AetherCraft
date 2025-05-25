@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
+import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,8 +29,28 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
 
 
     @Query("""
-            SELECT ctp FROM ChatThreadPo ctp
-            LEFT JOIN FETCH ctp.lastMessage
+            SELECT new com.ksptool.ql.biz.model.vo.GetThreadListVo(
+                ctp.id,
+                ctp.title,
+                COALESCE((
+                    SELECT m.content 
+                    FROM ChatMessagePo m 
+                    WHERE m.thread.id = ctp.id 
+                    ORDER BY m.seq DESC 
+                    LIMIT 1
+                ), ''),
+                ctp.publicInfo,
+                ctp.modelCode,
+                ctp.active,
+                ctp.createTime,
+                ctp.updateTime,
+                CAST((
+                    SELECT COUNT(m2.id) 
+                    FROM ChatMessagePo m2 
+                    WHERE m2.thread.id = ctp.id
+                ) AS INTEGER)
+            )
+            FROM ChatThreadPo ctp
             LEFT JOIN ctp.npc npc
             WHERE
             ctp.player.id = :playerId
@@ -39,12 +60,12 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
             AND (:title IS NULL OR ctp.title LIKE CONCAT('%',:title,'%') )
             ORDER BY ctp.createTime DESC
             """)
-    Page<ChatThreadPo> getThreadListWithLastMessage(@Param("playerId") Long playerId,
-                                                   @Param("userId") Long userId,
-                                                   @Param("npcId") Long npcId,
-                                                   @Param("type") Integer type,
-                                                   @Param("title") String title,
-                                                   Pageable page);
+    Page<GetThreadListVo> getThreadListWithLastMessage(@Param("playerId") Long playerId,
+                                                       @Param("userId") Long userId,
+                                                       @Param("npcId") Long npcId,
+                                                       @Param("type") Integer type,
+                                                       @Param("title") String title,
+                                                       Pageable page);
 
     @Query("""
        UPDATE ChatThreadPo ctp SET ctp.active = 0
