@@ -58,7 +58,7 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
        UPDATE ChatThreadPo ctp SET ctp.active = 0
        WHERE
        ctp.type = 1
-       AND ctp.npc = :npcId
+       AND ctp.npc.id = :npcId
     """)
     @Modifying
     void deActiveThreadByNpc(@Param("npcId")Long npcId);

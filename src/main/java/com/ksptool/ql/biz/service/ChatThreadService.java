@@ -3,6 +3,8 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
+import com.ksptool.ql.biz.mapper.NpcRepository;
+import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.SelectThreadDto;
@@ -61,6 +63,10 @@ public class ChatThreadService {
 
     @Autowired
     private ModelRestCgi restCgi;
+    @Autowired
+    private PlayerRepository playerRepository;
+    @Autowired
+    private NpcRepository npcRepository;
 
 
     //玩家选中Thread
@@ -315,8 +321,10 @@ public class ChatThreadService {
             throw new BizException("对话类型只允许 标准会话、增强会话");
         }
 
+        var playerPo = playerRepository.findById(AuthService.requirePlayerId())
+                .orElseThrow(() -> new BizException("Player不存在或无权访问"));
+
         var userPo = Any.of().val("id",AuthService.requireUserId()).as(UserPo.class);
-        var playerPo = Any.of().val("id",AuthService.requirePlayerId()).as(PlayerPo.class);
         var insert = new ChatThreadPo();
         insert.setType(type); //0:标准会话 1:RP会话 2:标准增强会话
         insert.setUser(userPo);
@@ -333,18 +341,23 @@ public class ChatThreadService {
     }
 
     @Transactional(rollbackFor = BizException.class)
-    public ChatThreadPo createSelfNpcThread(AIModelEnum model,NpcPo npc) throws BizException {
+    public ChatThreadPo createSelfNpcThread(AIModelEnum model,Long npcId) throws BizException {
+
+        var playerPo = playerRepository.findById(AuthService.requirePlayerId())
+                .orElseThrow(() -> new BizException("Player不存在或无权访问"));
+        var npcPo = npcRepository.findById(npcId)
+                .orElseThrow(() -> new BizException("Npc不存在或无权访问"));
+
         UserSessionVo player = AuthService.requirePlayer();
         var userPo = Any.of().val("id",player.getUserId()).as(UserPo.class);
-        var playerPo = Any.of().val("id",player.getPlayerId()).as(PlayerPo.class);
         var insert = new ChatThreadPo();
         insert.setType(1); //0:标准会话 1:RP会话 2:标准增强会话
         insert.setUser(userPo);
         insert.setPlayer(playerPo);
-        insert.setNpc(npc);
+        insert.setNpc(npcPo);
         var prompt = new PreparedPrompt("#{player}与#{npc}的对话");
         prompt.setParameter("player",player.getPlayerName());
-        prompt.setParameter("npc",npc.getName());
+        prompt.setParameter("npc",npcPo.getName());
         insert.setTitle(prompt.execute());
         insert.setPublicInfo(prompt.execute());
         insert.setDescription(null);

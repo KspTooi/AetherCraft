@@ -61,7 +61,10 @@ public class ChatConversationService {
 
     @Autowired
     private ChatMessageService chatMessageService;
+
+    @Autowired
     private NpcService npcService;
+
     @Autowired
     private GlobalConfigService globalConfigService;
 
@@ -78,8 +81,8 @@ public class ChatConversationService {
 
             //创建NPC会话
             if(dto.getType() == 1){
-                NpcPo selfNpc = npcService.getSelfNpc(dto.getNpcId());
-                threadPo = chatThreadService.createSelfNpcThread(model,selfNpc);
+                chatThreadRepository.deActiveThreadByNpc(dto.getNpcId());
+                threadPo = chatThreadService.createSelfNpcThread(model,dto.getNpcId());
             }
 
             //创建标准会话
@@ -128,6 +131,18 @@ public class ChatConversationService {
         //获取该Thread下全部聊天记录
         List<ChatMessagePo> messagesPos = threadPo.getMessages();
 
+        //需通过CGI发送的历史记录
+        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
+
+        //组装需通过CGI发送的聊天历史记录
+        for(var item : messagesPos){
+            var cgiItem = new CgiChatMessage();
+            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
+            cgiItem.setContent(css.decryptForCurUser(item.getContent()));
+            cgiItem.setSeq(item.getSeq());
+            cgiHistoryMessages.add(cgiItem);
+        }
+
         //保存用户发来的消息为一条历史记录
         var playerMessage = new ChatMessagePo();
         playerMessage.setThread(threadPo);
@@ -140,18 +155,6 @@ public class ChatConversationService {
         messagesPos.add(playerMessage);
         threadPo.setLastMessage(playerMessage);
         chatThreadRepository.save(threadPo);
-
-        //需通过CGI发送的历史记录
-        var cgiHistoryMessages = new ArrayList<CgiChatMessage>();
-
-        //组装需通过CGI发送的聊天历史记录
-        for(var item : messagesPos){
-            var cgiItem = new CgiChatMessage();
-            cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
-            cgiItem.setContent(css.decryptForCurUser(item.getContent()));
-            cgiItem.setSeq(item.getSeq());
-            cgiHistoryMessages.add(cgiItem);
-        }
 
         //创建起始分片
         var cf = new ChatFragment();
@@ -183,7 +186,7 @@ public class ChatConversationService {
             var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
             var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
-            PreparedPrompt systemPrompt = new PreparedPrompt(mainPromptTemplate).union(rolePromptTemplate);
+            PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
@@ -191,12 +194,12 @@ public class ChatConversationService {
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-            p.setSystemPrompt(systemPrompt.execute());
+            p.setSystemPrompt(systemPrompt.executeNested());
 
             PreparedPrompt msgPrompt = new PreparedPrompt(dto.getMessage());
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
-            msg.setContent(msgPrompt.execute());
+            msg.setContent(msgPrompt.executeNested());
         }
 
         restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
@@ -313,7 +316,7 @@ public class ChatConversationService {
             var mainPromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_MAIN.getKey());
             var rolePromptTemplate = globalConfigService.get(GlobalConfigEnum.MODEL_RP_PROMPT_ROLE.getKey());
 
-            PreparedPrompt systemPrompt = new PreparedPrompt(mainPromptTemplate).union(rolePromptTemplate);
+            PreparedPrompt systemPrompt = PreparedPrompt.prepare(mainPromptTemplate).union(rolePromptTemplate);
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
             systemPrompt.setParameter("npcDescription", css.decryptForCurUser(npc.getDescription()));
@@ -321,12 +324,12 @@ public class ChatConversationService {
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("npcScenario", css.decryptForCurUser(npc.getScenario()));
             systemPrompt.setParameter("playerDesc", css.decryptForCurUser(playerPo.getDescription()));
-            p.setSystemPrompt(systemPrompt.execute());
+            p.setSystemPrompt(systemPrompt.executeNested());
 
             PreparedPrompt msgPrompt = new PreparedPrompt(rootMessagePo.getContent());
             systemPrompt.setParameter("npc", npc.getName());
             systemPrompt.setParameter("player", playerPo.getName());
-            msg.setContent(msgPrompt.execute());
+            msg.setContent(msgPrompt.executeNested());
         }
 
 
