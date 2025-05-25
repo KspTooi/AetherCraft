@@ -137,12 +137,12 @@ public class ChatThreadService {
             msgVos.add(vo);
         }
 
+        ret.setMessages(new RestPageableView<>(msgVos, pPos.getTotalElements()));
+
         //取消其他所有会话的激活
         repository.deActiveAllStandardThread(player.getPlayerId(),player.getUserId());
-
-        ret.setMessages(new RestPageableView<>(msgVos, pPos.getTotalElements()));
-        threadPo.setActive(1); //激活当前会话
-        repository.save(threadPo);
+        //直接激活当前会话
+        repository.activeThread(threadPo.getId());
         return ret;
     }
 

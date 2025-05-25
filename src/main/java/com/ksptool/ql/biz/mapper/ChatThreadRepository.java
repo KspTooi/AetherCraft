@@ -63,6 +63,12 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
     @Modifying
     void deActiveThreadByNpc(@Param("npcId")Long npcId);
 
+    @Query("""
+       UPDATE ChatThreadPo ctp SET ctp.active = 1
+       WHERE ctp.id = :threadId
+    """)
+    @Modifying
+    void activeThread(@Param("threadId")Long threadId);
 
     @Query("SELECT ctp FROM ChatThreadPo ctp WHERE ctp.id = :id")
     ChatThreadPo getThread(@Param("id") Long id);
