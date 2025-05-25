@@ -2,7 +2,6 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
-import com.ksptool.ql.biz.model.vo.CreateEmptyThreadVo;
 import com.ksptool.ql.biz.model.vo.CreateThreadVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;

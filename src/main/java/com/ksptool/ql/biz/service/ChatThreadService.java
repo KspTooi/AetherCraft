@@ -358,6 +358,9 @@ public class ChatThreadService {
         var npcPo = npcRepository.findById(npcId)
                 .orElseThrow(() -> new BizException("Npc不存在或无权访问"));
 
+        //将该NPC下其他会话置于存档
+        repository.deActiveThreadByNpc(npcPo.getId());
+
         UserSessionVo player = AuthService.requirePlayer();
         var userPo = Any.of().val("id",player.getUserId()).as(UserPo.class);
         var insert = new ChatThreadPo();

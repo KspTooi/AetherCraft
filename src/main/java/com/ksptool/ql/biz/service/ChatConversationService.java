@@ -79,10 +79,11 @@ public class ChatConversationService {
         //Thread为-1时创建新会话
         if(dto.getThreadId() == -1L){
 
-            //创建NPC会话
+            //NPC会话无法自动创建
             if(dto.getType() == 1){
-                chatThreadRepository.deActiveThreadByNpc(dto.getNpcId());
-                threadPo = chatThreadService.createSelfNpcThread(model,dto.getNpcId());
+                throw new BizException("NPC会话无法自动创建");
+                //chatThreadRepository.deActiveThreadByNpc(dto.getNpcId());
+                //threadPo = chatThreadService.createSelfNpcThread(model,dto.getNpcId());
             }
 
             //创建标准会话

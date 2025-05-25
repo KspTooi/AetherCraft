@@ -79,19 +79,15 @@ import ThreadApi from '@/commons/api/ThreadApi';
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 const router = useRouter();
-
-const isCreatingThread = ref<boolean>(false)
-
-
 const messageData = ref<MessageBoxItem[]>([])
 const selectThreadData = ref<SelectThreadVo | null>(null)
 const selectThreadTotal = ref(0)
 const selectThreadQuery = ref<SelectThreadDto>({
   npcId: "",
+  modelCode:"",
   page: 1,
   pageSize: 1000
 })
-
 const curNpcId = ref<string>("")   //当前选择的NPC ID
 const curThreadId = ref<string>("") //当前聊天Thread的ID
 const curModelCode = ref<string>("")//当前选择的模型代码
@@ -114,8 +110,6 @@ const npcListRef = ref<NpcListInstance | null>(null);
 const isGenerating = ref(false);
 // 当前是否有临时消息
 const hasTempMessage = ref<boolean>(false)
-
-
 
 const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
 // 确认框引用
