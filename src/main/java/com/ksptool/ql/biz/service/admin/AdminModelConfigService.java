@@ -81,10 +81,10 @@ public class AdminModelConfigService {
         vo.setTopP(playerConfigService.getDouble(baseKey + "topP",1.0D));
 
         // 获取top_k值，默认40
-        vo.setTopK(playerConfigService.getInt(baseKey, 40));
+        vo.setTopK(playerConfigService.getInt(baseKey + "topK", 40));
 
         // 获取最大输出长度，默认4096
-        vo.setMaxOutputTokens(playerConfigService.getInt(baseKey, 4096));
+        vo.setMaxOutputTokens(playerConfigService.getInt(baseKey + "maxOutputTokens", 4096));
 
         // 获取可用的API密钥列表 - 只返回对应系列的密钥
         vo.setApiKeys(apiKeyService.getCurrentPlayerAvailableApiKey(byCode.getSeries()));
