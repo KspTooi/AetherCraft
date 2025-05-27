@@ -289,6 +289,12 @@ public class ChatConversationService {
 
             //组装需通过CGI发送的聊天历史记录
             for(var item : threadPo.getMessages()){
+
+                //根消息不参与历史记录
+                if(item.getId().equals(rootMessagePo.getId())){
+                    continue;
+                }
+
                 var cgiItem = new CgiChatMessage();
                 cgiItem.setSenderType(item.getSenderRole()); //发送人类型 0:玩家 1:模型
                 cgiItem.setContent(css.decryptForCurUser(item.getContent()));
@@ -354,7 +360,6 @@ public class ChatConversationService {
                 modelAvatarUrl = npc.getAvatarUrlPt(css);
                 modelName = npc.getName();
             }
-
 
             restCgi.sendMessage(p, onCgiCallback(new CgiCallbackContext(
                     threadPo.getId(),
