@@ -32,7 +32,6 @@
           <li
             class="nav-item player-info-container"
             v-if="!playerStore.isLoading"
-            v-click-outside="closePlayerDropdown"
             @mouseenter="openPlayerDropdown" 
             @mouseleave="closePlayerDropdown" 
           >
