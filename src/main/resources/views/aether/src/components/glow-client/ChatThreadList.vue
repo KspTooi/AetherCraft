@@ -186,7 +186,8 @@ onBeforeUnmount(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  closeMobileMenu
+  closeMobileMenu,
+  toggleMobileMenu
 })
 </script>
 

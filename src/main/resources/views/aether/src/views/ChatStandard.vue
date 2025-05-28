@@ -1,56 +1,64 @@
 <template>
-  <div class="chat-layout">
 
-    <ChatThreadList ref="chatListRef"
-                   class="chat-sidebar"
-                   :data="threadList"
-                   :selected="currentThreadId"
-                   @create-thread="onCreateThread"
-                   @select-thread="onSelectThread"
-                   @delete-thread="onDeleteThread"
-                   @update-title="onUpdateThreadTitle"
-    />
+  <GlowMobileSupport @on-touch-move-right="() => {
+    console.log('从左向右滑动')
+    chatListRef?.toggleMobileMenu()
+  }"
+  >
+    <div class="chat-layout">
 
-    <GlowDiv class="chat-content" border="none">
+      <ChatThreadList ref="chatListRef"
+                      class="chat-sidebar"
+                      :data="threadList"
+                      :selected="currentThreadId"
+                      @create-thread="onCreateThread"
+                      @select-thread="onSelectThread"
+                      @delete-thread="onDeleteThread"
+                      @update-title="onUpdateThreadTitle"
+      />
 
-      <div class="model-selector-container">
-        <ModelSelector :selected="currentModelCode" @select-model="onSelectMode"/>
-      </div>
+      <GlowDiv class="chat-content" border="none">
 
-      <div class="message-box-container">
-        <ChatMessageBox
-           ref="messageBoxRef" 
-           :data="messages" 
-           :isGenerating="isGenerating"
-           :loading="isLoadingMessages"
-           @update-message="onMessageEdit"
-           @delete-message="onMessageRemove"
-           @regenerate="onMessageRegenerate"
-         />
-      </div>
+        <div class="model-selector-container">
+          <ModelSelector :selected="currentModelCode" @select-model="onSelectMode"/>
+        </div>
 
-      <div class="message-input-container">
-        <ImMessageInput
-            :disabled="false"
-            :is-generating="isGenerating"
-            @message-send="onMessageSend"
-            @abort-generate="onBatchAbort"
-            placeholder="为什么不问问神奇的Gemini呢?"
-        />
-      </div>
+        <div class="message-box-container">
+          <ChatMessageBox
+              ref="messageBoxRef"
+              :data="messages"
+              :isGenerating="isGenerating"
+              :loading="isLoadingMessages"
+              @update-message="onMessageEdit"
+              @delete-message="onMessageRemove"
+              @regenerate="onMessageRegenerate"
+          />
+        </div>
 
-    </GlowDiv>
+        <div class="message-input-container">
+          <ImMessageInput
+              :disabled="false"
+              :is-generating="isGenerating"
+              @message-send="onMessageSend"
+              @abort-generate="onBatchAbort"
+              placeholder="为什么不问问神奇的Gemini呢?"
+          />
+        </div>
 
-    <!-- 确认框组件 -->
-    <GlowConfirm ref="confirmRef" />
+      </GlowDiv>
 
-    <!-- 错误提示框组件 -->
-    <GlowAlter ref="alterRef" />
+      <!-- 确认框组件 -->
+      <GlowConfirm ref="confirmRef" />
 
-    <!-- 输入框组件 -->
-    <GlowConfirmInput ref="inputRef" />
+      <!-- 错误提示框组件 -->
+      <GlowAlter ref="alterRef" />
 
-  </div>
+      <!-- 输入框组件 -->
+      <GlowConfirmInput ref="inputRef" />
+
+    </div>
+
+  </GlowMobileSupport>
 </template>
 
 <script setup lang="ts">
@@ -74,6 +82,7 @@ import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadAp
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
 import MessageApi from "@/commons/api/MessageApi";
 import type { EditMessageDto } from "@/commons/api/MessageApi";
+import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -135,6 +144,7 @@ interface ChatListInstance {
   getActiveThreadId: () => string;
   threads: any[];
   closeMobileMenu: () => void;
+  toggleMobileMenu: () => void;
 }
 
 
