@@ -1,7 +1,6 @@
 <template>
 
-  <GlowMobileSupport @on-touch-move-right="() => {
-    console.log('从左向右滑动')
+  <GlowMobileSupport :on-touch-move-right="() => {
     chatListRef?.toggleMobileMenu()
   }"
   >

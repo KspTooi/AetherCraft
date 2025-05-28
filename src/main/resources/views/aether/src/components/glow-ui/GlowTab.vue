@@ -1,35 +1,41 @@
 <template>
-  <div class="glow-tab">
-    <div class="tab-header">
-      <div 
-        v-for="(item, index) in items" 
-        :key="index" 
-        class="tab-item"
-        :class="{ 
-          'active': item.action === activeTab,
-          'disabled': item.disabled 
-        }"
-        @click="!item.disabled && handleTabClick(index, item.action)"
-      >
-        {{ item.title }}
+  <GlowMobileSupport 
+    :on-touch-move-left="handleSwipeLeft"
+    :on-touch-move-right="handleSwipeRight"
+  >
+    <div class="glow-tab">
+      <div class="tab-header">
+        <div 
+          v-for="(item, index) in items" 
+          :key="index" 
+          class="tab-item"
+          :class="{ 
+            'active': item.action === activeTab,
+            'disabled': item.disabled 
+          }"
+          @click="!item.disabled && handleTabClick(index, item.action)"
+        >
+          {{ item.title }}
+        </div>
+        
+        <!-- 添加高亮线容器 -->
+        <div class="tab-highlight-container">
+          <div class="tab-highlight-line" :class="{ 'initialized': isInitialized }" :style="highlightStyle"></div>
+        </div>
       </div>
       
-      <!-- 添加高亮线容器 -->
-      <div class="tab-highlight-container">
-        <div class="tab-highlight-line" :class="{ 'initialized': isInitialized }" :style="highlightStyle"></div>
+      <div class="tab-content">
+        <slot></slot>
       </div>
     </div>
-    
-    <div class="tab-content">
-      <slot></slot>
-    </div>
-  </div>
+  </GlowMobileSupport>
 </template>
 
 <script setup lang="ts">
 import { ref, inject, watch, computed, onMounted, nextTick, onUnmounted } from 'vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme } from './GlowTheme'
 import type { GlowThemeColors } from './GlowTheme'
+import GlowMobileSupport from './GlowMobileSupport.vue'
 
 const props = defineProps<{
   items: Array<{
@@ -131,6 +137,48 @@ const highlightStyle = computed(() => {
   }
   return highlightPosition.value
 })
+
+// 处理左滑动（切换到下一个标签）
+const handleSwipeLeft = (): boolean => {
+  const enabledItems = props.items.filter(item => !item.disabled)
+  const currentEnabledIndex = enabledItems.findIndex(item => item.action === props.activeTab)
+  
+  // 如果当前是最后一个启用的标签，不拦截事件（允许传播到外层）
+  if (currentEnabledIndex === enabledItems.length - 1) {
+    return false
+  }
+  
+  // 切换到下一个启用的标签
+  if (currentEnabledIndex < enabledItems.length - 1) {
+    const nextItem = enabledItems[currentEnabledIndex + 1]
+    const nextIndex = props.items.findIndex(item => item.action === nextItem.action)
+    handleTabClick(nextIndex, nextItem.action)
+  }
+  
+  // 成功切换了标签，拦截事件
+  return true
+}
+
+// 处理右滑动（切换到上一个标签）
+const handleSwipeRight = (): boolean => {
+  const enabledItems = props.items.filter(item => !item.disabled)
+  const currentEnabledIndex = enabledItems.findIndex(item => item.action === props.activeTab)
+  
+  // 如果当前是第一个启用的标签，不拦截事件（允许传播到外层）
+  if (currentEnabledIndex === 0) {
+    return false
+  }
+  
+  // 切换到上一个启用的标签
+  if (currentEnabledIndex > 0) {
+    const prevItem = enabledItems[currentEnabledIndex - 1]
+    const prevIndex = props.items.findIndex(item => item.action === prevItem.action)
+    handleTabClick(prevIndex, prevItem.action)
+  }
+  
+  // 成功切换了标签，拦截事件
+  return true
+}
 
 // 监听activeTab变化
 watch(() => props.activeTab, (newValue) => {

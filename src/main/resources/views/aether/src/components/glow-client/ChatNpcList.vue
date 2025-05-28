@@ -11,11 +11,18 @@
     </GlowButton>
 
     <!-- 移动端遮罩层 -->
-    <div 
-      v-if="isMobile && mobileMenuOpen" 
-      class="mobile-overlay"
-      @click="closeMobileMenu"
-    ></div>
+    <GlowMobileSupport 
+      v-if="isMobile && mobileMenuOpen"
+      :on-touch-move-left="() => {
+        closeMobileMenu()
+        return true
+      }"
+    >
+      <div 
+        class="mobile-overlay"
+        @click="closeMobileMenu"
+      ></div>
+    </GlowMobileSupport>
 
     <GlowDiv 
       border="right" 
@@ -105,6 +112,7 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '..
 import { useRouter } from 'vue-router' // 导入 router
 import type { GetNpcListVo, GetNpcListDto } from '@/commons/api/NpcApi.ts';
 import NpcApi from '@/commons/api/NpcApi.ts'; // 导入NpcApi
+import GlowMobileSupport from '../glow-ui/GlowMobileSupport.vue'
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -266,7 +274,8 @@ onBeforeUnmount(() => {
 defineExpose({
   closeMobileMenu,
   setSelectedNpc,
-  loadNpcList
+  loadNpcList,
+  toggleMobileMenu
 })
 </script>
 

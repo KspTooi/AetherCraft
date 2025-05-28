@@ -1,108 +1,111 @@
 <template>
-  <div class="npc-manager-layout">
-    <ChatNpcListCreator
-      ref="npcListRef"
-      class="npc-sidebar"
-      @select-npc="onSelectNpc"
-      @create-npc="onCreateNpc"
-    />
+  <GlowMobileSupport :on-touch-move-right="() => {
+    npcListRef?.toggleMobileMenu()
+  }">
+    <div class="npc-manager-layout">
+      <ChatNpcListCreator
+        ref="npcListRef"
+        class="npc-sidebar"
+        @select-npc="onSelectNpc"
+        @create-npc="onCreateNpc"
+      />
 
-    <GlowDiv class="npc-content" border="none">
-        <div v-if="!selectedNpcId" class="empty-detail">
-          <i class="bi bi-person-bounding-box"></i>
-          <p>请从左侧选择一个NPC进行设计</p>
-        </div>
-      
-      <GlowTab
-        v-else
-        :items="npcTabItems"
-        v-model:activeTab="currentTab"
-      >
-        <!-- NPC基本信息 -->
-        <div v-if="currentTab === 'base-info'" class="npc-tab-panel">
-          <div class="npc-panel">
-            <!-- 操作按钮区域（顶部） -->
-            <div class="action-buttons">
-              <GlowButton 
-                @click="removeNpc(selectedNpcId)"
-                :disabled="loading"
-                class="action-button danger-button"
-                title="移除NPC"
-              >
-                移除
-              </GlowButton>
-              <GlowButton 
-                @click="copyCurrentNpc"
-                :disabled="loading"
-                class="action-button"
-                title="复制NPC"
-              >
-                复制
-              </GlowButton>
-              <GlowButton 
-                @click="saveNpcChanges" 
-                :disabled="loading"
-                class="action-button save-button"
-                title="保存NPC"
-              >
-                保存
-              </GlowButton>
-            </div>
-            
-            <div class="npc-detail-form">
-              <div class="form-row">
-                <GlowInput
-                  v-model="currentNpcDetails.name"
-                  title="NPC名称"
-                  :maxLength="50"
-                  showLength
-                  notBlank
-                  placeholder="例如：艾莉娅、小助手、智能导师等，给你的NPC起一个有特色的名字"
-                />
+      <GlowDiv class="npc-content" border="none">
+          <div v-if="!selectedNpcId" class="empty-detail">
+            <i class="bi bi-person-bounding-box"></i>
+            <p>请从左侧选择一个NPC进行设计</p>
+          </div>
+        
+        <GlowTab
+          v-else
+          :items="npcTabItems"
+          v-model:activeTab="currentTab"
+        >
+          <!-- NPC基本信息 -->
+          <div v-if="currentTab === 'base-info'" class="npc-tab-panel">
+            <div class="npc-panel">
+              <!-- 操作按钮区域（顶部） -->
+              <div class="action-buttons">
+                <GlowButton 
+                  @click="removeNpc(selectedNpcId)"
+                  :disabled="loading"
+                  class="action-button danger-button"
+                  title="移除NPC"
+                >
+                  移除
+                </GlowButton>
+                <GlowButton 
+                  @click="copyCurrentNpc"
+                  :disabled="loading"
+                  class="action-button"
+                  title="复制NPC"
+                >
+                  复制
+                </GlowButton>
+                <GlowButton 
+                  @click="saveNpcChanges" 
+                  :disabled="loading"
+                  class="action-button save-button"
+                  title="保存NPC"
+                >
+                  保存
+                </GlowButton>
               </div>
               
-              <div class="form-row">
-                <div class="input-group">
+              <div class="npc-detail-form">
+                <div class="form-row">
                   <GlowInput
-                    v-model="currentNpcDetails.tags"
-                    title="NPC标签"
+                    v-model="currentNpcDetails.name"
+                    title="NPC名称"
                     :maxLength="50"
                     showLength
-                    placeholder="例如：助手,友善,专业 或 二次元,可爱,活泼 (用逗号分隔多个标签)"
+                    notBlank
+                    placeholder="例如：艾莉娅、小助手、智能导师等，给你的NPC起一个有特色的名字"
                   />
                 </div>
-                <div class="input-group status-group">
-                  <div class="status-wrapper">
-                    <GlowCheckBox 
-                      v-model="npcEnabled"
-                      tip="被禁用的NPC在聊天界面将不可见">
-                      启用NPC
-                    </GlowCheckBox>
+                
+                <div class="form-row">
+                  <div class="input-group">
+                    <GlowInput
+                      v-model="currentNpcDetails.tags"
+                      title="NPC标签"
+                      :maxLength="50"
+                      showLength
+                      placeholder="例如：助手,友善,专业 或 二次元,可爱,活泼 (用逗号分隔多个标签)"
+                    />
+                  </div>
+                  <div class="input-group status-group">
+                    <div class="status-wrapper">
+                      <GlowCheckBox 
+                        v-model="npcEnabled"
+                        tip="被禁用的NPC在聊天界面将不可见">
+                        启用NPC
+                      </GlowCheckBox>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div class="form-row">
-                <GlowInputArea
-                  v-model="currentNpcDetails.description"
-                  title="NPC描述"
-                  :maxLength="50000"
-                  showLength
-                  :auto-resize="true"
-                  placeholder="简要描述这个NPC的特点和用途，例如：
+                
+                <div class="form-row">
+                  <GlowInputArea
+                    v-model="currentNpcDetails.description"
+                    title="NPC描述"
+                    :maxLength="50000"
+                    showLength
+                    :auto-resize="true"
+                    placeholder="简要描述这个NPC的特点和用途，例如：
 一个温柔体贴的AI助手，擅长倾听和提供建议。她总是以积极的态度面对问题，善于从不同角度分析情况，帮助用户找到最佳解决方案。
 提示：这里的描述会影响NPC的整体性格基调。"
-                />
-              </div>
-              
-              <div class="form-row">
-                <GlowInputArea
-                  v-model="currentNpcDetails.roleSummary"
-                  title="NPC设定摘要"
-                  :maxLength="50000"
-                  showLength
-                  :auto-resize="true"
-                  placeholder="详细描述NPC的身份、性格、背景等核心设定，例如：
+                  />
+                </div>
+                
+                <div class="form-row">
+                  <GlowInputArea
+                    v-model="currentNpcDetails.roleSummary"
+                    title="NPC设定摘要"
+                    :maxLength="50000"
+                    showLength
+                    :auto-resize="true"
+                    placeholder="详细描述NPC的身份、性格、背景等核心设定，例如：
 
 【身份】：资深心理咨询师，拥有10年从业经验
 【性格】：温和耐心、善于倾听、逻辑清晰、富有同理心
@@ -111,122 +114,123 @@
 【行为特点】：喜欢通过提问引导对方思考，善于发现问题的根源
 
 提示：这是NPC的核心设定，越详细越能让AI更好地扮演这个角色。"
-                />
-              </div>
+                  />
+                </div>
 
-              <div class="form-row">
-                <GlowInputArea
-                  v-model="currentNpcDetails.scenario"
-                  title="情景"
-                  :maxLength="50000"
-                  showLength
-                  :auto-resize="true"
-                  placeholder="描述NPC所处的环境和背景情景，例如：
+                <div class="form-row">
+                  <GlowInputArea
+                    v-model="currentNpcDetails.scenario"
+                    title="情景"
+                    :maxLength="50000"
+                    showLength
+                    :auto-resize="true"
+                    placeholder="描述NPC所处的环境和背景情景，例如：
 你现在在一间温馨的心理咨询室里，柔和的灯光洒在舒适的沙发上。墙上挂着几幅宁静的风景画，书架上摆满了心理学相关的书籍。空气中弥漫着淡淡的薰衣草香味，让人感到放松和安全。
 作为这里的心理咨询师，你刚刚为下一位来访者准备好了茶水，正等待着他们的到来。
 提示：好的情景设定能让对话更有沉浸感，让用户感觉真的在与NPC互动。"
-                />
-              </div>
-              
-              <div class="form-row">
-                <GlowInputArea
-                  v-model="currentNpcDetails.firstMessage"
-                  title="首次对话内容"
-                  :maxLength="50000"
-                  showLength
-                  :auto-resize="true"
-                  placeholder="NPC在对话开始时会说的第一句话，例如：
+                  />
+                </div>
+                
+                <div class="form-row">
+                  <GlowInputArea
+                    v-model="currentNpcDetails.firstMessage"
+                    title="首次对话内容"
+                    :maxLength="50000"
+                    showLength
+                    :auto-resize="true"
+                    placeholder="NPC在对话开始时会说的第一句话，例如：
 你好，欢迎来到我的咨询室。我是艾莉娅，很高兴能在这里与你相遇。请随意坐下，不用紧张。
 我注意到你今天看起来有些疲惫，是工作上遇到了什么困扰吗？还是有其他的事情想要聊聊？无论是什么，我都会认真倾听的。
 想要喝点什么吗？我这里有温水、花茶，还有咖啡。
 提示：第一句话很重要，它设定了整个对话的基调。建议体现NPC的性格特点，并给用户一个自然的对话开端。"
-                />
-              </div>
-              
-              <!-- 头像区域 -->
-              <div class="avatar-section">
-                <p class="section-title">NPC头像</p>
-                <div class="avatar-container">
-                  <img v-if="currentNpcDetails.avatarUrl" :src="currentNpcDetails.avatarUrl" class="avatar-preview" alt="NPC头像" />
-                  <div v-else class="avatar-placeholder">
-                    <i class="bi bi-person"></i>
-                  </div>
-                  <div class="avatar-upload">
-                    <input 
-                      type="file" 
-                      ref="fileInput" 
-                      style="display: none" 
-                      accept="image/jpeg,image/png" 
-                      @change="handleFileUpload"
-                    />
-                    <GlowButton 
-                      class="upload-btn" 
-                      @click="triggerFileUpload"
-                      :disabled="uploading"
-                    >
-                      {{ uploading ? '上传中...' : '上传头像' }}
-                    </GlowButton>
-                    <p class="upload-tip">支持JPG、PNG格式图片</p>
+                  />
+                </div>
+                
+                <!-- 头像区域 -->
+                <div class="avatar-section">
+                  <p class="section-title">NPC头像</p>
+                  <div class="avatar-container">
+                    <img v-if="currentNpcDetails.avatarUrl" :src="currentNpcDetails.avatarUrl" class="avatar-preview" alt="NPC头像" />
+                    <div v-else class="avatar-placeholder">
+                      <i class="bi bi-person"></i>
+                    </div>
+                    <div class="avatar-upload">
+                      <input 
+                        type="file" 
+                        ref="fileInput" 
+                        style="display: none" 
+                        accept="image/jpeg,image/png" 
+                        @change="handleFileUpload"
+                      />
+                      <GlowButton 
+                        class="upload-btn" 
+                        @click="triggerFileUpload"
+                        :disabled="uploading"
+                      >
+                        {{ uploading ? '上传中...' : '上传头像' }}
+                      </GlowButton>
+                      <p class="upload-tip">支持JPG、PNG格式图片</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-                          <!-- 占位符使用提示 -->
-              <div class="placeholder-tip-section">
-                <div class="tip-header">
-                  <i class="bi bi-lightbulb"></i>
-                  <span class="tip-title">💡 高级技巧：动态占位符</span>
+                            <!-- 占位符使用提示 -->
+                <div class="placeholder-tip-section">
+                  <div class="tip-header">
+                    <i class="bi bi-lightbulb"></i>
+                    <span class="tip-title">💡 高级技巧：动态占位符</span>
+                  </div>
+                  <div class="tip-content">
+                    <p>在NPC设定中，你可以使用以下占位符来动态引用名称：</p>
+                    <div class="placeholder-examples">
+                      <div class="placeholder-item">
+                        <code class="placeholder-code">#{npc}</code>
+                        <span class="placeholder-desc">→ 自动替换为当前NPC的名称</span>
+                      </div>
+                      <div class="placeholder-item">
+                        <code class="placeholder-code">#{player}</code>
+                        <span class="placeholder-desc">→ 自动替换为玩家的名称</span>
+                      </div>
+                    </div>
+                    <div class="tip-example">
+                      <strong>示例：</strong>
+                      <div class="example-text">
+                        "我是#{npc}，很高兴认识你，#{player}。作为你的专属助手，我会竭尽全力帮助你解决问题。"
+                      </div>
+                    </div>
+                    <div class="tip-note">
+                      <i class="bi bi-info-circle"></i>
+                      <span>这些占位符在所有文本字段中都可以使用，包括设定摘要、情景描述和首次对话内容。</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="tip-content">
-                  <p>在NPC设定中，你可以使用以下占位符来动态引用名称：</p>
-                  <div class="placeholder-examples">
-                    <div class="placeholder-item">
-                      <code class="placeholder-code">#{npc}</code>
-                      <span class="placeholder-desc">→ 自动替换为当前NPC的名称</span>
-                    </div>
-                    <div class="placeholder-item">
-                      <code class="placeholder-code">#{player}</code>
-                      <span class="placeholder-desc">→ 自动替换为玩家的名称</span>
-                    </div>
-                  </div>
-                  <div class="tip-example">
-                    <strong>示例：</strong>
-                    <div class="example-text">
-                      "我是#{npc}，很高兴认识你，#{player}。作为你的专属助手，我会竭尽全力帮助你解决问题。"
-                    </div>
-                  </div>
-                  <div class="tip-note">
-                    <i class="bi bi-info-circle"></i>
-                    <span>这些占位符在所有文本字段中都可以使用，包括设定摘要、情景描述和首次对话内容。</span>
-                  </div>
-                </div>
-              </div>
-          </div>
-        </div>
-        
-        <!-- 对话示例 -->
-        <div v-if="currentTab === 'chat-examples'" class="npc-tab-panel">
-          <div class="npc-panel">
-            <NpcChatExampleTab v-if="selectedNpcId" :npcId="selectedNpcId" />
-            <div v-else class="chat-examples-placeholder">
-              <i class="bi bi-chat-dots"></i>
-              <p>请先选择一个NPC以查看和编辑对话示例</p>
             </div>
           </div>
-        </div>
-      </GlowTab>
-    </GlowDiv>
-    
-    <!-- 添加提示组件 -->
-    <GlowAlter ref="alterRef" />
-    
-    <!-- 添加确认对话框组件 -->
-    <GlowConfirm ref="confirmRef" />
-    
-    <!-- 添加确认输入框组件 -->
-    <GlowConfirmInput ref="confirmInputRef" :close-on-click-overlay="false" />
-  </div>
+          
+          <!-- 对话示例 -->
+          <div v-if="currentTab === 'chat-examples'" class="npc-tab-panel">
+            <div class="npc-panel">
+              <NpcChatExampleTab v-if="selectedNpcId" :npcId="selectedNpcId" />
+              <div v-else class="chat-examples-placeholder">
+                <i class="bi bi-chat-dots"></i>
+                <p>请先选择一个NPC以查看和编辑对话示例</p>
+              </div>
+            </div>
+          </div>
+        </GlowTab>
+      </GlowDiv>
+      
+      <!-- 添加提示组件 -->
+      <GlowAlter ref="alterRef" />
+      
+      <!-- 添加确认对话框组件 -->
+      <GlowConfirm ref="confirmRef" />
+      
+      <!-- 添加确认输入框组件 -->
+      <GlowConfirmInput ref="confirmInputRef" :close-on-click-overlay="false" />
+    </div>
+  </GlowMobileSupport>
 </template>
 
 <script setup lang="ts">
@@ -248,6 +252,7 @@ import NpcChatExampleTab from '@/components/glow-client/NpcChatExampleTab.vue';
 import { useRoute } from 'vue-router';
 import NpcApi, { type GetNpcDetailsVo, type SaveNpcDto, type GetNpcListVo } from '@/commons/api/NpcApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
+import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);

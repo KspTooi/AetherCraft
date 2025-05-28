@@ -11,11 +11,18 @@
     </GlowButton>
 
     <!-- 移动端遮罩层 -->
-    <div 
-      v-if="isMobile && mobileMenuOpen" 
-      class="mobile-overlay"
-      @click="closeMobileMenu"
-    ></div>
+    <GlowMobileSupport 
+      v-if="isMobile && mobileMenuOpen"
+      :on-touch-move-left="() => {
+        closeMobileMenu()
+        return true
+      }"
+    >
+      <div 
+        class="mobile-overlay"
+        @click="closeMobileMenu"
+      ></div>
+    </GlowMobileSupport>
 
     <GlowDiv 
       border="right" 
@@ -94,6 +101,7 @@
 import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
+import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 
 // 获取 glow 主题

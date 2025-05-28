@@ -1,59 +1,63 @@
 <template>
-  <div class="chat-layout">
+  <GlowMobileSupport :on-touch-move-right="() => {
+    npcListRef?.toggleMobileMenu()
+  }">
+    <div class="chat-layout">
 
-    <ChatNpcList ref="npcListRef"
-                   class="chat-sidebar"
-                   @select-npc="onSelectNpc"
-                   @create-thread="onCreateThread"
-                   @edit-role="onEditRole"
-                   @manageThreads="onManageThreads"
-    />
+      <ChatNpcList ref="npcListRef"
+                     class="chat-sidebar"
+                     @select-npc="onSelectNpc"
+                     @create-thread="onCreateThread"
+                     @edit-role="onEditRole"
+                     @manageThreads="onManageThreads"
+      />
 
-    <GlowDiv class="chat-content" border="none">
+      <GlowDiv class="chat-content" border="none">
 
-      <div class="model-selector-container">
-        <ModelSelector :selected="curModelCode" @select-model="onSelectMode"/>
-      </div>
+        <div class="model-selector-container">
+          <ModelSelector :selected="curModelCode" @select-model="onSelectMode"/>
+        </div>
 
-      <div class="message-box-container">
-        <ChatMessageBox
-           ref="messageBoxRef" 
-           :data="messageData" 
-           :isGenerating="isGenerating"
-           :loading="isLoadingMessages"
-           @update-message="onMessageEdit"
-           @delete-message="onMessageRemove"
-           @regenerate="onMessageRegenerate"
-         />
-      </div>
+        <div class="message-box-container">
+          <ChatMessageBox
+             ref="messageBoxRef" 
+             :data="messageData" 
+             :isGenerating="isGenerating"
+             :loading="isLoadingMessages"
+             @update-message="onMessageEdit"
+             @delete-message="onMessageRemove"
+             @regenerate="onMessageRegenerate"
+           />
+        </div>
 
-      <div class="message-input-container">
-        <ImMessageInput
-            :disabled="false"
-            :is-generating="isGenerating"
-            @message-send="onMessageSend"
-            @abort-generate="onBatchAbort"
-            placeholder="为什么不问问神奇的Gemini呢?"
-        />
-      </div>
+        <div class="message-input-container">
+          <ImMessageInput
+              :disabled="false"
+              :is-generating="isGenerating"
+              @message-send="onMessageSend"
+              @abort-generate="onBatchAbort"
+              placeholder="为什么不问问神奇的Gemini呢?"
+          />
+        </div>
 
-    </GlowDiv>
+      </GlowDiv>
 
-    <!-- 确认框组件 -->
-    <GlowConfirm ref="confirmRef" />
+      <!-- 确认框组件 -->
+      <GlowConfirm ref="confirmRef" />
 
-    <GlowAlter ref="alterRef" />
+      <GlowAlter ref="alterRef" />
 
-    <!-- 输入框组件 -->
-    <GlowConfirmInput ref="inputRef" />
+      <!-- 输入框组件 -->
+      <GlowConfirmInput ref="inputRef" />
 
-    <!-- 会话管理模态框 -->
-    <ChatNpcThreadsModal
-      ref="roleThreadsModalRef"
-      @activate-thread="handleActivateThread"
-    />
+      <!-- 会话管理模态框 -->
+      <ChatNpcThreadsModal
+        ref="roleThreadsModalRef"
+        @activate-thread="handleActivateThread"
+      />
 
-  </div>
+    </div>
+  </GlowMobileSupport>
 </template>
 
 <script setup lang="ts">
@@ -77,6 +81,7 @@ import type { SendMessageDto, MessageFragmentVo, RegenerateDto, AbortConversatio
 import ConversationApi from '@/commons/api/ConversationApi';
 import MessageApi, { type EditMessageDto } from '@/commons/api/MessageApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
+import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -136,6 +141,7 @@ interface NpcListInstance {
   closeMobileMenu: () => void;
   setSelectedNpc: (npcId: string) => void;
   loadNpcList: () => Promise<void>;
+  toggleMobileMenu: () => void;
 }
 
 const getNpcMessageList = async (npcId: string) => {
