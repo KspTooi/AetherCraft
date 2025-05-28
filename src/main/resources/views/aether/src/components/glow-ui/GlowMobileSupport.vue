@@ -3,17 +3,23 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, getCurrentInstance } from 'vue';
+import { onMounted, onUnmounted, getCurrentInstance, onBeforeUnmount, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 // 定义props来接收事件处理函数
 const props = defineProps<{
   onTouchMoveRight?: () => boolean | void;
   onTouchMoveLeft?: () => boolean | void;
+  layer?: number; // 层级，数值越大优先级越高，默认为0
 }>();
+
+// 获取当前路由
+const route = useRoute();
 
 // 获取当前组件实例ID，用于区分不同的组件实例
 const instance = getCurrentInstance();
 const instanceId = instance?.uid || Math.random().toString(36).substr(2, 9);
+const componentLayer = props.layer ?? 0; // 使用默认值0
 
 // 全局监听器标识和实例管理
 const GLOBAL_LISTENER_KEY = '__glow_mobile_support_listener__';
@@ -55,12 +61,32 @@ const handleTouchEnd = (e: TouchEvent) => {
   if (Math.abs(deltaY) > VERTICAL_THRESHOLD) return;
   if (Math.abs(deltaX) < SWIPE_THRESHOLD) return;
   
-  // 获取所有注册的实例，按注册顺序倒序处理（后注册的先处理，即内层优先）
+  // 获取所有注册的实例，按layer层级倒序处理（层级高的先处理）
   const instances = (window as any)[INSTANCES_KEY] || [];
-  const sortedInstances = [...instances].reverse();
+  // 过滤掉无效的实例（组件已卸载但未清理的）
+  const validInstances = instances.filter((inst: any) => {
+    try {
+      // 检查实例是否仍然有效
+      return inst && typeof inst.handleRight === 'function' && typeof inst.handleLeft === 'function';
+    } catch {
+      return false;
+    }
+  });
+  
+  // 更新实例列表，移除无效实例
+  if (validInstances.length !== instances.length) {
+    (window as any)[INSTANCES_KEY] = validInstances;
+  }
+  
+  const sortedInstances = [...validInstances].sort((a, b) => b.layer - a.layer);
   
   // 判断滑动方向并依次触发事件，直到有组件拦截
   const isRightSwipe = deltaX > 0;
+  
+  // 调试信息
+  if (import.meta.env.DEV) {
+    console.log(`GlowMobileSupport: ${isRightSwipe ? '右滑' : '左滑'}, 实例数量: ${sortedInstances.length}, 层级: [${sortedInstances.map(i => i.layer).join(', ')}]`);
+  }
   
   for (const inst of sortedInstances) {
     try {
@@ -71,12 +97,26 @@ const handleTouchEnd = (e: TouchEvent) => {
         result = inst.handleLeft();
       }
       
+      // 调试信息
+      if (import.meta.env.DEV) {
+        console.log(`GlowMobileSupport: 层级 ${inst.layer} 处理结果: ${result}`);
+      }
+      
       // 如果返回true，表示事件被拦截，停止传播
       if (result === true) {
+        if (import.meta.env.DEV) {
+          console.log(`GlowMobileSupport: 事件被层级 ${inst.layer} 拦截`);
+        }
         break;
       }
     } catch (error) {
       console.warn('GlowMobileSupport事件处理出错:', error);
+      // 移除出错的实例
+      const errorIndex = validInstances.findIndex((i: any) => i === inst);
+      if (errorIndex !== -1) {
+        validInstances.splice(errorIndex, 1);
+        (window as any)[INSTANCES_KEY] = validInstances;
+      }
     }
   }
 };
@@ -85,6 +125,7 @@ const handleTouchEnd = (e: TouchEvent) => {
 const createHandler = () => {
   return {
     instanceId,
+    layer: componentLayer, // 添加层级信息
     handleRight: () => {
       if (props.onTouchMoveRight) {
         return props.onTouchMoveRight();
@@ -96,6 +137,23 @@ const createHandler = () => {
       }
     }
   };
+};
+
+// 清理当前实例的函数
+const cleanupInstance = () => {
+  const instances = (window as any)[INSTANCES_KEY] || [];
+  const index = instances.findIndex((inst: any) => inst.instanceId === instanceId);
+  if (index !== -1) {
+    instances.splice(index, 1);
+  }
+  
+  // 如果没有实例了，移除全局监听器
+  if (instances.length === 0) {
+    document.removeEventListener('touchstart', handleTouchStart);
+    document.removeEventListener('touchend', handleTouchEnd);
+    delete (window as any)[GLOBAL_LISTENER_KEY];
+    delete (window as any)[INSTANCES_KEY];
+  }
 };
 
 onMounted(() => {
@@ -117,22 +175,28 @@ onMounted(() => {
   }
 });
 
+// 在组件卸载前清理实例
+onBeforeUnmount(() => {
+  cleanupInstance();
+});
+
+// 在组件卸载时也清理实例（双重保险）
 onUnmounted(() => {
-  // 移除当前实例
-  const instances = (window as any)[INSTANCES_KEY] || [];
-  const index = instances.findIndex((inst: any) => inst.instanceId === instanceId);
-  if (index !== -1) {
-    instances.splice(index, 1);
+  cleanupInstance();
+});
+
+// 监听路由变化，清理所有实例
+watch(() => route.path, () => {
+  // 路由变化时，清理所有实例并重新初始化
+  if ((window as any)[INSTANCES_KEY]) {
+    (window as any)[INSTANCES_KEY] = [];
   }
-  
-  // 如果没有实例了，移除全局监听器
-  if (instances.length === 0) {
+  if ((window as any)[GLOBAL_LISTENER_KEY]) {
     document.removeEventListener('touchstart', handleTouchStart);
     document.removeEventListener('touchend', handleTouchEnd);
     delete (window as any)[GLOBAL_LISTENER_KEY];
-    delete (window as any)[INSTANCES_KEY];
   }
-});
+}, { immediate: false });
 </script>
 
 <style scoped>
