@@ -1,7 +1,10 @@
 <template>
-  <GlowMobileSupport :on-touch-move-right="() => {
-    npcListRef?.toggleMobileMenu()
-  }">
+  <GlowMobileSupport 
+    :layer="2"
+    :on-touch-move-right="() => {
+      npcListRef?.toggleMobileMenu()
+    }"
+  >
     <div class="npc-manager-layout">
       <ChatNpcListCreator
         ref="npcListRef"

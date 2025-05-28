@@ -3,6 +3,7 @@ import { ref, inject, computed, onMounted, onBeforeUnmount } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from './GlowTheme.ts'
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
+import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue"
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -80,7 +81,8 @@ onBeforeUnmount(() => {
 
 // 暴露方法（如果需要）
 defineExpose({
-  closeMobileMenu
+  closeMobileMenu,
+  toggleMobileMenu
 });
 </script>
 
@@ -96,11 +98,19 @@ defineExpose({
   </GlowButton>
 
   <!-- 移动端遮罩层 (移到 wrapper 外部) -->
-  <div
+  <GlowMobileSupport 
     v-if="isMobile && mobileMenuOpen"
-    class="mobile-overlay"
-    @click="closeMobileMenu"
-  ></div>
+    :layer="500"
+    :on-touch-move-left="() => {
+      closeMobileMenu()
+      return true
+    }"
+  >
+    <div
+      class="mobile-overlay"
+      @click="closeMobileMenu"
+    ></div>
+  </GlowMobileSupport>
 
   <!-- 侧边栏容器 -->
   <div class="side-panel-wrapper" :class="[

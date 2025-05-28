@@ -1,7 +1,10 @@
 <template>
-  <GlowMobileSupport :on-touch-move-right="() => {
-    npcListRef?.toggleMobileMenu()
-  }">
+  <GlowMobileSupport 
+    :layer="1"
+    :on-touch-move-right="() => {
+      npcListRef?.toggleMobileMenu()
+    }"
+  >
     <div class="chat-layout">
 
       <ChatNpcList ref="npcListRef"

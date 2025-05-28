@@ -1,8 +1,10 @@
 <template>
 
-  <GlowMobileSupport :on-touch-move-right="() => {
-    chatListRef?.toggleMobileMenu()
-  }"
+  <GlowMobileSupport 
+    :layer="1"
+    :on-touch-move-right="() => {
+      chatListRef?.toggleMobileMenu()
+    }"
   >
     <div class="chat-layout">
 

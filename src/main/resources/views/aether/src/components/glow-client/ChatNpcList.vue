@@ -13,6 +13,7 @@
     <!-- 移动端遮罩层 -->
     <GlowMobileSupport 
       v-if="isMobile && mobileMenuOpen"
+      :layer="500"
       :on-touch-move-left="() => {
         closeMobileMenu()
         return true

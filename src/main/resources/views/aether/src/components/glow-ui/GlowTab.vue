@@ -1,5 +1,6 @@
 <template>
   <GlowMobileSupport 
+    :layer="10"
     :on-touch-move-left="handleSwipeLeft"
     :on-touch-move-right="handleSwipeRight"
   >
@@ -141,19 +142,21 @@ const highlightStyle = computed(() => {
 // 处理左滑动（切换到下一个标签）
 const handleSwipeLeft = (): boolean => {
   const enabledItems = props.items.filter(item => !item.disabled)
+  if (enabledItems.length <= 1) {
+    return false // 只有一个或没有启用的标签时，不拦截事件
+  }
+  
   const currentEnabledIndex = enabledItems.findIndex(item => item.action === props.activeTab)
   
   // 如果当前是最后一个启用的标签，不拦截事件（允许传播到外层）
-  if (currentEnabledIndex === enabledItems.length - 1) {
+  if (currentEnabledIndex === -1 || currentEnabledIndex === enabledItems.length - 1) {
     return false
   }
   
   // 切换到下一个启用的标签
-  if (currentEnabledIndex < enabledItems.length - 1) {
-    const nextItem = enabledItems[currentEnabledIndex + 1]
-    const nextIndex = props.items.findIndex(item => item.action === nextItem.action)
-    handleTabClick(nextIndex, nextItem.action)
-  }
+  const nextItem = enabledItems[currentEnabledIndex + 1]
+  const nextIndex = props.items.findIndex(item => item.action === nextItem.action)
+  handleTabClick(nextIndex, nextItem.action)
   
   // 成功切换了标签，拦截事件
   return true
@@ -162,19 +165,21 @@ const handleSwipeLeft = (): boolean => {
 // 处理右滑动（切换到上一个标签）
 const handleSwipeRight = (): boolean => {
   const enabledItems = props.items.filter(item => !item.disabled)
+  if (enabledItems.length <= 1) {
+    return false // 只有一个或没有启用的标签时，不拦截事件
+  }
+  
   const currentEnabledIndex = enabledItems.findIndex(item => item.action === props.activeTab)
   
   // 如果当前是第一个启用的标签，不拦截事件（允许传播到外层）
-  if (currentEnabledIndex === 0) {
+  if (currentEnabledIndex === -1 || currentEnabledIndex === 0) {
     return false
   }
   
   // 切换到上一个启用的标签
-  if (currentEnabledIndex > 0) {
-    const prevItem = enabledItems[currentEnabledIndex - 1]
-    const prevIndex = props.items.findIndex(item => item.action === prevItem.action)
-    handleTabClick(prevIndex, prevItem.action)
-  }
+  const prevItem = enabledItems[currentEnabledIndex - 1]
+  const prevIndex = props.items.findIndex(item => item.action === prevItem.action)
+  handleTabClick(prevIndex, prevItem.action)
   
   // 成功切换了标签，拦截事件
   return true

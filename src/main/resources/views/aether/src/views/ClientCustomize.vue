@@ -1,38 +1,46 @@
 <template>
-  <div class="chat-container">
-    <div class="chat-layout">
-      <!-- 使用 GlowSidePanel 替换左侧菜单 -->
-      <GlowSidePanel
-        class="side-panel"
-        :items="sidePanelItems"
-        :active-item-id="sidePanelCurrentItem"
-        title="个性化设置"
-        @item-click="onSidePanelChange"
-      />
+  <GlowMobileSupport 
+    :layer="2"
+    :on-touch-move-right="() => {
+      sidePanelRef?.toggleMobileMenu()
+    }"
+  >
+    <div class="chat-container">
+      <div class="chat-layout">
+        <!-- 使用 GlowSidePanel 替换左侧菜单 -->
+        <GlowSidePanel
+          ref="sidePanelRef"
+          class="side-panel"
+          :items="sidePanelItems"
+          :active-item-id="sidePanelCurrentItem"
+          title="个性化设置"
+          @item-click="onSidePanelChange"
+        />
 
-      <!-- 右侧内容区 -->
-      <GlowDiv class="chat-main">
+        <!-- 右侧内容区 -->
+        <GlowDiv class="chat-main">
 
-        <div v-if="sidePanelCurrentItem === 'wallpaper'" class="section-content">
-          <CustomizeWallpaper/>
-        </div>
+          <div v-if="sidePanelCurrentItem === 'wallpaper'" class="section-content">
+            <CustomizeWallpaper/>
+          </div>
 
-        <div v-if="sidePanelCurrentItem === 'theme'" class="section-content">
-          <CustomizeTheme />
-        </div>
+          <div v-if="sidePanelCurrentItem === 'theme'" class="section-content">
+            <CustomizeTheme />
+          </div>
 
-        <div v-if="sidePanelCurrentItem === 'effects'" class="section-content">
+          <div v-if="sidePanelCurrentItem === 'effects'" class="section-content">
 
-        </div>
+          </div>
 
-        <div v-if="sidePanelCurrentItem === 'fonts'" class="section-content">
+          <div v-if="sidePanelCurrentItem === 'fonts'" class="section-content">
 
-        </div>
-        
-      </GlowDiv>
+          </div>
+          
+        </GlowDiv>
+      </div>
+
     </div>
-
-  </div>
+  </GlowMobileSupport>
 </template>
 
 <script setup lang="ts">
@@ -44,6 +52,7 @@ import CustomizeWallpaper from '@/components/client-customize/CustomizeWallpaper
 import CustomizeTheme from '../components/client-customize/CustomizeTheme.vue'
 import GlowSidePanel from '@/components/glow-ui/GlowSidePanel.vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
+import GlowMobileSupport from '@/components/glow-ui/GlowMobileSupport.vue'
 
 // 获取主题颜色
 const themeStore = useThemeStore()
@@ -52,6 +61,9 @@ const activeColor = computed(() => themeStore.activeColor)
 // 初始化preferences store
 const preferencesStore = usePreferencesStore()
 const { customizePathSide } = storeToRefs(preferencesStore)
+
+// GlowSidePanel引用
+const sidePanelRef = ref<InstanceType<typeof GlowSidePanel> | null>(null)
 
 // 当前活动的章节
 const sidePanelCurrentItem = ref('wallpaper')
