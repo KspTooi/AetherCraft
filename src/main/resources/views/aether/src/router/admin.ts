@@ -94,6 +94,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/model/series',
+      name: 'ai-model-series-manager',
+      component: () => import('@/views/admin/AiModelSeriesManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: 'AI模型系列管理'
+        }
+      }
+    },
+    {
       path: '/admin/model/apikey',
       name: 'api-key-manager',
       component: () => import('@/views/admin/ApiKeyManager.vue'),

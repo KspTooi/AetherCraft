@@ -201,9 +201,15 @@ const menuItems = ref([
   },
   {
     id: 'model',
-    title: 'AI模型配置',
+    title: 'AI模型参数',
     icon: Monitor,
     routerLink: '/admin/model'
+  },
+  {
+    id: 'model_series',
+    title: 'AI模型管理',
+    icon: Cpu,
+    routerLink: '/admin/model/series'
   },
   {
     id: 'apikey',

@@ -6,7 +6,7 @@ import type CommonIdDto from '@/entity/dto/CommonIdDto';
 // --- DTOs ---
 
 export interface GetAdminModelSeriesListDto extends PageQuery {
-    keyword?: string; // 模糊筛选模型代码、名称、系列
+    keyword?: string | null; // 模糊筛选模型代码、名称、系列
     enabled?: number; // 启用状态 0:禁用 1:启用
 }
 
@@ -29,10 +29,10 @@ export interface GetAdminModelSeriesListVo {
     code: string; // 模型代码
     name: string; // 模型名称
     series: string; // 模型系列、厂商
-    thinking?: number; // 思考能力 0:无 1:有
-    scale?: number; // 规模 0:小型 1:中型 2:大型
-    speed?: number; // 速度 0:慢速 1:中速 2:快速 3:极快
-    intelligence?: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
+    thinking: number; // 思考能力 0:无 1:有
+    scale: number; // 规模 0:小型 1:中型 2:大型
+    speed: number; // 速度 0:慢速 1:中速 2:快速 3:极快
+    intelligence: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
     enabled: number; // 是否启用 0:禁用 1:启用
     createTime: string; // 创建时间 (Date -> string)
     updateTime: string; // 更新时间 (Date -> string)
@@ -43,10 +43,10 @@ export interface GetAdminModelSeriesDetailsVo {
     code: string; // 模型代码
     name: string; // 模型名称
     series: string; // 模型系列、厂商
-    thinking?: number; // 思考能力 0:无 1:有
-    scale?: number; // 规模 0:小型 1:中型 2:大型
-    speed?: number; // 速度 0:慢速 1:中速 2:快速 3:极快
-    intelligence?: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
+    thinking: number; // 思考能力 0:无 1:有
+    scale: number; // 规模 0:小型 1:中型 2:大型
+    speed: number; // 速度 0:慢速 1:中速 2:快速 3:极快
+    intelligence: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
     enabled: number; // 是否启用 0:禁用 1:启用
     createTime: string; // 创建时间 (Date -> string)
     updateTime: string; // 更新时间 (Date -> string)
