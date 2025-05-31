@@ -42,11 +42,11 @@ public class PlayerPo {
     @Comment("(密文)自定义性别种类 gender为4 5 6时必填")
     private String genderData;
 
-    @Column(length = 40000)
+    @Column(name = "public_info", length = 40000)
     @Comment("(明文)个人信息")
     private String publicInfo;
 
-    @Column(length = 32000)
+    @Column(name = "description", length = 32000)
     @Comment("(密文)人物角色描述")
     private String description;
 
@@ -74,9 +74,13 @@ public class PlayerPo {
     @Comment("移除申请提交时间(为空则未提交删除)")
     private Date removalRequestTime;
 
-    @Column(name = "removedTime")
+    @Column(name = "removed_time")
     @Comment("角色移除时间")
     private Date removedTime;
+
+    @Column(name = "last_active_time")
+    @Comment("最后激活时间")
+    private Date lastActiveTime;
 
     @Column(name = "create_time", nullable = false, updatable = false)
     @Comment("创建时间")
@@ -86,9 +90,6 @@ public class PlayerPo {
     @Comment("修改时间")
     private Date updateTime;
 
-    @Column(name = "last_active_time")
-    @Comment("最后激活时间")
-    private Date lastActiveTime;
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude

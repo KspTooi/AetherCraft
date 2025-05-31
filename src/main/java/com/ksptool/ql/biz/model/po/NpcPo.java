@@ -27,10 +27,10 @@ public class NpcPo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("玩家人物ID 为空表示全局配置")
+    @Comment("玩家人物ID")
     private PlayerPo player;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     @Comment("(明文)NPC名称")
     private String name;
     
@@ -38,7 +38,7 @@ public class NpcPo {
     @Comment("(加密)头像路径")
     private String avatarUrl;
 
-    @Column(length = 50000)
+    @Column(name = "description", length = 50000)
     @Comment("(加密)NPC描述")
     private String description;
 

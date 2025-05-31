@@ -27,12 +27,15 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        dialect: com.ksptool.ql.commons.dialect.H2DatabaseDialect
 
 session:
   expires: 86400
 
 application:
-  version: 1.2Z-15-M6 # 应用版本号
+  version: 1.2Z-32-M6 # 应用版本号
 
 # 加密配置
 encrypt:

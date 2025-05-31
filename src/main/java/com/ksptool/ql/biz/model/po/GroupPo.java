@@ -33,27 +33,27 @@ public class GroupPo {
     @Comment("组ID")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "code", nullable = false, unique = true, length = 50)
     @Comment("组标识，如：admin、developer等")
     private String code;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "name", nullable = false, unique = true, length = 50)
     @Comment("组名称，如：管理员组、开发者组等")
     private String name;
 
-    @Column(length = 200)
+    @Column(name = "description", length = 200)
     @Comment("组描述")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "is_system", nullable = false)
     @Comment("是否系统内置组（内置组不可删除）")
     private Boolean isSystem;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     @Comment("组状态：0-禁用，1-启用")
     private Integer status;
 
-    @Column(nullable = false)
+    @Column(name = "sort_order", nullable = false)
     @Comment("排序号")
     private Integer sortOrder;
 

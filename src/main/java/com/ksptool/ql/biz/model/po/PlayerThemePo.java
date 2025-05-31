@@ -22,19 +22,19 @@ public class PlayerThemePo {
     @Comment("所属人物ID")
     private PlayerPo player;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "theme_name", length = 50, nullable = false)
     @Comment("主题名称")
     private String themeName;
 
-    @Column(length = 255)
+    @Column(name = "description", length = 255)
     @Comment("主题描述")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     @Comment("是否为默认主题（0-否，1-是）")
     private Integer isActive = 0;
 
-    @Column(nullable = false)
+    @Column(name = "is_system", nullable = false)
     @Comment("是否为系统预设主题（0-否，1-是）")
     private Integer isSystem = 0;
     

@@ -28,7 +28,7 @@ public class NpcChatExamplePo {
     @Comment("(加密)对话内容")
     private String content;
 
-    @Column(nullable = false)
+    @Column(name = "sort_order", nullable = false)
     @Comment("排序号")
     private Integer sortOrder;
 

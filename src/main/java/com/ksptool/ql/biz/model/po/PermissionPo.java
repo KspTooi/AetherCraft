@@ -25,23 +25,23 @@ public class PermissionPo {
     @Comment("权限ID")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "code", nullable = false, unique = true, length = 100)
     @Comment("权限标识，如：system:user:view")
     private String code;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "name", nullable = false, unique = true, length = 50)
     @Comment("权限名称，如：查看用户")
     private String name;
 
-    @Column(length = 200)
+    @Column(name = "description", length = 200)
     @Comment("权限描述")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "sort_order", nullable = false)
     @Comment("排序号")
     private Integer sortOrder;
 
-    @Column(nullable = false)
+    @Column(name = "is_system", nullable = false)
     @Comment("是否系统权限 0:非系统权限 1:系统权限")
     private Integer isSystem = 0;
 

@@ -21,15 +21,15 @@ public class PlayerThemeValues {
     @Comment("所属主题")
     private PlayerThemePo theme;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "theme_key", length = 50, nullable = false)
     @Comment("设置项键名")
     private String themeKey;
 
-    @Column(length = 100, nullable = false)
+    @Column(name = "theme_value", length = 100, nullable = false)
     @Comment("设置项值")
     private String themeValue;
 
-    @Column(length = 100)
+    @Column(name = "display_name", length = 100)
     @Comment("设置项显示名称")
     private String displayName;
     

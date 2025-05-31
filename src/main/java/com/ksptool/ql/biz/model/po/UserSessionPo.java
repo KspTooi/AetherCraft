@@ -16,7 +16,7 @@ public class UserSessionPo {
     @Comment("会话ID")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     @Comment("用户ID")
     private Long userId;
 
@@ -32,15 +32,15 @@ public class UserSessionPo {
     @Comment("当前激活的人物头像路径")
     private String playerAvatarUrl;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "token", nullable = false, unique = true, length = 100)
     @Comment("Token")
     private String token;
 
-    @Column(nullable = false,columnDefinition = "TEXT")
+    @Column(name = "permissions", nullable = false,columnDefinition = "TEXT")
     @Comment("用户权限JSON")
     private String permissions;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     @Comment("过期时间")
     private Date expiresAt;
 
