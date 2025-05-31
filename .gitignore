@@ -1,4 +1,5 @@
 
+database/.back_GlowTavern/**
 *.mv.db
 *.db
 *.mv
