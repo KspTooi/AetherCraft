@@ -66,13 +66,6 @@ public class ContentSecurityService {
         return encrypt(content, dek);
     }
 
-    public void encryptEntity(NpcChatSegmentPo po, Long userId) throws BizException{
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(userId);
-        po.setContent(encrypt(po.getContent(), dek));
-    }
 
     public void encryptEntity(PlayerPo po) throws BizException{
         if(po == null) {
@@ -81,33 +74,6 @@ public class ContentSecurityService {
         String dek = getPlainUserDek(po.getUser().getId());
         po.setDescription(encrypt(po.getDescription(), dek));
         po.setGenderData(encrypt(po.getGenderData(), dek));
-    }
-
-    public void encryptEntity(NpcChatHistoryPo po, Long userId) throws BizException{
-        if(po == null) {
-            return;
-        }
-
-        Long uid = null;
-
-        if(po.getThread()!=null){
-            uid = userId;
-        }
-        if(uid == null){
-            uid = AuthService.getCurrentUserId();
-        }
-        String dek = getPlainUserDek(uid);
-        po.setRawContent(encrypt(po.getRawContent(), dek));
-        po.setRpContent(encrypt(po.getRpContent(), dek));
-    }
-
-    public void encryptEntity(NpcChatThreadPo po, Long userId) throws BizException{
-        if(po == null) {
-            return;
-        }
-        String dek = getPlainUserDek(userId);
-        po.setTitle(encrypt(po.getTitle(), dek));
-        po.setDescription(encrypt(po.getDescription(), dek));
     }
 
 
@@ -185,48 +151,7 @@ public class ContentSecurityService {
             return;
         }
 
-        if(firstElement instanceof NpcChatHistoryPo) {
-            @SuppressWarnings("unchecked")
-            List<NpcChatHistoryPo> historyList = (List<NpcChatHistoryPo>) poList;
-            if(historyList.isEmpty()) {
-                return;
-            }
-            String dek = getPlainUserDek(AuthService.getCurrentUserId());
-            
-            if(encrypt) {
-                for(NpcChatHistoryPo po : historyList) {
-                    po.setRawContent(encrypt(po.getRawContent(), dek));
-                    po.setRpContent(encrypt(po.getRpContent(), dek));
-                }
-                return;
-            }
-            
-            for(NpcChatHistoryPo po : historyList) {
-                po.setRawContent(decrypt(po.getRawContent(), dek));
-                po.setRpContent(decrypt(po.getRpContent(), dek));
-            }
-            return;
-        }
 
-        if(firstElement instanceof NpcChatSegmentPo) {
-            @SuppressWarnings("unchecked")
-            List<NpcChatSegmentPo> segmentList = (List<NpcChatSegmentPo>) poList;
-            if(segmentList.isEmpty()) {
-                return;
-            }
-            String dek = getPlainUserDek(AuthService.getCurrentUserId());
-            
-            if(encrypt) {
-                for(NpcChatSegmentPo po : segmentList) {
-                    po.setContent(encrypt(po.getContent(), dek));
-                }
-                return;
-            }
-            
-            for(NpcChatSegmentPo po : segmentList) {
-                po.setContent(decrypt(po.getContent(), dek));
-            }
-        }
     }
 
     /**
