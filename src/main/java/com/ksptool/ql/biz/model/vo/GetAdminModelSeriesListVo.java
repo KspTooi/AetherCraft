@@ -20,6 +20,9 @@ public class GetAdminModelSeriesListVo {
     // 模型名称
     private String name;
 
+    // 模型类型 0:文本 1:图形 2:多模态
+    private Integer type;
+
     // 模型系列、厂商
     private String series;
 

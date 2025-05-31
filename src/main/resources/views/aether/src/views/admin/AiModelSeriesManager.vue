@@ -52,6 +52,21 @@
           show-overflow-tooltip
         />
         <el-table-column 
+          prop="type" 
+          label="模型类型" 
+          width="100"
+          align="center"
+        >
+          <template #default="scope">
+            <el-tag 
+              :type="scope.row.type === 2 ? 'danger' : scope.row.type === 1 ? 'warning' : 'primary'" 
+              size="small"
+            >
+              {{ ['文本', '图形', '多模态'][scope.row.type] }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column 
           prop="series" 
           label="模型系列" 
           min-width="120"
@@ -220,6 +235,13 @@
             placeholder="请输入模型名称"
           />
         </el-form-item>
+        <el-form-item label="模型类型" prop="type">
+          <el-radio-group v-model="details.type">
+            <el-radio :value="0">文本</el-radio>
+            <el-radio :value="1">图形</el-radio>
+            <el-radio :value="2">多模态</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="模型系列" prop="series">
           <el-input 
             v-model="details.series" 
@@ -336,6 +358,7 @@ const details = reactive<GetAdminModelSeriesDetailsVo>({
   id: "",
   intelligence: 0,
   name: "",
+  type: 0,
   scale: 0,
   series: "",
   speed: 0,
@@ -353,6 +376,9 @@ const rules = {
   name: [
     { required: true, message: '请输入模型名称', trigger: 'blur' },
     { max: 128, message: '模型名称不能超过128个字符', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: '请选择模型类型', trigger: 'change' }
   ],
   series: [
     { required: true, message: '请输入模型系列', trigger: 'blur' },
@@ -406,6 +432,7 @@ const resetForm = () => {
   details.id = ""
   details.code = ""
   details.name = ""
+  details.type = 0
   details.series = ""
   details.thinking = 0
   details.scale = 0
@@ -459,6 +486,7 @@ const save = async () => {
         id: mode.value === 'update' ? details.id : undefined,
         code: details.code,
         name: details.name,
+        type: details.type,
         series: details.series,
         thinking: details.thinking,
         scale: details.scale,

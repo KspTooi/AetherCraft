@@ -14,6 +14,7 @@ export interface SaveAdminModelSeriesDto {
     id?: string; // 模型ID，新增时为null，编辑时必填 (Long -> string)
     code: string; // 模型代码 (PO中nullable = false)
     name: string; // 模型名称 (PO中nullable = false)
+    type: number; // 模型类型 0:文本 1:图形 2:多模态 (PO中nullable = false)
     series: string; // 模型系列、厂商 (PO中nullable = false)
     thinking?: number; // 思考能力 0:无 1:有 (PO中可为空)
     scale?: number; // 规模 0:小型 1:中型 2:大型 (PO中可为空)
@@ -29,6 +30,7 @@ export interface GetAdminModelSeriesListVo {
     id: string; // 模型ID (Long -> string)
     code: string; // 模型代码
     name: string; // 模型名称
+    type: number; // 模型类型 0:文本 1:图形 2:多模态
     series: string; // 模型系列、厂商
     thinking: number; // 思考能力 0:无 1:有
     scale: number; // 规模 0:小型 1:中型 2:大型
@@ -43,6 +45,7 @@ export interface GetAdminModelSeriesDetailsVo {
     id: string; // 模型ID (Long -> string)
     code: string; // 模型代码
     name: string; // 模型名称
+    type: number; // 模型类型 0:文本 1:图形 2:多模态
     series: string; // 模型系列、厂商
     thinking: number; // 思考能力 0:无 1:有
     scale: number; // 规模 0:小型 1:中型 2:大型

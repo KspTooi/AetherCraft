@@ -18,6 +18,10 @@ public class SaveAdminModelSeriesDto {
     @NotBlank(message = "模型名称不能为空")
     private String name;
 
+    // 模型类型 0:文本 1:图形 2:多模态 (PO中nullable = false)
+    @NotNull(message = "模型类型不能为空")
+    private Integer type;
+
     // 模型系列、厂商 (PO中nullable = false)
     @NotBlank(message = "模型系列不能为空")
     private String series;

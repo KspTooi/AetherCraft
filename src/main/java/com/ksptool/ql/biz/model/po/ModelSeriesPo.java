@@ -27,6 +27,10 @@ public class ModelSeriesPo {
     @Comment("模型名称")
     private String name;
 
+    @Column(name = "type",nullable = false, length = 128)
+    @Comment("模型类型 0:文本 1:图形 2:多模态")
+    private Integer type;
+
     @Column(name = "series",nullable = false,length = 128)
     @Comment("模型系列、厂商")
     private String series;
