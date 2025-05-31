@@ -226,6 +226,18 @@
             placeholder="请输入模型系列/厂商"
           />
         </el-form-item>
+        <el-form-item label="排序号" prop="seq">
+          <el-input-number 
+            v-model="details.seq" 
+            :min="1"
+            :max="9999"
+            placeholder="留空则自动设置"
+            style="width: 200px"
+          />
+          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+            排序号越小越靠前，留空则自动设置为最大值+1
+          </div>
+        </el-form-item>
         <el-form-item label="思考能力" prop="thinking">
           <el-radio-group v-model="details.thinking">
             <el-radio :value="0">无</el-radio>
@@ -328,6 +340,7 @@ const details = reactive<GetAdminModelSeriesDetailsVo>({
   series: "",
   speed: 0,
   thinking: 0,
+  seq: 1,
   updateTime: ""
 })
 
@@ -399,6 +412,7 @@ const resetForm = () => {
   details.speed = 0
   details.intelligence = 0
   details.enabled = 1
+  details.seq = 1
   details.createTime = ""
   details.updateTime = ""
   
@@ -450,7 +464,8 @@ const save = async () => {
         scale: details.scale,
         speed: details.speed,
         intelligence: details.intelligence,
-        enabled: details.enabled
+        enabled: details.enabled,
+        seq: details.seq || undefined // 如果为0或空则传undefined
       }
       
       await AdminModelSeriesApi.saveModelSeries(saveDto)

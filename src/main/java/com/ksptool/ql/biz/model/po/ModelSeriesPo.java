@@ -4,6 +4,8 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
@@ -49,10 +51,16 @@ public class ModelSeriesPo {
     @Comment("是否启用 0:禁用 1:启用")
     private Integer enabled;
 
+    @Column(name = "seq", nullable = false)
+    @Comment("排序号")
+    private Integer seq;
+
+    @CreationTimestamp
     @Column(name = "create_time",nullable = false)
     @Comment("创建时间")
     private Date createTime;
 
+    @UpdateTimestamp
     @Column(name = "update_time",nullable = false)
     @Comment("更新时间")
     private Date updateTime;

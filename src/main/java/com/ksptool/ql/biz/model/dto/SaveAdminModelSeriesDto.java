@@ -38,4 +38,7 @@ public class SaveAdminModelSeriesDto {
     @NotNull(message = "启用状态不能为空")
     private Integer enabled;
 
+    // 排序号 (可为空，后端会自动设置)
+    private Integer seq;
+
 } 

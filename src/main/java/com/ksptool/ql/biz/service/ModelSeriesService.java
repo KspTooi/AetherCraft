@@ -61,8 +61,16 @@ public class ModelSeriesService {
 
             ModelSeriesPo po = new ModelSeriesPo();
             assign(dto, po);
-            po.setCreateTime(new Date());
-            po.setUpdateTime(new Date());
+            
+            // 如果没有提供seq，则设为最大值+1
+            if (po.getSeq() == null) {
+                Integer maxSeq = repository.findAll().stream()
+                        .mapToInt(p -> p.getSeq() != null ? p.getSeq() : 0)
+                        .max()
+                        .orElse(0);
+                po.setSeq(maxSeq + 1);
+            }
+            
             repository.save(po);
             return;
         }
@@ -76,7 +84,6 @@ public class ModelSeriesService {
         }
 
         assign(dto, po);
-        po.setUpdateTime(new Date());
         repository.save(po);
     }
 

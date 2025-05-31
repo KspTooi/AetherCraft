@@ -19,7 +19,7 @@ public interface ModelSeriesRepository extends JpaRepository<ModelSeriesPo, Long
                    m.name LIKE CONCAT('%', :keyword, '%') OR 
                    m.series LIKE CONCAT('%', :keyword, '%'))
             AND (:enabled IS NULL OR m.enabled = :enabled)
-            ORDER BY m.createTime DESC
+            ORDER BY m.seq ASC, m.createTime DESC
             """)
     Page<ModelSeriesPo> getAdminModelSeriesList(
             @Param("keyword") String keyword,

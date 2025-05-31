@@ -20,6 +20,7 @@ export interface SaveAdminModelSeriesDto {
     speed?: number; // 速度 0:慢速 1:中速 2:快速 3:极快 (PO中可为空)
     intelligence?: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子 (PO中可为空)
     enabled: number; // 是否启用 0:禁用 1:启用 (PO中nullable = false)
+    seq?: number; // 排序号 (前端允许为空，后端会自动设置)
 }
 
 // --- VOs ---
@@ -48,6 +49,7 @@ export interface GetAdminModelSeriesDetailsVo {
     speed: number; // 速度 0:慢速 1:中速 2:快速 3:极快
     intelligence: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
     enabled: number; // 是否启用 0:禁用 1:启用
+    seq: number; // 排序号
     createTime: string; // 创建时间 (Date -> string)
     updateTime: string; // 更新时间 (Date -> string)
 }
