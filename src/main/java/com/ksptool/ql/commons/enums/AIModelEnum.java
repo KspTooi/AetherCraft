@@ -25,7 +25,6 @@ public enum AIModelEnum {
     GEMINI_15_PRO("gemini-1.5-pro", "Gemini 1.5 Pro", "Gemini", "中型", "中速", "铂金", 0),
 
     /*实验模型*/
-
     GEMINI_2_PRO_EXP("gemini-2.0-pro-exp", "Gemini 2.0 Pro Exp", "Gemini", "大型", "中速", "铂金", 0),
     GEMINI_2_PRO_EXP_0205("gemini-2.0-pro-exp-02-05", "Gemini 2.0 Pro Exp 2025-02-05", "Gemini", "大型", "中速", "铂金", 0),
     GEMINI_2_FLASH_THINKING_EXP_0121("gemini-2.0-flash-thinking-exp-01-21", "Gemini 2.0 Flash Thinking Exp 2025-01-21", "Gemini", "大型", "慢速", "铂金", 1),

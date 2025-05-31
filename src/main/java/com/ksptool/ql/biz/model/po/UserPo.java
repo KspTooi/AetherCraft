@@ -21,29 +21,21 @@ public class UserPo {
     @Comment("用户ID")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     @Comment("用户名")
     private String username;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "password", nullable = false, length = 100)
     @Comment("密码")
     private String password;
 
-    @Column(length = 100)
+    @Column(name = "email", length = 100)
     @Comment("邮箱")
     private String email;
 
-    @Column(length = 50)
+    @Column(name = "nickname", length = 50)
     @Comment("昵称")
     private String nickname;
-
-    @Column(name = "create_time", nullable = false, updatable = false)
-    @Comment("创建时间")
-    private Date createTime;
-
-    @Column(name = "update_time", nullable = false)
-    @Comment("修改时间")
-    private Date updateTime;
 
     @Column(name = "login_count", nullable = false)
     @Comment("登录次数")
@@ -60,6 +52,15 @@ public class UserPo {
     @Column(name = "last_login_time")
     @Comment("最后登录时间")
     private Date lastLoginTime;
+
+    @Column(name = "create_time", nullable = false, updatable = false)
+    @Comment("创建时间")
+    private Date createTime;
+
+    @Column(name = "update_time", nullable = false)
+    @Comment("修改时间")
+    private Date updateTime;
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
