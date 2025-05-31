@@ -1,5 +1,6 @@
 package com.ksptool.ql.restcgi.model.provider;
 
+import com.google.gson.annotations.SerializedName;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 
@@ -16,8 +17,31 @@ public class GrokRequest {
     private String model = "grok-2-latest";
     private boolean stream = false;
     private Double temperature;
+    
+    /**
+     * 词汇多样性控制参数，控制模型选词的随机性
+     * 数值越小，模型越倾向于选择高概率的词汇；数值越大，词汇选择越多样化
+     * 建议只调整此参数或temperature参数中的一个，不要同时调整
+     * 
+     * @apiNote 取值范围: (0, 1]，默认值: 1
+     */
+    @SerializedName("top_p")
     private Double topP;
-    private Integer maxTokens;
+    
+    /**
+     * 回复内容的最大长度限制（按token计算）
+     */
+    @SerializedName("max_completion_tokens")
+    private Integer maxCompletionTokens;
+    
+    /**
+     * 重复内容惩罚程度，用于避免模型生成重复的句子
+     * 正数：减少重复内容；负数：增加重复倾向；0：不进行惩罚
+     * 
+     * @apiNote 取值范围: [-2, 2]，默认值: 0
+     */
+    @SerializedName("frequency_penalty")
+    private Double frequencyPenalty;
 
     public GrokRequest() {}
 
@@ -26,7 +50,7 @@ public class GrokRequest {
         this.model = p.getModel().getCode();
         this.temperature = p.getTemperature();
         this.topP = p.getTopP();
-        this.maxTokens = p.getMaxOutputTokens();
+        this.maxCompletionTokens = p.getMaxOutputTokens();
         
         // 构建消息列表
         List<Message> messages = new ArrayList<>();
@@ -71,7 +95,7 @@ public class GrokRequest {
         request.setMessages(List.of(new Message("user", text)));
         request.setTemperature(temperature);
         request.setTopP(topP);
-        request.setMaxTokens(maxTokens);
+        request.setMaxCompletionTokens(maxTokens);
         return request;
     }
 
@@ -99,7 +123,7 @@ public class GrokRequest {
         request.setMessages(messages);
         request.setTemperature(temperature);
         request.setTopP(topP);
-        request.setMaxTokens(maxTokens);
+        request.setMaxCompletionTokens(maxTokens);
         return request;
     }
 } 
