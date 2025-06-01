@@ -205,6 +205,8 @@ public class ModelVariantService {
     public ModelVariantSchema getModelSchema(String modelCode){
         ModelVariantPo query = new ModelVariantPo();
         query.setCode(modelCode);
+        query.setEnabled(1);
+
         ModelVariantPo po = repository.findOne(Example.of(query)).orElse(null);
         if (po == null) {
             return null;
@@ -222,6 +224,8 @@ public class ModelVariantService {
     public ModelVariantSchema requireModelSchema(String modelCode) throws BizException {
         ModelVariantPo query = new ModelVariantPo();
         query.setCode(modelCode);
+        query.setEnabled(1); //是否启用 0:禁用 1:启用
+
         ModelVariantPo po = repository.findOne(Example.of(query)).orElse(null);
         if (po == null) {
             throw new BizException("模型变体不存在或当前不可用: " + modelCode);
