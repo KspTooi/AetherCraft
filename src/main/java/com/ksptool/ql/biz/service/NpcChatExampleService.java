@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.service;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
 import com.ksptool.ql.biz.mapper.NpcRepository;
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.SaveNpcChatExampleDto;
 import com.ksptool.ql.biz.model.po.NpcChatExamplePo;
 import com.ksptool.ql.biz.model.po.NpcPo;
@@ -11,18 +10,14 @@ import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetNpcChatExampleListVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.web.PageableView;
-import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 

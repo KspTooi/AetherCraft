@@ -2,7 +2,6 @@ package com.ksptool.ql.commons.interceptor;
 
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.commons.WebUtils;
 import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.servlet.*;
@@ -123,12 +122,7 @@ public class TokenFilter implements Filter {
             }
         }
 
-        try {
-            chain.doFilter(request, response);
-        } finally {
-            // RequestAttributes.SCOPE_REQUEST 范围的属性会在请求结束时自动清除
-            // 无需手动清理 AuthService.clearCurrentUserSession();
-        }
+        chain.doFilter(request, response);
     }
 
 }

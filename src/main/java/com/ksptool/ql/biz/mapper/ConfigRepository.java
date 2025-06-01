@@ -1,17 +1,13 @@
 package com.ksptool.ql.biz.mapper;
 
-import com.ksptool.ql.biz.model.dto.GetConfigListDto;
 import com.ksptool.ql.biz.model.po.ConfigPo;
 import com.ksptool.ql.biz.model.vo.GetConfigListVo;
-import com.ksptool.ql.biz.model.vo.ListPanelConfigVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 @Repository
 public interface ConfigRepository extends JpaRepository<ConfigPo, Long> {

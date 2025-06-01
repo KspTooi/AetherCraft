@@ -22,8 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import static com.ksptool.entities.Entities.as;
-
 /**
  * Grok模型服务
  */
@@ -85,7 +83,7 @@ public class ModelGrokService implements ModelRestCI{
                     throw new BizException("Grok API 返回内容为空");
                 }
                 
-                GrokResponse.Choice choice = grokResponse.getChoices().get(0);
+                GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
                 if (choice.getMessage() == null || StringUtils.isBlank(choice.getMessage().getContent())) {
                     throw new BizException("Grok API 返回内容为空");
                 }
@@ -171,7 +169,7 @@ public class ModelGrokService implements ModelRestCI{
                                     
                                     // 从响应中提取delta内容
                                     if (grokResponse.getChoices() != null && !grokResponse.getChoices().isEmpty()) {
-                                        GrokResponse.Choice choice = grokResponse.getChoices().get(0);
+                                        GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
                                         
                                         // 检查是否有finish_reason，如果有且不为null，则跳过
                                         if (choice.getFinishReason() != null && !choice.getFinishReason().isEmpty()) {

@@ -7,7 +7,6 @@ import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import jakarta.persistence.*;
-import lombok.Data;
 import org.hibernate.annotations.Comment;
 
 import java.util.Date;

@@ -56,7 +56,7 @@ public class GrokRestCgi implements ModelRestCgi {
                 throw new BizException("Grok API 返回内容为空");
             }
 
-            GrokResponse.Choice choice = grokResponse.getChoices().get(0);
+            GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
             if (choice.getMessage() == null || choice.getMessage().getContent() == null) {
                 throw new BizException("Grok API 返回内容为空");
             }

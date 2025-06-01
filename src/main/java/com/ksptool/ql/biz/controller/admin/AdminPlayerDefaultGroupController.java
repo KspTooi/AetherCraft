@@ -1,7 +1,6 @@
 package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.AddPlayerDefaultGroupDto;
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.RemovePlayerDefaultGroupDto;
 import com.ksptool.ql.biz.model.vo.GetPlayerDefaultGroupListVo;
 import com.ksptool.ql.biz.service.admin.AdminPlayerDefaultGroupService;

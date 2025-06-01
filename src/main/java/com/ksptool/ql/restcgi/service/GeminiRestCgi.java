@@ -4,12 +4,10 @@ import com.google.gson.Gson;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
-import com.ksptool.ql.restcgi.model.po.RestCgiRequestPo;
 import com.ksptool.ql.restcgi.model.provider.GeminiRequest;
 import com.ksptool.ql.restcgi.model.provider.GeminiResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -41,7 +39,7 @@ public class GeminiRestCgi implements ModelRestCgi {
         try (Response response = p.getHttpClient().newCall(request).execute()) {
 
             if (!response.isSuccessful()) {
-                throw new BizException("调用Gemini API失败: " + response.toString());
+                throw new BizException("调用Gemini API失败: " + response);
             }
 
             String responseBody = response.body().string();

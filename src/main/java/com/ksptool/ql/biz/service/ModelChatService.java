@@ -7,13 +7,11 @@ import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.RecoverChatVo;
 import com.ksptool.ql.biz.model.vo.RecoverChatHistoryVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
-import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
-import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.commons.utils.ThreadStatusTrack;
 import com.ksptool.ql.commons.utils.mccq.ChatFragment;
 import com.ksptool.ql.commons.utils.mccq.MemoryChatControlQueue;
@@ -24,10 +22,8 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import static com.ksptool.entities.Entities.as;
 
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;

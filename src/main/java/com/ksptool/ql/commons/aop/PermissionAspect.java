@@ -4,7 +4,6 @@ import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.commons.annotation.RequirePermission;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
-import com.ksptool.ql.commons.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

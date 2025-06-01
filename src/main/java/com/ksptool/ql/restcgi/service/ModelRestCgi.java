@@ -1,6 +1,5 @@
 package com.ksptool.ql.restcgi.service;
 
-import com.ksptool.ql.biz.model.vo.ModelChatContext;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;

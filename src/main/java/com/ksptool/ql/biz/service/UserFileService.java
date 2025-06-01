@@ -62,7 +62,7 @@ public class UserFileService {
             String fileExtension = getFilenameExtension(originalFilename);
             
             // 生成新文件名：userId_UUID.extension
-            String newFilename = userId + "_" + UUID.randomUUID().toString() + 
+            String newFilename = userId + "_" + UUID.randomUUID() +
                 (fileExtension != null ? "." + fileExtension : "");
 
             // 保存文件

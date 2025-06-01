@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 @Data
 public class EditAttachPlayerDetailsDto {
 

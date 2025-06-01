@@ -1,11 +1,5 @@
 package com.ksptool.ql.biz.model.vo;
 
-import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.EntityResult;
-import jakarta.persistence.FieldResult;
-import jakarta.persistence.ConstructorResult;
-import jakarta.persistence.ColumnResult;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**

@@ -83,7 +83,7 @@ public class ModelVariantService {
             
             // 如果没有提供seq，则设为最大值+1
             if (po.getSeq() == null) {
-                Integer maxSeq = repository.findAll().stream()
+                int maxSeq = repository.findAll().stream()
                         .mapToInt(p -> p.getSeq() != null ? p.getSeq() : 0)
                         .max()
                         .orElse(0);
@@ -176,7 +176,7 @@ public class ModelVariantService {
             po.setEnabled(1); // 默认启用
             
             // 设置排序号为最大值+1
-            Integer maxSeq = repository.findAll().stream()
+            int maxSeq = repository.findAll().stream()
                     .mapToInt(p -> p.getSeq() != null ? p.getSeq() : 0)
                     .max()
                     .orElse(0);

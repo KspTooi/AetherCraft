@@ -148,7 +148,6 @@ public class ContentSecurityService {
             for(NpcChatExamplePo po : exampleList) {
                 po.setContent(decrypt(po.getContent(), dek));
             }
-            return;
         }
 
 
@@ -164,10 +163,8 @@ public class ContentSecurityService {
             return true; // null 或空字符串视为内部路径或无效路径
         }
         String lowerCasePath = path.trim().toLowerCase();
-        if (lowerCasePath.startsWith("http://") || lowerCasePath.startsWith("https://") || lowerCasePath.startsWith("//")) {
-            return false; // 以协议或协议相对路径开头的视为外部路径
-        }
-        return true; // 其他情况视为内部路径
+        return !lowerCasePath.startsWith("http://") && !lowerCasePath.startsWith("https://") && !lowerCasePath.startsWith("//"); // 以协议或协议相对路径开头的视为外部路径
+// 其他情况视为内部路径
     }
 
     public String decryptForCurUser(String content) {

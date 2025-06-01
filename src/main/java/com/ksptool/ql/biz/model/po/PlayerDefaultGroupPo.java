@@ -16,7 +16,7 @@ public class PlayerDefaultGroupPo {
     @Comment("主键ID")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), unique = true)
     @Comment("关联的访问组ID")
     private GroupPo group;

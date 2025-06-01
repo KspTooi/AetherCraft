@@ -10,6 +10,7 @@ import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.enums.WallpaperEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -139,15 +140,10 @@ public class CustomizeWallpaperController {
     }
 
 
-
     // 用于处理Base64图片数据的内部类
-    private static class Base64MultipartFile implements MultipartFile {
-        private final byte[] fileContent;
+    private record Base64MultipartFile(byte[] fileContent) implements MultipartFile {
 
-        public Base64MultipartFile(byte[] fileContent) {
-            this.fileContent = fileContent;
-        }
-
+        @NotNull
         @Override
         public String getName() {
             return "wallpaper";
@@ -173,19 +169,22 @@ public class CustomizeWallpaperController {
             return fileContent.length;
         }
 
+        @NotNull
         @Override
         public byte[] getBytes() {
             return fileContent;
         }
 
+        @NotNull
         @Override
         public java.io.InputStream getInputStream() {
             return new ByteArrayInputStream(fileContent);
         }
 
         @Override
-        public void transferTo(java.io.File dest) throws java.io.IOException {
+        public void transferTo(@NotNull File dest) throws java.io.IOException {
             throw new UnsupportedOperationException("transferTo() is not supported");
         }
     }
+
 } 

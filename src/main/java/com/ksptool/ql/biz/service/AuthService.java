@@ -186,9 +186,7 @@ public class AuthService {
 
         UserPo user = userRepository.findById(userId).orElse(null);
 
-        if (user == null) {
-            return null; // 用户不存在
-        }
+        // 用户不存在
 
         return user; // Token有效，返回用户实例
     }

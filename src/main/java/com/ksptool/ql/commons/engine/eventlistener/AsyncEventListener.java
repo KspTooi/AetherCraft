@@ -6,5 +6,5 @@ import org.springframework.stereotype.Component;
 
 @Component
 public interface AsyncEventListener {
-    public void onEventPushed(AsyncEvent event);
+    void onEventPushed(AsyncEvent event);
 }

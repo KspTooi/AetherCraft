@@ -14,7 +14,6 @@ import com.ksptool.ql.commons.web.RestPageableView;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +84,7 @@ public class AdminPermissionService {
         
         Example<PermissionPo> example = Example.of(query);
         List<PermissionPo> existingPerms = repository.findAll(example);
-        PermissionPo existingPermByCode = existingPerms.isEmpty() ? null : existingPerms.get(0);
+        PermissionPo existingPermByCode = existingPerms.isEmpty() ? null : existingPerms.getFirst();
         
         if (existingPermByCode != null && (dto.getId() == null || !existingPermByCode.getId().equals(dto.getId()))) {
             throw new BizException("权限标识已存在");

@@ -6,8 +6,6 @@ import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
-import com.ksptool.ql.commons.annotation.RequirePermission;
-import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
@@ -107,7 +105,7 @@ public class AuthController {
         
         if (bindingResult.hasErrors()) {
             mav.setViewName("redirect:/register");
-            ra.addFlashAttribute("vo", Result.error(bindingResult.getAllErrors().get(0).getDefaultMessage()));
+            ra.addFlashAttribute("vo", Result.error(bindingResult.getAllErrors().getFirst().getDefaultMessage()));
             return mav;
         }
 

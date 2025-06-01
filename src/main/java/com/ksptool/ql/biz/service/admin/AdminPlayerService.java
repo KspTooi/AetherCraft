@@ -80,9 +80,7 @@ public class AdminPlayerService {
         List<Long> groupIds = new ArrayList<>();
 
         //查询访问组
-        playerPo.getGroups().forEach(group -> {
-            groupIds.add(group.getId());
-        });
+        playerPo.getGroups().forEach(group -> groupIds.add(group.getId()));
 
         vo.setGroupIds(groupIds);
         return vo;

@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.model.vo;
 
-import com.ksptool.ql.commons.web.PageQuery;
 import lombok.Data;
 
 import java.math.BigDecimal;

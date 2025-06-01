@@ -12,7 +12,6 @@ import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/admin/session")

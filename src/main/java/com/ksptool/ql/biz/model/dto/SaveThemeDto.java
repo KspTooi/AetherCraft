@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.model.dto;
 
-import jakarta.validation.Valid;
 import lombok.Data;
 import jakarta.validation.constraints.NotNull;
 

@@ -5,7 +5,6 @@ import com.ksptool.ql.biz.mapper.*;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.AuthService;
-import com.ksptool.ql.commons.web.SimpleExample;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;

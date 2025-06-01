@@ -24,13 +24,13 @@ public class H2Server {
 
     public void start() throws SQLException {
         tcpServer = Server.createTcpServer("-tcpPort", ""+port, "-tcpAllowOthers","-ifNotExists").start();
-        log.info("H2数据库引擎已启动(TCP模式) 端口:"+port);
+        log.info("H2数据库引擎已启动(TCP模式) 端口:{}", port);
     }
 
     public void stop() {
         if(tcpServer != null) {
             tcpServer.stop();
-            log.info("H2数据库引擎已停止(TCP模式) 端口:"+port);
+            log.info("H2数据库引擎已停止(TCP模式) 端口:{}", port);
         }
     }
 

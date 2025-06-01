@@ -2,7 +2,6 @@ package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.GetModelConfigDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelConfigDto;
-import com.ksptool.ql.biz.model.dto.SaveModelConfigDto;
 import com.ksptool.ql.biz.model.dto.TestModelConnectionDto;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.model.vo.GetAvailableModelVo;

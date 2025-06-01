@@ -21,7 +21,7 @@ public class MemoryChatControlQueue {
     private int FRAGMENT_TTL = 120;
 
     //Stream队列生存时间TTL(秒)
-    private int STREAM_TTL = 32;
+    private final int STREAM_TTL = 32;
 
     //对话分片获取超时时间(MS)
     private int FRAGMENT_NEXT_TIMEOUT = 1000 * 60;
@@ -75,10 +75,7 @@ public class MemoryChatControlQueue {
             return false;
         }
 
-        if(streamId.equals(sid)){
-            return true;
-        }
-        return false;
+        return streamId.equals(sid);
     }
 
     /**

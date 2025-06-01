@@ -1,10 +1,8 @@
 package com.ksptool.ql.biz.model.vo;
 
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import lombok.Data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

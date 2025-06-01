@@ -149,7 +149,7 @@ public class PreparedPrompt {
             throw new IllegalStateException("存在未设置的参数: " + String.join(", ", unsetParams));
         }
         
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         Matcher matcher = PLACEHOLDER_PATTERN.matcher(processedTemplate);
         
         while (matcher.find()) {
@@ -222,7 +222,7 @@ public class PreparedPrompt {
             }
             
             // 添加条件开始标记之前的内容
-            result.append(input.substring(position, startTagPos));
+            result.append(input, position, startTagPos);
             
             // 提取条件名称
             int nameStart = startTagPos + 3; // "#{?".length()

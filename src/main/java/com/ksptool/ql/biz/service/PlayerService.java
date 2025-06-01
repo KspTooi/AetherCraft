@@ -5,12 +5,10 @@ import com.ksptool.ql.biz.mapper.GroupRepository;
 import com.ksptool.ql.biz.mapper.PlayerDefaultGroupRepository;
 import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.CreatePlayerDto;
 import com.ksptool.ql.biz.model.dto.EditAttachPlayerDetailsDto;
 import com.ksptool.ql.biz.model.dto.GetPlayerListDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
-import com.ksptool.ql.biz.model.po.PlayerDefaultGroupPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.po.UserPo;
 import com.ksptool.ql.biz.model.vo.GetAttachPlayerDetailsVo;
@@ -19,15 +17,11 @@ import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
-import com.ksptool.ql.commons.web.Result;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -259,12 +253,9 @@ public class PlayerService {
         }
 
         // 4. 检查名称是否重复
-        if (repository.existsByName(name)) {
-            return false;
-        }
+        return !repository.existsByName(name);
 
         // 所有检查通过
-        return true;
     }
 
 

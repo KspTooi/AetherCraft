@@ -2,11 +2,8 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditMessageDto;
-import com.ksptool.ql.biz.model.dto.SelectThreadDto;
-import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.service.ChatMessageService;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

@@ -128,21 +128,6 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     }
 
     public void ensureCgiParamValid(CgiChatParam p) throws BizException {
-        /*if (p.getUserId() == null) {
-            throw new BizException("[CGI参数错误] UserId不可为空");
-        }
-
-        if (p.getPlayerId() == null) {
-            throw new BizException("[CGI参数错误] PlayerId不可为空");
-        }
-
-        if (p.getThreadId() == null) {
-            throw new BizException("[CGI参数错误] ThreadId不可为空");
-        }
-
-        if (p.getMessageId() == null) {
-            throw new BizException("[CGI参数错误] MessageId不可为空");
-        }*/
 
         if (p.getModel() == null) {
             throw new BizException("[CGI参数错误] 模型枚举不可为空");

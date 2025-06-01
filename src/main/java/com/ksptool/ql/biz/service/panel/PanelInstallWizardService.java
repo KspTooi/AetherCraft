@@ -5,8 +5,6 @@ import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
-
 /**
  * 安装向导
  */

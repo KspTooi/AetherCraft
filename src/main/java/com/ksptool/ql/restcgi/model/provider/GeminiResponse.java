@@ -49,11 +49,11 @@ public class GeminiResponse {
 
     public String getFirstResponseText() {
         if (candidates != null && !candidates.isEmpty()) {
-            Candidate firstCandidate = candidates.get(0);
+            Candidate firstCandidate = candidates.getFirst();
             if (firstCandidate.content != null && 
                 firstCandidate.content.parts != null && 
                 !firstCandidate.content.parts.isEmpty()) {
-                return firstCandidate.content.parts.get(0).text;
+                return firstCandidate.content.parts.getFirst().text;
             }
         }
         return null;

@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.mapper;
 
-import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import org.springframework.data.domain.Page;
@@ -11,8 +10,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * ChatThreadPo 数据访问接口

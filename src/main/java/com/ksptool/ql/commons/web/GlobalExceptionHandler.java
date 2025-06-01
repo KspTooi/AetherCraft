@@ -16,7 +16,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
@@ -133,16 +132,6 @@ public class GlobalExceptionHandler {
         log.error(ex.getMessage(),ex);
         return new ResponseEntity<>(Result.internalError(ex.getMessage(),null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
-    /**
-     * 处理其他Exception
-     */
-    //@ExceptionHandler(Exception.class)
-    //@ResponseBody
-    //public ResponseEntity<Result<Void>> handleException(Exception ex) {
-    //    log.error(ex.getMessage(),ex);
-    //    return new ResponseEntity<>(Result.internalError(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-    //}
 
 
 

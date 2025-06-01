@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.service;
 
-import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.dto.*;
@@ -82,8 +81,6 @@ public class ChatConversationService {
             //NPC会话无法自动创建
             if(dto.getType() == 1){
                 throw new BizException("NPC会话无法自动创建");
-                //chatThreadRepository.deActiveThreadByNpc(dto.getNpcId());
-                //threadPo = chatThreadService.createSelfNpcThread(model,dto.getNpcId());
             }
 
             //创建标准会话

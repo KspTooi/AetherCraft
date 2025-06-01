@@ -1,8 +1,6 @@
 package com.ksptool.ql.biz.model.po;
 
-import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
-import com.ksptool.ql.commons.exception.AuthException;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;

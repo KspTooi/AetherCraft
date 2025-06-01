@@ -2,6 +2,7 @@ package com.ksptool.ql.restcgi.model.provider;
 
 import com.google.gson.annotations.SerializedName;
 import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
+import com.ksptool.ql.restcgi.model.CgiChatMessage;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 
 import lombok.Data;
@@ -63,7 +64,7 @@ public class GrokRequest {
         // 添加历史消息
         if (p.getHistoryMessages() != null) {
             var sortedMessages = new ArrayList<>(p.getHistoryMessages());
-            sortedMessages.sort(Comparator.comparingInt(msg -> msg.getSeq()));
+            sortedMessages.sort(Comparator.comparingInt(CgiChatMessage::getSeq));
             
             for (var msg : sortedMessages) {
                 String role = msg.getSenderType() == 0 ? "user" : "assistant";

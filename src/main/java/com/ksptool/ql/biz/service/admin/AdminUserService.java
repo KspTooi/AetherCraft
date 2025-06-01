@@ -1,7 +1,6 @@
 package com.ksptool.ql.biz.service.admin;
 
 import com.ksptool.ql.biz.mapper.GroupRepository;
-import com.ksptool.ql.biz.mapper.PermissionRepository;
 import com.ksptool.ql.biz.mapper.UserRepository;
 import com.ksptool.ql.biz.model.po.GroupPo;
 import com.ksptool.ql.biz.model.po.PermissionPo;

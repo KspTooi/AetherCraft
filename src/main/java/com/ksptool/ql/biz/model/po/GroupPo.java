@@ -3,7 +3,6 @@ package com.ksptool.ql.biz.model.po;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.BatchSize;
 import lombok.ToString;
 import lombok.EqualsAndHashCode;
 
