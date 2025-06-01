@@ -53,6 +53,7 @@
       <el-table
         :data="list"
         stripe
+        border
         v-loading="loading"
         @selection-change="handleSelectionChange"
       >
@@ -66,18 +67,21 @@
           label="模型代码" 
           min-width="150"
           show-overflow-tooltip
+          resizable
         />
         <el-table-column 
           prop="name" 
           label="模型名称" 
           min-width="150" 
           show-overflow-tooltip
+          resizable
         />
         <el-table-column 
           prop="type" 
           label="模型类型" 
           width="100"
           align="center"
+          resizable
         >
           <template #default="scope">
             <el-tag 
@@ -93,12 +97,14 @@
           label="模型系列" 
           min-width="100"
           show-overflow-tooltip
+          resizable
         />
         <el-table-column
             prop="enabled"
             label="状态"
             width="80"
             align="center"
+            resizable
         >
           <template #default="scope">
             <el-tag :type="scope.row.enabled === 1 ? 'success' : 'danger'" size="small">
@@ -111,6 +117,7 @@
           label="思考能力" 
           width="100"
           align="center"
+          resizable
         >
           <template #default="scope">
             <el-tag :type="scope.row.thinking === 1 ? 'success' : 'info'" size="small">
@@ -138,6 +145,7 @@
           label="速度" 
           width="80"
           align="center"
+          resizable
         >
           <template #default="scope">
             <el-tag 
@@ -153,6 +161,7 @@
           label="智能程度" 
           width="100"
           align="center"
+          resizable
         >
           <template #default="scope">
             <el-tag 
@@ -168,12 +177,13 @@
           label="创建时间" 
           width="160"
           show-overflow-tooltip
+          resizable
         >
           <template #default="scope">
             {{ formatDateTime(scope.row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="140">
+        <el-table-column label="操作" fixed="right" min-width="140" resizable>
           <template #default="scope">
             <el-button 
               link
