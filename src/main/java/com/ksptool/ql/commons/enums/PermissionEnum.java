@@ -93,6 +93,11 @@ public enum PermissionEnum {
     ADMIN_MODEL_EDIT("admin:model:edit", "编辑模型配置"),
     ADMIN_MODEL_TEST("admin:model:test", "测试模型连接"),
 
+    //模型变体管理
+    ADMIN_MODEL_VARIANT_VIEW("admin:model:variant:view", "查看模型变体"),
+    ADMIN_MODEL_VARIANT_SAVE("admin:model:variant:save", "新增/编辑模型变体"),
+    ADMIN_MODEL_VARIANT_DELETE("admin:model:variant:delete", "删除模型变体"),
+
     //系统维护  
     ADMIN_MAINTAIN_PERMISSION("admin:maintain:permission", "校验系统权限"),
     ADMIN_MAINTAIN_GROUP("admin:maintain:group", "校验系统用户组"),

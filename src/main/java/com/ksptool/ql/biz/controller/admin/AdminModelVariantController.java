@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.service.ModelVariantService;
+import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.enums.AiModelSeries;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -41,26 +42,26 @@ public class AdminModelVariantController {
     }
 
     @PostMapping("getModelVariantList")
-    //@RequirePermissionRest("admin:model:variant:view")
+    @RequirePermissionRest("admin:model:variant:view")
     public Result<RestPageableView<GetAdminModelVariantListVo>> getModelVariantList(@RequestBody @Valid GetAdminModelVariantListDto dto){
         return Result.success(service.getModelVariantList(dto));
     }
 
     @PostMapping("getModelVariantDetails")
-    //@RequirePermissionRest("admin:model:variant:view")
+    @RequirePermissionRest("admin:model:variant:view")
     public Result<GetAdminModelVariantDetailsVo> getModelVariantDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
         return Result.success(service.getModelVariantDetails(dto.getId()));
     }
 
     @PostMapping("saveModelVariant")
-    //@RequirePermissionRest("admin:model:variant:save")
+    @RequirePermissionRest("admin:model:variant:save")
     public Result<String> saveModelVariant(@RequestBody @Valid SaveAdminModelVariantDto dto) throws BizException {
         service.saveModelVariant(dto);
         return Result.success("success");
     }
 
     @PostMapping("removeModelVariant")
-    //@RequirePermissionRest("admin:model:variant:delete")
+    @RequirePermissionRest("admin:model:variant:delete")
     public Result<String> removeModelVariant(@RequestBody @Valid CommonIdDto dto) throws BizException {
         service.removeModelVariant(dto.getId());
         return Result.success("success");
