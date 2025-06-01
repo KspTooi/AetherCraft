@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+import java.util.List;
 
 import static com.ksptool.entities.Entities.as;
 
@@ -76,6 +77,10 @@ public class ModelVariantPo {
     @Column(name = "update_time",nullable = false)
     @Comment("更新时间")
     private Date updateTime;
+
+    @OneToMany(mappedBy = "modelVariant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Comment("模型变体参数列表")
+    private List<ModelVariantParamPo> params;
 
     public ModelVariantSchema getSchema() {
         return as(this, ModelVariantSchema.class);
