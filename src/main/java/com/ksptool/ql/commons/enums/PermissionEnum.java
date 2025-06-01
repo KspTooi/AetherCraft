@@ -100,8 +100,10 @@ public enum PermissionEnum {
 
     //模型变体参数管理
     ADMIN_MODEL_VARIANT_PARAM_VIEW("admin:model:variant:param:view", "查看模型变体参数"),
-    ADMIN_MODEL_VARIANT_PARAM_SAVE("admin:model:variant:param:save", "新增/编辑模型变体参数"),
-    ADMIN_MODEL_VARIANT_PARAM_DELETE("admin:model:variant:param:delete", "删除模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_SAVE_GLOBAL("admin:model:variant:param:save:global", "新增/编辑全局模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_SAVE_SELF("admin:model:variant:param:save:self", "新增/编辑个人模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_REMOVE_GLOBAL("admin:model:variant:param:remove:global", "删除全局模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_REMOVE_SELF("admin:model:variant:param:remove:self", "删除个人模型变体参数"),
 
     //系统维护  
     ADMIN_MAINTAIN_PERMISSION("admin:maintain:permission", "校验系统权限"),

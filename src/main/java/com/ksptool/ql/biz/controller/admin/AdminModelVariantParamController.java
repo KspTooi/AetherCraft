@@ -12,6 +12,7 @@ import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.biz.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,7 +48,7 @@ public class AdminModelVariantParamController {
      * @return 参数详情
      */
     @PostMapping("getModelVariantParamDetails")
-    @RequirePermissionRest("admin:model:variant:param:save")
+    @RequirePermissionRest("admin:model:variant:param:view")
     public Result<GetModelVariantParamDetailsVo> getModelVariantParamDetails(@RequestBody @Valid GetModelVariantParamDetailsDto dto) throws BizException {
         try {
             return Result.success(service.getModelVariantParamDetails(dto));
@@ -62,11 +63,24 @@ public class AdminModelVariantParamController {
      * @return 操作结果
      */
     @PostMapping("saveModelVariantParam")
-    @RequirePermissionRest("admin:model:variant:param:save")
     public Result<String> saveModelVariantParam(@RequestBody @Valid SaveModelVariantParamDto dto) throws BizException {
         try {
+            // 根据global参数动态判断权限
+            if (dto.getGlobal() == 1) {
+                // 全局参数需要全局权限
+                if (!AuthService.hasPermission("admin:model:variant:param:save:global")) {
+                    return Result.error("无权限操作全局参数");
+                }
+            }
+            if (dto.getGlobal() == 0) {
+                // 个人参数需要个人权限
+                if (!AuthService.hasPermission("admin:model:variant:param:save:self")) {
+                    return Result.error("无权限操作个人参数");
+                }
+            }
+            
             service.saveModelVariantParam(dto);
-            return Result.success("success");
+            return Result.success("保存参数配置成功");
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -78,9 +92,22 @@ public class AdminModelVariantParamController {
      * @return 操作结果
      */
     @PostMapping("removeModelVariantParam")
-    @RequirePermissionRest("admin:model:variant:param:delete")
     public Result<String> removeModelVariantParam(@RequestBody @Valid RemoveModelVariantParamDto dto) throws BizException {
         try {
+            // 根据global参数动态判断权限
+            if (dto.getGlobal() == 1) {
+                // 删除全局参数需要全局权限
+                if (!AuthService.hasPermission("admin:model:variant:param:remove:global")) {
+                    return Result.error("无权限删除全局参数");
+                }
+            }
+            if (dto.getGlobal() == 0) {
+                // 删除个人参数需要个人权限
+                if (!AuthService.hasPermission("admin:model:variant:param:remove:self")) {
+                    return Result.error("无权限删除个人参数");
+                }
+            }
+            
             service.removeModelVariantParam(dto);
             return Result.success("删除参数配置成功");
         } catch (BizException e) {
