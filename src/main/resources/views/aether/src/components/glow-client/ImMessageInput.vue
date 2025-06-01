@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, nextTick, onMounted } from 'vue'
+import { ref, inject, nextTick, onMounted, defineExpose } from 'vue'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
@@ -130,6 +130,24 @@ const adjustTextareaHeight = () => {
     textarea.style.overflowY = 'hidden'
   }
 }
+
+// 设置消息内容到输入框
+const setContent = (message: string) => {
+  messageInput.value = message
+  nextTick(() => {
+    adjustTextareaHeight()
+    // 聚焦输入框并将光标移到末尾
+    //if (messageTextarea.value) {
+    //  messageTextarea.value.focus()
+    //  messageTextarea.value.setSelectionRange(message.length, message.length)
+    //}
+  })
+}
+
+// 暴露方法给父组件
+defineExpose({
+  setContent
+})
 
 // 生命周期钩子
 onMounted(() => {

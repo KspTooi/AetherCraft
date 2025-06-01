@@ -35,6 +35,7 @@
 
         <div class="message-input-container">
           <ImMessageInput
+              ref="messageInputRef"
               :disabled="false"
               :is-generating="isGenerating"
               @message-send="onMessageSend"
@@ -114,6 +115,8 @@ interface MessageBoxItem {
 
 // 消息框引用
 const messageBoxRef = ref<MessageBoxInstance | null>(null);
+// 消息输入框引用
+const messageInputRef = ref<MessageInputInstance | null>(null);
 // NPC列表引用
 const npcListRef = ref<NpcListInstance | null>(null);
 // 是否正在生成回复
@@ -145,6 +148,11 @@ interface NpcListInstance {
   setSelectedNpc: (npcId: string) => void;
   loadNpcList: () => Promise<void>;
   toggleMobileMenu: () => void;
+}
+
+// 定义消息输入框实例类型
+interface MessageInputInstance {
+  setContent: (message: string) => void;
 }
 
 const getNpcMessageList = async (npcId: string) => {
@@ -203,6 +211,9 @@ const sendMessage = async (message: string) => {
   if (isGenerating.value) return // 如果正在生成，则不处理新的发送请求
 
   if (!curThreadId.value) {
+    // 发送失败时恢复输入框内容
+    messageInputRef.value?.setContent(message);
+    
     alterRef.value?.showConfirm({
       title: "未选择NPC",
       content: `请先选择一个NPC`,
@@ -255,6 +266,10 @@ const sendMessage = async (message: string) => {
 
   } catch (error) {
     console.error('发送消息失败:', error);
+    
+    // 发送失败时恢复输入框内容
+    messageInputRef.value?.setContent(message);
+    
     alterRef.value?.showConfirm({
       title: "发送消息失败",
       content: `${error}`,
