@@ -8,26 +8,26 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
-@Table(name = "model_variant_param")
+@Table(name = "model_variant_param_template_values")
 @Entity
 @Data
-public class ModelVariantParamPo {
+public class ModelVariantParamTemplateValuePo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Comment("参数ID")
+    @Comment("值ID")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_variant_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("所属模型变体")
-    private ModelVariantPo modelVariant;
+    @JoinColumn(name = "template_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("关联模板ID")
+    private ModelVariantParamTemplatePo template;
 
     @Column(name = "param_key", nullable = false, length = 128)
     @Comment("参数键")
     private String paramKey;
 
-    @Column(name = "param_val", length = 1000, nullable = false)
+    @Column(name = "param_val", nullable = false, length = 1000)
     @Comment("参数值")
     private String paramVal;
 
@@ -35,19 +35,9 @@ public class ModelVariantParamPo {
     @Comment("参数类型 0:string 1:int 2:boolean")
     private Integer type;
 
-    @Column(name = "description", nullable = true)
-    @Comment("参数描述")
+    @Column(name = "description", nullable = true, length = 255)
+    @Comment("参数说明")
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("所属用户，为空表示全局默认参数")
-    private UserPo user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("所属玩家，为空表示全局默认参数")
-    private PlayerPo player;
 
     @Column(name = "seq", nullable = false)
     @Comment("排序号")
@@ -63,4 +53,4 @@ public class ModelVariantParamPo {
     @Comment("更新时间")
     private Date updateTime;
 
-}
+} 
