@@ -2,6 +2,7 @@ package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.biz.service.admin.AdminPermissionService;
@@ -37,6 +38,9 @@ public class AdminMaintainController {
 
     @Autowired
     private AdminPlayerService adminPlayerService;
+
+    @Autowired
+    private ModelVariantService modelVariantService;
 
     /**
      * 校验系统内置权限节点
@@ -121,6 +125,22 @@ public class AdminMaintainController {
             return Result.success(adminPlayerService.forceCreatePlayers(),null);
         }catch (Exception e){
             return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 校验系统内置模型变体
+     * 检查数据库中是否存在所有系统内置模型变体，如果不存在则自动创建
+     */
+    @PostMapping("/validateModelVariant")
+    @ResponseBody
+    @RequirePermissionRest("admin:maintain:model:variant")
+    public Result<String> validateModelVariant() {
+        try {
+            String result = modelVariantService.validateSystemModelVariants();
+            return Result.success(result, null);
+        } catch (Exception e) {
+            return Result.error("校验模型变体失败：" + e.getMessage());
         }
     }
 

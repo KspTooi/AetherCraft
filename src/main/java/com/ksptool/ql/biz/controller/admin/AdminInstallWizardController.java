@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller.admin;
 import com.ksptool.ql.AetherLauncher;
 import com.ksptool.ql.biz.model.vo.ValidateSystemPermissionsVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.biz.service.admin.AdminPermissionService;
@@ -38,6 +39,9 @@ public class AdminInstallWizardController {
 
     @Autowired
     private AdminGroupService adminGroupService;
+
+    @Autowired
+    private ModelVariantService modelVariantService;
 
     /**
      * 检查是否需要显示安装向导
@@ -144,7 +148,11 @@ public class AdminInstallWizardController {
             String configResult = globalConfigService.validateSystemConfigs();
             results.add(configResult);
             
-            // 5. 更新应用版本号
+            // 5. 校验系统内置模型变体
+            String modelVariantResult = modelVariantService.validateSystemModelVariants();
+            results.add(modelVariantResult);
+            
+            // 6. 更新应用版本号
             globalConfigService.setValue(GlobalConfigEnum.APPLICATION_VERSION.getKey(), AetherLauncher.getVersion());
             results.add("应用版本已更新为：" + AetherLauncher.getVersion());
             

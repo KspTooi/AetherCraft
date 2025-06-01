@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
+import com.ksptool.ql.commons.enums.AiModelVariantEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +93,55 @@ public class ModelVariantService {
                 .orElseThrow(() -> new BizException("要删除的模型变体不存在"));
 
         repository.delete(po);
+    }
+
+    /**
+     * 校验系统内置模型变体
+     * 检查数据库中是否存在所有系统内置模型变体，如果不存在则自动创建
+     * 对已存在的模型变体不做任何修改
+     */
+    @Transactional
+    public String validateSystemModelVariants() {
+        int addedCount = 0;
+        int existCount = 0;
+        
+        // 遍历所有系统内置的模型变体
+        for (AiModelVariantEnum variant : AiModelVariantEnum.values()) {
+            // 检查数据库中是否已存在该代码的模型变体
+            if (repository.existsByCode(variant.getCode())) {
+                existCount++;
+                continue;
+            }
+            
+            // 创建新的模型变体
+            ModelVariantPo po = new ModelVariantPo();
+            po.setCode(variant.getCode());
+            po.setName(variant.getName());
+            po.setType(0); // 默认为文本类型，可根据需要调整
+            po.setSeries(variant.getSeries());
+            po.setThinking(variant.getThinking());
+            po.setScale(variant.getScale());
+            po.setSpeed(variant.getSpeed());
+            po.setIntelligence(variant.getIntelligence());
+            po.setEnabled(1); // 默认启用
+            
+            // 设置排序号为最大值+1
+            Integer maxSeq = repository.findAll().stream()
+                    .mapToInt(p -> p.getSeq() != null ? p.getSeq() : 0)
+                    .max()
+                    .orElse(0);
+            po.setSeq(maxSeq + addedCount + 1);
+            
+            repository.save(po);
+            addedCount++;
+        }
+        
+        if (addedCount > 0) {
+            return String.format("校验完成，已添加 %d 个缺失的模型变体，已存在 %d 个模型变体", 
+                    addedCount, existCount);
+        }
+        
+        return String.format("校验完成，所有 %d 个系统模型变体均已存在", existCount);
     }
 
 }
