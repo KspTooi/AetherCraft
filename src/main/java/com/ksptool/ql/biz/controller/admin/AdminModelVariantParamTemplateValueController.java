@@ -2,7 +2,6 @@ package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelVariantParamTemplateValueListDto;
-import com.ksptool.ql.biz.model.dto.GetModelVariantParamTemplateValueDetailsDto;
 import com.ksptool.ql.biz.model.dto.SaveModelVariantParamTemplateValueDto;
 import com.ksptool.ql.biz.model.vo.GetModelVariantParamTemplateValueVo;
 import com.ksptool.ql.biz.service.admin.AdminModelVariantParamTemplateValueService;
@@ -46,7 +45,7 @@ public class AdminModelVariantParamTemplateValueController {
      */
     @PostMapping("getModelVariantParamTemplateValueDetails")
     @RequirePermissionRest("admin:model:variant:param:template:value:view")
-    public Result<GetModelVariantParamTemplateValueVo> getModelVariantParamTemplateValueDetails(@RequestBody @Valid GetModelVariantParamTemplateValueDetailsDto dto) {
+    public Result<GetModelVariantParamTemplateValueVo> getModelVariantParamTemplateValueDetails(@RequestBody @Valid CommonIdDto dto) {
         try {
             return Result.success(service.getModelVariantParamTemplateValueDetails(dto));
         } catch (BizException e) {
