@@ -13,6 +13,10 @@ import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.service.*;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
+import com.ksptool.ql.restcgi.model.CgiChatMessage;
+import com.ksptool.ql.restcgi.model.CgiChatParam;
+import com.ksptool.ql.restcgi.model.CgiChatResult;
+import com.ksptool.ql.restcgi.service.ModelRestCgi;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,13 +50,10 @@ public class AdminModelConfigService {
     private ApiKeyAuthorizationRepository apiKeyAuthorizationRepository;
 
     @Autowired
-    private ModelGeminiService modelGeminiService;
-
-    @Autowired
-    private ModelGrokService modelGrokService;
-
-    @Autowired
     private ModelVariantService modelVariantService;
+
+    @Autowired
+    private ModelRestCgi restCgi;
 
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
@@ -177,51 +178,17 @@ public class AdminModelConfigService {
             throw new BizException("未配置API Key，请先选择API Key并保存配置");
         }
 
-        // 构建配置键前缀
-        String baseKey = "ai.model.cfg." + model.getCode() + ".";
-
-        // 获取代理配置 - 首先检查用户级别的代理配置
-        String proxyConfig = playerConfigService.getString("model.proxy.config", null);
-
-        // 如果用户未配置代理，则使用全局代理配置
-        if (StringUtils.isBlank(proxyConfig)) {
-            proxyConfig = globalConfigService.get("model.proxy.config", null);
-        }
-
-        // 获取其他参数
-        double temperature = playerConfigService.getDouble(baseKey + "temperature", 0.7);
-
-        double topP = playerConfigService.getDouble(baseKey + "topP", 1.0);
-        int topK = playerConfigService.getInt(baseKey + "topK", 40);
-        int maxOutputTokens = playerConfigService.getInt(baseKey + "maxOutputTokens", 4096);
-
         try {
-            // 创建HTTP客户端
-            OkHttpClient client = HttpClientUtils.createHttpClient(proxyConfig, 30);
 
-            // 创建请求参数
-            ModelChatParam modelChatParam = new ModelChatParam();
-            modelChatParam.setModelCode(model.getCode());
-            modelChatParam.setMessage("你好，这是一条测试消息，请简短回复。");
-            modelChatParam.setTemperature(temperature);
-            modelChatParam.setTopP(topP);
-            modelChatParam.setTopK(topK);
-            modelChatParam.setMaxOutputTokens(maxOutputTokens);
-            modelChatParam.setHistories(new ArrayList<>());
-            modelChatParam.setSystemPrompt("你是一个有用的AI助手。这是一条测试消息，请简短回复。");
+            var p = new CgiChatParam();
+            p.setModel(model);
+            p.setMessage(new CgiChatMessage("你好,这是一条测试消息,请简短回复."));
+            p.setHistoryMessages(new ArrayList<>());
+            p.setApikey(apiKey);
+            p.setSystemPrompt("你是一个有用的AI助手,在该测试场景下,请使用一个文字回复.");
 
-            // 根据模型类型设置不同的URL并调用相应的服务
-            if (model.getCode().contains("grok")) {
-                modelChatParam.setUrl(GROK_BASE_URL);
-                modelChatParam.setApiKey(apiKey);
-                return modelGrokService.sendMessageSync(client, modelChatParam);
-            } else if (model.getCode().contains("gemini")) {
-                modelChatParam.setUrl(GEMINI_BASE_URL + model.getCode() + ":generateContent");
-                modelChatParam.setApiKey(apiKey);
-                return modelGeminiService.sendMessageSync(client, modelChatParam);
-            } else {
-                throw new BizException("不支持的模型类型");
-            }
+            CgiChatResult r = restCgi.sendMessage(p);
+            return r.getContent();
         } catch (Exception e) {
             throw new BizException("测试失败: " + e.getMessage());
         }

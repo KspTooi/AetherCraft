@@ -2,7 +2,6 @@ package com.ksptool.ac.test;
 
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.vo.ModelChatContext;
-import com.ksptool.ql.biz.service.ModelGrokService;
 import okhttp3.*;
 
 import java.util.ArrayList;
