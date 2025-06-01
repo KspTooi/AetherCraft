@@ -6,7 +6,8 @@ import {
     Lock, 
     User, 
     Setting, 
-    UserFilled 
+    UserFilled,
+    Cpu
 } from '@element-plus/icons-vue'
 
 // 定义维护操作接口类型
@@ -26,6 +27,7 @@ const operationLoading = ref<{ [key: string]: boolean }>({
     groups: false,
     users: false,
     configs: false,
+    modelVariant: false,
     forceCreatePlayers: false
 })
 
@@ -90,6 +92,15 @@ const maintainOperations: MaintainOperation[] = [
         action: () => executeMaintainOperation('configs', MaintainApi.validateSystemConfigs)
     },
     {
+        title: '模型变体校验',
+        description: '校验系统内置模型变体是否完整，如有缺失将自动补充默认的AI模型变体配置。',
+        icon: Cpu,
+        buttonText: '模型变体校验',
+        bgColor: 'rgba(155, 99, 235, 0.1)',
+        iconColor: '#9B63EB',
+        action: () => executeMaintainOperation('modelVariant', MaintainApi.validateModelVariant)
+    },
+    {
         title: '强制创建Player',
         description: '为所有没有Player角色的用户强制创建Player角色。',
         icon: UserFilled,
@@ -130,6 +141,7 @@ const maintainOperations: MaintainOperation[] = [
                             index === 1 ? 'groups' : 
                             index === 2 ? 'users' : 
                             index === 3 ? 'configs' : 
+                            index === 4 ? 'modelVariant' : 
                             'forceCreatePlayers'
                         ]"
                         @click="operation.action"

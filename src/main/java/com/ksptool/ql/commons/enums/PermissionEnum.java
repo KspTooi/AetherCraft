@@ -99,6 +99,7 @@ public enum PermissionEnum {
     ADMIN_MAINTAIN_USER("admin:maintain:user", "校验系统用户"),
     ADMIN_MAINTAIN_CONFIG("admin:maintain:config", "校验系统配置"),
     ADMIN_MAINTAIN_FORCE_CREATE_PLAYER("admin:maintain:force:create:player", "为没有Player的用户强制创建Player"),
+    ADMIN_MAINTAIN_MODEL_VARIANT("admin:maintain:model:variant", "校验模型变体配置"),
 
     //API密钥管理
     ADMIN_APIKEY_VIEW("admin:apikey:view", "查看API密钥"),

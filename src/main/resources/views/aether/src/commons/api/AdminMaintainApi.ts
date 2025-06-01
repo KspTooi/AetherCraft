@@ -35,6 +35,14 @@ export default {
     },
 
     /**
+     * 校验系统内置模型变体
+     */
+    validateModelVariant: async (): Promise<string> => {
+        const result = await Http.postRaw<string>('/admin/maintain/validateModelVariant', {});
+        return result.message || '模型变体校验完成';
+    },
+
+    /**
      * 强制为所有没有Player的用户创建Player
      */
     forceCreatePlayers: async (): Promise<string> => {
