@@ -121,7 +121,7 @@ import {
   Grid, Briefcase, Tools, Monitor, Opportunity, 
   Collection, CollectionTag, Cpu, Trophy, List,
   HomeFilled, Refrigerator, Ticket, Management,
-  SetUp, Operation
+  SetUp, Operation, DocumentCopy
 } from '@element-plus/icons-vue'
 
 // 定义组件props
@@ -216,6 +216,12 @@ const menuItems = ref([
     title: '模型参数管理',
     icon: Setting,
     routerLink: '/admin/model/variant/param'
+  },
+  {
+    id: 'param_template',
+    title: '参数模板管理',
+    icon: DocumentCopy,
+    routerLink: '/admin/model/variant/param/template'
   },
   {
     id: 'apikey',

@@ -66,4 +66,31 @@ public interface ModelVariantParamRepository extends JpaRepository<ModelVariantP
             @Param("playerId") Long playerId
     );
 
+    /**
+     * 查询指定模型变体的所有全局参数
+     */
+    @Query("""
+            SELECT p FROM ModelVariantParamPo p
+            WHERE p.modelVariant.id = :modelVariantId
+            AND p.user IS NULL AND p.player IS NULL
+            """)
+    List<ModelVariantParamPo> findByModelVariantIdAndUserIsNullAndPlayerIsNull(
+            @Param("modelVariantId") Long modelVariantId
+    );
+
+    /**
+     * 查询指定模型变体下指定用户的所有个人参数
+     */
+    @Query("""
+            SELECT p FROM ModelVariantParamPo p
+            WHERE p.modelVariant.id = :modelVariantId
+            AND p.user.id = :userId
+            AND p.player.id = :playerId
+            """)
+    List<ModelVariantParamPo> findByModelVariantIdAndUserIdAndPlayerId(
+            @Param("modelVariantId") Long modelVariantId,
+            @Param("userId") Long userId,
+            @Param("playerId") Long playerId
+    );
+
 } 

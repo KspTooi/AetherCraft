@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+import java.util.List;
 
 @Table(name = "model_variant_param_template", indexes = {
     @Index(name = "idx_template_user_name_unique", 
@@ -49,5 +50,10 @@ public class ModelVariantParamTemplatePo {
     @Column(name = "update_time", nullable = false)
     @Comment("更新时间")
     private Date updateTime;
+
+    @OneToMany(mappedBy = "template", fetch = FetchType.LAZY)
+    @OrderBy("seq ASC")
+    @Comment("模板参数值列表")
+    private List<ModelVariantParamTemplateValuePo> templateValues;
 
 } 

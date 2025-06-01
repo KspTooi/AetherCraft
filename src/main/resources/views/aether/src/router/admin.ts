@@ -114,6 +114,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/model/variant/param/template',
+      name: 'model-variant-param-template-manager',
+      component: () => import('@/views/admin/ModelVariantParamTemplateManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: '参数模板管理'
+        }
+      }
+    },
+    {
       path: '/admin/model/apikey',
       name: 'api-key-manager',
       component: () => import('@/views/admin/ApiKeyManager.vue'),
