@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ModelVariantRepository extends JpaRepository<ModelVariantPo, Long>{
 
@@ -31,5 +33,13 @@ public interface ModelVariantRepository extends JpaRepository<ModelVariantPo, Lo
 
     // 检查模型代码是否已存在（排除指定ID，用于编辑时验证）
     boolean existsByCodeAndIdNot(String code, Long id);
+
+    // 查询所有启用的模型变体，按排序号和创建时间排序（供客户端使用）
+    @Query("""
+            SELECT m FROM ModelVariantPo m
+            WHERE m.enabled = :enabled
+            ORDER BY m.seq ASC, m.createTime DESC
+            """)
+    List<ModelVariantPo> findEnabledModelVariants(@Param("enabled") Integer enabled);
 
 }

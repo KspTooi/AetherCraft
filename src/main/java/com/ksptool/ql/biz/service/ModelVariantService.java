@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
+import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
 import com.ksptool.ql.commons.enums.AiModelVariantEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -24,6 +25,24 @@ public class ModelVariantService {
 
     @Autowired
     private ModelVariantRepository repository;
+
+
+    public List<GetModelVariantListVo> getClientModelVariantList(){
+        // 查询所有启用的模型变体，按排序号和创建时间排序
+        List<ModelVariantPo> enabledModels = repository.findEnabledModelVariants(1);
+        
+        List<GetModelVariantListVo> vos = new ArrayList<>();
+        for (ModelVariantPo po : enabledModels) {
+            GetModelVariantListVo vo = new GetModelVariantListVo();
+            assign(po, vo);
+            vos.add(vo);
+        }
+        
+        return vos;
+    }
+
+
+
 
     public RestPageableView<GetAdminModelVariantListVo> getModelVariantList(GetAdminModelVariantListDto dto) {
         Page<ModelVariantPo> pageResult = repository.getAdminModelVariantList(
