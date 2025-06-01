@@ -10,7 +10,17 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "chat_thread")
+@Table(name = "chat_thread", indexes = {
+    @Index(name = "idx_chat_thread_player_id", columnList = "player_id"),
+    @Index(name = "idx_chat_thread_player_user_type", columnList = "player_id, user_id, type"),
+    @Index(name = "idx_chat_thread_player_user_type_npc", columnList = "player_id, user_id, type, npc_id"),
+    @Index(name = "idx_chat_thread_npc_player_user_active", columnList = "npc_id, player_id, user_id, active, id DESC"),
+    @Index(name = "idx_chat_thread_type_player_user", columnList = "type, player_id, user_id"),
+    @Index(name = "idx_chat_thread_type_npc", columnList = "type, npc_id"),
+    @Index(name = "idx_chat_thread_title", columnList = "title"),
+    @Index(name = "idx_chat_thread_create_time_desc", columnList = "create_time DESC"),
+    @Index(name = "idx_chat_thread_model_code", columnList = "model_code")
+})
 public class ChatThreadPo {
 
     @Id

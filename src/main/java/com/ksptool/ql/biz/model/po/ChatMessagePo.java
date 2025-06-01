@@ -9,7 +9,13 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "chat_message")
+@Table(name = "chat_message", indexes = {
+    @Index(name = "idx_chat_message_thread_id", columnList = "thread_id"),
+    @Index(name = "idx_chat_message_thread_seq", columnList = "thread_id, seq"),
+    @Index(name = "idx_chat_message_thread_role_seq", columnList = "thread_id, sender_role, seq DESC"),
+    @Index(name = "idx_chat_message_seq_desc", columnList = "seq DESC"),
+    @Index(name = "idx_chat_message_create_time", columnList = "create_time")
+})
 public class ChatMessagePo {
 
     @Id

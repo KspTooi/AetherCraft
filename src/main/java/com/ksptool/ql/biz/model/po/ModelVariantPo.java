@@ -10,7 +10,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.util.Date;
 
 @Entity
-@Table(name = "model_variant")
+@Table(name = "model_variant", indexes = {
+    @Index(name = "idx_model_variant_code", columnList = "code", unique = true),
+    @Index(name = "idx_model_variant_enabled", columnList = "enabled"),
+    @Index(name = "idx_model_variant_series", columnList = "series"),
+    @Index(name = "idx_model_variant_seq", columnList = "seq")
+})
 @Data
 public class ModelVariantPo {
 

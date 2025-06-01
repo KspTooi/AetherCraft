@@ -35,7 +35,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.2Z-58-M6 # 应用版本号
+  version: 1.3A-1 # 应用版本号
 
 # 加密配置
 encrypt:
