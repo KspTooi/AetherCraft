@@ -8,7 +8,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
-@Table(name = "model_variant_param_template_values")
+@Table(name = "model_variant_param_template_values", indexes = {
+    @Index(name = "idx_template_value_param_unique", 
+           columnList = "template_id, param_key", 
+           unique = true),
+    @Index(name = "idx_template_value_template", 
+           columnList = "template_id"),
+    @Index(name = "idx_template_value_seq", 
+           columnList = "seq")
+})
 @Entity
 @Data
 public class ModelVariantParamTemplateValuePo {

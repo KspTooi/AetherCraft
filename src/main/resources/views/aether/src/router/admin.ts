@@ -104,6 +104,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/model/variant/param',
+      name: 'model-variant-param-manager',
+      component: () => import('@/views/admin/ModelVariantParamManager.vue'),
+      meta: {
+        breadcrumb: {
+          title: '模型参数管理'
+        }
+      }
+    },
+    {
       path: '/admin/model/apikey',
       name: 'api-key-manager',
       component: () => import('@/views/admin/ApiKeyManager.vue'),

@@ -1,20 +1,77 @@
 ---
 description: codebase coding standards
 globs: *.java
+alwaysApply: false
 ---
 SpringBoot版本3.4.1
-使用import static com.ksptool.entities.Entities.assign; assign(source,target)映射对象的同名属性,这是一个可靠的映射函数,它能处理绝大多数类型转换，包括Date到String
-不允许三元表达式,使用普通IF
-接口为后端渲染视图统一使用ModelAndView响应
-使用ModelAndView响应带有分页的列表数据时应使用com.ksptool.ql.commons.web.PageableView(List<T> rows, long count, int currentPage, int pageSize)作为data
-需要为接口创建单独的Dto用于接收数据，Vo用于响应数据,请记住所有的Controller的输入都是Dto而响应都为Vo(包括ModelAndView中嵌入Vo)
-接口为JSON响应时使用com.ksptool.ql.commons.web.Result类进行响应
-后端校验参数使用HibernateValidation注解
-Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
-不允许StreamAPI,除非必须使用它.
-不允许Optinal
-使用多个if-return组合或多个if代替else
-Service中的简单查询统一使用Example，复杂查询使用JPQL投影到一个单独的Vo
-Rep中使用@QUERY注解的JPQL请使用多行字符串编写
-未接到明确指令，不随意拆分任何函数
-Service不需要创建接口，直接创建实现类。
+1.使用import static com.ksptool.entities.Entities.assign; assign(source,target)映射对象的同名属性,这是一个可靠的映射函数,它能处理绝大多数类型转换，包括Date到String
+2.不允许三元表达式,使用普通IF
+3.需要为接口创建单独的Dto用于接收数据，Vo用于响应数据,请记住所有的Controller的输入都是Dto而响应都为Vo
+4.接口为JSON响应时使用com.ksptool.ql.commons.web.Result类进行响应
+5.后端校验参数使用HibernateValidation注解
+6.Vo、Dto使用单行注释，Po使用org.hibernate.annotations.Comment注释
+7.尽可能少使用StreamAPI,除非必须使用它.
+8.尽可能少使用Optinal
+9.使用多个if-return组合或多个if代替else
+10.Service中的简单查询统一使用Example，复杂查询使用JPQL投影到一个单独的Vo
+11.Rep中使用@QUERY注解的JPQL请使用多行字符串编写
+12.未接到明确指令，不随意拆分任何函数
+13.Service不需要创建接口，直接创建实现类。
+
+## Controller开发规范
+14.Controller类使用@RestController注解，统一使用@RequestMapping定义路径前缀
+15.所有接口方法都使用@PostMapping注解，不使用GET请求
+16.接口方法参数统一使用@RequestBody @Valid接收Dto对象
+17.需要权限控制的接口使用@RequirePermissionRest注解，格式为"模块:功能:操作"
+18.接口方法返回值统一使用Result包装，成功时使用Result.success()
+19.可能抛出业务异常的方法声明throws BizException
+20.Service字段使用@Autowired注解进行依赖注入
+21.接口方法添加简洁的javadoc注释说明功能
+22.Controller中不进行复杂业务逻辑处理，所有业务逻辑都委托给Service
+23.成功响应消息使用中文描述，如"批量切换模型变体状态成功"
+
+## Service开发规范
+24.Service类使用@Service注解，不需要创建接口，直接实现
+25.Repository字段使用@Autowired注解进行依赖注入
+26.数据修改操作的方法必须添加@Transactional注解
+27.方法参数校验在方法开始时进行，参数为空或无效时抛出BizException
+28.使用Example进行简单查询，格式：new Po(); query.setField(value); repository.findOne(Example.of(query))
+29.数据转换统一使用assign(source, target)函数，但需注意其局限性：只能处理同名字段映射(支持简单类型转换)，字段名不同或需要复杂转换逻辑时需手动处理
+30.分页查询返回RestPageableView包装结果
+31.业务异常信息使用中文描述，如"模型变体不存在"
+32.新增数据时，如果需要排序号且未提供，自动设置为最大值+1
+33.编辑数据时先查询验证存在性，再检查唯一性约束
+34.删除数据时先查询验证存在性
+35.批量操作时使用repository.findAllById()和repository.saveAll()提高效率
+36.提供数据校验方法时，返回详细的操作结果说明
+37.方法注释使用javadoc格式，说明参数、返回值和异常情况
+38.业务逻辑复杂时使用多个if判断替代else，提前return减少嵌套
+
+## Repository开发规范
+39.Repository接口使用@Repository注解，继承JpaRepository<Po, Long>
+40.自定义查询方法使用@Query注解，JPQL语句必须使用多行字符串(三引号)格式
+41.查询参数使用@Param注解明确标注参数名称
+42.复杂查询直接投影到Vo对象，格式：SELECT new com.xxx.Vo(字段列表) FROM Po
+43.查询条件支持动态过滤，使用(:param IS NULL OR 条件)模式处理可选参数
+44.更新操作使用@Modifying注解标注
+45.手动编写@Query的JPQL方法命名必须以get开头，如getAdminModelVariantList、getGroupList
+46.Repository方法添加简洁的javadoc注释说明查询目的和返回内容
+
+## 函数命名规范
+47.Controller方法：get+业务对象+功能描述，如getModelVariantList、getModelVariantDetails
+48.Controller操作方法：动词+业务对象，如saveModelVariant、removeModelVariant、toggleModelVariant
+49.Service查询方法：get+使用场景+业务对象+功能，如getClientModelVariantList、getAdminPlayerList
+50.Service业务方法：动词+业务对象，如validateSystemModelVariants、detachAllActivePlayersByUserId
+51.Service校验方法：require+业务对象+功能，如requireModelSchema（必须存在版本）
+52.方法名使用驼峰命名法，动词在前，名词在后，含义清晰明确
+
+## 变量命名规范
+53.数据传输对象统一命名：dto（请求参数）、vo（响应数据）、po（数据库实体）
+54.分页查询结果：pageResult、page（Page类型）
+55.集合变量：复数形式，如vos、modelVariants、permissions
+56.查询对象：query（用于Example查询）
+57.计数变量：使用Count后缀，如addedCount、existCount、maxSeq
+58.ID类型变量：实体名+Id，如userId、playerId、groupId
+59.业务字段变量：使用完整单词，避免缩写，如keyword、enabled、username
+60.临时变量使用有意义的名称，避免使用单字母变量（循环变量除外）
+61.布尔类型变量使用is/has/can等前缀，如isSystem、hasPermission

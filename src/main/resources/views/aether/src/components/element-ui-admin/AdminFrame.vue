@@ -212,6 +212,12 @@ const menuItems = ref([
     routerLink: '/admin/model/variant'
   },
   {
+    id: 'model_param',
+    title: '模型参数管理',
+    icon: Setting,
+    routerLink: '/admin/model/variant/param'
+  },
+  {
     id: 'apikey',
     title: 'API密钥管理',
     icon: Key,
