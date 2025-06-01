@@ -38,6 +38,7 @@
 
         <div class="message-input-container">
           <ImMessageInput
+              ref="messageInputRef"
               :disabled="false"
               :is-generating="isGenerating"
               @message-send="onMessageSend"
@@ -90,6 +91,8 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
 // 消息框引用
 const messageBoxRef = ref<MessageBoxInstance | null>(null);
+// 消息输入框引用
+const messageInputRef = ref<MessageInputInstance | null>(null);
 // 聊天列表引用
 const chatListRef = ref<ChatListInstance | null>(null);
 // 是否正在生成回复
@@ -148,6 +151,10 @@ interface ChatListInstance {
   toggleMobileMenu: () => void;
 }
 
+// 定义消息输入框实例类型
+interface MessageInputInstance {
+  setContent: (message: string) => void;
+}
 
 // 处理发送消息
 const onMessageSend = async (message: string) => {
@@ -199,6 +206,10 @@ const onMessageSend = async (message: string) => {
 
   } catch (error) {
     console.error('发送消息失败:', error);
+    
+    // 发送失败时恢复输入框内容
+    messageInputRef.value?.setContent(message);
+    
     alterRef.value?.showConfirm({
       title: "发送消息失败",
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
