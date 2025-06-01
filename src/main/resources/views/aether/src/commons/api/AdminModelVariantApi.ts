@@ -24,6 +24,11 @@ export interface SaveAdminModelSeriesDto {
     seq?: number; // 排序号 (前端允许为空，后端会自动设置)
 }
 
+export interface AdminToggleModelVariantDto {
+    ids: string[]; // 模型变体ID列表 (Long[] -> string[])
+    enabled: number; // 启用状态 0:禁用 1:启用
+}
+
 // --- VOs ---
 
 export interface GetAdminModelSeriesListVo {
@@ -85,6 +90,13 @@ export default {
      */
     saveModelVariant: async (dto: SaveAdminModelSeriesDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/model/variant/saveModelVariant', dto);
+    },
+
+    /**
+     * 批量切换模型变体启用状态
+     */
+    toggleModelVariant: async (dto: AdminToggleModelVariantDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/toggleModelVariant', dto);
     },
 
     /**

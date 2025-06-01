@@ -29,6 +29,22 @@
       </el-form>
       <div class="add-button-container">
         <el-button type="success" @click="openInsertModal">新增模型变体</el-button>
+        <el-button 
+          type="primary" 
+          @click="batchToggle(1)" 
+          :disabled="selectedRows.length === 0"
+          :loading="batchLoading"
+        >
+          批量启用 ({{ selectedRows.length }})
+        </el-button>
+        <el-button 
+          type="warning" 
+          @click="batchToggle(0)" 
+          :disabled="selectedRows.length === 0"
+          :loading="batchLoading"
+        >
+          批量禁用 ({{ selectedRows.length }})
+        </el-button>
       </div>
     </div>
 
@@ -38,7 +54,13 @@
         :data="list"
         stripe
         v-loading="loading"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column 
+          type="selection" 
+          width="55"
+          align="center"
+        />
         <el-table-column 
           prop="code" 
           label="模型代码" 
@@ -315,6 +337,7 @@
 
 import {reactive, ref, onMounted, markRaw} from "vue";
 import type {
+  AdminToggleModelVariantDto,
   GetAdminModelSeriesDetailsVo,
   GetAdminModelSeriesListDto,
   GetAdminModelSeriesListVo,
@@ -331,6 +354,10 @@ const mode = ref<"insert" | "update">("insert")
 
 // 模型系列选项
 const modelSeriesOptions = ref<string[]>([])
+
+// 多选相关状态
+const selectedRows = ref<GetAdminModelSeriesListVo[]>([])
+const batchLoading = ref(false)
 
 const query = reactive<GetAdminModelSeriesListDto>({
   keyword: null,
@@ -545,6 +572,24 @@ const remove = async (row: GetAdminModelSeriesListVo) => {
       const errorMsg = error instanceof Error ? error.message : '删除失败';
       ElMessage.error(errorMsg);
     }
+  }
+}
+
+const handleSelectionChange = (rows: GetAdminModelSeriesListVo[]) => {
+  selectedRows.value = rows
+}
+
+const batchToggle = async (enabled: number) => {
+  batchLoading.value = true
+  try {
+    await AdminModelSeriesApi.toggleModelVariant({ ids: selectedRows.value.map(row => row.id), enabled })
+    ElMessage.success('批量操作成功')
+    loadModelSeriesList()
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : '操作失败'
+    ElMessage.error(errorMsg)
+  } finally {
+    batchLoading.value = false
   }
 }
 
