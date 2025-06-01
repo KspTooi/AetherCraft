@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Order(1) // 设置过滤器顺序，确保在其他过滤器之前执行
@@ -42,6 +43,11 @@ public class TokenFilter implements Filter {
             "/install-wizard/**",
             "/welcome",
             "/"
+    );
+
+    private static final Map<String,String> BLACK_LIST = Map.of(
+            "/actuator/**", "admin:maintain:actuator",
+            "/actuator", "admin:maintain:actuator"
     );
 
     @Override
@@ -86,6 +92,36 @@ public class TokenFilter implements Filter {
 
         // 将会话信息存储到请求上下文中
         AuthService.setCurrentUserSession(session);
+
+        // 检查黑名单路径权限
+        for (Map.Entry<String, String> entry : BLACK_LIST.entrySet()) {
+            String pattern = entry.getKey();
+            String requiredPermission = entry.getValue();
+            
+            if (pathMatcher.match(pattern, uri)) {
+                // 检查用户是否有访问权限
+                if (!AuthService.hasPermission(requiredPermission)) {
+                    // 检查是否为 AJAX 请求
+                    String requestWithHeader = req.getHeader("AE-Request-With");
+                    if ("XHR".equalsIgnoreCase(requestWithHeader)) {
+                        // AJAX 请求返回403状态码和JSON错误信息
+                        res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        res.setContentType("application/json;charset=UTF-8");
+                        
+                        Result<String> result = Result.error(403, "权限不足，需要权限：" + requiredPermission, null);
+                        
+                        try (PrintWriter writer = res.getWriter()) {
+                            writer.write(gson.toJson(result));
+                        }
+                        return;
+                    }
+                    // 非AJAX请求重定向到无权限页面
+                    res.sendRedirect("/noPermission");
+                    return;
+                }
+                break; // 找到匹配的模式后退出循环
+            }
+        }
 
         try {
             chain.doFilter(request, response);
