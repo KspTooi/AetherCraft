@@ -28,11 +28,11 @@
         </el-form-item>
       </el-form>
       <div class="add-button-container">
-        <el-button type="success" @click="openInsertModal">新增模型系列</el-button>
+        <el-button type="success" @click="openInsertModal">新增模型变体</el-button>
       </div>
     </div>
 
-    <!-- 模型系列列表 -->
+    <!-- 模型变体列表 -->
     <div class="model-series-table">
       <el-table
         :data="list"
@@ -196,10 +196,10 @@
       </div>
     </div>
 
-    <!-- 模型系列编辑/新增模态框 -->
+    <!-- 模型变体编辑/新增模态框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="mode === 'insert' ? '新增模型系列' : '编辑模型系列'"
+      :title="mode === 'insert' ? '新增模型变体' : '编辑模型变体'"
       width="600px"
       :close-on-click-modal="false"
     >
@@ -243,10 +243,20 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="模型系列" prop="series">
-          <el-input 
+          <el-select 
             v-model="details.series" 
-            placeholder="请输入模型系列/厂商"
-          />
+            placeholder="请选择或输入模型系列/厂商"
+            filterable
+            allow-create
+            style="width: 100%"
+          >
+            <el-option 
+              v-for="series in modelSeriesOptions" 
+              :key="series" 
+              :label="series" 
+              :value="series"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="排序号" prop="seq">
           <el-input-number 
@@ -255,6 +265,7 @@
             :max="9999"
             placeholder="留空则自动设置"
             style="width: 200px"
+            clearable
           />
           <div style="color: #909399; font-size: 12px; margin-top: 4px;">
             排序号越小越靠前，留空则自动设置为最大值+1
@@ -318,8 +329,8 @@ import type {
   GetAdminModelSeriesListDto,
   GetAdminModelSeriesListVo,
   SaveAdminModelSeriesDto
-} from "@/commons/api/AdminModelSeriesApi.ts";
-import AdminModelSeriesApi from "@/commons/api/AdminModelSeriesApi.ts";
+} from "@/commons/api/AdminModelVariantApi.ts";
+import AdminModelSeriesApi from "@/commons/api/AdminModelVariantApi.ts";
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import type { FormInstance } from 'element-plus';
@@ -327,6 +338,9 @@ import dayjs from 'dayjs';
 
 //模态框模式
 const mode = ref<"insert" | "update">("insert")
+
+// 模型系列选项
+const modelSeriesOptions = ref<string[]>([])
 
 const query = reactive<GetAdminModelSeriesListDto>({
   keyword: null,
@@ -363,15 +377,14 @@ const details = reactive<GetAdminModelSeriesDetailsVo>({
   series: "",
   speed: 0,
   thinking: 0,
-  seq: 1,
+  seq: null,
   updateTime: ""
 })
 
 // 表单校验规则
 const rules = {
   code: [
-    { required: true, message: '请输入模型代码', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_-]{2,50}$/, message: '模型代码只能包含2-50位字母、数字、下划线和横线', trigger: 'blur' }
+    { required: true, message: '请输入模型代码', trigger: 'blur' }
   ],
   name: [
     { required: true, message: '请输入模型名称', trigger: 'blur' },
@@ -407,15 +420,26 @@ const formatDateTime = (dateStr: string) => {
   return dayjs(dateStr).format('YYYY-MM-DD HH:mm:ss')
 }
 
+// 加载模型系列选项
+const loadModelSeriesOptions = async () => {
+  try {
+    const series = await AdminModelSeriesApi.getModelSeries()
+    modelSeriesOptions.value = series
+  } catch (e) {
+    ElMessage.error('加载模型系列选项失败')
+    console.error("加载模型系列选项失败", e)
+  }
+}
+
 const loadModelSeriesList = async () => {
   loading.value = true
   try {
-    const res = await AdminModelSeriesApi.getModelSeriesList(query);
+    const res = await AdminModelSeriesApi.getModelVariantList(query);
     list.value = res.rows;
     total.value = res.count;
   } catch (e) {
-    ElMessage.error('加载模型系列列表失败');
-    console.error("加载模型系列列表失败", e);
+    ElMessage.error('加载模型变体列表失败');
+    console.error("加载模型变体列表失败", e);
   } finally {
     loading.value = false
   }
@@ -439,7 +463,7 @@ const resetForm = () => {
   details.speed = 0
   details.intelligence = 0
   details.enabled = 1
-  details.seq = 1
+  details.seq = null
   details.createTime = ""
   details.updateTime = ""
   
@@ -450,6 +474,7 @@ const resetForm = () => {
 
 //页面加载时自动加载数据
 onMounted(() => {
+  loadModelSeriesOptions()
   loadModelSeriesList()
 })
 
@@ -464,13 +489,13 @@ const openUpdateModal = async (row: GetAdminModelSeriesListVo) => {
     mode.value = "update"
     resetForm()
     
-    const res = await AdminModelSeriesApi.getModelSeriesDetails({ id: row.id })
+    const res = await AdminModelSeriesApi.getModelVariantDetails({ id: row.id })
     Object.assign(details, res)
     
     dialogVisible.value = true
   } catch (error) {
-    ElMessage.error('获取模型系列详情失败')
-    console.error('获取模型系列详情失败', error)
+    ElMessage.error('获取模型变体详情失败')
+    console.error('获取模型变体详情失败', error)
   }
 }
 
@@ -496,9 +521,9 @@ const save = async () => {
         seq: details.seq || undefined // 如果为0或空则传undefined
       }
       
-      await AdminModelSeriesApi.saveModelSeries(saveDto)
+      await AdminModelSeriesApi.saveModelVariant(saveDto)
       
-      ElMessage.success(mode.value === 'insert' ? '新增模型系列成功' : '更新模型系列成功')
+      ElMessage.success(mode.value === 'insert' ? '新增模型变体成功' : '更新模型变体成功')
       dialogVisible.value = false
       loadModelSeriesList()
     } catch (error) {
@@ -513,7 +538,7 @@ const save = async () => {
 const remove = async (row: GetAdminModelSeriesListVo) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除模型系列 ${row.name} (${row.code}) 吗？`,
+      `确定要删除模型变体 ${row.name} (${row.code}) 吗？`,
       '警告',
       {
         confirmButtonText: '确定',
@@ -522,8 +547,8 @@ const remove = async (row: GetAdminModelSeriesListVo) => {
       }
     )
     
-    await AdminModelSeriesApi.removeModelSeries({ id: row.id });
-    ElMessage.success('删除模型系列成功');
+    await AdminModelSeriesApi.removeModelVariant({ id: row.id });
+    ElMessage.success('删除模型变体成功');
     loadModelSeriesList();
   } catch (error) {
     if (error !== 'cancel') {

@@ -10,9 +10,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.util.Date;
 
 @Entity
-@Table(name = "model_series")
+@Table(name = "model_variant")
 @Data
-public class ModelSeriesPo {
+public class ModelVariantPo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -94,12 +94,12 @@ const router = createRouter({
       }
     },
     {
-      path: '/admin/model/series',
-      name: 'ai-model-series-manager',
-      component: () => import('@/views/admin/AiModelSeriesManager.vue'),
+      path: '/admin/model/variant',
+      name: 'ai-model-variant-manager',
+      component: () => import('@/views/admin/AiModelVariantManager.vue'),
       meta: {
         breadcrumb: {
-          title: 'AI模型系列管理'
+          title: 'AI模型变体管理'
         }
       }
     },

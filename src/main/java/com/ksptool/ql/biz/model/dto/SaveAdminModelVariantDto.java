@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class SaveAdminModelSeriesDto {
+public class SaveAdminModelVariantDto {
 
     // 模型ID，新增时为null，编辑时必填
     private Long id;

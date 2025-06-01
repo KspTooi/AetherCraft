@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class GetAdminModelSeriesListDto extends PageQuery {
+public class GetAdminModelVariantListDto extends PageQuery {
 
     //模糊筛选模型代码、名称、系列
     private String keyword;

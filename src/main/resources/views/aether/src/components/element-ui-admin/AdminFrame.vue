@@ -209,7 +209,7 @@ const menuItems = ref([
     id: 'model_series',
     title: 'AI模型管理',
     icon: Cpu,
-    routerLink: '/admin/model/series'
+    routerLink: '/admin/model/variant'
   },
   {
     id: 'apikey',

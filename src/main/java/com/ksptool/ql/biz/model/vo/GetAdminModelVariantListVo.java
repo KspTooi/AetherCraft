@@ -1,11 +1,15 @@
 package com.ksptool.ql.biz.model.vo;
 
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
-public class GetAdminModelSeriesDetailsVo {
+@NoArgsConstructor
+@AllArgsConstructor
+public class GetAdminModelVariantListVo {
 
     // 模型ID
     private Long id;
@@ -37,13 +41,10 @@ public class GetAdminModelSeriesDetailsVo {
     // 是否启用 0:禁用 1:启用
     private Integer enabled;
 
-    // 排序号
-    private Integer seq;
-
     // 创建时间
     private Date createTime;
 
     // 更新时间
     private Date updateTime;
 
-} 
+}

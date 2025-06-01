@@ -52,7 +52,7 @@ export interface GetAdminModelSeriesDetailsVo {
     speed: number; // 速度 0:慢速 1:中速 2:快速 3:极快
     intelligence: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
     enabled: number; // 是否启用 0:禁用 1:启用
-    seq: number; // 排序号
+    seq: number | null; // 排序号，允许为空
     createTime: string; // 创建时间 (Date -> string)
     updateTime: string; // 更新时间 (Date -> string)
 }
@@ -60,31 +60,38 @@ export interface GetAdminModelSeriesDetailsVo {
 export default {
 
     /**
-     * 获取模型系列列表
+     * 获取所有支持的AI模型系列代码
      */
-    getModelSeriesList: async (dto: GetAdminModelSeriesListDto): Promise<RestPageableView<GetAdminModelSeriesListVo>> => {
-        return await Http.postEntity<RestPageableView<GetAdminModelSeriesListVo>>('/admin/model/series/getModelSeriesList', dto);
+    getModelSeries: async (): Promise<string[]> => {
+        return await Http.postEntity<string[]>('/admin/model/variant/getModelSeries', {});
     },
 
     /**
-     * 获取模型系列详情
+     * 获取模型变体列表
      */
-    getModelSeriesDetails: async (dto: CommonIdDto): Promise<GetAdminModelSeriesDetailsVo> => {
-        return await Http.postEntity<GetAdminModelSeriesDetailsVo>('/admin/model/series/getModelSeriesDetails', dto);
+    getModelVariantList: async (dto: GetAdminModelSeriesListDto): Promise<RestPageableView<GetAdminModelSeriesListVo>> => {
+        return await Http.postEntity<RestPageableView<GetAdminModelSeriesListVo>>('/admin/model/variant/getModelVariantList', dto);
     },
 
     /**
-     * 保存模型系列
+     * 获取模型变体详情
      */
-    saveModelSeries: async (dto: SaveAdminModelSeriesDto): Promise<string> => {
-        return await Http.postEntity<string>('/admin/model/series/saveModelSeries', dto);
+    getModelVariantDetails: async (dto: CommonIdDto): Promise<GetAdminModelSeriesDetailsVo> => {
+        return await Http.postEntity<GetAdminModelSeriesDetailsVo>('/admin/model/variant/getModelVariantDetails', dto);
     },
 
     /**
-     * 删除模型系列
+     * 保存模型变体
      */
-    removeModelSeries: async (dto: CommonIdDto): Promise<string> => {
-        return await Http.postEntity<string>('/admin/model/series/removeModelSeries', dto);
+    saveModelVariant: async (dto: SaveAdminModelSeriesDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/saveModelVariant', dto);
+    },
+
+    /**
+     * 删除模型变体
+     */
+    removeModelVariant: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/removeModelVariant', dto);
     }
 
 };
