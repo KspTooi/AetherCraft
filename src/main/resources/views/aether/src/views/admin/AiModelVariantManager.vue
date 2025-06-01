@@ -69,9 +69,21 @@
         <el-table-column 
           prop="series" 
           label="模型系列" 
-          min-width="120"
+          min-width="100"
           show-overflow-tooltip
         />
+        <el-table-column
+            prop="enabled"
+            label="状态"
+            width="80"
+            align="center"
+        >
+          <template #default="scope">
+            <el-tag :type="scope.row.enabled === 1 ? 'success' : 'danger'" size="small">
+              {{ scope.row.enabled === 1 ? '启用' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column 
           prop="thinking" 
           label="思考能力" 
@@ -84,7 +96,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column 
+<!--        <el-table-column
           prop="scale" 
           label="规模" 
           width="80"
@@ -98,7 +110,7 @@
               {{ ['小型', '中型', '大型'][scope.row.scale] }}
             </el-tag>
           </template>
-        </el-table-column>
+        </el-table-column>-->
         <el-table-column 
           prop="speed" 
           label="速度" 
@@ -126,18 +138,6 @@
               size="small"
             >
               {{ ['木质', '石质', '铁质', '钻石', '纳米', '量子'][scope.row.intelligence] }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column 
-          prop="enabled" 
-          label="状态" 
-          width="80"
-          align="center"
-        >
-          <template #default="scope">
-            <el-tag :type="scope.row.enabled === 1 ? 'success' : 'danger'" size="small">
-              {{ scope.row.enabled === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>

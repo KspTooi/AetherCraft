@@ -50,13 +50,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, inject } from 'vue'
-import http from '@/commons/Http'
+import ModelVariantApi, { type ClientModelVariant } from '@/commons/api/ModelVariantApi'
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
-// 数据模型
+// 数据模型（为了兼容现有模板，保持原有字段名）
 interface ModelData {
   modelCode: string // 模型代码(不展示)
   modelName: string // 模型名称(展示)
@@ -127,12 +127,57 @@ const selectModel = (model: ModelData) => {
   closeDropdown()
 }
 
+// 数据转换函数
+const convertApiDataToModelData = (apiData: ClientModelVariant[]): ModelData[] => {
+  return apiData.map(item => ({
+    modelCode: item.code,
+    modelName: item.name,
+    series: item.series,
+    size: getSizeDisplay(item.scale),
+    speed: getSpeedDisplay(item.speed),
+    intelligence: getIntelligenceDisplay(item.intelligence),
+    thinking: item.thinking
+  }))
+}
+
+// 将数字转换为显示文本
+const getSizeDisplay = (scale: number): string => {
+  const sizeMap: Record<number, string> = {
+    0: '小型',
+    1: '中型', 
+    2: '大型'
+  }
+  return sizeMap[scale] || '中型'
+}
+
+const getSpeedDisplay = (speed: number): string => {
+  const speedMap: Record<number, string> = {
+    0: '慢速',
+    1: '中速',
+    2: '快速',
+    3: '极快'
+  }
+  return speedMap[speed] || '中速'
+}
+
+const getIntelligenceDisplay = (intelligence: number): string => {
+  const intelligenceMap: Record<number, string> = {
+    0: '木质',
+    1: '石质',
+    2: '铁质',
+    3: '钻石',
+    4: '纳米',
+    5: '量子'
+  }
+  return intelligenceMap[intelligence] || '石质'
+}
+
 // 重新加载模型列表
 const loadModelList = async () => {
   loading.value = true
   try {
-    const modelList = await http.postEntity<ModelData[]>('/model/series/getModelSeries', {})
-    data.value = modelList
+    const apiData = await ModelVariantApi.getModelVariantList()
+    data.value = convertApiDataToModelData(apiData)
     
     // 确保在有模型数据时自动选择
     if (data.value.length > 0) {
@@ -154,11 +199,6 @@ onMounted(() => {
   loadModelList()
 })
 
-// 获取模型大小显示文本
-const getSizeDisplay = (size: string): string => {
-  return size // 直接返回原始文字
-}
-
 // 获取模型大小样式类
 const getSizeClass = (size: string): string => {
   const sizeMap: Record<string, string> = {
@@ -172,11 +212,10 @@ const getSizeClass = (size: string): string => {
 // 获取模型速度样式类
 const getSpeedClass = (speed: string): string => {
   const speedMap: Record<string, string> = {
-    '极速': 'speed-fastest',
+    '极快': 'speed-fastest',
     '快速': 'speed-fast',
     '中速': 'speed-medium',
-    '慢速': 'speed-slow',
-    '最慢': 'speed-slowest'
+    '慢速': 'speed-slow'
   }
   return speedMap[speed] || 'speed-medium'
 }
@@ -184,13 +223,12 @@ const getSpeedClass = (speed: string): string => {
 // 获取智能程度样式类
 const getIntelligenceClass = (intelligence: string): string => {
   const intelligenceMap: Record<string, string> = {
-    '精英': 'intelligence-elite',
-    '钻石': 'intelligence-diamond',
-    '铂金': 'intelligence-platinum',
-    '黄金': 'intelligence-gold',
-    '白银': 'intelligence-silver',
-    '青铜': 'intelligence-bronze',
-    '木制': 'intelligence-wood'
+    '量子': 'intelligence-elite',
+    '纳米': 'intelligence-diamond',
+    '钻石': 'intelligence-platinum',
+    '铁质': 'intelligence-silver',
+    '石质': 'intelligence-bronze',
+    '木质': 'intelligence-wood'
   }
   return intelligenceMap[intelligence] || 'intelligence-bronze'
 }
