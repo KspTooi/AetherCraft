@@ -55,7 +55,7 @@ public class ModelRestCgiTest {
         }
 
         var param = new CgiChatParam();
-        param.setModel(AIModelEnum.GEMINI_2_FLASH);
+        //param.setModel(AIModelEnum.GEMINI_2_FLASH);
         param.setApikey(geminiApiKey);
         param.setHttpClient(httpClient);
 
@@ -92,7 +92,7 @@ public class ModelRestCgiTest {
         }
 
         var param = new CgiChatParam();
-        param.setModel(AIModelEnum.GEMINI_2_FLASH);
+        //param.setModel(AIModelEnum.GEMINI_2_FLASH);
         param.setApikey(geminiApiKey);
         param.setHttpClient(httpClient);
         //param.setUserId(-1L);
@@ -145,7 +145,7 @@ public class ModelRestCgiTest {
         }
 
         var param = new CgiChatParam();
-        param.setModel(AIModelEnum.GROK_3_BETA);
+        //param.setModel(AIModelEnum.GROK_3_BETA);
         param.setApikey(grokApiKey);
         param.setHttpClient(httpClient);
         
@@ -177,7 +177,7 @@ public class ModelRestCgiTest {
         }
 
         var param = new CgiChatParam();
-        param.setModel(AIModelEnum.GROK_3_BETA);
+        //param.setModel(AIModelEnum.GROK_3_BETA);
         param.setApikey(grokApiKey);
         param.setHttpClient(httpClient);
         

@@ -81,7 +81,7 @@ public class GrokServiceTest {
         AtomicReference<Exception> error = new AtomicReference<>();
         
         // 创建ModelGrokService实例
-        ModelGrokService grokService = new ModelGrokService();
+        //ModelGrokService grokService = new ModelGrokService();
         
         // 创建回调函数
         Consumer<ModelChatContext> callback = context -> {
@@ -109,7 +109,7 @@ public class GrokServiceTest {
         
         // 发送消息
         System.out.println("开始发送测试消息...");
-        grokService.sendMessageStream(client, param, callback);
+        //grokService.sendMessageStream(client, param, callback);
         
         // 等待响应完成或超时
         boolean completed = latch.await(60, TimeUnit.SECONDS);
