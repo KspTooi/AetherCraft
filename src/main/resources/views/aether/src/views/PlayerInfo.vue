@@ -142,7 +142,7 @@
         未能加载玩家信息，请稍后再试。
     </div>
     <!-- 添加提示组件 -->
-    <GlowAlter ref="alterRef" />
+    <GlowAlert ref="alterRef" />
     <!-- 添加确认对话框组件 -->
     <GlowConfirm ref="confirmRef" />
   </GlowDiv>
@@ -156,7 +156,7 @@ import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowSelector from "@/components/glow-ui/GlowSelector.vue";
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import type { GetAttachPlayerDetailsVo, EditAttachPlayerDetailsDto } from "@/commons/api/PlayerApi.ts";
 import PlayerApi from "@/commons/api/PlayerApi.ts";
@@ -167,7 +167,7 @@ import dayjs from 'dayjs'; // For date formatting
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme);
 const router = useRouter();
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 

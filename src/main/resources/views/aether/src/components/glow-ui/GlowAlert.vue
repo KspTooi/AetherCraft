@@ -48,6 +48,11 @@ const showConfirm = (options?: {
     if (options.closeText) closeText.value = options.closeText
   }
 
+  // 让当前焦点元素失焦
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
+
   // 显示模态框
   visible.value = true
 

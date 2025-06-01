@@ -88,7 +88,7 @@
     </div>
 
     <!-- 添加提示组件 -->
-    <GlowAlter ref="alterRef" />
+    <GlowAlert ref="alterRef" />
     
     <!-- 添加确认对话框组件 -->
     <GlowConfirm ref="confirmRef" />
@@ -102,7 +102,7 @@ import NpcChatExampleApi from "@/commons/api/NpcChatExampleApi.ts";
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme';
 
@@ -115,7 +115,7 @@ const props = defineProps<{
 
 const list = ref<GetNpcChatExampleListVo[]>([]);
 const loading = ref(false);
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null);
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
 const hasChanges = ref(false);
 

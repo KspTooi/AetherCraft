@@ -4,7 +4,7 @@ import GlowTheme from "@/components/glow-ui/GlowTheme.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowModal from "@/components/glow-ui/GlowModal.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import { ref } from 'vue';
 import GlowColorPicker from "@/components/glow-ui/GlowColorPicker.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
@@ -348,7 +348,7 @@ const checkValue4 = ref(false);
       <GlowConfirm ref="confirmRef" />
       
       <!-- GlowAlter组件 -->
-      <GlowAlter ref="alterRef" />
+      <GlowAlert ref="alterRef" />
     </div>
   </GlowTheme>
 </template>

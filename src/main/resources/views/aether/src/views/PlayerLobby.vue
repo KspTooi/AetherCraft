@@ -110,7 +110,7 @@
       </div>
       
       <!-- 错误提示框 -->
-      <GlowAlter ref="alterRef" />
+      <GlowAlert ref="alterRef" />
       <GlowConfirm ref="confirmRef" />
     </div>
   </GlowDiv>
@@ -122,7 +122,7 @@ import { useRouter } from 'vue-router';
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue";
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import PlayerApi, { type GetPlayerListVo } from "@/commons/api/PlayerApi";
 import { usePlayerStore } from "@/stores/player";
 
@@ -137,7 +137,7 @@ const playerList = ref<GetPlayerListVo[]>([]);
 const selectedPlayer = ref<GetPlayerListVo | null>(null);
 const defaultAvatarUrl = '/imgs/default-avatar.png';
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null);
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null);
 
 // --- Avatar URL Logic ---
 const getAvatarUrl = (url: string | undefined | null): string => {

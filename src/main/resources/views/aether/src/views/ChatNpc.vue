@@ -49,7 +49,7 @@
       <!-- 确认框组件 -->
       <GlowConfirm ref="confirmRef" />
 
-      <GlowAlter ref="alterRef" />
+      <GlowAlert ref="alterRef" />
 
       <!-- 输入框组件 -->
       <GlowConfirmInput ref="inputRef" />
@@ -76,7 +76,7 @@ import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import ChatNpcList from "@/components/glow-client/ChatNpcList.vue";
 import type { GetNpcListVo } from '@/commons/api/NpcApi.ts';
 import ChatNpcThreadsModal from "@/components/glow-client/ChatNpcThreadsModal.vue";
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import { useRouter } from 'vue-router';
 import type { SelectThreadDto, SelectThreadVo, CreateThreadDto, CreateThreadVo } from '@/commons/api/ThreadApi';
 import ThreadApi from '@/commons/api/ThreadApi';
@@ -126,7 +126,7 @@ const hasTempMessage = ref<boolean>(false)
 // 是否正在加载消息
 const isLoadingMessages = ref<boolean>(false)
 
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null);
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null);
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 输入框引用

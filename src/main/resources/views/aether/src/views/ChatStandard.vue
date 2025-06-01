@@ -53,7 +53,7 @@
       <GlowConfirm ref="confirmRef" />
 
       <!-- 错误提示框组件 -->
-      <GlowAlter ref="alterRef" />
+      <GlowAlert ref="alterRef" />
 
       <!-- 输入框组件 -->
       <GlowConfirmInput ref="inputRef" />
@@ -73,7 +73,7 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue"
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue"
 import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
 import ConversationApi from "@/commons/api/ConversationApi";
@@ -124,7 +124,7 @@ const messages = ref<Array<{
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 // 错误提示框引用
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null)
 // 输入框引用
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 

@@ -225,7 +225,7 @@
       </GlowDiv>
       
       <!-- 添加提示组件 -->
-      <GlowAlter ref="alterRef" />
+      <GlowAlert ref="alterRef" />
       
       <!-- 添加确认对话框组件 -->
       <GlowConfirm ref="confirmRef" />
@@ -242,7 +242,7 @@ import GlowDiv from "@/components/glow-ui/GlowDiv.vue";
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/components/glow-ui/GlowTheme';
 import { inject } from 'vue';
 import ChatNpcListCreator from '@/components/glow-client/ChatNpcListCreator.vue';
-import GlowAlter from "@/components/glow-ui/GlowAlter.vue";
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue";
 import GlowInput from "@/components/glow-ui/GlowInput.vue";
 import GlowInputArea from "@/components/glow-ui/GlowInputArea.vue";
 import GlowButton from "@/components/glow-ui/GlowButton.vue";

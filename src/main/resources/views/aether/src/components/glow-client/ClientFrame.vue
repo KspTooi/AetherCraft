@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useThemeStore } from '../../stores/theme'
 import GlowConfirm from '../glow-ui/GlowConfirm.vue'
-import GlowAlter from '../glow-ui/GlowAlter.vue'
+import GlowAlert from '../glow-ui/GlowAlert.vue'
 import axios from 'axios'
 import ClientTopNav from './ClientTopNav.vue'
 import PlayerApi from "@/commons/api/PlayerApi"
@@ -11,7 +11,7 @@ import { usePlayerStore } from '@/stores/player'
 
 const brandName = ref('Project Glow')
 const logoutModal = ref<InstanceType<typeof GlowConfirm> | null>(null)
-const alterRef = ref<InstanceType<typeof GlowAlter> | null>(null)
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null)
 const router = useRouter()
 const playerStore = usePlayerStore()
 
@@ -153,7 +153,7 @@ onUnmounted(() => {
     </div>
     
     <GlowConfirm ref="logoutModal" />
-    <GlowAlter ref="alterRef" /> 
+    <GlowAlert ref="alterRef" />
   </div>
 </template>
 
