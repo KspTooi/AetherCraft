@@ -130,7 +130,7 @@ public class AdminModelVariantParamTemplateValueService {
                 throw new BizException("参数键已存在");
             }
         }
-        
+
         if (dto.getId() == null) {
             // 新增模式
             // 检查paramKey唯一性
@@ -148,7 +148,9 @@ public class AdminModelVariantParamTemplateValueService {
                 if (maxSeq == null) {
                     templateValue.setSeq(1);
                 }
-            } else {
+            }
+
+            if (dto.getSeq() != null) {
                 templateValue.setSeq(dto.getSeq());
             }
         }
