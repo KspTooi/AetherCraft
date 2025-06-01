@@ -1,8 +1,6 @@
 package com.ksptool.ql.biz.mapper;
 
-import com.ksptool.ql.biz.model.dto.ListPanelGroupDto;
 import com.ksptool.ql.biz.model.po.GroupPo;
-import com.ksptool.ql.biz.model.vo.ListPanelGroupVo;
 import com.ksptool.ql.biz.model.dto.GetGroupListDto;
 import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import org.springframework.data.domain.Page;
@@ -39,32 +37,10 @@ public interface GroupRepository extends JpaRepository<GroupPo, Long>, JpaSpecif
      * @return 最大排序号，如果没有记录则返回0
      */
     @Query("""
-            SELECT COALESCE(MAX(g.sortOrder), 0) 
+            SELECT COALESCE(MAX(g.sortOrder), 0)
             FROM GroupPo g
             """)
     Integer findMaxSortOrder();
-
-    /**
-     * 查询用户组列表，并统计权限数量
-     */
-    @Query("""
-            SELECT new com.ksptool.ql.biz.model.vo.ListPanelGroupVo(
-                g.id,
-                g.name,
-                g.code,
-                g.description,
-                g.status,
-                g.isSystem,
-                g.sortOrder,
-                CAST((SELECT COUNT(u) t FROM g.users u) AS int),
-                CAST((SELECT COUNT(p) t FROM g.permissions p) AS int)
-            )
-            FROM GroupPo g
-            WHERE (:#{#dto.name} IS NULL OR g.name LIKE %:#{#dto.name}%)
-            AND (:#{#dto.code} IS NULL OR g.code LIKE %:#{#dto.code}%)
-            AND (:#{#dto.description} IS NULL OR g.description LIKE %:#{#dto.description}%)
-            """)
-    Page<ListPanelGroupVo> getListView(@Param("dto") ListPanelGroupDto dto, Pageable pageable);
 
     @Query("""
             SELECT new com.ksptool.ql.biz.model.vo.GetGroupListVo(

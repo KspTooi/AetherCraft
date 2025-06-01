@@ -3,20 +3,14 @@ package com.ksptool.ql.biz.service.panel;
 import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.NpcChatExampleRepository;
 import com.ksptool.ql.biz.mapper.NpcRepository;
-import com.ksptool.ql.biz.model.dto.ListModelRoleDto;
 import com.ksptool.ql.biz.model.dto.SaveNpcDto;
 import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
-import com.ksptool.ql.biz.model.vo.ListModelRoleItemVo;
-import com.ksptool.ql.biz.model.vo.ListModelRoleVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.web.PageableView;
-import com.ksptool.ql.commons.web.SimpleExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,67 +27,9 @@ public class PanelNpcService {
     
     @Autowired
     private NpcChatExampleRepository npcChatExampleRepository;
+
     @Autowired
     private ContentSecurityService css;
-
-    /**
-     * 获取模型角色列表视图
-     * 
-     * @param dto 查询参数
-     * @return 模型角色列表视图
-     */
-    @Transactional(readOnly = true)
-    public ListModelRoleVo getListView(ListModelRoleDto dto) throws BizException {
-        // 创建视图对象
-        ListModelRoleVo vo = new ListModelRoleVo();
-        
-        // 设置DTO中的参数回显
-        vo.setId(dto.getId());
-        vo.setKeyword(dto.getKeyword());
-
-        NpcPo query = new NpcPo();
-        query.setName(dto.getKeyword());
-        query.setPlayer(Any.of().val("id",AuthService.getCurrentPlayerId()).as(PlayerPo.class));
-
-        SimpleExample<NpcPo> simpleExample = SimpleExample.of(query)
-                .like("name")
-                .orderByDesc("updateTime");
-
-        // 查询角色列表
-        Page<NpcPo> pagePos = npcRepository.findAll(simpleExample.get(),  dto.pageRequest().withSort(
-                simpleExample.getSort()
-        ));
-        
-        // 创建分页视图
-        PageableView<ListModelRoleItemVo> pageableView = new PageableView<>(pagePos,ListModelRoleItemVo.class);
-        
-        // 解密列表中的加密字段
-        for(ListModelRoleItemVo item : pageableView.getRows()) {
-            item.setDescription(css.decryptForCurUser(item.getDescription()));
-            item.setAvatarPath(css.decryptForCurUser(item.getAvatarPath()));
-        }
-
-        // 设置分页信息
-        vo.setRoleList(pageableView);
-        
-        // 如果有选中的角色ID，则查询角色详情
-        if (dto.getId() != null) {
-            NpcPo rolePo = npcRepository.findById(dto.getId()).orElse(null);
-            if (rolePo != null) {
-                // 将角色详情映射到VO
-                assign(rolePo, vo);
-                // 解密选中角色的加密字段
-                vo.setDescription(css.decryptForCurUser(vo.getDescription()));
-                vo.setAvatarPath(css.decryptForCurUser(vo.getAvatarPath()));
-                vo.setRoleSummary(css.decryptForCurUser(vo.getRoleSummary()));
-                vo.setScenario(css.decryptForCurUser(vo.getScenario()));
-                vo.setFirstMessage(css.decryptForCurUser(vo.getFirstMessage()));
-                vo.setTags(css.decryptForCurUser(vo.getTags()));
-            }
-        }
-        
-        return vo;
-    }
 
 
     /**

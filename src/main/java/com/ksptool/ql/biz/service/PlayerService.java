@@ -49,8 +49,8 @@ public class PlayerService {
 
     @Autowired
     private GlobalConfigService globalConfigService;
-    @Autowired
-    private GroupRepository groupRepository;
+
+
     @Autowired
     private PlayerDefaultGroupRepository playerDefaultGroupRepository;
 
