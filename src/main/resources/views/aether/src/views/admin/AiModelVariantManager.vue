@@ -211,16 +211,6 @@
         label-width="120px"
         :validate-on-rule-change="false"
       >
-        <!-- 编辑时显示的只读信息 -->
-        <template v-if="mode === 'update'">
-          <el-form-item label="创建时间">
-            <el-input :value="formatDateTime(details.createTime)" disabled />
-          </el-form-item>
-          <el-form-item label="修改时间">
-            <el-input :value="formatDateTime(details.updateTime)" disabled />
-          </el-form-item>
-        </template>
-
         <!-- 可编辑字段 -->
         <el-form-item label="模型代码" prop="code">
           <el-input 
