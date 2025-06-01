@@ -360,20 +360,6 @@ const dialogTitle = computed(() => {
   return '新增参数'
 })
 
-// 通用权限错误处理函数
-const handleApiError = (error: any, defaultMessage: string) => {
-  console.error(defaultMessage + ':', error)
-  
-  // 检查是否为权限相关错误，如果是则重新抛出让HTTP层处理重定向
-  const errorMessage = (error as any)?.message || String(error)
-  if (errorMessage.includes('权限不足') || errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
-    throw error // 重新抛出权限错误，让HTTP层处理重定向
-  }
-  
-  // 只有非权限错误才显示错误消息
-  ElMessage.error(defaultMessage)
-}
-
 // 获取参数类型名称
 const getTypeName = (type: number): string => {
   const typeNames = ['字符串', '整数', '布尔值', '浮点数']
@@ -395,8 +381,9 @@ const loadModelVariants = async () => {
       enabled: 1
     })
     modelVariants.value = result.rows
-  } catch (error) {
-    handleApiError(error, '加载模型变体列表失败')
+  } catch (error: any) {
+    console.error('加载模型变体列表失败:', error)
+    ElMessage.error(error.message || '加载模型变体列表失败')
   }
 }
 
@@ -414,8 +401,9 @@ const loadParamList = async () => {
     const result = await AdminModelVariantParamApi.getModelVariantParamList(query)
     list.value = result.rows
     total.value = result.count
-  } catch (error) {
-    handleApiError(error, '加载参数列表失败')
+  } catch (error: any) {
+    console.error('加载参数列表失败:', error)
+    ElMessage.error(error.message || '加载参数列表失败')
   } finally {
     loading.value = false
   }
@@ -425,11 +413,10 @@ const loadParamList = async () => {
 const resetQuery = () => {
   query.page = 1
   query.pageSize = 20
-  query.modelVariantId = ''
+  // 保留模型变体选择，只重置关键字
   query.keyword = null
-  // 重置后清空参数列表，不自动加载
-  list.value = []
-  total.value = 0
+  // 重置后重新加载参数列表
+  loadParamList()
 }
 
 // 打开新增对话框
@@ -465,8 +452,9 @@ const openUpdateGlobalModal = async (row: GetModelVariantParamListVo) => {
       seq: details.seq
     })
     dialogVisible.value = true
-  } catch (error) {
-    handleApiError(error, '加载参数详情失败')
+  } catch (error: any) {
+    console.error('加载参数详情失败:', error)
+    ElMessage.error(error.message || '加载参数详情失败')
   }
 }
 
@@ -531,8 +519,9 @@ const removeParam = async (row: GetModelVariantParamListVo, type: string = 'both
     
     ElMessage.success('删除成功')
     loadParamList()
-  } catch (error) {
-    handleApiError(error, '删除失败')
+  } catch (error: any) {
+    console.error('删除失败:', error)
+    ElMessage.error(error.message || '删除失败')
   }
 }
 
@@ -565,9 +554,13 @@ const submitForm = async () => {
     ElMessage.success(editMode.value ? '更新成功' : '保存成功')
     dialogVisible.value = false
     loadParamList()
-  } catch (error) {
+  } catch (error: any) {
     if (error === false) return // 表单验证失败
-    handleApiError(error, '保存失败')
+    
+    // 对于提交表单的错误，使用更具体的默认消息
+    const defaultMsg = editMode.value ? '更新失败' : '保存失败'
+    console.error(defaultMsg + ':', error)
+    ElMessage.error(error.message || defaultMsg)
   } finally {
     submitLoading.value = false
   }
