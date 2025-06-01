@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.controller.admin;
 
+import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
@@ -40,6 +41,14 @@ public class AdminModelVariantController {
         
         return Result.success(seriesList);
     }
+
+    @PostMapping("toggleModelVariant")
+    @RequirePermissionRest("admin:model:variant:save")
+    public Result<String> toggleModelVariant(@RequestBody @Valid AdminToggleModelVariantDto dto) throws BizException {
+        service.toggleModelVariant(dto);
+        return Result.success("批量切换模型变体状态成功");
+    }
+
 
     @PostMapping("getModelVariantList")
     @RequirePermissionRest("admin:model:variant:view")

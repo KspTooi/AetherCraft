@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ModelVariantRepository;
+import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
@@ -40,7 +41,6 @@ public class ModelVariantService {
         
         return vos;
     }
-
 
 
 
@@ -112,6 +112,37 @@ public class ModelVariantService {
                 .orElseThrow(() -> new BizException("要删除的模型变体不存在"));
 
         repository.delete(po);
+    }
+
+    /**
+     * 批量切换模型变体启用状态
+     * 
+     * @param dto 包含模型变体ID列表和目标启用状态的DTO
+     * @throws BizException 当找不到模型变体时抛出异常
+     */
+    @Transactional
+    public void toggleModelVariant(AdminToggleModelVariantDto dto) throws BizException {
+        if (dto.getIds() == null || dto.getIds().isEmpty()) {
+            throw new BizException("模型变体ID列表不能为空");
+        }
+        
+        if (dto.getEnabled() == null) {
+            throw new BizException("启用状态不能为空");
+        }
+        
+        // 批量查询所有要更新的模型变体
+        List<ModelVariantPo> modelVariants = repository.findAllById(dto.getIds());
+        
+        if (modelVariants.size() != dto.getIds().size()) {
+            throw new BizException("部分模型变体不存在，请检查ID列表");
+        }
+        
+        // 批量更新启用状态
+        for (ModelVariantPo po : modelVariants) {
+            po.setEnabled(dto.getEnabled());
+        }
+        
+        repository.saveAll(modelVariants);
     }
 
     /**
