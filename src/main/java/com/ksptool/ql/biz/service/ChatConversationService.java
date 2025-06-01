@@ -8,10 +8,10 @@ import com.ksptool.ql.biz.model.po.ChatThreadPo;
 import com.ksptool.ql.biz.model.po.NpcPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.record.CgiCallbackContext;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
@@ -67,11 +67,14 @@ public class ChatConversationService {
     @Autowired
     private NpcScriptService npcScriptService;
 
+    @Autowired
+    private ModelVariantService modelVariantService;
+
     @Transactional
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
 
         var player = AuthService.requirePlayer();
-        AIModelEnum model = AIModelEnum.ensureModelCodeExists(dto.getModelCode());
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
 
         ChatThreadPo threadPo = null;
 
@@ -252,7 +255,7 @@ public class ChatConversationService {
             throw new BizException("该会话正在处理中,请等待模型响应完成.");
         }
 
-        var model = AIModelEnum.ensureModelCodeExists(dto.getModelCode());
+        var model = modelVariantService.requireModelSchema(dto.getModelCode());
         ChatThreadPo threadPo = chatThreadService.getSelfThread(dto.getThreadId());
         threadPo.setModelCode(model.getCode());
 

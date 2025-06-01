@@ -1,6 +1,6 @@
 package com.ksptool.ql.restcgi.model;
 
-import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import lombok.Data;
 import okhttp3.OkHttpClient;
 
@@ -14,7 +14,7 @@ public class CgiChatParam {
     private String streamId;
 
     //模型枚举 必填
-    private AIModelEnum model;
+    private ModelVariantSchema model;
 
     //消息内容 必填
     private CgiChatMessage message;

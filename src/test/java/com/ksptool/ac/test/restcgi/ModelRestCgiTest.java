@@ -1,7 +1,6 @@
 package com.ksptool.ac.test.restcgi;
 
 import com.ksptool.ql.AetherLauncher;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.restcgi.model.CgiChatMessage;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;

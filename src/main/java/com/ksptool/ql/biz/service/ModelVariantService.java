@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
@@ -13,6 +14,7 @@ import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -193,5 +195,41 @@ public class ModelVariantService {
         
         return String.format("校验完成，所有 %d 个系统模型变体均已存在", existCount);
     }
+
+
+    /**
+     * 根据模型代码获取模型变体Schema
+     * @param modelCode 模型代码
+     * @return 模型变体Schema，如果不存在则返回null
+     */
+    public ModelVariantSchema getModelSchema(String modelCode){
+        ModelVariantPo query = new ModelVariantPo();
+        query.setCode(modelCode);
+        ModelVariantPo po = repository.findOne(Example.of(query)).orElse(null);
+        if (po == null) {
+            return null;
+        }
+        
+        return po.getSchema();
+    }
+
+    /**
+     * 根据模型代码获取模型变体Schema（必须存在）
+     * @param modelCode 模型代码
+     * @return 模型变体Schema
+     * @throws BizException 当模型变体不存在时抛出异常
+     */
+    public ModelVariantSchema requireModelSchema(String modelCode) throws BizException {
+        ModelVariantPo query = new ModelVariantPo();
+        query.setCode(modelCode);
+        ModelVariantPo po = repository.findOne(Example.of(query)).orElse(null);
+        if (po == null) {
+            throw new BizException("模型变体不存在或当前不可用: " + modelCode);
+        }
+        
+        return po.getSchema();
+    }
+
+
 
 }

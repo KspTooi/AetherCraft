@@ -9,12 +9,12 @@ import com.ksptool.ql.biz.model.dto.GetThreadListDto;
 import com.ksptool.ql.biz.model.dto.ModelChatParam;
 import com.ksptool.ql.biz.model.dto.SelectThreadDto;
 import com.ksptool.ql.biz.model.po.*;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadMessageVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.biz.service.contentsecurity.ContentSecurityService;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
@@ -61,10 +61,15 @@ public class ChatThreadService {
 
     @Autowired
     private ModelRestCgi restCgi;
+
     @Autowired
     private PlayerRepository playerRepository;
+
     @Autowired
     private NpcRepository npcRepository;
+
+    @Autowired
+    private ModelVariantService modelVariantService;
 
 
     //玩家选中Thread
@@ -89,7 +94,7 @@ public class ChatThreadService {
 
             //如果是NPC会话 则后端自动创建新会话
             if(dto.getNpcId() != null){
-                threadPo = createSelfNpcThread(AIModelEnum.ensureModelCodeExists(dto.getModelCode()),dto.getNpcId());
+                threadPo = createSelfNpcThread(modelVariantService.requireModelSchema(dto.getModelCode()),dto.getNpcId());
             }
             if(dto.getNpcId() == null){
                 throw new BizException("未能找到活跃会话");
@@ -269,7 +274,7 @@ public class ChatThreadService {
             }
 
             //获取Thread绑定的模型及其系列
-            AIModelEnum model = AIModelEnum.getByCode(threadPo.getModelCode());
+            ModelVariantSchema model = modelVariantService.requireModelSchema(threadPo.getModelCode());
 
             if(model == null){
                 log.warn("无法为会话 {} 生成标题 原因:Thread未配置modelCode", threadId);
@@ -333,7 +338,7 @@ public class ChatThreadService {
     }
 
     @Transactional(rollbackFor = BizException.class)
-    public ChatThreadPo createSelfThread(AIModelEnum model,int type) throws BizException {
+    public ChatThreadPo createSelfThread(ModelVariantSchema model,int type) throws BizException {
 
         if(type != 0 && type != 2){
             throw new BizException("对话类型只允许 标准会话、增强会话");
@@ -359,7 +364,7 @@ public class ChatThreadService {
     }
 
     @Transactional(rollbackFor = BizException.class)
-    public ChatThreadPo createSelfNpcThread(AIModelEnum model,Long npcId) throws BizException {
+    public ChatThreadPo createSelfNpcThread(ModelVariantSchema model, Long npcId) throws BizException {
 
         var playerPo = playerRepository.findById(AuthService.requirePlayerId())
                 .orElseThrow(() -> new BizException("Player不存在或无权访问"));

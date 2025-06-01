@@ -2,11 +2,12 @@ package com.ksptool.ql.biz.controller;
 
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ChatThreadPo;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.CreateThreadVo;
 import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatThreadService;
-import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -26,6 +27,9 @@ public class ChatThreadController {
     @Autowired
     private ChatThreadService service;
 
+    @Autowired
+    private ModelVariantService modelVariantService;
+
     //创建新的空NPC对话
     @PostMapping("/createThread")
     public Result<CreateThreadVo> createThread(@RequestBody @Valid CreateThreadDto dto) throws BizException {
@@ -34,7 +38,7 @@ public class ChatThreadController {
             throw new BizException("type错误");
         }
 
-        AIModelEnum model = AIModelEnum.ensureModelCodeExists(dto.getModelCode());
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
         ChatThreadPo threadPo = service.createSelfNpcThread(model, dto.getNpcId());
 
         var vo = new CreateThreadVo();

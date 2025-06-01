@@ -1,6 +1,8 @@
 package com.ksptool.ql.commons.enums;
 
 import lombok.Getter;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * AI模型系列枚举
@@ -115,15 +117,15 @@ public enum AiModelSeries {
     /**
      * 获取所有支持的模型系列代码
      * 
-     * @return 模型系列代码数组
+     * @return 模型系列代码列表
      */
-    public static String[] getAllCodes() {
+    public static List<String> getAllCodes() {
         AiModelSeries[] series = values();
         String[] codes = new String[series.length];
         for (int i = 0; i < series.length; i++) {
             codes[i] = series[i].getCode();
         }
-        return codes;
+        return Arrays.asList(codes);
     }
 
     /**

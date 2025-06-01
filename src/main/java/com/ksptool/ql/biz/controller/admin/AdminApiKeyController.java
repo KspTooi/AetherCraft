@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationListVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
 import com.ksptool.ql.biz.service.admin.AdminApiKeyService;
+import com.ksptool.ql.commons.enums.AiModelSeries;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RestController;
 import com.ksptool.ql.commons.exception.BizException;
-import com.ksptool.ql.commons.enums.AIModelEnum;
+
 import java.util.List;
 
 @RestController
@@ -29,7 +30,7 @@ public class AdminApiKeyController {
 
     @PostMapping("getSeriesList")
     public Result<List<String>> getSeriesList(){
-        return Result.success(AIModelEnum.getSeriesList());
+        return Result.success(AiModelSeries.getAllCodes());
     }
 
     @PostMapping("getApiKeyList")

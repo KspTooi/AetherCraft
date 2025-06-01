@@ -6,7 +6,6 @@ import com.ksptool.ql.biz.mapper.ApiKeyAuthorizationRepository;
 import com.ksptool.ql.biz.mapper.ModelApiKeyConfigRepository;
 import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.vo.*;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +38,9 @@ public class ApiKeyService {
     @Autowired
     private ApiKeyRepository apiKeyRepository;
 
+    @Autowired
+    private ModelVariantService modelVariantService;
+
 
     @Transactional
     public String getSelfApiKey(String modelCode) throws BizException {
@@ -60,7 +62,7 @@ public class ApiKeyService {
         if (config == null) {
 
             //查询该人物下是否拥有任意一个可用的密钥
-            List<AvailableApiKeyVo> availableApiKey = getCurrentPlayerAvailableApiKey(AIModelEnum.getByCode(modelCode).getSeries());
+            List<AvailableApiKeyVo> availableApiKey = getCurrentPlayerAvailableApiKey(modelVariantService.requireModelSchema(modelCode).getSeries());
 
             if(availableApiKey.isEmpty()){
                 throw new BizException("未找到模型API密钥配置");

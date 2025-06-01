@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.dto.SendMessageDto;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.ChatConversationService;
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -24,6 +25,9 @@ public class ChatConversationController {
 
     @Autowired
     private ChatConversationService service;
+
+    @Autowired
+    private ModelVariantService modelVariantService;
 
     @PostMapping("/sendMessage")
     public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {

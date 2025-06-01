@@ -36,10 +36,7 @@ public class AdminModelVariantController {
     @PostMapping("getModelSeries")
     public Result<List<String>> getModelSeries() {
         // 从AiModelSeries枚举获取所有系列代码
-        String[] seriesCodes = AiModelSeries.getAllCodes();
-        List<String> seriesList = Arrays.asList(seriesCodes);
-        
-        return Result.success(seriesList);
+        return Result.success(AiModelSeries.getAllCodes());
     }
 
     @PostMapping("toggleModelVariant")

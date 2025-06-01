@@ -8,9 +8,9 @@ import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.service.*;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import okhttp3.OkHttpClient;
@@ -51,12 +51,15 @@ public class AdminModelConfigService {
     @Autowired
     private ModelGrokService modelGrokService;
 
+    @Autowired
+    private ModelVariantService modelVariantService;
+
     private static final String GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     private static final String GROK_BASE_URL = "https://api.x.ai/v1/chat/completions";
 
     public GetAdminModelConfigVo getModelConfig(GetModelConfigDto dto) throws BizException {
 
-        AIModelEnum byCode = AIModelEnum.getByCode(dto.getModelCode());
+        ModelVariantSchema byCode = modelVariantService.getModelSchema(dto.getModelCode());
 
         if(byCode == null){
             throw new BizException("无效的模型代码:"+dto.getModelCode());
@@ -102,10 +105,7 @@ public class AdminModelConfigService {
     public void saveModelConfig(SaveAdminModelConfigDto dto) throws BizException{
 
         // 验证模型是否存在
-        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModelCode());
-        if (modelEnum == null) {
-            throw new IllegalArgumentException("无效的模型代码");
-        }
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
 
         // 获取当前人物ID
         Long playerId = AuthService.getCurrentPlayerId();
@@ -124,7 +124,7 @@ public class AdminModelConfigService {
             }
 
             // 保存模型API密钥配置
-            ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(modelEnum.getCode(),playerId);
+            ModelApiKeyConfigPo config = modelApiKeyConfigRepository.getByPlayerIdAnyModeCode(model.getCode(),playerId);
 
             if (config == null) {
                 config = new ModelApiKeyConfigPo();
@@ -137,7 +137,7 @@ public class AdminModelConfigService {
         }
 
         // 构建配置键前缀
-        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+        String baseKey = "ai.model.cfg." + model.getCode() + ".";
 
         // 保存其他配置
         playerConfigService.put(baseKey + "temperature", dto.getTemperature());
@@ -164,23 +164,21 @@ public class AdminModelConfigService {
     }
 
     public String testModelConnection(TestModelConnectionDto dto) throws BizException{
+
         // 验证模型是否存在
-        AIModelEnum modelEnum = AIModelEnum.getByCode(dto.getModelCode());
-        if (modelEnum == null) {
-            throw new BizException("无效的模型代码");
-        }
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
 
         // 获取当前玩家ID
         Long playerId = AuthService.getCurrentPlayerId();
 
         // 获取API密钥
-        String apiKey = apiKeyService.getApiKey(modelEnum.getCode(), playerId);
+        String apiKey = apiKeyService.getApiKey(model.getCode(), playerId);
         if (StringUtils.isBlank(apiKey)) {
             throw new BizException("未配置API Key，请先选择API Key并保存配置");
         }
 
         // 构建配置键前缀
-        String baseKey = "ai.model.cfg." + modelEnum.getCode() + ".";
+        String baseKey = "ai.model.cfg." + model.getCode() + ".";
 
         // 获取代理配置 - 首先检查用户级别的代理配置
         String proxyConfig = playerConfigService.getString("model.proxy.config", null);
@@ -203,7 +201,7 @@ public class AdminModelConfigService {
 
             // 创建请求参数
             ModelChatParam modelChatParam = new ModelChatParam();
-            modelChatParam.setModelCode(modelEnum.getCode());
+            modelChatParam.setModelCode(model.getCode());
             modelChatParam.setMessage("你好，这是一条测试消息，请简短回复。");
             modelChatParam.setTemperature(temperature);
             modelChatParam.setTopP(topP);
@@ -213,12 +211,12 @@ public class AdminModelConfigService {
             modelChatParam.setSystemPrompt("你是一个有用的AI助手。这是一条测试消息，请简短回复。");
 
             // 根据模型类型设置不同的URL并调用相应的服务
-            if (modelEnum.getCode().contains("grok")) {
+            if (model.getCode().contains("grok")) {
                 modelChatParam.setUrl(GROK_BASE_URL);
                 modelChatParam.setApiKey(apiKey);
                 return modelGrokService.sendMessageSync(client, modelChatParam);
-            } else if (modelEnum.getCode().contains("gemini")) {
-                modelChatParam.setUrl(GEMINI_BASE_URL + modelEnum.getCode() + ":generateContent");
+            } else if (model.getCode().contains("gemini")) {
+                modelChatParam.setUrl(GEMINI_BASE_URL + model.getCode() + ":generateContent");
                 modelChatParam.setApiKey(apiKey);
                 return modelGeminiService.sendMessageSync(client, modelChatParam);
             } else {

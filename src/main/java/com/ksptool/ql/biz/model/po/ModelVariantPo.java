@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.model.po;
 
 
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
@@ -8,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+
+import static com.ksptool.entities.Entities.as;
 
 @Entity
 @Table(name = "model_variant", indexes = {
@@ -73,5 +76,9 @@ public class ModelVariantPo {
     @Column(name = "update_time",nullable = false)
     @Comment("更新时间")
     private Date updateTime;
+
+    public ModelVariantSchema getSchema() {
+        return as(this, ModelVariantSchema.class);
+    }
 
 }

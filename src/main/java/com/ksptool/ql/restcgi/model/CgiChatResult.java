@@ -1,19 +1,13 @@
 package com.ksptool.ql.restcgi.model;
 
-import com.ksptool.ql.commons.enums.AIModelEnum;
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import lombok.Data;
 
 @Data
 public class CgiChatResult {
 
-
-
-
-
-
-
     //模型枚举
-    private AIModelEnum model;
+    private ModelVariantSchema model;
 
     //返回类型 0:数据 1:结束 2:错误
     private int type;

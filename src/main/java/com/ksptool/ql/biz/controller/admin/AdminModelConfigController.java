@@ -5,8 +5,9 @@ import com.ksptool.ql.biz.model.dto.SaveAdminModelConfigDto;
 import com.ksptool.ql.biz.model.dto.TestModelConnectionDto;
 import com.ksptool.ql.biz.model.vo.GetAdminModelConfigVo;
 import com.ksptool.ql.biz.model.vo.GetAvailableModelVo;
+import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.admin.AdminModelConfigService;
-import com.ksptool.ql.commons.enums.AIModelEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -26,14 +27,19 @@ public class AdminModelConfigController {
     @Autowired
     private AdminModelConfigService service;
 
+    @Autowired
+    private ModelVariantService modelVariantService;
+
     @PostMapping("getAvailableModels")
     public Result<List<GetAvailableModelVo>> getAvailableModels() {
         List<GetAvailableModelVo> modelList = new ArrayList<>();
 
-        for (AIModelEnum model : AIModelEnum.values()) {
+        List<GetModelVariantListVo> variantList = modelVariantService.getClientModelVariantList();
+
+        for (var variant : variantList) {
             GetAvailableModelVo vo = new GetAvailableModelVo();
-            vo.setModelCode(model.getCode());
-            vo.setModelName(model.getName());
+            vo.setModelCode(variant.getCode());
+            vo.setModelName(variant.getName());
             modelList.add(vo);
         }
 
