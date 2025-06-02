@@ -52,6 +52,8 @@ public enum PermissionEnum {
     PANEL_MAINTAIN_VIEW("panel:maintain:view", "管理台:访问维护工具"),
     PANEL_MAINTAIN_PERMISSION("panel:maintain:permission", "管理台:校验系统权限"),
 
+
+
     /**
      * 管理台权限(Admin)
      */
@@ -96,26 +98,27 @@ public enum PermissionEnum {
     //模型变体管理
     ADMIN_MODEL_VARIANT_VIEW("admin:model:variant:view", "查看模型变体"),
     ADMIN_MODEL_VARIANT_SAVE("admin:model:variant:save", "新增/编辑模型变体"),
-    ADMIN_MODEL_VARIANT_DELETE("admin:model:variant:delete", "删除模型变体"),
+    ADMIN_MODEL_VARIANT_REMOVE("admin:model:variant:remove", "删除模型变体"),
 
     //模型变体参数管理
     ADMIN_MODEL_VARIANT_PARAM_VIEW("admin:model:variant:param:view", "查看模型变体参数"),
     ADMIN_MODEL_VARIANT_PARAM_SAVE_GLOBAL("admin:model:variant:param:save:global", "新增/编辑全局模型变体参数"),
-    ADMIN_MODEL_VARIANT_PARAM_SAVE_SELF("admin:model:variant:param:save:self", "新增/编辑个人模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_SAVE_SELF("admin:model:variant:param:save:player", "新增/编辑个人模型变体参数"),
     ADMIN_MODEL_VARIANT_PARAM_REMOVE_GLOBAL("admin:model:variant:param:remove:global", "删除全局模型变体参数"),
-    ADMIN_MODEL_VARIANT_PARAM_REMOVE_SELF("admin:model:variant:param:remove:self", "删除个人模型变体参数"),
+    ADMIN_MODEL_VARIANT_PARAM_REMOVE_SELF("admin:model:variant:param:remove:player", "删除个人模型变体参数"),
 
     //模型变体参数模板管理
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VIEW("admin:model:variant:param:template:view", "查看模型变体参数模板"),
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_SAVE("admin:model:variant:param:template:save", "新增/编辑模型变体参数模板"),
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_DELETE("admin:model:variant:param:template:delete", "删除模型变体参数模板"),
-    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_APPLY("admin:model:variant:param:template:apply", "应用模型变体参数模板"),
+    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_APPLY_GLOBAL("admin:model:variant:param:template:apply:global", "应用参数模板到全局"),
+    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_APPLY_PLAYER("admin:model:variant:param:template:apply:player", "应用参数模板到个人"),
 
     //模型变体参数模板值管理
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_VIEW("admin:model:variant:param:template:value:view", "查看模型变体参数模板值"),
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_SAVE("admin:model:variant:param:template:value:save", "新增/编辑模型变体参数模板值"),
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_DELETE("admin:model:variant:param:template:value:delete", "删除模型变体参数模板值"),
-
+    
     //系统维护  
     ADMIN_MAINTAIN_PERMISSION("admin:maintain:permission", "校验系统权限"),
     ADMIN_MAINTAIN_GROUP("admin:maintain:group", "校验系统用户组"),

@@ -183,6 +183,13 @@ public class AdminModelVariantParamService {
                     .orElseThrow(() -> new BizException("用户不存在"));
             player = playerRepository.findById(currentPlayerId)
                     .orElseThrow(() -> new BizException("玩家不存在"));
+
+            // 检查是否存在对应的全局参数
+            ModelVariantParamPo globalParam = repository.findByModelVariantIdAndParamKeyAndUserIsNullAndPlayerIsNull(
+                    dto.getModelVariantId(), dto.getParamKey());
+            if (globalParam == null) {
+                throw new BizException("无法添加个人参数：对应的全局参数不存在");
+            }
         }
 
         // 通过三要素查找现有参数

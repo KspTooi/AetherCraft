@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.service.ModelVariantService;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.enums.AiModelSeries;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -68,7 +69,7 @@ public class AdminModelVariantController {
     }
 
     @PostMapping("removeModelVariant")
-    @RequirePermissionRest("admin:model:variant:delete")
+    @RequirePermissionRest("admin:model:variant:remove")
     public Result<String> removeModelVariant(@RequestBody @Valid CommonIdDto dto) throws BizException {
         service.removeModelVariant(dto.getId());
         return Result.success("success");
@@ -80,17 +81,25 @@ public class AdminModelVariantController {
      * @return 操作结果
      */
     @PostMapping("applyModelVariantParamTemplate")
-    @RequirePermissionRest("admin:model:variant:param:template:apply")
     public Result<String> applyModelVariantParamTemplate(@RequestBody @Valid ApplyModelVariantParamTemplateDto dto) throws BizException {
-        try {
-            service.applyModelVariantParamTemplate(dto);
-            if (dto.getGlobal() == 1) {
+
+        if (dto.getGlobal() == 0) {
+            if (AuthService.hasPermission("admin:model:variant:param:template:apply:player")) {
+                service.applyModelVariantParamTemplate(dto);
+                return Result.success("应用模板为个人参数成功");
+            }
+            throw new BizException("权限不足：无法应用个人参数模板");
+        }
+
+        if (dto.getGlobal() == 1) {
+            if (AuthService.hasPermission("admin:model:variant:param:template:apply:global")) {
+                service.applyModelVariantParamTemplate(dto);
                 return Result.success("应用模板为全局默认参数成功");
             }
-            return Result.success("应用模板为个人参数成功");
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
+            throw new BizException("权限不足：无法应用全局参数模板");
         }
+
+        return Result.error("应用模板失败 未知的操作符:"+dto.getGlobal());
     }
 
 }

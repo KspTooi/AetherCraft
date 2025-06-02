@@ -64,26 +64,23 @@ public class AdminModelVariantParamController {
      */
     @PostMapping("saveModelVariantParam")
     public Result<String> saveModelVariantParam(@RequestBody @Valid SaveModelVariantParamDto dto) throws BizException {
-        try {
-            // 根据global参数动态判断权限
-            if (dto.getGlobal() == 1) {
-                // 全局参数需要全局权限
-                if (!AuthService.hasPermission("admin:model:variant:param:save:global")) {
-                    return Result.error("无权限操作全局参数");
-                }
+        if (dto.getGlobal() == 1) {
+            if (AuthService.hasPermission("admin:model:variant:param:save:global")) {
+                service.saveModelVariantParam(dto);
+                return Result.success("保存参数配置成功");
             }
-            if (dto.getGlobal() == 0) {
-                // 个人参数需要个人权限
-                if (!AuthService.hasPermission("admin:model:variant:param:save:self")) {
-                    return Result.error("无权限操作个人参数");
-                }
-            }
-            
-            service.saveModelVariantParam(dto);
-            return Result.success("保存参数配置成功");
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
+            throw new BizException("无权限操作全局参数");
         }
+
+        if (dto.getGlobal() == 0) {
+            if (AuthService.hasPermission("admin:model:variant:param:save:self")) {
+                service.saveModelVariantParam(dto);
+                return Result.success("保存参数配置成功");
+            }
+            throw new BizException("无权限操作个人参数");
+        }
+
+        return Result.error("保存参数配置失败 未知的操作符:" + dto.getGlobal());
     }
 
     /**
@@ -93,26 +90,23 @@ public class AdminModelVariantParamController {
      */
     @PostMapping("removeModelVariantParam")
     public Result<String> removeModelVariantParam(@RequestBody @Valid RemoveModelVariantParamDto dto) throws BizException {
-        try {
-            // 根据global参数动态判断权限
-            if (dto.getGlobal() == 1) {
-                // 删除全局参数需要全局权限
-                if (!AuthService.hasPermission("admin:model:variant:param:remove:global")) {
-                    return Result.error("无权限删除全局参数");
-                }
+        if (dto.getGlobal() == 1) {
+            if (AuthService.hasPermission("admin:model:variant:param:remove:global")) {
+                service.removeModelVariantParam(dto);
+                return Result.success("删除参数配置成功");
             }
-            if (dto.getGlobal() == 0) {
-                // 删除个人参数需要个人权限
-                if (!AuthService.hasPermission("admin:model:variant:param:remove:player")) {
-                    return Result.error("无权限删除个人参数");
-                }
-            }
-            
-            service.removeModelVariantParam(dto);
-            return Result.success("删除参数配置成功");
-        } catch (BizException e) {
-            return Result.error(e.getMessage());
+            throw new BizException("无权限删除全局参数");
         }
+
+        if (dto.getGlobal() == 0) {
+            if (AuthService.hasPermission("admin:model:variant:param:remove:player")) {
+                service.removeModelVariantParam(dto);
+                return Result.success("删除参数配置成功");
+            }
+            throw new BizException("无权限删除个人参数");
+        }
+
+        return Result.error("删除参数配置失败 未知的操作符:" + dto.getGlobal());
     }
 
 } 
