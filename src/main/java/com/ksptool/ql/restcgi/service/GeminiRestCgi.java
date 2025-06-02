@@ -26,6 +26,10 @@ public class GeminiRestCgi implements ModelRestCgi {
     public CgiChatResult sendMessage(CgiChatParam p) throws BizException {
 
         var req = new GeminiRequest(p);
+
+        //加载Variant参数
+        req.getGenerationConfig().putAll(p.getVariantParam());
+
         String jsonBody = gson.toJson(req);
 
         // 创建请求对象
@@ -77,6 +81,10 @@ public class GeminiRestCgi implements ModelRestCgi {
     public void sendMessage(CgiChatParam p, Consumer<CgiChatResult> callback) throws BizException {
 
         var req = new GeminiRequest(p);
+
+        //加载Variant参数
+        req.getGenerationConfig().putAll(p.getVariantParam());
+
         String jsonBody = gson.toJson(req);
 
         //创建请求对象

@@ -5,7 +5,9 @@ import lombok.Data;
 import okhttp3.OkHttpClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class CgiChatParam {
@@ -42,5 +44,8 @@ public class CgiChatParam {
 
     //用于发起REST请求的HttpClient (CGI自动获取 可被覆盖)
     private OkHttpClient httpClient;
+
+    //API可选参数 (为null时CGI将自动获取)
+    private Map<String,String> variantParam;
 
 }

@@ -1,20 +1,27 @@
 package com.ksptool.ql.restcgi.service;
 
+import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.exception.ModelSeriesNotExistsException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
 import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Primary;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
 import java.util.function.Consumer;
+
 
 @Primary
 @Service
+@Slf4j
 public class AutoSelectorModelCgi implements ModelRestCgi {
 
     @Autowired
@@ -38,6 +45,9 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     @Autowired
     private PlayerConfigService playerConfigService;
 
+    @Autowired
+    private ModelVariantService variantService;
+
 
     @Override
     public CgiChatResult sendMessage(CgiChatParam param) throws BizException {
@@ -58,7 +68,18 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
     }
 
     private void selectModelSettings(CgiChatParam param){
+
         var modelCode = param.getModel().getCode();
+
+        //填充可选参数
+        if(param.getVariantParam() == null){
+            try {
+                param.setVariantParam(variantService.getVariantParam(param.getModel().getId()));
+            } catch (Exception e) {
+                log.error(e.getMessage(),e);
+                log.error("获取模型参数时出现授权异常");
+            }
+        }
 
         // 只在参数为-1时自动获取配置
         if (param.getTemperature() == -1) {

@@ -4,10 +4,12 @@ import com.ksptool.ql.biz.model.dto.ModelChatParamHistory;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatMessage;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 @Data
@@ -125,8 +127,9 @@ public class GeminiRequest {
         private String threshold;
     }
 
+    @EqualsAndHashCode(callSuper = true)
     @Data
-    public static class GenerationConfig {
+    public static class GenerationConfig extends HashMap<String, String> {
         private List<String> stopSequences;
         private Double temperature;
         private Integer maxOutputTokens;

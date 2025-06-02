@@ -1,5 +1,6 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ModelVariantRepository;
 import com.ksptool.ql.biz.mapper.ModelVariantParamRepository;
 import com.ksptool.ql.biz.mapper.ModelVariantParamTemplateRepository;
@@ -33,8 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 import static com.ksptool.entities.Entities.assign;
 
@@ -406,6 +410,59 @@ public class ModelVariantService {
                 modelVariantParamRepository.saveAll(newParams);
             }
         }
+    }
+
+
+
+    /**
+     * 获取该模型变体下的有效参数
+     */
+    public Map<String,String> getVariantParam(long modelVariantId) throws AuthException {
+        return getVariantParam(modelVariantId, AuthService.requireUserId(), AuthService.requirePlayerId());
+    }
+
+    /**
+     * 获取该模型变体下的有效参数
+     * @param modelVariantId 模型变体ID
+     * @param userId 用户ID
+     * @param playerId 玩家ID
+     * @return 组合后的参数Map，个人参数将覆盖全局参数
+     */
+    public Map<String,String> getVariantParam(long modelVariantId, long userId, long playerId) {
+
+        var player = Any.of().val("id",playerId).as(PlayerPo.class);
+        var user = Any.of().val("id",userId).as(UserPo.class);
+        var model = Any.of().val("id",modelVariantId).as(ModelVariantPo.class);
+
+        //先获取个人参数
+        var query = new ModelVariantParamPo();
+        query.setPlayer(player);
+        query.setUser(user);
+        query.setModelVariant(model);
+
+        List<ModelVariantParamPo> playerParamList = modelVariantParamRepository.findAll(Example.of(query));
+
+        //再获取全局参数
+        List<ModelVariantParamPo> globalParamList = modelVariantParamRepository.findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+
+        //组合参数 个人参数将覆盖全局参数
+        var map = new HashMap<String,String>();
+        
+        // 先添加全局参数
+        if (!globalParamList.isEmpty()) {
+            for (ModelVariantParamPo param : globalParamList) {
+                map.put(param.getParamKey(), param.getParamVal());
+            }
+        }
+        
+        // 再添加个人参数(会覆盖同名的全局参数)
+        if (!playerParamList.isEmpty()) {
+            for (ModelVariantParamPo param : playerParamList) {
+                map.put(param.getParamKey(), param.getParamVal());
+            }
+        }
+
+        return map;
     }
 
 }
