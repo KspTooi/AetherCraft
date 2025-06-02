@@ -57,12 +57,27 @@
             resizable
           />
           <el-table-column 
-            prop="typeName" 
             label="类型" 
             width="100"
             align="center"
             resizable
-          />
+          >
+            <template #default="scope">
+              <el-tooltip 
+                :content="getTypeDescription(scope.row.type)" 
+                placement="top"
+              >
+                <el-tag
+                  :type="getTypeTagType(scope.row.type)"
+                  size="small"
+                  effect="light"
+                  class="type-tag"
+                >
+                  {{ getTypeNameText(scope.row.type) }}
+                </el-tag>
+              </el-tooltip>
+            </template>
+          </el-table-column>
           <el-table-column 
             prop="description" 
             label="描述" 
@@ -150,7 +165,6 @@
             <el-input 
               v-model="valueForm.paramKey" 
               placeholder="请输入参数键"
-              :disabled="valueEditMode"
               maxlength="128"
               show-word-limit
             />
@@ -159,13 +173,23 @@
             <el-select 
               v-model="valueForm.type" 
               placeholder="请选择参数类型"
-              :disabled="valueEditMode"
               style="width: 100%"
             >
-              <el-option label="String" :value="0" />
-              <el-option label="Integer" :value="1" />
-              <el-option label="Boolean" :value="2" />
-              <el-option label="Float" :value="3" />
+              <el-option 
+                v-for="(typeName, typeValue) in typeOptions" 
+                :key="Number(typeValue)" 
+                :label="typeName" 
+                :value="Number(typeValue)"
+              >
+                <el-tag 
+                  :type="getTypeTagType(Number(typeValue))" 
+                  size="small" 
+                  effect="light"
+                  class="type-tag"
+                >
+                  {{ typeName }}
+                </el-tag>
+              </el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="参数值" prop="paramVal">
@@ -284,6 +308,14 @@ const valueFormRules = {
   ]
 }
 
+// 类型选项
+const typeOptions = {
+  0: '字符串',
+  1: '整数',
+  2: '布尔值',
+  3: '浮点'
+}
+
 // 监听templateId变化，重新加载列表
 watch(() => props.templateId, (newId) => {
   if (newId) {
@@ -333,7 +365,7 @@ const openUpdateModal = async (row: GetModelVariantParamTemplateValueVo) => {
     Object.assign(valueForm, {
       id: details.id,
       templateId: details.templateId,
-      paramKey: details.paramKey,
+      paramKey: details.paramKey, // 允许编辑模式下修改参数键
       paramVal: details.paramVal,
       type: details.type,
       description: details.description,
@@ -419,6 +451,39 @@ const handleClose = () => {
   emit('update:visible', false);
 }
 
+// 类型映射函数
+const getTypeNameText = (type: number): string => {
+  const typeMap: Record<number, string> = {
+    0: '字符串',
+    1: '整数',
+    2: '布尔值',
+    3: '浮点'
+  }
+  return typeMap[type] || '未知类型'
+}
+
+// 获取类型描述
+const getTypeDescription = (type: number): string => {
+  const typeDescMap: Record<number, string> = {
+    0: '字符串类型 (String)',
+    1: '整数类型 (Integer)',
+    2: '布尔类型 (Boolean)',
+    3: '浮点类型 (Float)'
+  }
+  return typeDescMap[type] || '未知类型'
+}
+
+// 获取类型标签样式
+const getTypeTagType = (type: number): string => {
+  const typeTagMap: Record<number, string> = {
+    0: 'info',     // 字符串 - 蓝色
+    1: 'success',  // 整数 - 绿色
+    2: 'warning',  // 布尔值 - 黄色
+    3: 'danger'    // 浮点 - 红色
+  }
+  return typeTagMap[type] || ''
+}
+
 // 初始化
 onMounted(() => {
   // 初始加载在watch中处理了，因为需要props.templateId
@@ -462,6 +527,14 @@ onMounted(() => {
 
 .dialog-footer {
   text-align: right;
+}
+
+.type-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  min-width: 60px;
+  display: inline-block;
+  text-align: center;
 }
 
 /* 响应式布局 */

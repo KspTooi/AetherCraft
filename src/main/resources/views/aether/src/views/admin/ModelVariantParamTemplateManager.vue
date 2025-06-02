@@ -27,6 +27,17 @@
       </div>
     </div>
 
+    <!-- 用户指南 -->
+    <div class="user-guide">
+      <el-alert
+        type="info"
+        :closable="false"
+        show-icon
+      >
+        <p>本页面管理AI模型变体参数模板，可预先配置一组参数，并批量应用至多个模型变体。</p>
+      </el-alert>
+    </div>
+
     <!-- 模板列表 -->
     <div class="template-table">
       <el-table
@@ -410,6 +421,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+}
+
+.user-guide {
+  margin-bottom: 20px;
 }
 
 .add-button-container {

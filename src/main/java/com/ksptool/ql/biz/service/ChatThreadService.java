@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -306,10 +307,14 @@ public class ChatThreadService {
             p.setModel(model);
             p.setApikey(apiKeyService.getApiKey(model.getCode(),playerId));
             p.setHttpClient(HttpClientUtils.createHttpClient(playerConfigService.getSelfProxyUrl(playerId), 30));
-            p.setTemperature(0.7);
-            p.setTopP(1);
-            p.setTopK(40);
-            p.setMaxOutputTokens(128);
+            //p.setTemperature(0.7);
+            //p.setTopP(1);
+            //p.setTopK(40);
+            //p.setMaxOutputTokens(128);
+            HashMap<String, String> vp = new HashMap<>();
+            vp.put("generationConfig.maxOutputTokens","64");
+            vp.put("max_completion_tokens","64");
+            p.setVariantParam(vp);
             p.setMessage(new CgiChatMessage(prompt.execute()));
             CgiChatResult result = restCgi.sendMessage(p);
 
