@@ -18,16 +18,6 @@ export interface SaveModelVariantParamTemplateDto {
     name: string; // 模板名称，必填
 }
 
-export interface ApplyModelVariantParamTemplateToGlobalDto {
-    templateId: string; // 模板ID，必填 (Long -> string)
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
-}
-
-export interface ApplyModelVariantParamTemplateToPersonalDto {
-    templateId: string; // 模板ID，必填 (Long -> string)
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
-}
-
 // --- VOs ---
 
 export interface GetModelVariantParamTemplateListVo {
@@ -75,20 +65,6 @@ export default {
      */
     removeModelVariantParamTemplate: async (dto: CommonIdDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/model/variant/param/template/removeModelVariantParamTemplate', dto);
-    },
-
-    /**
-     * 应用模板为全局默认参数
-     */
-    applyModelVariantParamTemplateToGlobal: async (dto: ApplyModelVariantParamTemplateToGlobalDto): Promise<string> => {
-        return await Http.postEntity<string>('/admin/model/variant/param/template/applyModelVariantParamTemplateToGlobal', dto);
-    },
-
-    /**
-     * 应用模板为个人参数
-     */
-    applyModelVariantParamTemplateToPersonal: async (dto: ApplyModelVariantParamTemplateToPersonalDto): Promise<string> => {
-        return await Http.postEntity<string>('/admin/model/variant/param/template/applyModelVariantParamTemplateToPersonal', dto);
     }
 
 }; 

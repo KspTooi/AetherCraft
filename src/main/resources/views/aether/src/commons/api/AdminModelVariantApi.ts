@@ -29,6 +29,12 @@ export interface AdminToggleModelVariantDto {
     enabled: number; // 启用状态 0:禁用 1:启用
 }
 
+export interface ApplyModelVariantParamTemplateDto {
+    templateId: string; // 模板ID，必填 (Long -> string)
+    modelVariantIds: string[]; // 模型变体ID列表，支持批量 (Long[] -> string[])
+    global: number; // 应用范围：0=个人参数, 1=全局参数
+}
+
 // --- VOs ---
 
 export interface GetAdminModelSeriesListVo {
@@ -104,6 +110,13 @@ export default {
      */
     removeModelVariant: async (dto: CommonIdDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/model/variant/removeModelVariant', dto);
+    },
+
+    /**
+     * 应用参数模板到模型变体（支持批量应用和全局/个人参数选择）
+     */
+    applyModelVariantParamTemplate: async (dto: ApplyModelVariantParamTemplateDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/applyModelVariantParamTemplate', dto);
     }
 
 };
