@@ -288,10 +288,6 @@ public class ModelVariantService {
 
         // 获取模板的所有参数值
         List<ModelVariantParamTemplateValuePo> templateValues = templateValueRepository.findByTemplateIdOrderBySeq(dto.getTemplateId());
-        
-        if (templateValues == null || templateValues.isEmpty()) {
-            throw new BizException("模板无参数值，无法应用");
-        }
 
         // 根据global参数决定应用范围
         if (dto.getGlobal() == 1) {
@@ -306,22 +302,24 @@ public class ModelVariantService {
                     modelVariantParamRepository.deleteAll(existingGlobalParams);
                 }
 
-                // 第二步：从模板创建新的全局默认参数记录
-                ModelVariantPo modelVariant = new ModelVariantPo();
-                modelVariant.setId(modelVariantId);
+                // 第二步：如果模板有参数值，从模板创建新的全局默认参数记录
+                if (templateValues != null && !templateValues.isEmpty()) {
+                    ModelVariantPo modelVariant = new ModelVariantPo();
+                    modelVariant.setId(modelVariantId);
 
-                for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
-                    ModelVariantParamPo newParam = new ModelVariantParamPo();
-                    newParam.setModelVariant(modelVariant);
-                    newParam.setParamKey(templateValue.getParamKey());
-                    newParam.setParamVal(templateValue.getParamVal());
-                    newParam.setType(templateValue.getType());
-                    newParam.setDescription(templateValue.getDescription());
-                    newParam.setSeq(templateValue.getSeq());
-                    // user和player为null表示全局参数
-                    newParam.setUser(null);
-                    newParam.setPlayer(null);
-                    newParams.add(newParam);
+                    for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
+                        ModelVariantParamPo newParam = new ModelVariantParamPo();
+                        newParam.setModelVariant(modelVariant);
+                        newParam.setParamKey(templateValue.getParamKey());
+                        newParam.setParamVal(templateValue.getParamVal());
+                        newParam.setType(templateValue.getType());
+                        newParam.setDescription(templateValue.getDescription());
+                        newParam.setSeq(templateValue.getSeq());
+                        // user和player为null表示全局参数
+                        newParam.setUser(null);
+                        newParam.setPlayer(null);
+                        newParams.add(newParam);
+                    }
                 }
             }
             
@@ -351,22 +349,24 @@ public class ModelVariantService {
                     modelVariantParamRepository.deleteAll(existingPlayerParams);
                 }
 
-                // 第二步：从模板创建新的玩家自定义参数记录
-                ModelVariantPo modelVariant = new ModelVariantPo();
-                modelVariant.setId(modelVariantId);
+                // 第二步：如果模板有参数值，从模板创建新的玩家自定义参数记录
+                if (templateValues != null && !templateValues.isEmpty()) {
+                    ModelVariantPo modelVariant = new ModelVariantPo();
+                    modelVariant.setId(modelVariantId);
 
-                for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
-                    ModelVariantParamPo newParam = new ModelVariantParamPo();
-                    newParam.setModelVariant(modelVariant);
-                    newParam.setParamKey(templateValue.getParamKey());
-                    newParam.setParamVal(templateValue.getParamVal());
-                    newParam.setType(templateValue.getType());
-                    newParam.setDescription(templateValue.getDescription());
-                    newParam.setSeq(templateValue.getSeq());
-                    // 设置当前用户和玩家
-                    newParam.setUser(user);
-                    newParam.setPlayer(player);
-                    newParams.add(newParam);
+                    for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
+                        ModelVariantParamPo newParam = new ModelVariantParamPo();
+                        newParam.setModelVariant(modelVariant);
+                        newParam.setParamKey(templateValue.getParamKey());
+                        newParam.setParamVal(templateValue.getParamVal());
+                        newParam.setType(templateValue.getType());
+                        newParam.setDescription(templateValue.getDescription());
+                        newParam.setSeq(templateValue.getSeq());
+                        // 设置当前用户和玩家
+                        newParam.setUser(user);
+                        newParam.setPlayer(player);
+                        newParams.add(newParam);
+                    }
                 }
             }
             
