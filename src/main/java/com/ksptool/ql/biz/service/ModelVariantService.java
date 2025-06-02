@@ -31,6 +31,8 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -56,6 +58,9 @@ public class ModelVariantService {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<GetModelVariantListVo> getClientModelVariantList(){
         // 查询所有启用的模型变体，按排序号和创建时间排序
@@ -141,6 +146,7 @@ public class ModelVariantService {
                 .orElseThrow(() -> new BizException("要删除的模型变体不存在"));
 
         repository.delete(po);
+        entityManager.flush();
     }
 
     /**
@@ -301,7 +307,12 @@ public class ModelVariantService {
                 if (!existingGlobalParams.isEmpty()) {
                     modelVariantParamRepository.deleteAll(existingGlobalParams);
                 }
-
+            }
+            
+            // 强制刷新删除操作到数据库
+            entityManager.flush();
+            
+            for (Long modelVariantId : dto.getModelVariantIds()) {
                 // 第二步：如果模板有参数值，从模板创建新的全局默认参数记录
                 if (templateValues != null && !templateValues.isEmpty()) {
                     ModelVariantPo modelVariant = new ModelVariantPo();
@@ -348,7 +359,12 @@ public class ModelVariantService {
                 if (!existingPlayerParams.isEmpty()) {
                     modelVariantParamRepository.deleteAll(existingPlayerParams);
                 }
+            }
+            
+            // 强制刷新删除操作到数据库
+            entityManager.flush();
 
+            for (Long modelVariantId : dto.getModelVariantIds()) {
                 // 第二步：如果模板有参数值，从模板创建新的玩家自定义参数记录
                 if (templateValues != null && !templateValues.isEmpty()) {
                     ModelVariantPo modelVariant = new ModelVariantPo();

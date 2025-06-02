@@ -58,6 +58,7 @@
     <!-- 模型变体列表 -->
     <div class="model-series-table">
       <el-table
+        ref="tableRef"
         :data="list"
         stripe
         border
@@ -427,6 +428,9 @@ const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
 const submitLoading = ref(false)
 
+// 表格引用
+const tableRef = ref()
+
 //表单数据
 const details = reactive<GetAdminModelSeriesDetailsVo>({
   code: "",
@@ -654,6 +658,10 @@ const openApplyTemplateModal = () => {
 const handleTemplateApplied = () => {
   applyTemplateModalVisible.value = false
   selectedRows.value = []
+  // 清除表格选择状态
+  if (tableRef.value) {
+    tableRef.value.clearSelection()
+  }
 }
 
 const handleManageCommand = (command: string, row: GetAdminModelSeriesListVo) => {
