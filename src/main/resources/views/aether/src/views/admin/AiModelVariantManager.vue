@@ -45,6 +45,13 @@
         >
           批量禁用 ({{ selectedRows.length }})
         </el-button>
+        <el-button 
+          type="info" 
+          @click="openApplyTemplateModal" 
+          :disabled="selectedRows.length === 0"
+        >
+          应用参数模板 ({{ selectedRows.length }})
+        </el-button>
       </div>
     </div>
 
@@ -355,6 +362,13 @@
       :model-variant-id="currentModelVariant?.id || ''"
       :model-variant-name="currentModelVariant ? `${currentModelVariant.code} (${currentModelVariant.name})` : ''"
     />
+
+    <!-- 应用参数模板模态框 -->
+    <ApplyParamTemplateModal
+      v-model:visible="applyTemplateModalVisible"
+      :selected-model-variants="selectedRows"
+      @applied="handleTemplateApplied"
+    />
   </div>
 </template>
 
@@ -374,6 +388,7 @@ import { Edit, Delete, Setting, ArrowDown } from '@element-plus/icons-vue';
 import type { FormInstance } from 'element-plus';
 import dayjs from 'dayjs';
 import ModelVariantParamsModal from '@/views/admin/ModelVariantParamsModal.vue'
+import ApplyParamTemplateModal from '@/views/admin/ApplyParamTemplateModal.vue'
 
 //模态框模式
 const mode = ref<"insert" | "update">("insert")
@@ -627,6 +642,18 @@ const batchToggle = async (enabled: number) => {
 const openParamsModal = (row: GetAdminModelSeriesListVo) => {
   currentModelVariant.value = row
   paramsModalVisible.value = true
+}
+
+// 应用参数模板模态框相关状态
+const applyTemplateModalVisible = ref(false)
+
+const openApplyTemplateModal = () => {
+  applyTemplateModalVisible.value = true
+}
+
+const handleTemplateApplied = () => {
+  applyTemplateModalVisible.value = false
+  selectedRows.value = []
 }
 
 const handleManageCommand = (command: string, row: GetAdminModelSeriesListVo) => {
