@@ -116,65 +116,64 @@
               {{ scope.row.createTime }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" min-width="200" resizable align="center">
+          <el-table-column label="操作" fixed="right" min-width="200" resizable>
             <template #default="scope">
-              <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <el-button 
+                link
+                type="primary" 
+                size="small" 
+                @click="openUpdateGlobalModal(scope.row)"
+                :icon="EditIcon"
+                style="margin-right: 8px;"
+              >
+                编辑缺省值
+              </el-button>
+              <el-button 
+                link
+                type="warning" 
+                size="small" 
+                @click="openUpdateUserModal(scope.row)"
+                :icon="UserIcon"
+                style="margin-right: 8px;"
+              >
+                设置用户值
+              </el-button>
+              <el-dropdown 
+                v-if="scope.row.globalVal !== null || scope.row.userVal !== null"
+                @command="(command: string) => handleDeleteCommand(command, scope.row)"
+              >
                 <el-button 
                   link
-                  type="primary" 
+                  type="danger" 
                   size="small" 
-                  @click="openUpdateGlobalModal(scope.row)"
-                  :icon="EditIcon"
+                  :icon="DeleteIcon"
                 >
-                  编辑缺省值
+                  删除<el-icon class="el-icon--right" style="margin-left: 4px;"><arrow-down /></el-icon>
                 </el-button>
-                <el-button 
-                  link
-                  type="warning" 
-                  size="small" 
-                  @click="openUpdateUserModal(scope.row)"
-                  :icon="UserIcon"
-                >
-                  设置用户值
-                </el-button>
-                <el-dropdown 
-                  v-if="scope.row.globalVal !== null || scope.row.userVal !== null"
-                  @command="(command: string) => handleDeleteCommand(command, scope.row)"
-                  style="display: flex; align-items: center;"
-                >
-                  <el-button 
-                    link
-                    type="danger" 
-                    size="small" 
-                    :icon="DeleteIcon"
-                  >
-                    删除<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item 
-                        v-if="scope.row.globalVal !== null" 
-                        command="global"
-                      >
-                        删除缺省参数
-                      </el-dropdown-item>
-                      <el-dropdown-item 
-                        v-if="scope.row.userVal !== null" 
-                        command="user"
-                      >
-                        删除用户参数
-                      </el-dropdown-item>
-                      <el-dropdown-item 
-                        v-if="scope.row.globalVal !== null && scope.row.userVal !== null" 
-                        command="both"
-                        divided
-                      >
-                        删除全部参数
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item 
+                      v-if="scope.row.globalVal !== null" 
+                      command="global"
+                    >
+                      删除缺省参数
+                    </el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="scope.row.userVal !== null" 
+                      command="user"
+                    >
+                      删除用户参数
+                    </el-dropdown-item>
+                    <el-dropdown-item 
+                      v-if="scope.row.globalVal !== null && scope.row.userVal !== null" 
+                      command="both"
+                      divided
+                    >
+                      删除全部参数
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </template>
           </el-table-column>
         </el-table>

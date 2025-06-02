@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.controller.admin;
 
 import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
+import com.ksptool.ql.biz.model.dto.ApplyModelVariantParamTemplateDto;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
@@ -71,6 +72,25 @@ public class AdminModelVariantController {
     public Result<String> removeModelVariant(@RequestBody @Valid CommonIdDto dto) throws BizException {
         service.removeModelVariant(dto.getId());
         return Result.success("success");
+    }
+
+    /**
+     * 应用参数模板到模型变体（支持批量应用和全局/个人参数选择）
+     * @param dto 应用参数（包含模板ID、模型变体ID列表、应用范围）
+     * @return 操作结果
+     */
+    @PostMapping("applyModelVariantParamTemplate")
+    @RequirePermissionRest("admin:model:variant:param:template:apply")
+    public Result<String> applyModelVariantParamTemplate(@RequestBody @Valid ApplyModelVariantParamTemplateDto dto) throws BizException {
+        try {
+            service.applyModelVariantParamTemplate(dto);
+            if (dto.getGlobal() == 1) {
+                return Result.success("应用模板为全局默认参数成功");
+            }
+            return Result.success("应用模板为个人参数成功");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
 }

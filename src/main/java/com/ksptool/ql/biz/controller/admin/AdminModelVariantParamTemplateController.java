@@ -83,36 +83,4 @@ public class AdminModelVariantParamTemplateController {
         }
     }
 
-    /**
-     * 应用当前用户的模板为全局默认参数
-     * @param dto 应用参数
-     * @return 操作结果
-     */
-    @PostMapping("applyModelVariantParamTemplateToGlobal")
-    @RequirePermissionRest("admin:model:variant:param:template:apply")
-    public Result<String> applyModelVariantParamTemplateToGlobal(@RequestBody @Valid ApplyModelVariantParamTemplateToGlobalDto dto) throws BizException {
-        try {
-            service.applyModelVariantParamTemplateToGlobal(dto);
-            return Result.success("应用模板为全局默认参数成功");
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
-    }
-
-    /**
-     * 应用当前用户的模板为个人参数
-     * @param dto 应用参数
-     * @return 操作结果
-     */
-    @PostMapping("applyModelVariantParamTemplateToPersonal")
-    @RequirePermissionRest("admin:model:variant:param:template:apply")
-    public Result<String> applyModelVariantParamTemplateToPersonal(@RequestBody @Valid ApplyModelVariantParamTemplateToPersonalDto dto) throws BizException {
-        try {
-            service.applyModelVariantParamTemplateToPersonal(dto);
-            return Result.success("应用模板为个人参数成功");
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
-    }
-
 } 

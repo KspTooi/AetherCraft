@@ -1,15 +1,28 @@
 package com.ksptool.ql.biz.service;
 
 import com.ksptool.ql.biz.mapper.ModelVariantRepository;
+import com.ksptool.ql.biz.mapper.ModelVariantParamRepository;
+import com.ksptool.ql.biz.mapper.ModelVariantParamTemplateRepository;
+import com.ksptool.ql.biz.mapper.ModelVariantParamTemplateValueRepository;
+import com.ksptool.ql.biz.mapper.UserRepository;
+import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
+import com.ksptool.ql.biz.model.dto.ApplyModelVariantParamTemplateDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
 import com.ksptool.ql.biz.model.dto.SaveAdminModelVariantDto;
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
+import com.ksptool.ql.biz.model.po.ModelVariantParamPo;
+import com.ksptool.ql.biz.model.po.ModelVariantParamTemplatePo;
+import com.ksptool.ql.biz.model.po.ModelVariantParamTemplateValuePo;
+import com.ksptool.ql.biz.model.po.UserPo;
+import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
+import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.enums.AiModelVariantEnum;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +42,20 @@ public class ModelVariantService {
     @Autowired
     private ModelVariantRepository repository;
 
+    @Autowired
+    private ModelVariantParamRepository modelVariantParamRepository;
+
+    @Autowired
+    private ModelVariantParamTemplateRepository templateRepository;
+
+    @Autowired
+    private ModelVariantParamTemplateValueRepository templateValueRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PlayerRepository playerRepository;
 
     public List<GetModelVariantListVo> getClientModelVariantList(){
         // 查询所有启用的模型变体，按排序号和创建时间排序
@@ -234,6 +261,120 @@ public class ModelVariantService {
         return po.getSchema();
     }
 
+    /**
+     * 应用参数模板到模型变体（支持批量应用和全局/个人参数选择）
+     * @param dto 应用参数（包含模板ID、模型变体ID列表、应用范围）
+     */
+    @Transactional
+    public void applyModelVariantParamTemplate(ApplyModelVariantParamTemplateDto dto) throws BizException, AuthException {
+        // 获取当前用户信息
+        Long currentUserId = AuthService.getCurrentUserId();
 
+        // 使用Example查询当前用户的模板
+        ModelVariantParamTemplatePo templateQuery = new ModelVariantParamTemplatePo();
+        templateQuery.setId(dto.getTemplateId());
+        UserPo userQuery = new UserPo();
+        userQuery.setId(currentUserId);
+        templateQuery.setUser(userQuery);
+
+        ModelVariantParamTemplatePo template = templateRepository.findOne(Example.of(templateQuery))
+                .orElseThrow(() -> new BizException("模板不存在或无权限应用"));
+
+        // 验证所有模型变体都存在
+        List<ModelVariantPo> modelVariants = repository.findAllById(dto.getModelVariantIds());
+        if (modelVariants.size() != dto.getModelVariantIds().size()) {
+            throw new BizException("部分模型变体不存在，请检查ID列表");
+        }
+
+        // 获取模板的所有参数值
+        List<ModelVariantParamTemplateValuePo> templateValues = templateValueRepository.findByTemplateIdOrderBySeq(dto.getTemplateId());
+        
+        if (templateValues == null || templateValues.isEmpty()) {
+            throw new BizException("模板无参数值，无法应用");
+        }
+
+        // 根据global参数决定应用范围
+        if (dto.getGlobal() == 1) {
+            // 应用为全局参数
+            List<ModelVariantParamPo> newParams = new ArrayList<>();
+            
+            for (Long modelVariantId : dto.getModelVariantIds()) {
+                // 第一步：清理目标模型变体下已有的全局默认参数
+                List<ModelVariantParamPo> existingGlobalParams = modelVariantParamRepository
+                        .findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+                if (!existingGlobalParams.isEmpty()) {
+                    modelVariantParamRepository.deleteAll(existingGlobalParams);
+                }
+
+                // 第二步：从模板创建新的全局默认参数记录
+                ModelVariantPo modelVariant = new ModelVariantPo();
+                modelVariant.setId(modelVariantId);
+
+                for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
+                    ModelVariantParamPo newParam = new ModelVariantParamPo();
+                    newParam.setModelVariant(modelVariant);
+                    newParam.setParamKey(templateValue.getParamKey());
+                    newParam.setParamVal(templateValue.getParamVal());
+                    newParam.setType(templateValue.getType());
+                    newParam.setDescription(templateValue.getDescription());
+                    newParam.setSeq(templateValue.getSeq());
+                    // user和player为null表示全局参数
+                    newParam.setUser(null);
+                    newParam.setPlayer(null);
+                    newParams.add(newParam);
+                }
+            }
+            
+            // 批量保存所有新参数
+            if (!newParams.isEmpty()) {
+                modelVariantParamRepository.saveAll(newParams);
+            }
+        }
+        
+        if (dto.getGlobal() == 0) {
+            // 应用为个人参数
+            Long currentPlayerId = AuthService.requirePlayerId();
+
+            // 直接创建用户和玩家PO，不查询数据库
+            UserPo user = new UserPo();
+            user.setId(currentUserId);
+            PlayerPo player = new PlayerPo();
+            player.setId(currentPlayerId);
+
+            List<ModelVariantParamPo> newParams = new ArrayList<>();
+
+            for (Long modelVariantId : dto.getModelVariantIds()) {
+                // 第一步：清理目标模型变体下该玩家已有的自定义参数
+                List<ModelVariantParamPo> existingPlayerParams = modelVariantParamRepository
+                        .findByModelVariantIdAndUserIdAndPlayerId(modelVariantId, currentUserId, currentPlayerId);
+                if (!existingPlayerParams.isEmpty()) {
+                    modelVariantParamRepository.deleteAll(existingPlayerParams);
+                }
+
+                // 第二步：从模板创建新的玩家自定义参数记录
+                ModelVariantPo modelVariant = new ModelVariantPo();
+                modelVariant.setId(modelVariantId);
+
+                for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
+                    ModelVariantParamPo newParam = new ModelVariantParamPo();
+                    newParam.setModelVariant(modelVariant);
+                    newParam.setParamKey(templateValue.getParamKey());
+                    newParam.setParamVal(templateValue.getParamVal());
+                    newParam.setType(templateValue.getType());
+                    newParam.setDescription(templateValue.getDescription());
+                    newParam.setSeq(templateValue.getSeq());
+                    // 设置当前用户和玩家
+                    newParam.setUser(user);
+                    newParam.setPlayer(player);
+                    newParams.add(newParam);
+                }
+            }
+            
+            // 批量保存所有新参数
+            if (!newParams.isEmpty()) {
+                modelVariantParamRepository.saveAll(newParams);
+            }
+        }
+    }
 
 }
