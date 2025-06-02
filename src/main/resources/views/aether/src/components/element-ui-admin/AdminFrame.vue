@@ -207,7 +207,7 @@ const menuItems = ref([
   },
   {
     id: 'model_series',
-    title: 'AI模型管理',
+    title: '模型变体管理',
     icon: Cpu,
     routerLink: '/admin/model/variant'
   },
