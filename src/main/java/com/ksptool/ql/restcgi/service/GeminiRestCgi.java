@@ -1,7 +1,9 @@
 package com.ksptool.ql.restcgi.service;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.GsonUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
 import com.ksptool.ql.restcgi.model.provider.GeminiRequest;
@@ -28,9 +30,8 @@ public class GeminiRestCgi implements ModelRestCgi {
         var req = new GeminiRequest(p);
 
         //加载Variant参数
-        req.getGenerationConfig().putAll(p.getVariantParam());
-
-        String jsonBody = gson.toJson(req);
+        JsonElement element = GsonUtils.injectContent(gson.toJsonTree(req), p.getVariantParam());
+        String jsonBody = gson.toJson(element);
 
         // 创建请求对象
         Request request = new Request.Builder()
@@ -83,9 +84,8 @@ public class GeminiRestCgi implements ModelRestCgi {
         var req = new GeminiRequest(p);
 
         //加载Variant参数
-        req.getGenerationConfig().putAll(p.getVariantParam());
-
-        String jsonBody = gson.toJson(req);
+        JsonElement element = GsonUtils.injectContent(gson.toJsonTree(req), p.getVariantParam());
+        String jsonBody = gson.toJson(element);
 
         //创建请求对象
         Request request = new Request.Builder()

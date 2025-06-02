@@ -127,14 +127,33 @@ public class GeminiRequest {
         private String threshold;
     }
 
-    @EqualsAndHashCode(callSuper = true)
     @Data
-    public static class GenerationConfig extends HashMap<String, String> {
+    public static class GenerationConfig {
         private List<String> stopSequences;
         private Double temperature;
         private Integer maxOutputTokens;
         private Double topP;
         private Integer topK;
+
+        public void setStopSequences(List<String> stopSequences) {
+            //this.stopSequences = stopSequences;
+        }
+
+        public void setTemperature(Double temperature) {
+            //this.temperature = temperature;
+        }
+
+        public void setMaxOutputTokens(Integer maxOutputTokens) {
+            //this.maxOutputTokens = maxOutputTokens;
+        }
+
+        public void setTopP(Double topP) {
+            //this.topP = topP;
+        }
+
+        public void setTopK(Integer topK) {
+            //this.topK = topK;
+        }
     }
 
     public static GeminiRequest of(List<ChatMessage> messages, Double temperature, Double topP, Integer topK, Integer maxOutputTokens) {

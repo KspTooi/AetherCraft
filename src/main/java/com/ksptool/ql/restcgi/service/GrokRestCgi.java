@@ -3,6 +3,7 @@ package com.ksptool.ql.restcgi.service;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.GsonUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
 import com.ksptool.ql.restcgi.model.provider.GrokRequest;
@@ -29,9 +30,9 @@ public class GrokRestCgi implements ModelRestCgi {
         var req = new GrokRequest(p);
         req.setStream(false);
 
-        // 将req转换为JsonElement并加入variantParam
-        JsonElement jsonElement = addVariantParamsToJsonElement(gson.toJsonTree(req), p);
-        String jsonBody = gson.toJson(jsonElement);
+        //加载Variant参数
+        JsonElement element = GsonUtils.injectContent(gson.toJsonTree(req), p.getVariantParam());
+        String jsonBody = gson.toJson(element);
 
         // 创建请求对象
         Request request = new Request.Builder()
@@ -95,9 +96,9 @@ public class GrokRestCgi implements ModelRestCgi {
         var req = new GrokRequest(p);
         req.setStream(true);
 
-        // 将req转换为JsonElement并加入variantParam
-        JsonElement jsonElement = addVariantParamsToJsonElement(gson.toJsonTree(req), p);
-        String jsonBody = gson.toJson(jsonElement);
+        //加载Variant参数
+        JsonElement element = GsonUtils.injectContent(gson.toJsonTree(req), p.getVariantParam());
+        String jsonBody = gson.toJson(element);
 
         // 创建请求对象
         Request request = new Request.Builder()
@@ -218,16 +219,5 @@ public class GrokRestCgi implements ModelRestCgi {
         });
     }
 
-    private JsonElement addVariantParamsToJsonElement(JsonElement jsonElement, CgiChatParam p) {
-        // 将CgiChatParam.variantParam加入到jsonElement中
-        if (p.getVariantParam() != null && !p.getVariantParam().isEmpty()) {
-            for (Map.Entry<String, String> entry : p.getVariantParam().entrySet()) {
-                // 如果jsonElement中已存在该键，则不覆盖
-                if (!jsonElement.getAsJsonObject().has(entry.getKey())) {
-                    jsonElement.getAsJsonObject().addProperty(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        return jsonElement;
-    }
+
 }
