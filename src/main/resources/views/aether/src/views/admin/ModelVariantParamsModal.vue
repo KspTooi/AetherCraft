@@ -43,17 +43,28 @@
           v-loading="loading"
           max-height="400"
         >
-          <el-table-column 
+          <el-table-column
+              prop="description"
+              label="参数描述"
+              min-width="320"
+              show-overflow-tooltip
+              resizable
+          >
+            <template #default="scope">
+              {{ scope.row.description || '-' }}
+            </template>
+          </el-table-column>
+<!--          <el-table-column
             prop="paramKey" 
             label="参数键" 
             min-width="120"
             show-overflow-tooltip
             resizable
-          />
+          />-->
           <el-table-column 
             prop="globalVal" 
             label="缺省值" 
-            min-width="120" 
+            min-width="64"
             show-overflow-tooltip
             resizable
           >
@@ -67,7 +78,7 @@
           <el-table-column 
             prop="userVal" 
             label="用户值" 
-            min-width="120"
+            min-width="64"
             show-overflow-tooltip
             resizable
           >
@@ -78,7 +89,7 @@
               <span v-else class="no-value">使用缺省值</span>
             </template>
           </el-table-column>
-          <el-table-column 
+<!--          <el-table-column
             prop="type" 
             label="参数类型" 
             width="100"
@@ -93,19 +104,8 @@
                 {{ getTypeName(scope.row.type) }}
               </el-tag>
             </template>
-          </el-table-column>
-          <el-table-column 
-            prop="description" 
-            label="描述" 
-            min-width="150"
-            show-overflow-tooltip
-            resizable
-          >
-            <template #default="scope">
-              {{ scope.row.description || '-' }}
-            </template>
-          </el-table-column>
-          <el-table-column 
+          </el-table-column>-->
+<!--          <el-table-column
             prop="createTime" 
             label="创建时间" 
             width="160"
@@ -115,8 +115,8 @@
             <template #default="scope">
               {{ scope.row.createTime }}
             </template>
-          </el-table-column>
-          <el-table-column label="操作" fixed="right" min-width="200" resizable>
+          </el-table-column>-->
+          <el-table-column label="操作" fixed="right" min-width="128" resizable>
             <template #default="scope">
               <el-button 
                 link

@@ -22,12 +22,12 @@ public interface ModelVariantParamRepository extends JpaRepository<ModelVariantP
     @Query("""
             SELECT p FROM ModelVariantParamPo p
             WHERE p.modelVariant.id = :modelVariantId
-            AND (:keyword IS NULL OR :keyword = '' OR 
-                 p.paramKey LIKE CONCAT('%', :keyword, '%') OR 
+            AND (:keyword IS NULL OR :keyword = '' OR
+                 p.paramKey LIKE CONCAT('%', :keyword, '%') OR
                  p.description LIKE CONCAT('%', :keyword, '%'))
-            AND (p.user IS NULL AND p.player IS NULL OR 
+            AND (p.user IS NULL AND p.player IS NULL OR
                  (p.user.id = :currentUserId AND p.player.id = :currentPlayerId))
-            ORDER BY p.seq ASC, p.createTime DESC
+            ORDER BY p.seq ASC
             """)
     List<ModelVariantParamPo> getModelVariantParamListForMerge(
             @Param("modelVariantId") Long modelVariantId,
