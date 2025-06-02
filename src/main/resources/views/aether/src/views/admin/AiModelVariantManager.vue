@@ -183,26 +183,34 @@
             {{ formatDateTime(scope.row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" min-width="140" resizable>
+        <el-table-column label="操作" fixed="right" min-width="80" resizable align="center">
           <template #default="scope">
-            <el-button 
-              link
-              type="primary" 
-              size="small" 
-              @click="openUpdateModal(scope.row)"
-              :icon="EditIcon"
-            >
-              编辑
-            </el-button>
-            <el-button 
-              link
-              type="danger" 
-              size="small" 
-              @click="remove(scope.row)"
-              :icon="DeleteIcon"
-            >
-              删除
-            </el-button>
+            <div style="display: flex; align-items: center; justify-content: center;">
+              <el-dropdown @command="(command: string) => handleManageCommand(command, scope.row)">
+                <el-button 
+                  link
+                  type="primary" 
+                  size="small"
+                  :icon="SettingIcon"
+                  style="height: 24px; line-height: 24px;"
+                >
+                  管理<el-icon class="el-icon--right" style="margin-left: 4px;"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="edit" :icon="EditIcon">
+                      编辑模型
+                    </el-dropdown-item>
+                    <el-dropdown-item command="params" :icon="SettingIcon">
+                      管理参数
+                    </el-dropdown-item>
+                    <el-dropdown-item command="delete" :icon="DeleteIcon" divided>
+                      删除模型
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -340,6 +348,13 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 参数模态框 -->
+    <ModelVariantParamsModal
+      v-model:visible="paramsModalVisible"
+      :model-variant-id="currentModelVariant?.id || ''"
+      :model-variant-name="currentModelVariant ? `${currentModelVariant.code} (${currentModelVariant.name})` : ''"
+    />
   </div>
 </template>
 
@@ -355,9 +370,10 @@ import type {
 } from "@/commons/api/AdminModelVariantApi.ts";
 import AdminModelSeriesApi from "@/commons/api/AdminModelVariantApi.ts";
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, Delete } from '@element-plus/icons-vue';
+import { Edit, Delete, Setting, ArrowDown } from '@element-plus/icons-vue';
 import type { FormInstance } from 'element-plus';
 import dayjs from 'dayjs';
+import ModelVariantParamsModal from '@/views/admin/ModelVariantParamsModal.vue'
 
 //模态框模式
 const mode = ref<"insert" | "update">("insert")
@@ -368,6 +384,10 @@ const modelSeriesOptions = ref<string[]>([])
 // 多选相关状态
 const selectedRows = ref<GetAdminModelSeriesListVo[]>([])
 const batchLoading = ref(false)
+
+// 参数模态框相关状态
+const paramsModalVisible = ref(false)
+const currentModelVariant = ref<GetAdminModelSeriesListVo | null>(null)
 
 const query = reactive<GetAdminModelSeriesListDto>({
   keyword: null,
@@ -385,6 +405,7 @@ const loading = ref(false)
 // 使用markRaw包装图标组件
 const EditIcon = markRaw(Edit);
 const DeleteIcon = markRaw(Delete);
+const SettingIcon = markRaw(Setting);
 
 // 模态框相关
 const dialogVisible = ref(false)
@@ -600,6 +621,21 @@ const batchToggle = async (enabled: number) => {
     ElMessage.error(errorMsg)
   } finally {
     batchLoading.value = false
+  }
+}
+
+const openParamsModal = (row: GetAdminModelSeriesListVo) => {
+  currentModelVariant.value = row
+  paramsModalVisible.value = true
+}
+
+const handleManageCommand = (command: string, row: GetAdminModelSeriesListVo) => {
+  if (command === 'edit') {
+    openUpdateModal(row)
+  } else if (command === 'params') {
+    openParamsModal(row)
+  } else if (command === 'delete') {
+    remove(row)
   }
 }
 
