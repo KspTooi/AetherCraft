@@ -65,6 +65,13 @@ export default {
      */
     removeModelVariantParamTemplate: async (dto: CommonIdDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/model/variant/param/template/removeModelVariantParamTemplate', dto);
+    },
+
+    /**
+     * 复制参数模板
+     */
+    copyModelVariantParamTemplate: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/param/template/copyModelVariantParamTemplate', dto);
     }
 
 }; 

@@ -23,6 +23,8 @@ public class PlayerPo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",nullable = false,foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("关联用户ID")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private UserPo user;
 
     @Column(name = "avatar_url", length = 320)
@@ -121,4 +123,18 @@ public class PlayerPo {
         // lastActiveTime 的更新通常与具体业务操作相关，不在 PreUpdate 中处理
     }
 
+    // 自定义hashCode方法，只使用id计算哈希
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    // 自定义equals方法，只比较id
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PlayerPo that = (PlayerPo) obj;
+        return id != null && id.equals(that.id);
+    }
 }

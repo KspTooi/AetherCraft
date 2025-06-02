@@ -2,6 +2,8 @@ package com.ksptool.ql.biz.model.po;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -29,6 +31,8 @@ public class ModelVariantParamTemplateValuePo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("关联模板ID")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private ModelVariantParamTemplatePo template;
 
     @Column(name = "param_key", nullable = false, length = 128)
@@ -61,4 +65,18 @@ public class ModelVariantParamTemplateValuePo {
     @Comment("更新时间")
     private Date updateTime;
 
+    // 自定义hashCode方法，只使用id计算哈希
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    // 自定义equals方法，只比较id
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        ModelVariantParamTemplateValuePo that = (ModelVariantParamTemplateValuePo) obj;
+        return id != null && id.equals(that.id);
+    }
 } 

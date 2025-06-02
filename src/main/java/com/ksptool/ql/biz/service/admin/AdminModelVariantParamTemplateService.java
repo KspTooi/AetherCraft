@@ -168,4 +168,61 @@ public class AdminModelVariantParamTemplateService {
         repository.delete(template);
     }
 
+    @Transactional
+    public void copyModelVariantParamTemplate(long id) throws BizException, AuthException {
+        Long currentUserId = AuthService.getCurrentUserId();
+
+        // 1. 查询源模板
+        ModelVariantParamTemplatePo query = new ModelVariantParamTemplatePo();
+        query.setId(id);
+        UserPo userQuery = new UserPo();
+        userQuery.setId(currentUserId);
+        query.setUser(userQuery);
+
+        ModelVariantParamTemplatePo originalTemplate = repository.findOne(Example.of(query))
+                .orElseThrow(() -> new BizException("源模板不存在或无权限复制"));
+
+        // 2. 创建新模板
+        ModelVariantParamTemplatePo newTemplate = new ModelVariantParamTemplatePo();
+        assign(originalTemplate, newTemplate);
+        newTemplate.setId(null); // 设置ID为null，让JPA生成新的ID
+        newTemplate.setName(originalTemplate.getName() + "_副本");
+
+        // 检查复制后的名称唯一性
+        ModelVariantParamTemplatePo nameCheckQuery = new ModelVariantParamTemplatePo();
+        nameCheckQuery.setName(newTemplate.getName());
+        nameCheckQuery.setUser(userQuery); // 关联当前用户，检查用户下的名称唯一性
+        if (repository.findOne(Example.of(nameCheckQuery)).isPresent()) {
+             throw new BizException("复制后的模板名称已存在，请修改");
+        }
+
+        UserPo currentUserPo = new UserPo();
+        currentUserPo.setId(currentUserId);
+        newTemplate.setUser(currentUserPo);
+
+        PlayerPo currentPlayerPo = new PlayerPo();
+        currentPlayerPo.setId(AuthService.requirePlayerId());
+        newTemplate.setPlayer(currentPlayerPo);
+
+        repository.save(newTemplate);
+
+        // 3. 复制模板下的所有参数值
+        ModelVariantParamTemplateValuePo valueQuery = new ModelVariantParamTemplateValuePo();
+        valueQuery.setTemplate(originalTemplate);
+        List<ModelVariantParamTemplateValuePo> originalValues = templateValueRepository.findAll(Example.of(valueQuery));
+
+        List<ModelVariantParamTemplateValuePo> newValues = new java.util.ArrayList<>();
+        for (ModelVariantParamTemplateValuePo originalValue : originalValues) {
+            ModelVariantParamTemplateValuePo newValue = new ModelVariantParamTemplateValuePo();
+            assign(originalValue, newValue);
+            newValue.setId(null); // 设置ID为null，让JPA生成新的ID
+            newValue.setTemplate(newTemplate); // 关联到新的模板
+            newValues.add(newValue);
+        }
+
+        if (!newValues.isEmpty()) {
+            templateValueRepository.saveAll(newValues);
+        }
+    }
+
 } 

@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.admin.AdminModelVariantParamTemplateService;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
+import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.exception.BizException;
@@ -28,12 +29,8 @@ public class AdminModelVariantParamTemplateController {
      */
     @PostMapping("getModelVariantParamTemplateList")
     @RequirePermissionRest("admin:model:variant:param:template:view")
-    public Result<RestPageableView<GetModelVariantParamTemplateListVo>> getModelVariantParamTemplateList(@RequestBody @Valid GetModelVariantParamTemplateListDto dto) {
-        try {
-            return Result.success(service.getModelVariantParamTemplateList(dto));
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+    public Result<RestPageableView<GetModelVariantParamTemplateListVo>> getModelVariantParamTemplateList(@RequestBody @Valid GetModelVariantParamTemplateListDto dto) throws AuthException {
+        return Result.success(service.getModelVariantParamTemplateList(dto));
     }
 
     /**
@@ -44,11 +41,7 @@ public class AdminModelVariantParamTemplateController {
     @PostMapping("getModelVariantParamTemplateDetails")
     @RequirePermissionRest("admin:model:variant:param:template:view")
     public Result<GetModelVariantParamTemplateDetailsVo> getModelVariantParamTemplateDetails(@RequestBody @Valid GetModelVariantParamTemplateDetailsDto dto) throws BizException {
-        try {
-            return Result.success(service.getModelVariantParamTemplateDetails(dto));
-        } catch (BizException e) {
-            return Result.error(e.getMessage());
-        }
+        return Result.success(service.getModelVariantParamTemplateDetails(dto));
     }
 
     /**
@@ -59,12 +52,8 @@ public class AdminModelVariantParamTemplateController {
     @PostMapping("saveModelVariantParamTemplate")
     @RequirePermissionRest("admin:model:variant:param:template:save")
     public Result<String> saveModelVariantParamTemplate(@RequestBody @Valid SaveModelVariantParamTemplateDto dto) throws BizException {
-        try {
-            service.saveModelVariantParamTemplate(dto);
-            return Result.success("保存模板成功");
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
+        service.saveModelVariantParamTemplate(dto);
+        return Result.success("保存模板成功");
     }
 
     /**
@@ -75,12 +64,17 @@ public class AdminModelVariantParamTemplateController {
     @PostMapping("removeModelVariantParamTemplate")
     @RequirePermissionRest("admin:model:variant:param:template:delete")
     public Result<String> removeModelVariantParamTemplate(@RequestBody @Valid CommonIdDto dto) throws BizException {
-        try {
-            service.removeModelVariantParamTemplate(dto);
-            return Result.success("删除模板成功");
-        } catch (BizException e) {
-            return Result.error(e.getMessage());
-        }
+        service.removeModelVariantParamTemplate(dto);
+        return Result.success("删除模板成功");
+    }
+
+    /**
+     * 复制模板
+     */
+    @PostMapping("copyModelVariantParamTemplate")
+    public Result<String> copyModelVariantParamTemplate(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        service.copyModelVariantParamTemplate(dto.getId());
+        return Result.success("模板复制成功");
     }
 
 } 

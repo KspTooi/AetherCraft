@@ -95,4 +95,19 @@ public class UserPo {
     public void preUpdate() {
         updateTime = new Date();
     }
+    
+    // 自定义hashCode方法，只使用id计算哈希
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    // 自定义equals方法，只比较id
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        UserPo that = (UserPo) obj;
+        return id != null && id.equals(that.id);
+    }
 }

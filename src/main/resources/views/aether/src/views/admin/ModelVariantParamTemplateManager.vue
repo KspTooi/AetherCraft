@@ -100,6 +100,15 @@
             >
               查看
             </el-button>
+            <el-button 
+              link
+              type="primary" 
+              size="small" 
+              @click="confirmCopy(scope.row)"
+              :icon="CopyDocument"
+            >
+              复制
+            </el-button>
             <el-button
               link
               type="success"
@@ -131,8 +140,8 @@
         :page-sizes="[10, 20, 50, 100]"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
-        @size-change="loadTemplateList"
-        @current-change="loadTemplateList"
+        @size-change="() => loadTemplateList()"
+        @current-change="() => loadTemplateList()"
       />
     </div>
 
@@ -220,7 +229,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit as EditIcon, Delete as DeleteIcon, View as ViewIcon, Plus as PlusIcon, Management as ManageIcon } from '@element-plus/icons-vue'
+import { Edit as EditIcon, Delete as DeleteIcon, View as ViewIcon, Plus as PlusIcon, Management as ManageIcon, CopyDocument } from '@element-plus/icons-vue'
 import AdminModelVariantParamTemplateApi from '@/commons/api/AdminModelVariantParamTemplateApi'
 import ModelVariantParamTemplateValueManager from '@/views/admin/ModelVariantParamTemplateValueManager.vue'
 import type { 
@@ -399,6 +408,33 @@ const submitForm = async () => {
     ElMessage.error(error.message || defaultMsg)
   } finally {
     submitLoading.value = false
+  }
+}
+
+// 确认复制
+const confirmCopy = (row: GetModelVariantParamTemplateListVo) => {
+  ElMessageBox.confirm(
+    `确定要复制模板 "${row.name}" 吗？这将创建一个包含所有参数值的新模板。`,
+    '复制确认',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }
+  ).then(() => {
+    copyTemplate(row.id)
+  })
+}
+
+// 复制模板
+const copyTemplate = async (templateId: string) => {
+  try {
+    await AdminModelVariantParamTemplateApi.copyModelVariantParamTemplate({ id: templateId })
+    ElMessage.success('复制成功')
+    loadTemplateList()
+  } catch (error: any) {
+    console.error('复制失败:', error)
+    ElMessage.error(error.message || '复制失败')
   }
 }
 
