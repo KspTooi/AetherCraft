@@ -312,8 +312,8 @@ public class ChatThreadService {
             //p.setTopK(40);
             //p.setMaxOutputTokens(128);
             HashMap<String, String> vp = new HashMap<>();
-            vp.put("generationConfig.maxOutputTokens","64");
-            vp.put("max_completion_tokens","64");
+            //vp.put("generationConfig.maxOutputTokens","64");
+            //vp.put("max_completion_tokens","64");
             p.setVariantParam(vp);
             p.setMessage(new CgiChatMessage(prompt.execute()));
             CgiChatResult result = restCgi.sendMessage(p);

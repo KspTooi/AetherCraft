@@ -18,7 +18,7 @@
       <GlowDiv class="chat-content" border="none">
 
         <div class="model-selector-container">
-          <ModelSelector :selected="curModelCode" @select-model="onSelectMode"/>
+          <ModelSelector :selected="curModelCode" @select-model="onSelectMode" :allowType="[0]"/>
         </div>
 
         <div class="message-box-container">

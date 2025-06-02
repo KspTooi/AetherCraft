@@ -23,8 +23,8 @@
             <div class="model-item" 
                  v-for="model in series.models" 
                  :key="model.modelCode"
-                 :class="{ 'active': selected === model.modelCode }"
-                 @click="selectModel(model)">
+                 :class="{ 'active': selected === model.modelCode, 'disabled': !isModelSelectable(model) }"
+                 @click="selectModelIfAllowed(model)">
               <span class="model-name-text">{{ model.modelName }}</span>
               <div class="model-tags">
                 <span v-if="model.thinking === 1" class="tag thinking-tag">
@@ -38,6 +38,9 @@
                 </span>
                 <span class="tag intelligence-tag" :class="getIntelligenceClass(model.intelligence)">
                   {{ model.intelligence }}
+                </span>
+                <span v-if="!isModelSelectable(model)" class="tag disabled-tag">
+                  不可用
                 </span>
               </div>
             </div>
@@ -65,14 +68,16 @@ interface ModelData {
   speed: string     // 模型速度
   intelligence: string // 智能程度
   thinking: number  // 思考能力
+  type: number      // 模型类型
 }
 
 const props = defineProps<{
-  selected: string //当前选择的模型代码
+  selected: string, // 当前选择的模型代码
+  allowType?: number[] // 允许选择的模型类型数组
 }>()
 
 const emits = defineEmits<{
-  (e: "select-model", modelCode: string): void //选择模型时触发
+  (e: "select-model", modelCode: string): void // 选择模型时触发
 }>()
 
 // 状态定义
@@ -122,9 +127,22 @@ const closeDropdown = () => {
   isOpen.value = false
 }
 
-const selectModel = (model: ModelData) => {
-  emits('select-model', model.modelCode)
-  closeDropdown()
+// 检查模型是否可选择
+const isModelSelectable = (model: ModelData): boolean => {
+  // 如果未设置allowType或allowType为空数组，则所有模型都可选
+  if (!props.allowType || props.allowType.length === 0) {
+    return true
+  }
+  // 否则检查模型类型是否在允许列表中
+  return props.allowType.includes(model.type)
+}
+
+// 选择模型（如果允许）
+const selectModelIfAllowed = (model: ModelData) => {
+  if (isModelSelectable(model)) {
+    emits('select-model', model.modelCode)
+    closeDropdown()
+  }
 }
 
 // 数据转换函数
@@ -136,7 +154,8 @@ const convertApiDataToModelData = (apiData: ClientModelVariant[]): ModelData[] =
     size: getSizeDisplay(item.scale),
     speed: getSpeedDisplay(item.speed),
     intelligence: getIntelligenceDisplay(item.intelligence),
-    thinking: item.thinking
+    thinking: item.thinking,
+    type: item.type
   }))
 }
 
@@ -181,10 +200,23 @@ const loadModelList = async () => {
     
     // 确保在有模型数据时自动选择
     if (data.value.length > 0) {
-      // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个
+      // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个可选的模型
       const exists = data.value.some(model => model.modelCode === props.selected)
       if (!props.selected || !exists) {
-        emits('select-model', data.value[0].modelCode)
+        const selectableModel = data.value.find(model => isModelSelectable(model))
+        if (selectableModel) {
+          emits('select-model', selectableModel.modelCode)
+        }
+      } else {
+        // 检查当前选择的模型是否可选
+        const currentModel = data.value.find(model => model.modelCode === props.selected)
+        if (currentModel && !isModelSelectable(currentModel)) {
+          // 如果当前选择的模型不可选，则切换到第一个可选的模型
+          const selectableModel = data.value.find(model => isModelSelectable(model))
+          if (selectableModel) {
+            emits('select-model', selectableModel.modelCode)
+          }
+        }
       }
     }
   } catch (error) {
@@ -370,6 +402,15 @@ const vClickOutside = {
   font-weight: 500;
 }
 
+.model-item.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.model-item.disabled:hover {
+  background: v-bind('theme.boxSecondColor');
+}
+
 .model-name-text {
   flex: 1;
   min-width: 0;
@@ -402,6 +443,13 @@ const vClickOutside = {
   -webkit-backdrop-filter: blur(2px);
   transition: all 0.2s ease;
   position: relative;
+}
+
+.disabled-tag {
+  background: rgba(96, 96, 96, 0.2);
+  border-color: rgba(96, 96, 96, 0.7);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 0 4px rgba(96, 96, 96, 0.5);
 }
 
 /* 大小标签样式 */

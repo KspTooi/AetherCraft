@@ -69,7 +69,7 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
 
     private void selectModelSettings(CgiChatParam param){
 
-        var modelCode = param.getModel().getCode();
+        //var modelCode = param.getModel().getCode();
 
         //填充可选参数
         if(param.getVariantParam() == null){
@@ -82,7 +82,7 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
         }
 
         // 只在参数为-1时自动获取配置
-        if (param.getTemperature() == -1) {
+        /*if (param.getTemperature() == -1) {
             PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TEMPERATURE.key())
                     .setParameter("modelCode", modelCode);
             param.setTemperature(playerConfigService.getDouble(temperatureK.execute(), 0.7));
@@ -104,7 +104,7 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
             PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_MAX_OUTPUT_TOKENS.key())
                     .setParameter("modelCode", modelCode);
             param.setMaxOutputTokens(playerConfigService.getInt(maxOutputTokensK.execute(), 4096));
-        }
+        }*/
     }
 
     private void selectHttpClient(CgiChatParam param) throws BizException {

@@ -26,13 +26,13 @@ public class GrokRequest {
      * 
      * @apiNote 取值范围: (0, 1]，默认值: 1
      */
-    @SerializedName("top_p")
+    //@SerializedName("top_p")
     private Double topP;
     
     /**
      * 回复内容的最大长度限制（按token计算）
      */
-    @SerializedName("max_completion_tokens")
+    //@SerializedName("max_completion_tokens")
     private Integer maxCompletionTokens;
     
     /**
@@ -41,17 +41,17 @@ public class GrokRequest {
      * 
      * @apiNote 取值范围: [-2, 2]，默认值: 0
      */
-    @SerializedName("frequency_penalty")
-    private Double frequencyPenalty;
+    //@SerializedName("frequency_penalty")
+    //private Double frequencyPenalty;
 
     public GrokRequest() {}
 
 
     public GrokRequest(CgiChatParam p) {
-        this.model = p.getModel().getCode();
-        this.temperature = p.getTemperature();
-        this.topP = p.getTopP();
-        this.maxCompletionTokens = p.getMaxOutputTokens();
+        //this.model = p.getModel().getCode();
+        //this.temperature = p.getTemperature();
+        //this.topP = p.getTopP();
+        //this.maxCompletionTokens = p.getMaxOutputTokens();
         
         // 构建消息列表
         List<Message> messages = new ArrayList<>();
@@ -95,8 +95,8 @@ public class GrokRequest {
         GrokRequest request = new GrokRequest();
         request.setMessages(List.of(new Message("user", text)));
         request.setTemperature(temperature);
-        request.setTopP(topP);
-        request.setMaxCompletionTokens(maxTokens);
+        //request.setTopP(topP);
+        //request.setMaxCompletionTokens(maxTokens);
         return request;
     }
 
@@ -123,8 +123,8 @@ public class GrokRequest {
 
         request.setMessages(messages);
         request.setTemperature(temperature);
-        request.setTopP(topP);
-        request.setMaxCompletionTokens(maxTokens);
+        //request.setTopP(topP);
+        //request.setMaxCompletionTokens(maxTokens);
         return request;
     }
 } 
