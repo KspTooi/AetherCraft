@@ -162,6 +162,7 @@ public class AdminModelVariantParamService {
      */
     @Transactional
     public void saveModelVariantParam(SaveModelVariantParamDto dto) throws BizException, AuthException {
+
         // 验证模型变体是否存在
         ModelVariantPo modelVariant = modelVariantRepository.findById(dto.getModelVariantId())
                 .orElseThrow(() -> new BizException("模型变体不存在"));
@@ -172,13 +173,9 @@ public class AdminModelVariantParamService {
         
         if (dto.getGlobal() == 0) {
             // 个人参数，设置当前用户和玩家
-            Long currentUserId = AuthService.getCurrentUserId();
+            Long currentUserId = AuthService.requireUserId();
             Long currentPlayerId = AuthService.requirePlayerId();
-            
-            if (currentUserId == null || currentPlayerId == null) {
-                throw new BizException("用户信息获取失败");
-            }
-            
+
             user = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new BizException("用户不存在"));
             player = playerRepository.findById(currentPlayerId)
@@ -190,6 +187,7 @@ public class AdminModelVariantParamService {
             if (globalParam == null) {
                 throw new BizException("无法添加个人参数：对应的全局参数不存在");
             }
+
         }
 
         // 通过三要素查找现有参数
@@ -208,33 +206,35 @@ public class AdminModelVariantParamService {
         }
 
         ModelVariantParamPo param = null;
+
         if (existingParam != null) {
             // 编辑现有参数
             param = existingParam;
-        } else {
+        }
+
+        if(existingParam == null){
             // 新增参数
             param = new ModelVariantParamPo();
             param.setModelVariant(modelVariant);
             param.setParamKey(dto.getParamKey());
             param.setUser(user);
             param.setPlayer(player);
+            // 新增时设置类型
+            param.setType(dto.getType());
         }
 
         // 设置基础信息
         param.setParamVal(dto.getParamVal());
-        param.setType(dto.getType());
         param.setDescription(dto.getDescription());
 
         // 设置排序号
         if (dto.getSeq() != null) {
             param.setSeq(dto.getSeq());
         }
-        if (dto.getSeq() == null && existingParam == null) {
-            // 新增时，如果未提供排序号，自动设置为最大值+1
-            Integer maxSeq = repository.findAll().stream()
-                    .mapToInt(p -> p.getSeq() != null ? p.getSeq() : 0)
-                    .max()
-                    .orElse(0);
+
+        //自动设置排序号
+        if(dto.getSeq() == null){
+            int maxSeq = repository.getMaxSeq();
             param.setSeq(maxSeq + 1);
         }
 

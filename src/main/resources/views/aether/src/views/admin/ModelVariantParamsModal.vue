@@ -228,7 +228,7 @@
             />
           </el-form-item>
           <el-form-item label="参数类型" prop="type">
-            <el-select v-model="form.type" placeholder="请选择参数类型" style="width: 100%">
+            <el-select v-model="form.type" placeholder="请选择参数类型" style="width: 100%" :disabled="editMode">
               <el-option label="字符串" :value="0" />
               <el-option label="整数" :value="1" />
               <el-option label="布尔值" :value="2" />

@@ -117,7 +117,6 @@
 
     <!-- 参数管理模态框 -->
     <ModelVariantParamsModal
-      v-if="paramsModalVisible" 
       :visible="paramsModalVisible"
       :model-variant-id="currentManagedModelVariantId"
       :model-variant-name="currentManagedModelVariantName"

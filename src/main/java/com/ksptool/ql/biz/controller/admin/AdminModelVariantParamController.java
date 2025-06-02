@@ -1,6 +1,5 @@
 package com.ksptool.ql.biz.controller.admin;
 
-import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.GetModelVariantParamListDto;
 import com.ksptool.ql.biz.model.dto.GetModelVariantParamDetailsDto;
 import com.ksptool.ql.biz.model.dto.RemoveModelVariantParamDto;

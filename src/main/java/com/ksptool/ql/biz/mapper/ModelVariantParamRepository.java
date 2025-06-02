@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ModelVariantParamRepository extends JpaRepository<ModelVariantParamPo, Long> {
@@ -92,5 +93,14 @@ public interface ModelVariantParamRepository extends JpaRepository<ModelVariantP
             @Param("userId") Long userId,
             @Param("playerId") Long playerId
     );
+
+    /**
+     * 查询所有模型变体参数的最大排序号
+     * @return 最大排序号，如果不存在则返回0
+     */
+    @Query("""
+            SELECT COALESCE(MAX(p.seq), 0) FROM ModelVariantParamPo p
+            """)
+    int getMaxSeq();
 
 } 
