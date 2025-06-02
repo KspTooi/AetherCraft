@@ -15,6 +15,7 @@ import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.utils.SHA256;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+@Slf4j
 @Service
 public class AuthService {
 
@@ -156,10 +158,17 @@ public class AuthService {
         //return true;
 
         UserSessionVo session = getCurrentUserSession();
+        var uid = -1;
         if (session == null || session.getPermissions() == null) {
+            log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
             return false;
         }
-        return session.getPermissions().contains(permission);
+
+        if(session.getPermissions().contains(permission)){
+            return true;
+        }
+        log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
+        return false;
     }
 
     /**

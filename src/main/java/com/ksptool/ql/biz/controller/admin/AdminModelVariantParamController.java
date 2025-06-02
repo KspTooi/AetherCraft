@@ -103,7 +103,7 @@ public class AdminModelVariantParamController {
             }
             if (dto.getGlobal() == 0) {
                 // 删除个人参数需要个人权限
-                if (!AuthService.hasPermission("admin:model:variant:param:remove:self")) {
+                if (!AuthService.hasPermission("admin:model:variant:param:remove:player")) {
                     return Result.error("无权限删除个人参数");
                 }
             }
