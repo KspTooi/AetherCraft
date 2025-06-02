@@ -111,6 +111,11 @@ public enum PermissionEnum {
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_DELETE("admin:model:variant:param:template:delete", "删除模型变体参数模板"),
     ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_APPLY("admin:model:variant:param:template:apply", "应用模型变体参数模板"),
 
+    //模型变体参数模板值管理
+    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_VIEW("admin:model:variant:param:template:value:view", "查看模型变体参数模板值"),
+    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_SAVE("admin:model:variant:param:template:value:save", "新增/编辑模型变体参数模板值"),
+    ADMIN_MODEL_VARIANT_PARAM_TEMPLATE_VALUE_DELETE("admin:model:variant:param:template:value:delete", "删除模型变体参数模板值"),
+
     //系统维护  
     ADMIN_MAINTAIN_PERMISSION("admin:maintain:permission", "校验系统权限"),
     ADMIN_MAINTAIN_GROUP("admin:maintain:group", "校验系统用户组"),

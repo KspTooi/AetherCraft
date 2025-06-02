@@ -29,7 +29,6 @@ public class SaveModelVariantParamTemplateValueDto {
     private String description;
 
     // 排序号
-    @NotNull(message = "排序号不能为空")
     private Integer seq;
 
 } 

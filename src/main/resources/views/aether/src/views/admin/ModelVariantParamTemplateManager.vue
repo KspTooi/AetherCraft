@@ -69,7 +69,7 @@
           show-overflow-tooltip
           resizable
         />
-        <el-table-column label="操作" fixed="right" min-width="180" resizable>
+        <el-table-column label="操作" fixed="right" min-width="240" resizable>
           <template #default="scope">
             <el-button 
               link
@@ -88,6 +88,15 @@
               :icon="ViewIcon"
             >
               查看
+            </el-button>
+            <el-button
+              link
+              type="success"
+              size="small"
+              @click="openTemplateValueManager(scope.row)"
+              :icon="ManageIcon"
+            >
+              管理
             </el-button>
             <el-button 
               link
@@ -192,14 +201,23 @@
         </div>
       </template>
     </el-dialog>
+    
+    <!-- 模板值管理模态框 -->
+    <ModelVariantParamTemplateValueManager
+      v-model:visible="templateValueManagerVisible"
+      :templateId="currentTemplateId"
+      :templateName="currentTemplateName"
+      @template-value-changed="loadTemplateList" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit as EditIcon, Delete as DeleteIcon, View as ViewIcon, Plus as PlusIcon } from '@element-plus/icons-vue'
+import { Edit as EditIcon, Delete as DeleteIcon, View as ViewIcon, Plus as PlusIcon, Management as ManageIcon } from '@element-plus/icons-vue'
 import AdminModelVariantParamTemplateApi from '@/commons/api/AdminModelVariantParamTemplateApi'
+import ModelVariantParamTemplateValueManager from '@/views/admin/ModelVariantParamTemplateValueManager.vue'
 import type { 
   GetModelVariantParamTemplateListDto, 
   GetModelVariantParamTemplateListVo, 
@@ -216,6 +234,11 @@ const editMode = ref(false)
 const list = ref<GetModelVariantParamTemplateListVo[]>([])
 const total = ref(0)
 const templateDetails = ref<GetModelVariantParamTemplateDetailsVo | null>(null)
+
+// 模板值管理相关数据
+const templateValueManagerVisible = ref(false)
+const currentTemplateId = ref('')
+const currentTemplateName = ref('')
 
 // 查询条件
 const query = reactive<GetModelVariantParamTemplateListDto>({
@@ -305,6 +328,13 @@ const viewTemplateDetails = async (row: GetModelVariantParamTemplateListVo) => {
     ElMessage.error(error.message || '加载模板详情失败')
   }
 }
+
+// 打开模板值管理模态框
+const openTemplateValueManager = (row: GetModelVariantParamTemplateListVo) => {
+  currentTemplateId.value = row.id;
+  currentTemplateName.value = row.name;
+  templateValueManagerVisible.value = true;
+};
 
 // 确认删除
 const confirmRemove = (row: GetModelVariantParamTemplateListVo) => {

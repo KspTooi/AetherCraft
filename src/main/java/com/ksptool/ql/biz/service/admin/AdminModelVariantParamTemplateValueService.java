@@ -139,23 +139,22 @@ public class AdminModelVariantParamTemplateValueService {
             }
             templateValue = new ModelVariantParamTemplateValuePo();
             templateValue.setTemplate(template);
-            // 自动管理seq：如果dto中未提供seq，则设置为当前模板下的最大seq + 1
-            if (dto.getSeq() == null) {
-                Long maxSeq = repository.findMaxSeqByTemplateId(dto.getTemplateId());
-                if (maxSeq != null) {
-                    templateValue.setSeq(maxSeq.intValue() + 1);
-                }
-                if (maxSeq == null) {
-                    templateValue.setSeq(1);
-                }
-            }
+        }
 
-            if (dto.getSeq() != null) {
-                templateValue.setSeq(dto.getSeq());
+        // 先执行DTO到PO的赋值，再处理可能需要自动生成的字段，确保自动生成的字段不会被DTO的null值覆盖
+        assign(dto, templateValue);
+
+        // 自动管理seq：如果dto中未提供seq，则设置为当前模板下的最大seq + 1
+        if (dto.getSeq() == null) {
+            Long maxSeq = repository.findMaxSeqByTemplateId(dto.getTemplateId());
+            if (maxSeq != null) {
+                templateValue.setSeq(maxSeq.intValue() + 1);
+            }
+            if (maxSeq == null) {
+                templateValue.setSeq(1);
             }
         }
 
-        assign(dto, templateValue);
         repository.save(templateValue);
     }
 
