@@ -8,6 +8,7 @@
               v-model="query.modelVariantId"
               placeholder="请选择模型变体"
               clearable
+              filterable
               style="width: 200px"
               @change="loadParamList"
           >
@@ -42,6 +43,9 @@
         </el-button>
       </div>
     </div>
+
+    <!-- 更清晰的说明文字 -->
+    <div class="tip-text-above-table">提示：用户参数优先级高于缺省参数，若同时设置，用户参数将生效。</div>
 
     <!-- 参数列表 -->
     <div class="param-table">
@@ -224,6 +228,7 @@
               placeholder="请选择模型变体"
               style="width: 100%"
               :disabled="editMode"
+              filterable
           >
             <el-option
                 v-for="variant in modelVariants"
@@ -629,6 +634,21 @@ onMounted(() => {
 
 .dialog-footer {
   text-align: right;
+}
+
+/* 新增的小字说明样式 */
+.tip-text {
+  font-size: 12px;
+  color: #909399; /* Element-UI 的 info 颜色 */
+  margin-top: 5px;
+}
+
+/* 新增的小字说明，移到表格附近 */
+.tip-text-above-table {
+  font-size: 12px;
+  color: #909399; /* Element-UI 的 info 颜色 */
+  margin-bottom: 10px; /* 与表格之间留一些间距 */
+  text-align: left; /* 修改为靠左显示 */
 }
 
 /* 响应式布局 */

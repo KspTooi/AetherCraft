@@ -1,7 +1,22 @@
 <template>
   <div class="container">
     <el-card class="box-card">
-      
+      <el-alert
+        title="参数管理功能升级通知"
+        type="warning"
+        :closable="false"
+        show-icon
+        class="mb-4"
+      >
+        <template #default>
+          <div>原模型参数（温度、Top P/K、最大输出等）已统一迁移至
+            <router-link to="/admin/model/variant/param" class="text-blue-600 hover:text-blue-700 hover:underline font-semibold">模型变体参数管理</router-link> 页面进行配置。
+          </div>
+          <div class="mt-1">您可以在新页面为不同模型变体独立设置这些参数，实现更精细化控制。</div>
+          <div class="mt-1"><strong>此页面的相关参数设置功能已停用。</strong>API Key 和代理配置仍可在此页面管理。</div>
+        </template>
+      </el-alert>
+
       <el-form :model="curModelConfig" label-position="top" :rules="rules" ref="formRef">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -31,7 +46,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="温度值" prop="temperature" required>
+            <el-form-item label="温度值" prop="temperature" required :disabled="true">
               <el-input-number 
                 v-model="curModelConfig.temperature"
                 :min="0"
@@ -54,7 +69,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="Top P" prop="topP" required>
+            <el-form-item label="Top P" prop="topP" required :disabled="true">
               <el-input-number
                 v-model="curModelConfig.topP"
                 :min="0"
@@ -77,7 +92,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="Top K" prop="topK" required>
+            <el-form-item label="Top K" prop="topK" required :disabled="true">
               <el-input-number
                 v-model="curModelConfig.topK"
                 :min="1"
@@ -99,7 +114,7 @@
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="最大输出长度" prop="maxOutputTokens" required>
+            <el-form-item label="最大输出长度" prop="maxOutputTokens" required :disabled="true">
               <el-input-number
                 v-model="curModelConfig.maxOutputTokens"
                 :min="1"
