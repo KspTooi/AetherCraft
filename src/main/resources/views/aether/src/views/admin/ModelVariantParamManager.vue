@@ -67,7 +67,7 @@
         />
         <el-table-column 
           prop="globalVal" 
-          label="全局默认值" 
+          label="缺省值" 
           min-width="120" 
           show-overflow-tooltip
           resizable
@@ -81,7 +81,7 @@
         </el-table-column>
         <el-table-column 
           prop="userVal" 
-          label="我的值" 
+          label="用户值" 
           min-width="120"
           show-overflow-tooltip
           resizable
@@ -90,7 +90,7 @@
             <span v-if="scope.row.userVal !== null" class="user-value">
               {{ scope.row.userVal }}
             </span>
-            <span v-else class="no-value">使用全局值</span>
+            <span v-else class="no-value">使用缺省值</span>
           </template>
         </el-table-column>
         <el-table-column 
@@ -140,7 +140,7 @@
               @click="openUpdateGlobalModal(scope.row)"
               :icon="EditIcon"
             >
-              编辑全局值
+              编辑缺省值
             </el-button>
             <el-button 
               link
@@ -149,7 +149,7 @@
               @click="openUpdateUserModal(scope.row)"
               :icon="UserIcon"
             >
-              设置我的值
+              设置用户值
             </el-button>
             <el-dropdown 
               v-if="scope.row.globalVal !== null || scope.row.userVal !== null"
@@ -169,13 +169,13 @@
                     v-if="scope.row.globalVal !== null" 
                     command="global"
                   >
-                    删除全局参数
+                    删除缺省参数
                   </el-dropdown-item>
                   <el-dropdown-item 
                     v-if="scope.row.userVal !== null" 
                     command="user"
                   >
-                    删除我的参数
+                    删除用户参数
                   </el-dropdown-item>
                   <el-dropdown-item 
                     v-if="scope.row.globalVal !== null && scope.row.userVal !== null" 
@@ -258,8 +258,8 @@
         </el-form-item>
         <el-form-item label="参数范围" prop="global">
           <el-radio-group v-model="form.global" :disabled="editMode">
-            <el-radio :value="1">全局默认参数</el-radio>
-            <el-radio :value="0">我的个人参数</el-radio>
+            <el-radio :value="1">缺省参数</el-radio>
+            <el-radio :value="0">用户参数</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="描述">
@@ -324,7 +324,7 @@ const form = reactive<SaveModelVariantParamDto>({
   paramVal: '',
   type: 0,
   description: '',
-  global: 1, // 默认为全局参数 1:是
+  global: 1, // 默认为缺省参数 1:是
   seq: undefined
 })
 
@@ -355,7 +355,7 @@ const formRules = {
 // 计算属性
 const dialogTitle = computed(() => {
   if (editMode.value) {
-    return form.global === 1 ? '编辑全局默认参数' : '编辑我的个人参数'
+    return form.global === 1 ? '编辑缺省参数' : '编辑用户参数'
   }
   return '新增参数'
 })
@@ -423,14 +423,14 @@ const resetQuery = () => {
 const openInsertModal = () => {
   editMode.value = false
   form.modelVariantId = query.modelVariantId || ''
-  form.global = 1 // 默认为全局参数
+  form.global = 1 // 默认为缺省参数
   dialogVisible.value = true
 }
 
 // 打开编辑全局参数对话框
 const openUpdateGlobalModal = async (row: GetModelVariantParamListVo) => {
   if (row.globalVal === null) {
-    ElMessage.warning('该参数没有全局默认值，请先新增')
+    ElMessage.warning('该参数没有缺省值，请先新增')
     return
   }
   
@@ -439,7 +439,7 @@ const openUpdateGlobalModal = async (row: GetModelVariantParamListVo) => {
     const details = await AdminModelVariantParamApi.getModelVariantParamDetails({ 
       modelVariantId: query.modelVariantId,
       paramKey: row.paramKey,
-      global: 1 // 查询全局参数
+      global: 1 // 查询缺省参数
     })
     // 使用三要素定位，不再使用id
     Object.assign(form, {
@@ -468,7 +468,7 @@ const openUpdateUserModal = (row: GetModelVariantParamListVo) => {
     paramVal: row.userVal || row.globalVal || '',
     type: row.type,
     description: row.description,
-    global: 0, // 个人参数
+    global: 0, // 用户参数
     seq: row.seq
   })
   dialogVisible.value = true
@@ -478,9 +478,9 @@ const openUpdateUserModal = (row: GetModelVariantParamListVo) => {
 const handleDeleteCommand = (command: string, row: GetModelVariantParamListVo) => {
   let message = ''
   if (command === 'global') {
-    message = `确定要删除全局参数 "${row.paramKey}" 吗？`
+    message = `确定要删除缺省参数 "${row.paramKey}" 吗？`
   } else if (command === 'user') {
-    message = `确定要删除我的参数 "${row.paramKey}" 吗？`
+    message = `确定要删除用户参数 "${row.paramKey}" 吗？`
   } else if (command === 'both') {
     message = `确定要删除参数 "${row.paramKey}" 的全部配置吗？`
   }
@@ -502,7 +502,7 @@ const removeParam = async (row: GetModelVariantParamListVo, type: string = 'both
         await AdminModelVariantParamApi.removeModelVariantParam({ 
           modelVariantId: query.modelVariantId,
           paramKey: row.paramKey,
-          global: 1 // 删除全局参数
+          global: 1 // 删除缺省参数
         })
       }
     }
@@ -537,7 +537,7 @@ const resetForm = () => {
     paramVal: '',
     type: 0,
     description: '',
-    global: 1, // 默认为全局参数
+    global: 1, // 默认为缺省参数
     seq: undefined
   })
 }
