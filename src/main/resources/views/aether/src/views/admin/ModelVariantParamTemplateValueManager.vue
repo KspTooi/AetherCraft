@@ -4,6 +4,7 @@
     :title="dialogTitle"
     width="80%"
     @close="handleClose"
+    :close-on-click-modal="false"
   >
     <div class="template-value-manager-container">
       <!-- 查询表单 -->

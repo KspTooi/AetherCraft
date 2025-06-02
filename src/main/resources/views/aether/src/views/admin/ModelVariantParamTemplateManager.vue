@@ -171,12 +171,6 @@
           <el-descriptions-item label="模板ID">
             {{ templateDetails.id }}
           </el-descriptions-item>
-          <el-descriptions-item label="所属用户ID">
-            {{ templateDetails.userId }}
-          </el-descriptions-item>
-          <el-descriptions-item label="所属玩家ID">
-            {{ templateDetails.playerId }}
-          </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ templateDetails.createTime }}
           </el-descriptions-item>
