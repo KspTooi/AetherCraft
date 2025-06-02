@@ -286,7 +286,7 @@ public class ModelVariantService {
         // 获取模板的所有参数值
         List<ModelVariantParamTemplateValuePo> templateValues = templateValueRepository.findByTemplateIdOrderBySeq(dto.getTemplateId());
 
-        // 根据global参数决定应用范围
+        // 根据global参数决定应用范围 应用范围：0=个人参数, 1=全局参数
         if (dto.getGlobal() == 1) {
             // 应用为全局参数
             List<ModelVariantParamPo> newParams = new ArrayList<>();
@@ -330,7 +330,8 @@ public class ModelVariantService {
                 modelVariantParamRepository.saveAll(newParams);
             }
         }
-        
+
+
         if (dto.getGlobal() == 0) {
             // 应用为个人参数
             Long currentPlayerId = AuthService.requirePlayerId();
@@ -340,6 +341,29 @@ public class ModelVariantService {
             user.setId(currentUserId);
             PlayerPo player = new PlayerPo();
             player.setId(currentPlayerId);
+
+            // 检查每个模型变体的全局参数与模板的参数键是否一致
+            for (Long modelVariantId : dto.getModelVariantIds()) {
+                // 获取模型变体的全局参数
+                List<ModelVariantParamPo> globalParams = modelVariantParamRepository
+                        .findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+                
+                // 检查模板中的每个参数键是否在全局参数中存在
+                if (templateValues != null && !templateValues.isEmpty()) {
+                    for (ModelVariantParamTemplateValuePo templateValue : templateValues) {
+                        boolean keyExists = false;
+                        for (ModelVariantParamPo globalParam : globalParams) {
+                            if (globalParam.getParamKey().equals(templateValue.getParamKey())) {
+                                keyExists = true;
+                                break;
+                            }
+                        }
+                        if (!keyExists) {
+                            throw new BizException("模板中存在全局参数中不存在的参数键: " + templateValue.getParamKey() + "，无法应用到模型变体");
+                        }
+                    }
+                }
+            }
 
             List<ModelVariantParamPo> newParams = new ArrayList<>();
 
