@@ -76,23 +76,14 @@ public class ModelVariantService {
         return vos;
     }
 
-
-
     public RestPageableView<GetAdminModelVariantListVo> getModelVariantList(GetAdminModelVariantListDto dto) {
-        Page<ModelVariantPo> pageResult = repository.getAdminModelVariantList(
+        Page<GetAdminModelVariantListVo> pageResult = repository.getAdminModelVariantList(
                 dto.getKeyword(),
                 dto.getEnabled(),
                 dto.pageRequest()
         );
 
-        List<GetAdminModelVariantListVo> vos = new ArrayList<>();
-        for (ModelVariantPo po : pageResult.getContent()) {
-            GetAdminModelVariantListVo vo = new GetAdminModelVariantListVo();
-            assign(po, vo);
-            vos.add(vo);
-        }
-
-        return new RestPageableView<>(vos, pageResult.getTotalElements());
+        return new RestPageableView<>(pageResult.getContent(), pageResult.getTotalElements());
     }
 
     public GetAdminModelVariantDetailsVo getModelVariantDetails(Long id) throws BizException {

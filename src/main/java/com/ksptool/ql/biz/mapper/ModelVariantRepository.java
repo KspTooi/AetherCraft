@@ -1,6 +1,7 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ModelVariantPo;
+import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,15 +15,32 @@ import java.util.List;
 public interface ModelVariantRepository extends JpaRepository<ModelVariantPo, Long>{
 
     @Query("""
-            SELECT m FROM ModelVariantPo m
-            WHERE (:keyword IS NULL OR :keyword = '' OR 
-                   m.code LIKE CONCAT('%', :keyword, '%') OR 
-                   m.name LIKE CONCAT('%', :keyword, '%') OR 
+            SELECT new com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo(
+                m.id,
+                m.code,
+                m.name,
+                m.type,
+                m.series,
+                m.thinking,
+                m.scale,
+                m.speed,
+                m.intelligence,
+                m.enabled,
+                CAST(
+                 (SELECT COUNT(mvp) FROM ModelVariantParamPo mvp
+                 WHERE mvp.modelVariant.id = m.id AND mvp.user IS NULL AND mvp.player IS NULL) AS Integer),
+                m.createTime,
+                m.updateTime
+            )
+            FROM ModelVariantPo m
+            WHERE (:keyword IS NULL OR :keyword = '' OR
+                   m.code LIKE CONCAT('%', :keyword, '%') OR
+                   m.name LIKE CONCAT('%', :keyword, '%') OR
                    m.series LIKE CONCAT('%', :keyword, '%'))
             AND (:enabled IS NULL OR m.enabled = :enabled)
             ORDER BY m.seq ASC, m.createTime DESC
             """)
-    Page<ModelVariantPo> getAdminModelVariantList(
+    Page<GetAdminModelVariantListVo> getAdminModelVariantList(
             @Param("keyword") String keyword,
             @Param("enabled") Integer enabled,
             Pageable pageable

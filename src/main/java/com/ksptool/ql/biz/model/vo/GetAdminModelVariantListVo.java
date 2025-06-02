@@ -7,9 +7,23 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class GetAdminModelVariantListVo {
+
+    public GetAdminModelVariantListVo(Long id, String code, String name, Integer type, String series, Integer thinking, Integer scale, Integer speed, Integer intelligence, Integer enabled, Integer paramCount, Date createTime, Date updateTime) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.type = type;
+        this.series = series;
+        this.thinking = thinking;
+        this.scale = scale;
+        this.speed = speed;
+        this.intelligence = intelligence;
+        this.enabled = enabled;
+        this.paramCount = paramCount;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+    }
 
     // 模型ID
     private Long id;
@@ -40,6 +54,9 @@ public class GetAdminModelVariantListVo {
 
     // 是否启用 0:禁用 1:启用
     private Integer enabled;
+
+    // 参数数量
+    private Integer paramCount;
 
     // 创建时间
     private Date createTime;

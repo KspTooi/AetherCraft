@@ -5,12 +5,12 @@ import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
 // --- DTOs ---
 
-export interface GetAdminModelSeriesListDto extends PageQuery {
+export interface GetAdminModelVariantListDto extends PageQuery {
     keyword?: string | null; // 模糊筛选模型代码、名称、系列
     enabled?: number; // 启用状态 0:禁用 1:启用
 }
 
-export interface SaveAdminModelSeriesDto {
+export interface SaveAdminModelVariantDto {
     id?: string; // 模型ID，新增时为null，编辑时必填 (Long -> string)
     code: string; // 模型代码 (PO中nullable = false)
     name: string; // 模型名称 (PO中nullable = false)
@@ -37,7 +37,7 @@ export interface ApplyModelVariantParamTemplateDto {
 
 // --- VOs ---
 
-export interface GetAdminModelSeriesListVo {
+export interface GetAdminModelVariantListVo {
     id: string; // 模型ID (Long -> string)
     code: string; // 模型代码
     name: string; // 模型名称
@@ -48,11 +48,12 @@ export interface GetAdminModelSeriesListVo {
     speed: number; // 速度 0:慢速 1:中速 2:快速 3:极快
     intelligence: number; // 智能程度 0:木质 1:石质 2:铁质 3:钻石 4:纳米 5:量子
     enabled: number; // 是否启用 0:禁用 1:启用
+    paramCount: number; // 参数数量
     createTime: string; // 创建时间 (Date -> string)
     updateTime: string; // 更新时间 (Date -> string)
 }
 
-export interface GetAdminModelSeriesDetailsVo {
+export interface GetAdminModelVariantDetailsVo {
     id: string; // 模型ID (Long -> string)
     code: string; // 模型代码
     name: string; // 模型名称
@@ -80,21 +81,21 @@ export default {
     /**
      * 获取模型变体列表
      */
-    getModelVariantList: async (dto: GetAdminModelSeriesListDto): Promise<RestPageableView<GetAdminModelSeriesListVo>> => {
-        return await Http.postEntity<RestPageableView<GetAdminModelSeriesListVo>>('/admin/model/variant/getModelVariantList', dto);
+    getModelVariantList: async (dto: GetAdminModelVariantListDto): Promise<RestPageableView<GetAdminModelVariantListVo>> => {
+        return await Http.postEntity<RestPageableView<GetAdminModelVariantListVo>>('/admin/model/variant/getModelVariantList', dto);
     },
 
     /**
      * 获取模型变体详情
      */
-    getModelVariantDetails: async (dto: CommonIdDto): Promise<GetAdminModelSeriesDetailsVo> => {
-        return await Http.postEntity<GetAdminModelSeriesDetailsVo>('/admin/model/variant/getModelVariantDetails', dto);
+    getModelVariantDetails: async (dto: CommonIdDto): Promise<GetAdminModelVariantDetailsVo> => {
+        return await Http.postEntity<GetAdminModelVariantDetailsVo>('/admin/model/variant/getModelVariantDetails', dto);
     },
 
     /**
      * 保存模型变体
      */
-    saveModelVariant: async (dto: SaveAdminModelSeriesDto): Promise<string> => {
+    saveModelVariant: async (dto: SaveAdminModelVariantDto): Promise<string> => {
         return await Http.postEntity<string>('/admin/model/variant/saveModelVariant', dto);
     },
 
