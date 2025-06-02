@@ -52,7 +52,7 @@
           />
           <el-table-column 
             prop="globalVal" 
-            label="全局默认值" 
+            label="缺省值" 
             min-width="120" 
             show-overflow-tooltip
             resizable
@@ -66,7 +66,7 @@
           </el-table-column>
           <el-table-column 
             prop="userVal" 
-            label="我的值" 
+            label="用户值" 
             min-width="120"
             show-overflow-tooltip
             resizable
@@ -75,7 +75,7 @@
               <span v-if="scope.row.userVal !== null" class="user-value">
                 {{ scope.row.userVal }}
               </span>
-              <span v-else class="no-value">使用全局值</span>
+              <span v-else class="no-value">使用缺省值</span>
             </template>
           </el-table-column>
           <el-table-column 
@@ -116,62 +116,65 @@
               {{ scope.row.createTime }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" fixed="right" min-width="200" resizable>
+          <el-table-column label="操作" fixed="right" min-width="200" resizable align="center">
             <template #default="scope">
-              <el-button 
-                link
-                type="primary" 
-                size="small" 
-                @click="openUpdateGlobalModal(scope.row)"
-                :icon="EditIcon"
-              >
-                编辑全局值
-              </el-button>
-              <el-button 
-                link
-                type="warning" 
-                size="small" 
-                @click="openUpdateUserModal(scope.row)"
-                :icon="UserIcon"
-              >
-                设置我的值
-              </el-button>
-              <el-dropdown 
-                v-if="scope.row.globalVal !== null || scope.row.userVal !== null"
-                @command="(command: string) => handleDeleteCommand(command, scope.row)"
-              >
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <el-button 
                   link
-                  type="danger" 
+                  type="primary" 
                   size="small" 
-                  :icon="DeleteIcon"
+                  @click="openUpdateGlobalModal(scope.row)"
+                  :icon="EditIcon"
                 >
-                  删除<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                  编辑缺省值
                 </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item 
-                      v-if="scope.row.globalVal !== null" 
-                      command="global"
-                    >
-                      删除全局参数
-                    </el-dropdown-item>
-                    <el-dropdown-item 
-                      v-if="scope.row.userVal !== null" 
-                      command="user"
-                    >
-                      删除我的参数
-                    </el-dropdown-item>
-                    <el-dropdown-item 
-                      v-if="scope.row.globalVal !== null && scope.row.userVal !== null" 
-                      command="both"
-                      divided
-                    >
-                      删除全部参数
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+                <el-button 
+                  link
+                  type="warning" 
+                  size="small" 
+                  @click="openUpdateUserModal(scope.row)"
+                  :icon="UserIcon"
+                >
+                  设置用户值
+                </el-button>
+                <el-dropdown 
+                  v-if="scope.row.globalVal !== null || scope.row.userVal !== null"
+                  @command="(command: string) => handleDeleteCommand(command, scope.row)"
+                  style="display: flex; align-items: center;"
+                >
+                  <el-button 
+                    link
+                    type="danger" 
+                    size="small" 
+                    :icon="DeleteIcon"
+                  >
+                    删除<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item 
+                        v-if="scope.row.globalVal !== null" 
+                        command="global"
+                      >
+                        删除缺省参数
+                      </el-dropdown-item>
+                      <el-dropdown-item 
+                        v-if="scope.row.userVal !== null" 
+                        command="user"
+                      >
+                        删除用户参数
+                      </el-dropdown-item>
+                      <el-dropdown-item 
+                        v-if="scope.row.globalVal !== null && scope.row.userVal !== null" 
+                        command="both"
+                        divided
+                      >
+                        删除全部参数
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -235,8 +238,8 @@
           </el-form-item>
           <el-form-item label="参数范围" prop="global">
             <el-radio-group v-model="form.global" :disabled="editMode">
-              <el-radio :value="1">全局默认参数</el-radio>
-              <el-radio :value="0">我的个人参数</el-radio>
+              <el-radio :value="1">缺省参数</el-radio>
+              <el-radio :value="0">用户参数</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="描述">
@@ -349,7 +352,7 @@ const formRules = {
 // 计算属性
 const paramDialogTitle = computed(() => {
   if (editMode.value) {
-    return form.global === 1 ? '编辑全局默认参数' : '编辑我的个人参数'
+    return form.global === 1 ? '编辑缺省参数' : '编辑用户参数'
   }
   return '新增参数'
 })
@@ -422,7 +425,7 @@ const openInsertModal = () => {
 // 打开编辑全局参数对话框
 const openUpdateGlobalModal = async (row: GetModelVariantParamListVo) => {
   if (row.globalVal === null) {
-    ElMessage.warning('该参数没有全局默认值，请先新增')
+    ElMessage.warning('该参数没有缺省值，请先新增')
     return
   }
   
@@ -468,9 +471,9 @@ const openUpdateUserModal = (row: GetModelVariantParamListVo) => {
 const handleDeleteCommand = (command: string, row: GetModelVariantParamListVo) => {
   let message = ''
   if (command === 'global') {
-    message = `确定要删除全局参数 "${row.paramKey}" 吗？`
+    message = `确定要删除缺省参数 "${row.paramKey}" 吗？`
   } else if (command === 'user') {
-    message = `确定要删除我的参数 "${row.paramKey}" 吗？`
+    message = `确定要删除用户参数 "${row.paramKey}" 吗？`
   } else if (command === 'both') {
     message = `确定要删除参数 "${row.paramKey}" 的全部配置吗？`
   }
