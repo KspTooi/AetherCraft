@@ -26,6 +26,7 @@ public class GeminiResponse {
     @Data
     public static class Part {
         private String text;
+        private Boolean thought;
     }
 
     @Data
@@ -57,5 +58,18 @@ public class GeminiResponse {
             }
         }
         return null;
+    }
+
+    public boolean isThought(){
+        if (candidates != null && !candidates.isEmpty()) {
+            Candidate firstCandidate = candidates.getFirst();
+            if (firstCandidate.content != null && 
+                firstCandidate.content.parts != null && 
+                !firstCandidate.content.parts.isEmpty()) {
+                Boolean thought = firstCandidate.content.parts.getFirst().thought;
+                return thought != null && thought;
+            }
+        }
+        return false;
     }
 } 

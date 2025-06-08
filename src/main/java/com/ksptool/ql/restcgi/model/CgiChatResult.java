@@ -10,12 +10,14 @@ public class CgiChatResult {
     private ModelVariantSchema model;
 
     //返回类型(旧) 0:数据 1:结束 2:错误
-
     //返回类型(新) 0:思考片段 1:文本 50:结束 51:错误
     private int type;
 
     //返回内容(模型回复内容) 如果type=50时返回模型的完整回复内容 如果type=0/1时返回模型当前回复的片段
     private String content;
+
+    //返回内容(模型思考内容) 当type=50时一次性返回 当type=0时使用content字段返回思考片段
+    private String contentThought;
 
     //顺序
     private int seq;
