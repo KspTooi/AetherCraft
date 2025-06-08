@@ -106,15 +106,15 @@ import AdminModelVariantApi from '@/commons/api/AdminModelVariantApi'
 import type { 
   GetModelVariantParamTemplateListVo
 } from '@/commons/api/AdminModelVariantParamTemplateApi'
-import type { 
-  GetAdminModelSeriesListVo,
+import type {
+  GetAdminModelVariantListVo,
   ApplyModelVariantParamTemplateDto
 } from '@/commons/api/AdminModelVariantApi'
 
 // Props
 interface Props {
   visible: boolean
-  selectedModelVariants: GetAdminModelSeriesListVo[]
+  selectedModelVariants: GetAdminModelVariantListVo[]
 }
 
 // Emits

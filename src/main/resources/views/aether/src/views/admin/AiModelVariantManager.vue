@@ -375,18 +375,17 @@
 
 <script setup lang="ts">
 
-import {reactive, ref, onMounted, markRaw} from "vue";
+import {markRaw, onMounted, reactive, ref} from "vue";
 import type {
-  AdminToggleModelVariantDto,
-  GetAdminModelSeriesDetailsVo,
-  GetAdminModelSeriesListDto,
-  GetAdminModelSeriesListVo,
-  SaveAdminModelSeriesDto
+  GetAdminModelVariantDetailsVo,
+  GetAdminModelVariantListDto,
+  GetAdminModelVariantListVo,
+  SaveAdminModelVariantDto
 } from "@/commons/api/AdminModelVariantApi.ts";
 import AdminModelSeriesApi from "@/commons/api/AdminModelVariantApi.ts";
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, Delete, Setting, ArrowDown } from '@element-plus/icons-vue';
-import type { FormInstance } from 'element-plus';
+import type {FormInstance} from 'element-plus';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {ArrowDown, Delete, Edit, Setting} from '@element-plus/icons-vue';
 import dayjs from 'dayjs';
 import ModelVariantParamsModal from '@/views/admin/ModelVariantParamsModal.vue'
 import ApplyParamTemplateModal from '@/views/admin/ApplyParamTemplateModal.vue'
@@ -398,21 +397,21 @@ const mode = ref<"insert" | "update">("insert")
 const modelSeriesOptions = ref<string[]>([])
 
 // 多选相关状态
-const selectedRows = ref<GetAdminModelSeriesListVo[]>([])
+const selectedRows = ref<GetAdminModelVariantListVo[]>([])
 const batchLoading = ref(false)
 
 // 参数模态框相关状态
 const paramsModalVisible = ref(false)
-const currentModelVariant = ref<GetAdminModelSeriesListVo | null>(null)
+const currentModelVariant = ref<GetAdminModelVariantListVo | null>(null)
 
-const query = reactive<GetAdminModelSeriesListDto>({
+const query = reactive<GetAdminModelVariantListDto>({
   keyword: null,
   enabled: undefined,
   page: 1,
   pageSize: 10
 })
 
-const list = ref<GetAdminModelSeriesListVo[]>([])
+const list = ref<GetAdminModelVariantListVo[]>([])
 const total = ref(0)
 
 // 加载状态
@@ -432,7 +431,7 @@ const submitLoading = ref(false)
 const tableRef = ref()
 
 //表单数据
-const details = reactive<GetAdminModelSeriesDetailsVo>({
+const details = reactive<GetAdminModelVariantDetailsVo>({
   code: "",
   createTime: "",
   enabled: 1,
@@ -490,8 +489,7 @@ const formatDateTime = (dateStr: string) => {
 // 加载模型系列选项
 const loadModelSeriesOptions = async () => {
   try {
-    const series = await AdminModelSeriesApi.getModelSeries()
-    modelSeriesOptions.value = series
+    modelSeriesOptions.value = await AdminModelSeriesApi.getModelSeries()
   } catch (e) {
     ElMessage.error('加载模型系列选项失败')
     console.error("加载模型系列选项失败", e)
@@ -551,7 +549,7 @@ const openInsertModal = () => {
   dialogVisible.value = true
 }
 
-const openUpdateModal = async (row: GetAdminModelSeriesListVo) => {
+const openUpdateModal = async (row: GetAdminModelVariantListVo) => {
   try {
     mode.value = "update"
     resetForm()
@@ -574,7 +572,7 @@ const save = async () => {
     
     submitLoading.value = true
     try {
-      const saveDto: SaveAdminModelSeriesDto = {
+      const saveDto: SaveAdminModelVariantDto = {
         id: mode.value === 'update' ? details.id : undefined,
         code: details.code,
         name: details.name,
@@ -602,7 +600,7 @@ const save = async () => {
   })
 }
 
-const remove = async (row: GetAdminModelSeriesListVo) => {
+const remove = async (row: GetAdminModelVariantListVo) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除模型变体 ${row.name} (${row.code}) 吗？`,
@@ -625,7 +623,7 @@ const remove = async (row: GetAdminModelSeriesListVo) => {
   }
 }
 
-const handleSelectionChange = (rows: GetAdminModelSeriesListVo[]) => {
+const handleSelectionChange = (rows: GetAdminModelVariantListVo[]) => {
   selectedRows.value = rows
 }
 
@@ -643,7 +641,7 @@ const batchToggle = async (enabled: number) => {
   }
 }
 
-const openParamsModal = (row: GetAdminModelSeriesListVo) => {
+const openParamsModal = (row: GetAdminModelVariantListVo) => {
   currentModelVariant.value = row
   paramsModalVisible.value = true
 }
@@ -664,7 +662,7 @@ const handleTemplateApplied = () => {
   }
 }
 
-const handleManageCommand = (command: string, row: GetAdminModelSeriesListVo) => {
+const handleManageCommand = (command: string, row: GetAdminModelVariantListVo) => {
   if (command === 'edit') {
     openUpdateModal(row)
   } else if (command === 'params') {
