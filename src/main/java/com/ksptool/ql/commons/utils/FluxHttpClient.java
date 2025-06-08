@@ -1,6 +1,7 @@
 package com.ksptool.ql.commons.utils;
 
 import com.ksptool.ql.commons.exception.BizException;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -9,6 +10,7 @@ import reactor.core.publisher.Flux;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+@Slf4j
 public class FluxHttpClient {
 
     private final OkHttpClient httpClient;
@@ -47,6 +49,7 @@ public class FluxHttpClient {
                         String line;
                         // 循环读取每一行，直到流结束或订阅被取消
                         while ((line = reader.readLine()) != null && !sink.isCancelled()) {
+                            //log.info(line);
                             sink.next(line); // 发出原始行
                         }
                         // 正常结束信号

@@ -9,8 +9,13 @@ import java.util.Map;
 public class GsonUtils {
 
     public static JsonElement injectContent(JsonElement json, Map<String, String> map) {
+
         if (json == null) {
             json = new JsonObject();
+        }
+
+        if(map == null){
+            return json;
         }
 
         if (!(json instanceof JsonObject)) {

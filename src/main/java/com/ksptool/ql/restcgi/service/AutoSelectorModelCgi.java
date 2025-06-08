@@ -2,20 +2,16 @@ package com.ksptool.ql.restcgi.service;
 
 import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
-import com.ksptool.ql.commons.enums.UserConfigEnum;
-import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.exception.ModelSeriesNotExistsException;
 import com.ksptool.ql.commons.utils.HttpClientUtils;
-import com.ksptool.ql.commons.utils.PreparedPrompt;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Primary;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
+import reactor.core.publisher.Flux;
 import java.util.function.Consumer;
 
 
@@ -80,31 +76,6 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
                 log.error("获取模型参数时出现授权异常");
             }
         }
-
-        // 只在参数为-1时自动获取配置
-        /*if (param.getTemperature() == -1) {
-            PreparedPrompt temperatureK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TEMPERATURE.key())
-                    .setParameter("modelCode", modelCode);
-            param.setTemperature(playerConfigService.getDouble(temperatureK.execute(), 0.7));
-        }
-
-        if (param.getTopP() == -1) {
-            PreparedPrompt topPK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_P.key())
-                    .setParameter("modelCode", modelCode);
-            param.setTopP(playerConfigService.getDouble(topPK.execute(), 1.0));
-        }
-
-        if (param.getTopK() == -1) {
-            PreparedPrompt topKK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_TOP_K.key())
-                    .setParameter("modelCode", modelCode);
-            param.setTopK(playerConfigService.getInt(topKK.execute(), 40));
-        }
-
-        if (param.getMaxOutputTokens() == -1) {
-            PreparedPrompt maxOutputTokensK = PreparedPrompt.prepare(UserConfigEnum.AI_MODEL_MAX_OUTPUT_TOKENS.key())
-                    .setParameter("modelCode", modelCode);
-            param.setMaxOutputTokens(playerConfigService.getInt(maxOutputTokensK.execute(), 4096));
-        }*/
     }
 
     private void selectHttpClient(CgiChatParam param) throws BizException {
@@ -165,5 +136,10 @@ public class AutoSelectorModelCgi implements ModelRestCgi {
         if (p.getHistoryMessages() == null) {
             throw new BizException("[CGI参数错误] 历史消息不允许为null");
         }
+    }
+
+    @Override
+    public Flux<CgiChatResult> sendMessageFlux(CgiChatParam param) {
+        return null;
     }
 }

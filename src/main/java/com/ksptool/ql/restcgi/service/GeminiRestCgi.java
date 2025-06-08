@@ -3,6 +3,7 @@ package com.ksptool.ql.restcgi.service;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.FluxHttpClient;
 import com.ksptool.ql.commons.utils.GsonUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
@@ -10,7 +11,9 @@ import com.ksptool.ql.restcgi.model.provider.GeminiRequest;
 import com.ksptool.ql.restcgi.model.provider.GeminiResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -178,4 +181,91 @@ public class GeminiRestCgi implements ModelRestCgi {
 
 
     }
+
+    @Override
+    public Flux<CgiChatResult> sendMessageFlux(CgiChatParam p) {
+
+        var req = new GeminiRequest(p);
+
+        //加载Variant参数
+        JsonElement element = GsonUtils.injectContent(gson.toJsonTree(req), p.getVariantParam());
+        String jsonBody = gson.toJson(element);
+
+        //创建请求对象
+        Request request = new Request.Builder()
+                .url(GEMINI_BASE_URL + p.getModel().getCode() + ":streamGenerateContent?alt=sse&key=" + p.getApikey())
+                .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
+                .build();
+
+        FluxHttpClient fhc = new FluxHttpClient(p.getHttpClient());
+        AtomicInteger seq = new AtomicInteger(0);
+        StringBuilder finalText = new StringBuilder();
+
+        return fhc.send(request)
+                .filter(line->line.startsWith("data: "))
+                .map(line -> line.substring(6).trim())
+                .filter(line->!line.equals("[DONE]"))
+                .map(line -> processFragment(line,p,seq,finalText))
+                .concatWith(Flux.defer(() -> {
+
+                    if (StringUtils.isBlank(finalText.toString())) {
+                        return Flux.error(new BizException("Gemini响应内容为空!"));
+                    }
+                    
+                    var result = new CgiChatResult();
+                    result.setModel(p.getModel());
+                    result.setType(50);
+                    result.setContent(finalText.toString());
+                    result.setSeq(seq.getAndIncrement());
+                    result.setException(null);
+                    result.setTokenInput(-1);
+                    result.setTokenOutput(-1);
+                    result.setTokenThoughtOutput(-1);
+                    return Flux.just(result);
+                }))
+                .onErrorResume(error -> processException(p,error));
+    }
+    
+    private CgiChatResult processFragment(String line, CgiChatParam p, AtomicInteger seq, StringBuilder finalText) {
+        try {
+            GeminiResponse geminiResponse = gson.fromJson(line, GeminiResponse.class);
+            String text = geminiResponse.getFirstResponseText();
+
+            var result = new CgiChatResult();
+            result.setModel(p.getModel());
+            result.setType(1);
+            result.setContent("");
+            result.setSeq(seq.getAndIncrement());
+            result.setTokenInput(0);
+            result.setTokenOutput(0);
+            result.setTokenThoughtOutput(0);
+
+            if(StringUtils.isBlank(text)){
+                return result;
+            }
+            
+            finalText.append(text);
+            result.setContent(text);
+            return result;
+            
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    private Flux<CgiChatResult> processException(CgiChatParam p, Throwable error) {
+        var result = new CgiChatResult();
+        result.setModel(p.getModel());
+        result.setType(51);
+        result.setContent("流处理错误:" + error.getMessage());
+        result.setSeq(-1);
+        result.setException(error instanceof Exception ? (Exception) error : new Exception(error));
+        result.setTokenInput(-1);
+        result.setTokenOutput(-1);
+        result.setTokenThoughtOutput(-1);
+        return Flux.just(result);
+    }
+
+
 }
