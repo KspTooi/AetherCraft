@@ -60,4 +60,63 @@ public class CgiChatResult {
         }
         this.tokenThoughtOutput = tokenThoughtOutput;
     }
+
+    public static CgiChatResult thought(CgiChatParam param,String content,int seq){
+        var ccr = new CgiChatResult();
+        ccr.setModel(param.getModel());
+        ccr.setType(0); //0:思考片段 1:文本 50:结束 51:错误
+        ccr.setContent(content);
+        ccr.setContentThought(null);
+        ccr.setSeq(seq);
+        ccr.setException(null);
+        ccr.setTokenInput(0);
+        ccr.setTokenOutput(0);
+        ccr.setTokenThoughtOutput(0);
+        return ccr;
+    }
+
+    public static CgiChatResult text(CgiChatParam param,String content,int seq){
+        var ccr = new CgiChatResult();
+        ccr.setModel(param.getModel());
+        ccr.setType(1); //0:思考片段 1:文本 50:结束 51:错误
+        ccr.setContent(content);
+        ccr.setContentThought(null);
+        ccr.setSeq(seq);
+        ccr.setException(null);
+        ccr.setTokenInput(0);
+        ccr.setTokenOutput(0);
+        ccr.setTokenThoughtOutput(0);
+        return ccr;
+    }
+
+    public static CgiChatResult error(CgiChatParam param,String content,Exception exception){
+        var ccr = new CgiChatResult();
+        ccr.setModel(param.getModel());
+        ccr.setType(51); //0:思考片段 1:文本 50:结束 51:错误
+        ccr.setContent(content);
+        ccr.setContentThought(null);
+        ccr.setSeq(-1);
+        ccr.setException(exception);
+        ccr.setTokenInput(0);
+        ccr.setTokenOutput(0);
+        ccr.setTokenThoughtOutput(0);
+        return ccr;
+    }
+
+    public static CgiChatResult finish(CgiChatParam param,String allContent,String allThoughtContent,int seq){
+        var ccr = new CgiChatResult();
+        ccr.setModel(param.getModel());
+        ccr.setType(50); //0:思考片段 1:文本 50:结束 51:错误
+        ccr.setContent(allContent);
+        ccr.setContentThought(allThoughtContent);
+        ccr.setSeq(seq);
+        ccr.setException(null);
+        ccr.setTokenInput(0);
+        ccr.setTokenOutput(0);
+        ccr.setTokenThoughtOutput(0);
+        return ccr;
+    }
+
+
+
 }

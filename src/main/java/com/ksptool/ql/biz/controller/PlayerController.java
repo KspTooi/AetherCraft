@@ -179,7 +179,7 @@ public class PlayerController {
         }
     }
 
-
+    //上传人物头像
     @PostMapping("/uploadAvatar")
     public Result<String> uploadAvatar(@RequestParam("file") MultipartFile file){
         try {

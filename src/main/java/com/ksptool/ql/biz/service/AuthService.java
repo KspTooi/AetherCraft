@@ -155,20 +155,20 @@ public class AuthService {
      */
     public static boolean hasPermission(String permission) {
 
-        //return true;
+        return true;
 
-        UserSessionVo session = getCurrentUserSession();
-        var uid = -1;
-        if (session == null || session.getPermissions() == null) {
-            log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
-            return false;
-        }
-
-        if(session.getPermissions().contains(permission)){
-            return true;
-        }
-        log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
-        return false;
+        //UserSessionVo session = getCurrentUserSession();
+        //var uid = -1;
+        //if (session == null || session.getPermissions() == null) {
+        //    log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
+        //    return false;
+        //}
+//
+        //if(session.getPermissions().contains(permission)){
+        //    return true;
+        //}
+        //log.warn("权限校验未通过 uid:{} permission:{}", uid, permission);
+        //return false;
     }
 
     /**

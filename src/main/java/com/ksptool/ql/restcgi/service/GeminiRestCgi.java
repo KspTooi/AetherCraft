@@ -3,6 +3,7 @@ package com.ksptool.ql.restcgi.service;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.CallbackHttpClient;
 import com.ksptool.ql.commons.utils.FluxHttpClient;
 import com.ksptool.ql.commons.utils.GsonUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Flux;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -100,110 +102,84 @@ public class GeminiRestCgi implements ModelRestCgi {
                 .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
                 .build();
 
-        //进入虚拟线程 处理SSE响应
-        Thread.startVirtualThread(() -> {
+        CallbackHttpClient client = new CallbackHttpClient(p.getHttpClient());
+        AtomicInteger seq = new AtomicInteger(0);
 
-            try (Response response = p.getHttpClient().newCall(request).execute()) {
+        AtomicReference<GeminiResponse> lastRet = new AtomicReference<>();
+        StringBuilder allText = new StringBuilder();
+        StringBuilder allThought = new StringBuilder();
 
-                if (!response.isSuccessful()) {
-                    throw new BizException("调用Gemini API失败 连接已被关闭");
+        client.onResponse((body)->{
+
+            try{
+
+                if (!body.startsWith("data: ")) {
+                    return;
+                }
+                if(body.contains("[DONE]")){
+                    return;
                 }
 
-                AtomicInteger seq = new AtomicInteger(0);
+                String data = body.substring(6);
+                GeminiResponse gr = gson.fromJson(data, GeminiResponse.class);
+                lastRet.set(gr);
 
-                GeminiResponse geminiResponse = null;
-                StringBuilder responseBuilder = new StringBuilder();
-                StringBuilder thoughtBuilder = new StringBuilder();
+                String text = gr.getFirstResponseText();
 
-
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("data: ")) {
-                            String data = line.substring(6);
-
-                            if("[DONE]".equals(data)){
-                                break;
-                            }
-
-                            geminiResponse = gson.fromJson(data, GeminiResponse.class);
-                            String text = geminiResponse.getFirstResponseText();
-
-                            if(StringUtils.isBlank(text)){
-                                continue;
-                            }
-
-
-                            // 0:思考片段 1:文本 50:结束 51:错误
-                            var ccr = new CgiChatResult();
-                            ccr.setModel(p.getModel());
-                            ccr.setType(1);
-                            ccr.setContent(text);
-                            ccr.setSeq(seq.getAndIncrement());
-                            ccr.setException(null);
-                            ccr.setTokenInput(0);
-                            ccr.setTokenOutput(0);
-                            ccr.setTokenThoughtOutput(0);
-
-                            //思考
-                            if(geminiResponse.isThought()){
-                                ccr.setType(0);
-                                thoughtBuilder.append(text);
-                            }
-
-                            //非思考
-                            if(!geminiResponse.isThought()){
-                                ccr.setType(1);
-                                responseBuilder.append(text);
-                            }
-
-                            callback.accept(ccr);
-                        }
-                    }
+                if(StringUtils.isBlank(text)){
+                    return;
                 }
 
-                if(responseBuilder.isEmpty()){
-                    throw new BizException("Gemini API 响应为空");
+                //思考
+                if(gr.isThought()){
+                    allThought.append(text);
+                    CgiChatResult ccr = CgiChatResult.thought(p, text, seq.getAndIncrement());
+                    callback.accept(ccr);
                 }
 
-                //整个SSE都响应完成 需通知回调完成
-                var ccr = new CgiChatResult();
-                ccr.setModel(p.getModel());
-                ccr.setType(50); //返回类型 0:思考片段 1:文本 50:结束 51:错误
-                ccr.setContent(responseBuilder.toString());
-                ccr.setSeq(seq.get());
-                ccr.setException(null);
-                ccr.setTokenInput(-1);
-                ccr.setTokenOutput(-1);
-                ccr.setTokenThoughtOutput(-1);
-
-                if(geminiResponse != null && geminiResponse.getUsageMetadata() != null){
-                    ccr.setTokenInput(geminiResponse.getUsageMetadata().getPromptTokenCount());
-                    ccr.setTokenOutput(geminiResponse.getUsageMetadata().getCandidatesTokenCount());
-                    ccr.setTokenThoughtOutput(geminiResponse.getUsageMetadata().getThoughtsTokenCount());
+                //非思考
+                if(!gr.isThought()){
+                    allText.append(text);
+                    CgiChatResult ccr = CgiChatResult.text(p, text, seq.getAndIncrement());
+                    callback.accept(ccr);
                 }
 
-                callback.accept(ccr);
-
-
-            } catch (Exception e) {
+            }catch (Exception e){
                 log.error(e.getMessage(),e);
-                //流式响应出现错误 需通知回调
-                var ccr = new CgiChatResult();
-                ccr.setModel(p.getModel());
-                ccr.setType(51); //0:思考片段 1:文本 50:结束 51:错误
-                ccr.setContent(e.getMessage());
-                ccr.setSeq(-1);
-                ccr.setException(e);
-                ccr.setTokenInput(-1);
-                ccr.setTokenOutput(-1);
-                ccr.setTokenThoughtOutput(-1);
-                callback.accept(ccr);
+                var error = CgiChatResult.error(p,e.getMessage(),e);
+                callback.accept(error);
             }
+
         });
 
+        client.onError((e)->{
+            var error = CgiChatResult.error(p,e.getMessage(),e);
+            callback.accept(error);
+        });
+
+        client.onComplete(()->{
+
+            if((allText.isEmpty() && allThought.isEmpty()) || lastRet.get() == null){
+                var error = CgiChatResult.error(p,"Gemini返回内容为空",new BizException("Gemini返回内容为空"));
+                callback.accept(error);
+                return;
+            }
+
+            GeminiResponse lastGr = lastRet.get();
+            CgiChatResult ccr = CgiChatResult.finish(p, allText.toString(), allThought.toString(), seq.getAndIncrement());
+
+            if(lastGr != null && lastGr.getUsageMetadata() != null){
+                ccr.setTokenInput(lastGr.getUsageMetadata().getPromptTokenCount());
+                ccr.setTokenOutput(lastGr.getUsageMetadata().getCandidatesTokenCount());
+                ccr.setTokenThoughtOutput(lastGr.getUsageMetadata().getThoughtsTokenCount());
+            }
+            callback.accept(ccr);
+        });
+
+        client.send(request);
 
     }
+
 
     @Override
     public Flux<CgiChatResult> sendMessageFlux(CgiChatParam p) {
@@ -223,6 +199,7 @@ public class GeminiRestCgi implements ModelRestCgi {
         FluxHttpClient fhc = new FluxHttpClient(p.getHttpClient());
         AtomicInteger seq = new AtomicInteger(0);
         StringBuilder finalText = new StringBuilder();
+
 
         return fhc.send(request)
                 .filter(line->line.startsWith("data: "))
