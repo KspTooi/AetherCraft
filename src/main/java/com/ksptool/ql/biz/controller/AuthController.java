@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.vo.UserSessionVo;
 import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.UserService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Set;
 
+@PrintLog
 @Controller
 public class AuthController {
 
@@ -34,6 +36,7 @@ public class AuthController {
     @Autowired
     private GlobalConfigService globalConfigService;
 
+    @PrintLog(sensitiveFields = "password")
     @PostMapping(value = "/login")
     public String login(@Valid LoginDto dto, HttpServletResponse response, RedirectAttributes ra) {
         try {
@@ -55,9 +58,10 @@ public class AuthController {
         }
     }
 
+    @PrintLog(sensitiveFields = "password")
     @PostMapping(value = "/register")
     @ResponseBody
-    public Result<String> login(@Valid @RequestBody RegisterDto dto) {
+    public Result<String> register(@Valid @RequestBody RegisterDto dto) {
 
         String allowRegister = globalConfigService.getValue(GlobalConfigEnum.ALLOW_USER_REGISTER.getKey());
 
@@ -91,6 +95,7 @@ public class AuthController {
         }
     }
 
+    @PrintLog(sensitiveFields = "password")
     @PostMapping("/userRegister")
     public ModelAndView userRegister(@Valid RegisterDto dto, BindingResult bindingResult, RedirectAttributes ra) {
 

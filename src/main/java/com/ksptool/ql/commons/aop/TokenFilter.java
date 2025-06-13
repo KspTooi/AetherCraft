@@ -1,4 +1,4 @@
-package com.ksptool.ql.commons.interceptor;
+package com.ksptool.ql.commons.aop;
 
 import com.google.gson.Gson;
 import com.ksptool.ql.biz.service.AuthService;

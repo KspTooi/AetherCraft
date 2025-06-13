@@ -574,6 +574,7 @@ public class ChatConversationService {
 
             }catch (Exception e){
                 log.error("处理聊天片段失败!",e);
+                mccq.closeStream(ctx.threadId());
             }
         };
     }

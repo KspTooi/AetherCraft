@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
 import com.ksptool.ql.biz.model.vo.SendMessageVo;
 import com.ksptool.ql.biz.service.ChatConversationService;
 import com.ksptool.ql.biz.service.ModelVariantService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/conversation")
+@PrintLog
 public class ChatConversationController {
 
     @Autowired
