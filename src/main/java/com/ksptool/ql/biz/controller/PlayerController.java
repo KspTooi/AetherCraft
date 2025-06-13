@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.PlayerService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.enums.GlobalConfigEnum;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@PrintLog
 @RestController
 @RequestMapping("/player")
 public class PlayerController {
@@ -32,6 +34,7 @@ public class PlayerController {
     private GlobalConfigService globalConfigService;
 
     //获取当前登录人物快照
+    @PrintLog(sensitiveFields = {"name","avatarUrl"})
     @PostMapping("/getCurrentPlayer")
     public Result<GetCurrentPlayerVo> getCurrentPlayer() {
 
@@ -50,6 +53,7 @@ public class PlayerController {
     }
 
     //获取当前登录人物详细信息
+    @PrintLog(sensitiveFields = "data")
     @PostMapping("/getAttachPlayerDetails")
     public Result<GetAttachPlayerDetailsVo> getAttachPlayerDetails() {
         try{
@@ -60,6 +64,7 @@ public class PlayerController {
     }
 
     //编辑当前登录人物详细信息
+    @PrintLog(sensitiveFields = {"avatarUrl","gender","genderData","publicInfo","description","language","era","contentFilterLevel"})
     @PostMapping("/editAttachPlayerDetails")
     public Result<String> editAttachPlayerDetails(@RequestBody @Valid EditAttachPlayerDetailsDto dto){
 
