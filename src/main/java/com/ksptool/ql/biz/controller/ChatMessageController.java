@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.CommonIdDto;
 import com.ksptool.ql.biz.model.dto.EditMessageDto;
 import com.ksptool.ql.biz.service.ChatMessageService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/message")
+@PrintLog
 public class ChatMessageController {
 
     @Autowired
@@ -23,6 +25,7 @@ public class ChatMessageController {
 
 
     //编辑对话消息
+    @PrintLog(sensitiveFields = "content")
     @PostMapping("/editMessage")
     public Result<String> editMessage(@RequestBody @Valid EditMessageDto dto) throws BizException {
         service.editMessage(dto.getMessageId(),dto.getContent());

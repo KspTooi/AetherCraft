@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.vo.SelectThreadVo;
 import com.ksptool.ql.biz.model.vo.GetThreadListVo;
 import com.ksptool.ql.biz.service.ChatThreadService;
 import com.ksptool.ql.biz.service.ModelVariantService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/thread")
+@PrintLog
 public class ChatThreadController {
 
     @Autowired
@@ -47,6 +49,7 @@ public class ChatThreadController {
     }
 
 
+    @PrintLog(sensitiveFields = "data.messages")
     @PostMapping("/selectThread")
     public Result<SelectThreadVo> selectThread(@RequestBody @Valid SelectThreadDto dto) throws BizException {
 
@@ -60,6 +63,7 @@ public class ChatThreadController {
         return Result.success(service.selectThread(dto));
     }
 
+    @PrintLog(sensitiveFields = {"title","data.rows"})
     @PostMapping("/getThreadList")
     public Result<RestPageableView<GetThreadListVo>> getThreadList(@RequestBody @Valid GetThreadListDto dto) throws BizException {
 
@@ -71,6 +75,7 @@ public class ChatThreadController {
         return Result.success(service.getThreadList(dto));
     }
 
+    @PrintLog(sensitiveFields = "title")
     @PostMapping("/editThreadTitle")
     public Result<String> editThreadTitle(@RequestBody @Valid EditThreadTitleDto dto) throws BizException {
         service.editThreadTitle(dto.getThreadId(),dto.getTitle());
