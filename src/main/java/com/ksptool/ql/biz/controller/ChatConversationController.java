@@ -31,6 +31,7 @@ public class ChatConversationController {
     @Autowired
     private ModelVariantService modelVariantService;
 
+    @PrintLog(sensitiveFields = {"message","title","senderName","senderAvatarUrl","content","streamId"})
     @PostMapping("/sendMessage")
     public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {
 
@@ -43,11 +44,13 @@ public class ChatConversationController {
         return Result.success(service.sendMessage(dto));
     }
 
+    @PrintLog(sensitiveFields = {"streamId","content","senderName","senderAvatarUrl"})
     @PostMapping("/queryStream")
     public Result<MessageFragmentVo> queryStream(@RequestBody @Valid QueryStreamDto dto) throws BizException {
         return Result.success(service.queryMessage(dto));
     }
 
+    @PrintLog(sensitiveFields = {"streamId","content","senderName","senderAvatarUrl","title"})
     @PostMapping("/regenerate")
     public Result<SendMessageVo> regenerate(@RequestBody @Valid RegenerateDto dto) throws BizException {
         return Result.success(service.regenerate(dto));
