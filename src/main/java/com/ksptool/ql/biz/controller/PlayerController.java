@@ -34,7 +34,7 @@ public class PlayerController {
     private GlobalConfigService globalConfigService;
 
     //获取当前登录人物快照
-    @PrintLog(sensitiveFields = {"name","avatarUrl"})
+    @PrintLog(sensitiveFields = {"data.name","data.avatarUrl"})
     @PostMapping("/getCurrentPlayer")
     public Result<GetCurrentPlayerVo> getCurrentPlayer() {
 
