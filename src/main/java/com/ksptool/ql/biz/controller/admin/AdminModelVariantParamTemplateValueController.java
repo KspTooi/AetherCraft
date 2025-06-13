@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.GetModelVariantParamTemplateValueListDto;
 import com.ksptool.ql.biz.model.dto.SaveModelVariantParamTemplateValueDto;
 import com.ksptool.ql.biz.model.vo.GetModelVariantParamTemplateValueVo;
 import com.ksptool.ql.biz.service.admin.AdminModelVariantParamTemplateValueService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/model/variant/param/template/value")
 public class AdminModelVariantParamTemplateValueController {

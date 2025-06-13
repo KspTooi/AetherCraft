@@ -4,6 +4,7 @@ import com.ksptool.ql.biz.model.dto.AddPlayerDefaultGroupDto;
 import com.ksptool.ql.biz.model.dto.RemovePlayerDefaultGroupDto;
 import com.ksptool.ql.biz.model.vo.GetPlayerDefaultGroupListVo;
 import com.ksptool.ql.biz.service.admin.AdminPlayerDefaultGroupService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.PageQuery;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/player/default/group")
 public class AdminPlayerDefaultGroupController {

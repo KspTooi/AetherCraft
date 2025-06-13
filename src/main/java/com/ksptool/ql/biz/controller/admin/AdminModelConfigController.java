@@ -8,6 +8,7 @@ import com.ksptool.ql.biz.model.vo.GetAvailableModelVo;
 import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
 import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.admin.AdminModelConfigService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/model")
 public class AdminModelConfigController {

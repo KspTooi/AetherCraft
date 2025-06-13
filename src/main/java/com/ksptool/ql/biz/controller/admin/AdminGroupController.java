@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.vo.GetGroupDefinitionsVo;
 import com.ksptool.ql.biz.model.vo.GetGroupDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetGroupListVo;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/group")
 public class AdminGroupController {

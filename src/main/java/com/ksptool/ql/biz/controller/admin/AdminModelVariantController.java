@@ -9,6 +9,7 @@ import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.service.ModelVariantService;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.enums.AiModelSeries;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Arrays;
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/model/variant")
 public class AdminModelVariantController {

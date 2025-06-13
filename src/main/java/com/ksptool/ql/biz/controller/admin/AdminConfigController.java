@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.SaveConfigDto;
 import com.ksptool.ql.biz.model.vo.GetConfigDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetConfigListVo;
 import com.ksptool.ql.biz.service.admin.AdminConfigService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/config")
 public class AdminConfigController {

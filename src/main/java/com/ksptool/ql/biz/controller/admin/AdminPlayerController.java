@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.dto.EditAdminPlayerDto;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
 import com.ksptool.ql.biz.service.admin.AdminPlayerService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/player")
 public class AdminPlayerController {

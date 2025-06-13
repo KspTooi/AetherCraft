@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.vo.GetApiKeyAuthorizationListVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
 import com.ksptool.ql.biz.service.admin.AdminApiKeyService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.enums.AiModelSeries;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -21,6 +22,7 @@ import com.ksptool.ql.commons.exception.BizException;
 
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/apikey")
 public class AdminApiKeyController {

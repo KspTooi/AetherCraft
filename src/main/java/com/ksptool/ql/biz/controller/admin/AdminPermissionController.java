@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.vo.GetPermissionDefinitionVo;
 import com.ksptool.ql.biz.model.vo.GetPermissionDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetPermissionListVo;
 import com.ksptool.ql.biz.service.admin.AdminPermissionService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/permission")
 public class AdminPermissionController {

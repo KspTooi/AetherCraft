@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller.admin;
 import com.ksptool.ql.biz.model.dto.*;
 import com.ksptool.ql.biz.model.vo.*;
 import com.ksptool.ql.biz.service.admin.AdminModelVariantParamTemplateService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.web.RestPageableView;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/model/variant/param/template")
 public class AdminModelVariantParamTemplateController {

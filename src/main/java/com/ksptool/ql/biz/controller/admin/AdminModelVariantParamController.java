@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.model.dto.SaveModelVariantParamDto;
 import com.ksptool.ql.biz.model.vo.GetModelVariantParamDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetModelVariantParamListVo;
 import com.ksptool.ql.biz.service.admin.AdminModelVariantParamService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/model/variant/param")
 public class AdminModelVariantParamController {

@@ -7,6 +7,7 @@ import com.ksptool.ql.biz.service.UserService;
 import com.ksptool.ql.biz.service.admin.AdminGroupService;
 import com.ksptool.ql.biz.service.admin.AdminPermissionService;
 import com.ksptool.ql.biz.service.admin.AdminPlayerService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.annotation.RequirePermissionRest;
 import com.ksptool.ql.commons.web.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 维护工具控制器
  */
+@PrintLog
 @Controller
 @RestController
 @RequestMapping("/admin/maintain")

@@ -5,6 +5,7 @@ import com.ksptool.ql.biz.model.dto.GetSessionListDto;
 import com.ksptool.ql.biz.model.vo.GetSessionDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetSessionListVo;
 import com.ksptool.ql.biz.service.admin.AdminSessionService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@PrintLog
 @RestController
 @RequestMapping("/admin/session")
 public class AdminSessionController {
