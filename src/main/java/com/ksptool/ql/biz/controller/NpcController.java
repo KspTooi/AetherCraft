@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.model.vo.GetNpcListVo;
 import com.ksptool.ql.biz.service.NpcService;
 import com.ksptool.ql.biz.service.UserFileService;
 import com.ksptool.ql.biz.service.panel.PanelNpcService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.RestPageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@PrintLog
 @RestController
 @RequestMapping("/npc")
 public class NpcController {
@@ -32,11 +34,13 @@ public class NpcController {
     private PanelNpcService panelNpcService;
 
 
+    @PrintLog(sensitiveFields = {"data.rows","keyword"})
     @PostMapping("/getNpcList")
     public Result<RestPageableView<GetNpcListVo>> getNpcList(@RequestBody @Valid GetNpcListDto dto){
         return Result.success(service.getNpcList(dto));
     }
 
+    @PrintLog(sensitiveFields = {"data.name","data.avatarUrl","data.description","data.roleSummary","data.scenario","data.firstMessage","data.tags"})
     @PostMapping("/getNpcDetails")
     public Result<GetNpcDetailsVo> getNpcDetails(@RequestBody @Valid CommonIdDto dto) throws BizException {
         return Result.success(service.getNpcDetails(dto.getId()));
@@ -54,6 +58,7 @@ public class NpcController {
     }
 
 
+    @PrintLog(sensitiveFields = {"name","description","avatarUrl","roleSummary","scenario","firstMessage","tags"})
     @PostMapping("/saveNpc")
     public Result<String> saveNpc(@RequestBody @Valid SaveNpcDto dto){
         try{
