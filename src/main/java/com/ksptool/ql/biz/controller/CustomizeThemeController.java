@@ -10,6 +10,7 @@ import com.ksptool.ql.biz.model.vo.GetActiveThemeVo;
 import com.ksptool.ql.biz.model.vo.GetThemeValuesVo;
 import com.ksptool.ql.biz.model.vo.GetUserThemeListVo;
 import com.ksptool.ql.biz.service.AuthService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.exception.BizException;
 import com.ksptool.ql.commons.web.PageableView;
 import com.ksptool.ql.commons.web.Result;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 
+@PrintLog
 @RestController
 @RequestMapping("/customize/theme")
 public class CustomizeThemeController {

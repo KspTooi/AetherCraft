@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.controller;
 import com.ksptool.ql.biz.model.dto.SavePreferencesDto;
 import com.ksptool.ql.biz.model.vo.GetPreferencesVo;
 import com.ksptool.ql.biz.service.PlayerConfigService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.web.Result;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@PrintLog
 @RestController
 @RequestMapping("/client")
 public class ClientPreferencesController {

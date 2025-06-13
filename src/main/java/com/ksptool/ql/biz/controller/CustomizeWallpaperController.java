@@ -6,6 +6,7 @@ import com.ksptool.ql.biz.model.vo.WallpaperVo;
 import com.ksptool.ql.biz.service.GlobalConfigService;
 import com.ksptool.ql.biz.service.PlayerConfigService;
 import com.ksptool.ql.biz.service.UserFileService;
+import com.ksptool.ql.commons.annotation.PrintLog;
 import com.ksptool.ql.commons.enums.UserConfigEnum;
 import com.ksptool.ql.commons.enums.WallpaperEnum;
 import com.ksptool.ql.commons.web.Result;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+@PrintLog
 @RestController
 @RequestMapping("/customize")
 public class CustomizeWallpaperController {
