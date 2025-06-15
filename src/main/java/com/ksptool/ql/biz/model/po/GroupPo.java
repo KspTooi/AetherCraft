@@ -80,25 +80,25 @@ public class GroupPo {
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("用户组拥有的权限")
+    //用户组拥有的权限
     private Set<PermissionPo> permissions = new HashSet<>();
 
     @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("用户组中的用户")
+    //用户组中的用户
     private Set<UserPo> users = new HashSet<>();
 
     @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("用户组中的玩家")
+    //用户组中的玩家
     private Set<PlayerPo> players = new HashSet<>();
 
     @OneToOne(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("关联玩家默认访问组")
+    //关联玩家默认访问组
     private PlayerDefaultGroupPo playerDefaultGroup;
 
     @PrePersist

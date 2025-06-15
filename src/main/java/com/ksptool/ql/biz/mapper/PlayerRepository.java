@@ -3,6 +3,7 @@ package com.ksptool.ql.biz.mapper;
 import com.ksptool.ql.biz.model.po.PermissionPo;
 import com.ksptool.ql.biz.model.po.PlayerPo;
 import com.ksptool.ql.biz.model.vo.GetAdminPlayerListVo;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -24,8 +24,9 @@ spring:
     suffix: .html
 
   jpa:
+    generate-ddl: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:

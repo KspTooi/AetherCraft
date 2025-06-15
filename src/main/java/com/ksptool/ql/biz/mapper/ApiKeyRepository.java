@@ -3,12 +3,15 @@ package com.ksptool.ql.biz.mapper;
 import com.ksptool.ql.biz.model.dto.GetApiKeyListDto;
 import com.ksptool.ql.biz.model.po.ApiKeyPo;
 import com.ksptool.ql.biz.model.vo.GetApiKeyListVo;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ApiKeyRepository extends JpaRepository<ApiKeyPo, Long> {
 
     @Query(value = """

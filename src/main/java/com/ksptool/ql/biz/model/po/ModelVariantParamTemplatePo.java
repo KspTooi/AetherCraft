@@ -55,7 +55,7 @@ public class ModelVariantParamTemplatePo {
 
     @OneToMany(mappedBy = "template", fetch = FetchType.LAZY)
     @OrderBy("seq ASC")
-    @Comment("模板参数值列表")
+    //模板参数值列表
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<ModelVariantParamTemplateValuePo> templateValues;

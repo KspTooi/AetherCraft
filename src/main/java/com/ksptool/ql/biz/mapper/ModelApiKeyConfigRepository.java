@@ -1,16 +1,20 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ModelApiKeyConfigPo;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
 /**
  * 模型API密钥配置数据访问层
  */
+@Repository
 public interface ModelApiKeyConfigRepository extends JpaRepository<ModelApiKeyConfigPo, Long>, JpaSpecificationExecutor<ModelApiKeyConfigPo> {
     
     /**

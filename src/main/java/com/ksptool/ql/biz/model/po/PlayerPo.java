@@ -95,7 +95,7 @@ public class PlayerPo {
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("玩家主题列表")
+    //玩家主题列表
     private List<PlayerThemePo> themes = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -106,7 +106,7 @@ public class PlayerPo {
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @Comment("玩家所属的访问组")
+    //玩家所属的访问组
     private Set<GroupPo> groups = new HashSet<>();
 
     @PrePersist

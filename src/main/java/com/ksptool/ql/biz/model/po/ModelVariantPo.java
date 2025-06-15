@@ -79,7 +79,7 @@ public class ModelVariantPo {
     private Date updateTime;
 
     @OneToMany(mappedBy = "modelVariant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Comment("模型变体参数列表")
+    //模型变体参数列表
     private List<ModelVariantParamPo> params;
 
     public ModelVariantSchema getSchema() {

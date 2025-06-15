@@ -19,7 +19,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-parent</artifactId>
-                <version>3.4.1</version>
+                <version>3.5.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -238,7 +238,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -256,6 +256,17 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- 添加这个插件来开启 -parameters 编译选项 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version> <!-- Spring Boot 3.5.0 推荐的版本，或者你可以不写版本号，让父POM管理 -->
+                <configuration>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
