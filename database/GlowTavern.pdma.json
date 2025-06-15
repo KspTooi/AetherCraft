@@ -4,7 +4,7 @@
   "avatar": "",
   "version": "4.9.4",
   "createdTime": "2025-5-31 18:54:43",
-  "updatedTime": "2025-6-2 03:00:49",
+  "updatedTime": "2025-6-16 03:52:59",
   "dbConns": [],
   "profile": {
     "default": {
@@ -2113,7 +2113,16 @@
           "id": "8533337B-EC94-4FA5-8543-A2F4DACED414"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "4810310E-5854-4A41-9FA9-A5EF9BE5E645",
+          "refEntity": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+          "refField": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "indexes": [],
       "type": "P"
     },
@@ -2125,7 +2134,7 @@
           "codeRoot": ""
         }
       },
-      "defKey": "permissions",
+      "defKey": "PERMISSIONS",
       "defName": "权限节点",
       "comment": "",
       "properties": {
@@ -4744,7 +4753,16 @@
           "baseType": "89D69E81-EA34-42EE-9FA2-93B8BD27E098"
         }
       ],
-      "correlations": [],
+      "correlations": [
+        {
+          "myField": "6BFF5FBD-0D64-49CC-B1F3-0D136C293E4B",
+          "refEntity": "AED91307-6EF9-447A-9D15-337D0C485530",
+          "refField": "73FC3538-E73B-48F2-B888-E3E044BEC440",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
       "indexes": [],
       "type": "P"
     },
@@ -6594,6 +6612,1250 @@
       "correlations": [],
       "indexes": [],
       "type": "P"
+    },
+    {
+      "id": "0B0BC34E-1176-41CC-866D-8F006B2E8962",
+      "env": {
+        "base": {
+          "nameSpace": "",
+          "codeRoot": ""
+        }
+      },
+      "defKey": "CHAT_MESSAGE",
+      "defName": "对话消息",
+      "comment": "",
+      "properties": {
+        "partitioned by": "(date string)",
+        "row format delimited": "",
+        "fields terminated by ','": "",
+        "collection items terminated by '-'": "",
+        "map keys terminated by ':'": "",
+        "store as textfile;": ""
+      },
+      "sysProps": {
+        "nameTemplate": "{defKey}[{defName}]"
+      },
+      "notes": {},
+      "headers": [
+        {
+          "refKey": "hideInGraph",
+          "hideInGraph": true
+        },
+        {
+          "refKey": "defKey",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "defName",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "primaryKey",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "notNull",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "autoIncrement",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "domain",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "type",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "len",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "scale",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "comment",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "refDict",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "defaultValue",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "isStandard",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "uiHint",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "extProps",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr1",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr2",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr3",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr4",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr5",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr6",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr7",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr8",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr9",
+          "freeze": false,
+          "hideInGraph": true
+        }
+      ],
+      "fields": [
+        {
+          "defKey": "id",
+          "defName": "主键ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "6B60C08E-5F8C-4897-94CB-213C6FDBE4B6",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "thread_id",
+          "defName": "会话串ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "EA74D273-EECD-40C3-8FE6-DDB59A138A74",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "user_id",
+          "defName": "所属用户ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "refDict": "",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26",
+          "extProps": {},
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "id": "46ECF88F-E715-4EB9-855A-3B60314E0B1F"
+        },
+        {
+          "defKey": "player_id",
+          "defName": "所属玩家ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "refDict": "",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26",
+          "extProps": {},
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "id": "2D975698-E502-4471-A1AD-174B8153B9F3"
+        },
+        {
+          "defKey": "sender_role",
+          "defName": "发送人角色 0:Player 1:Model",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "48C78973-0BDF-4535-9153-90A8CD017DFC",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "sender_name",
+          "defName": "发送人名称",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "674A788C-8407-40B4-959A-23AE190C9D58",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "model_code",
+          "defName": "模型编码(sender_role为1必填)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "refDict": "",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64",
+          "extProps": {},
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "id": "28AD0D57-D191-473B-9BB9-0ED19F0C67A3"
+        },
+        {
+          "defKey": "content",
+          "defName": "(加密)消息内容",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "0313717C-98CC-44AF-8C9F-D60DA691461A",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "content_thought",
+          "defName": "(加密)思考内容",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "refDict": "",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64",
+          "extProps": {},
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "id": "58BFF7D9-FEF4-40A6-B913-A8D9C8C8B3FE"
+        },
+        {
+          "defKey": "seq",
+          "defName": "消息序号",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "E2367C94-216D-4ED2-B507-0C20F1CA78C7",
+          "baseType": "1D764C4A-6F9F-421E-B11A-6F3E23B51811"
+        },
+        {
+          "defKey": "token_input",
+          "defName": "TOKEN使用量(用户输入)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "E008896D-72C8-44FF-A851-53C1238E32AC",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "token_output",
+          "defName": "TOKEN使用量(模型输出)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "1D131F2A-D0B6-4451-9E4D-6A700202BDF7",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "token_thoughts",
+          "defName": "TOKEN使用量(模型思考)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "89F4975D-ACBE-43CB-BCA0-DF22CDD64EB9",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "create_time",
+          "defName": "创建时间",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "7CFFA0D3-6A93-4DDC-BC10-DF21211064DC",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "5AE9E028-FB2A-46EA-B9B3-1BE03FF92CFD",
+          "baseType": "89D69E81-EA34-42EE-9FA2-93B8BD27E098"
+        },
+        {
+          "defKey": "update_time",
+          "defName": "编辑时间",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "7CFFA0D3-6A93-4DDC-BC10-DF21211064DC",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "36C57B91-2B0B-45FE-9AB3-7FEE1E135341",
+          "baseType": "89D69E81-EA34-42EE-9FA2-93B8BD27E098"
+        }
+      ],
+      "correlations": [
+        {
+          "myField": "EA74D273-EECD-40C3-8FE6-DDB59A138A74",
+          "refEntity": "CF47A008-B606-4163-AF4C-25C3CC4EFCF5",
+          "refField": "311BFA9E-6565-47CD-A86B-12BD223D8830",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "46ECF88F-E715-4EB9-855A-3B60314E0B1F",
+          "refEntity": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+          "refField": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "2D975698-E502-4471-A1AD-174B8153B9F3",
+          "refEntity": "AED91307-6EF9-447A-9D15-337D0C485530",
+          "refField": "73FC3538-E73B-48F2-B888-E3E044BEC440",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
+      "indexes": [],
+      "type": "P"
+    },
+    {
+      "id": "CF47A008-B606-4163-AF4C-25C3CC4EFCF5",
+      "env": {
+        "base": {
+          "nameSpace": "",
+          "codeRoot": ""
+        }
+      },
+      "defKey": "chat_thread",
+      "defName": "对话串",
+      "comment": "",
+      "properties": {
+        "partitioned by": "(date string)",
+        "row format delimited": "",
+        "fields terminated by ','": "",
+        "collection items terminated by '-'": "",
+        "map keys terminated by ':'": "",
+        "store as textfile;": ""
+      },
+      "sysProps": {
+        "nameTemplate": "{defKey}[{defName}]"
+      },
+      "notes": {},
+      "headers": [
+        {
+          "refKey": "hideInGraph",
+          "hideInGraph": true
+        },
+        {
+          "refKey": "defKey",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "defName",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "primaryKey",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "notNull",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "autoIncrement",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "domain",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "type",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "len",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "scale",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "comment",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "refDict",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "defaultValue",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "isStandard",
+          "freeze": false,
+          "hideInGraph": false
+        },
+        {
+          "refKey": "uiHint",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "extProps",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr1",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr2",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr3",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr4",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr5",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr6",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr7",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr8",
+          "freeze": false,
+          "hideInGraph": true
+        },
+        {
+          "refKey": "attr9",
+          "freeze": false,
+          "hideInGraph": true
+        }
+      ],
+      "fields": [
+        {
+          "defKey": "id",
+          "defName": "主键ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": true,
+          "notNull": true,
+          "autoIncrement": true,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "311BFA9E-6565-47CD-A86B-12BD223D8830",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "type",
+          "defName": "Thread类型 0:标准会话 1:RP会话 2:标准增强会话",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "DB4B147A-E615-4E35-9F54-802BFFD69F17",
+          "baseType": "1D764C4A-6F9F-421E-B11A-6F3E23B51811"
+        },
+        {
+          "defKey": "user_id",
+          "defName": "Thread拥有方用户ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "C2FDC383-E46D-4DD9-97AA-CF2A61085D94",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "player_id",
+          "defName": "Thread拥有方玩家ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "9BE5EE41-A3C7-48AB-BA13-650B4F080E06",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "npc_id",
+          "defName": "聊天NPC 当type=2时必填",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "09AAF466-5501-4191-AB2C-B940A8FF9D9A",
+          "baseType": "1D764C4A-6F9F-421E-B11A-6F3E23B51811"
+        },
+        {
+          "defKey": "title",
+          "defName": "(明文)会话标题",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "4B9B12AA-9321-4065-A6A4-99677AF546E7",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "public_info",
+          "defName": "(明文)会话公开信息",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "6B63C36C-57B9-4938-89EC-70F1B8FC3AB1",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "description",
+          "defName": "(加密)会话描述",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": false,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "2A311E72-377B-411E-B317-232EC01D12F0",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "title_generated",
+          "defName": "是否已生成过标题 0-未生成 1-已生成",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "5A580D34-00CD-4CD3-8452-5A4743E7C0CA",
+          "baseType": "1D764C4A-6F9F-421E-B11A-6F3E23B51811"
+        },
+        {
+          "defKey": "model_code",
+          "defName": "AI模型代码",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "9092C4E0-1A54-4859-ABBB-5B62DBC27573",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "99A05DE1-1ABE-41BC-9316-BBD50DA0C7B9",
+          "baseType": "FC9790A7-36B8-4A48-8F9A-BC1042BCFE64"
+        },
+        {
+          "defKey": "active",
+          "defName": "是否为当前激活的对话 -1:旁路 0:存档 1:激活 type为1时需处理",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "6BC8F04B-6CFA-4995-98D3-318F5CDD774E",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "5CA900B0-6836-4891-AD8D-A6AEB40EA181",
+          "baseType": "1D764C4A-6F9F-421E-B11A-6F3E23B51811"
+        },
+        {
+          "defKey": "token_input",
+          "defName": "总TOKEN使用量(用户输入)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "92D532BD-682C-4296-92DC-D7B9EFE6341D",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "token_output",
+          "defName": "总TOKEN使用量(模型输出)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "5261507D-9160-4EB7-AFAE-63FCE4E2F87E",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "token_thoughts",
+          "defName": "总TOKEN使用量(模型思考)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "F9D8A6C3-BA5B-4BFF-B85A-B3EC788FD269",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "80DB506E-C0EA-476F-9099-148740A776FF",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "coin_usage",
+          "defName": "预估价值(以CU记)",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "C3B1681B-99F9-4818-9E80-DE1652A51D85",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "6F8634C6-1E1E-4777-B1E3-B45086DBBC84",
+          "baseType": "1A0BDC09-0792-4174-9E8E-80BE8DF44B8E"
+        },
+        {
+          "defKey": "last_message_id",
+          "defName": "最后一条消息ID",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "16120F75-6AA7-4483-868D-F07F511BB081",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "3501F731-E411-41B7-8ADD-E382BB63550C",
+          "baseType": "CA36AC02-8F8B-4F4E-B485-463730D15D26"
+        },
+        {
+          "defKey": "create_time",
+          "defName": "创建时间",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "7CFFA0D3-6A93-4DDC-BC10-DF21211064DC",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "504DB1A8-AAD9-47FE-B931-54E6FD482F60",
+          "baseType": "89D69E81-EA34-42EE-9FA2-93B8BD27E098"
+        },
+        {
+          "defKey": "update_time",
+          "defName": "更新时间",
+          "comment": "",
+          "type": "",
+          "len": "",
+          "scale": "",
+          "primaryKey": false,
+          "notNull": true,
+          "autoIncrement": false,
+          "defaultValue": "",
+          "hideInGraph": false,
+          "domain": "7CFFA0D3-6A93-4DDC-BC10-DF21211064DC",
+          "refDict": "",
+          "extProps": {},
+          "notes": {},
+          "attr1": "",
+          "attr2": "",
+          "attr3": "",
+          "attr4": "",
+          "attr5": "",
+          "attr6": "",
+          "attr7": "",
+          "attr8": "",
+          "attr9": "",
+          "id": "54C99F0A-3FC0-4B67-B1AA-956DCBD8633F",
+          "baseType": "89D69E81-EA34-42EE-9FA2-93B8BD27E098"
+        }
+      ],
+      "correlations": [
+        {
+          "myField": "C2FDC383-E46D-4DD9-97AA-CF2A61085D94",
+          "refEntity": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+          "refField": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "9BE5EE41-A3C7-48AB-BA13-650B4F080E06",
+          "refEntity": "AED91307-6EF9-447A-9D15-337D0C485530",
+          "refField": "73FC3538-E73B-48F2-B888-E3E044BEC440",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        },
+        {
+          "myField": "09AAF466-5501-4191-AB2C-B940A8FF9D9A",
+          "refEntity": "1CE2E935-848F-45EC-BC78-800E72F34B1E",
+          "refField": "D24ECA8A-A7B5-465C-8F27-CBB7B685B728",
+          "myRows": "1",
+          "refRows": "n",
+          "innerType": ""
+        }
+      ],
+      "indexes": [],
+      "type": "P"
     }
   ],
   "views": [],
@@ -6620,14 +7882,17 @@
         "46EBDB7D-5189-4A20-8FCE-FC9771976119",
         "D06D83C7-B0E7-4152-8F2B-CFECD005204D",
         "4CE108FB-C4C8-47F3-B536-52A8BEA3D345",
-        "15CDFB02-9259-49AD-A11C-DD4DCF03713F"
+        "15CDFB02-9259-49AD-A11C-DD4DCF03713F",
+        "0B0BC34E-1176-41CC-866D-8F006B2E8962",
+        "CF47A008-B606-4163-AF4C-25C3CC4EFCF5"
       ],
       "refViews": [],
       "refDiagrams": [
         "C9FDB451-BC8E-44DC-85C2-7A67E5959CA0",
         "E65B3F74-6A19-4972-9408-EA22B95E9A22",
         "4302A785-D578-476A-B902-BEC3AB4DB8AD",
-        "DB5BB3A7-4322-4D46-8012-80C2270624E4"
+        "DB5BB3A7-4322-4D46-8012-80C2270624E4",
+        "DD76FEBC-5938-42F2-902E-5EC8519A1B35"
       ],
       "refDicts": [],
       "id": "486C12EC-2C36-40E9-82E3-C5DED93715B5",
@@ -8152,6 +9417,402 @@
         ]
       },
       "id": "DB5BB3A7-4322-4D46-8012-80C2270624E4",
+      "comment": ""
+    },
+    {
+      "defKey": "对话系统",
+      "defName": "对话系统",
+      "relationType": "field",
+      "canvasData": {
+        "cells": [
+          {
+            "id": "a8202923-9257-4f8b-a20a-5bd0b7e8ebf9",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
+              "port": "4810310E-5854-4A41-9FA9-A5EF9BE5E645%in"
+            },
+            "target": {
+              "cell": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+              "port": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A%out"
+            },
+            "relation": "1:n",
+            "vertices": [],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "用户->玩家"
+                  }
+                }
+              }
+            ],
+            "fillColor": "#ACDAFC",
+            "router": {
+              "name": "normal"
+            },
+            "connector": {
+              "name": "normal"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "6612f7c2-e09e-42d6-944e-7e53a56be19d",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "d12000ff-c9b1-4ef0-acf1-6a215520c338",
+              "port": "6BFF5FBD-0D64-49CC-B1F3-0D136C293E4B%in"
+            },
+            "target": {
+              "cell": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
+              "port": "73FC3538-E73B-48F2-B888-E3E044BEC440%out"
+            },
+            "relation": "1:n",
+            "vertices": [],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "玩家->NPC"
+                  }
+                }
+              }
+            ],
+            "fillColor": "#ACDAFC",
+            "router": {
+              "name": "normal"
+            },
+            "connector": {
+              "name": "normal"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "ea8e6c23-1c6f-41d4-8839-c19d418e2c66",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "8ccb7618-f1b2-4805-940e-1f6c7317bada",
+              "port": "C2FDC383-E46D-4DD9-97AA-CF2A61085D94%in"
+            },
+            "target": {
+              "cell": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+              "port": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A%out"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": -340,
+                "y": -40
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "用户->对话串"
+                  }
+                }
+              }
+            ],
+            "fillColor": "rgb(51, 153, 108)",
+            "router": {
+              "name": "manhattan",
+              "args": {
+                "excludeShapes": [
+                  "group"
+                ]
+              }
+            },
+            "connector": {
+              "name": "normal"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "979134a9-4472-4474-bf4d-62f31a9d852b",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "8ccb7618-f1b2-4805-940e-1f6c7317bada",
+              "port": "9BE5EE41-A3C7-48AB-BA13-650B4F080E06%in"
+            },
+            "target": {
+              "cell": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
+              "port": "73FC3538-E73B-48F2-B888-E3E044BEC440%out"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": -50,
+                "y": -20
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "玩家->对话串"
+                  }
+                }
+              }
+            ],
+            "fillColor": "rgb(214, 74, 67)",
+            "router": {
+              "name": "manhattan",
+              "args": {
+                "excludeShapes": [
+                  "group"
+                ]
+              }
+            },
+            "connector": {
+              "name": "normal"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "0259bdb0-3db5-4426-a8e3-09a9b93b3a6e",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "8ccb7618-f1b2-4805-940e-1f6c7317bada",
+              "port": "09AAF466-5501-4191-AB2C-B940A8FF9D9A%in"
+            },
+            "target": {
+              "cell": "d12000ff-c9b1-4ef0-acf1-6a215520c338",
+              "port": "D24ECA8A-A7B5-465C-8F27-CBB7B685B728%out"
+            },
+            "relation": "1:n",
+            "vertices": [],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "NPC->对话串"
+                  }
+                }
+              }
+            ],
+            "fillColor": "rgb(35, 156, 163)",
+            "router": {
+              "name": "normal"
+            },
+            "connector": {
+              "name": "normal"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "60d1f738-37d4-41e1-8c5f-60db49f1d3d6",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "a7c98435-bc39-4597-9706-25139642e04c",
+              "port": "EA74D273-EECD-40C3-8FE6-DDB59A138A74%in"
+            },
+            "target": {
+              "cell": "8ccb7618-f1b2-4805-940e-1f6c7317bada",
+              "port": "311BFA9E-6565-47CD-A86B-12BD223D8830%in"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": 400,
+                "y": 250
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "对话串->对话消息"
+                  }
+                }
+              }
+            ],
+            "fillColor": "#ACDAFC",
+            "router": {
+              "name": "manhattan"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "8ccb7618-f1b2-4805-940e-1f6c7317bada",
+            "shape": "table",
+            "position": {
+              "x": 500,
+              "y": 0
+            },
+            "count": 0,
+            "originKey": "CF47A008-B606-4163-AF4C-25C3CC4EFCF5",
+            "type": "P",
+            "size": {
+              "width": 580,
+              "height": 450
+            }
+          },
+          {
+            "id": "d923fb21-1223-4e52-a6d5-c1a226d2493b",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "a7c98435-bc39-4597-9706-25139642e04c",
+              "port": "46ECF88F-E715-4EB9-855A-3B60314E0B1F%in"
+            },
+            "target": {
+              "cell": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+              "port": "2F60487E-2F66-4A79-9D36-8E9E22F3F99A%out"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": -540,
+                "y": 350
+              },
+              {
+                "x": -540,
+                "y": 70
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "用户->对话消息"
+                  }
+                }
+              }
+            ],
+            "fillColor": "rgb(51, 153, 108)",
+            "router": {
+              "name": "manhattan"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "a7c98435-bc39-4597-9706-25139642e04c",
+            "shape": "table",
+            "position": {
+              "x": 500,
+              "y": 520
+            },
+            "count": 0,
+            "originKey": "0B0BC34E-1176-41CC-866D-8F006B2E8962",
+            "type": "P",
+            "size": {
+              "width": 450,
+              "height": 380
+            }
+          },
+          {
+            "id": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
+            "shape": "table",
+            "position": {
+              "x": -520,
+              "y": 0
+            },
+            "count": 0,
+            "originKey": "AED91307-6EF9-447A-9D15-337D0C485530",
+            "type": "P",
+            "size": {
+              "width": 320,
+              "height": 470
+            }
+          },
+          {
+            "id": "6a8303a1-69ad-4624-8d5b-592a298da684",
+            "shape": "erdRelation",
+            "source": {
+              "cell": "a7c98435-bc39-4597-9706-25139642e04c",
+              "port": "2D975698-E502-4471-A1AD-174B8153B9F3%in"
+            },
+            "target": {
+              "cell": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
+              "port": "73FC3538-E73B-48F2-B888-E3E044BEC440%out"
+            },
+            "relation": "1:n",
+            "vertices": [
+              {
+                "x": -180,
+                "y": 510
+              }
+            ],
+            "labels": [
+              {
+                "attrs": {
+                  "text": {
+                    "text": "玩家->对话消息"
+                  }
+                }
+              }
+            ],
+            "fillColor": "rgb(214, 74, 67)",
+            "router": {
+              "name": "manhattan"
+            },
+            "attrs": {
+              "line": {
+                "strokeDasharray": ""
+              }
+            }
+          },
+          {
+            "id": "d12000ff-c9b1-4ef0-acf1-6a215520c338",
+            "shape": "table",
+            "position": {
+              "x": -20,
+              "y": 0
+            },
+            "count": 0,
+            "originKey": "1CE2E935-848F-45EC-BC78-800E72F34B1E",
+            "type": "P",
+            "size": {
+              "width": 320,
+              "height": 370
+            }
+          },
+          {
+            "id": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+            "shape": "table",
+            "position": {
+              "x": -970,
+              "y": 0
+            },
+            "count": 0,
+            "originKey": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+            "type": "P",
+            "size": {
+              "width": 320,
+              "height": 280
+            }
+          }
+        ]
+      },
+      "id": "DD76FEBC-5938-42F2-902E-5EC8519A1B35",
       "comment": ""
     }
   ],

@@ -28,6 +28,16 @@ public class ChatMessagePo {
     @Comment("会话ThreadID")
     private ChatThreadPo thread;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("所属用户ID")
+    private UserPo user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @Comment("所属玩家ID")
+    private PlayerPo player;
+
     @Column(name = "sender_role", nullable = false)
     @Comment("发送人角色 0:Player 1:Model")
     private Integer senderRole;
@@ -35,6 +45,10 @@ public class ChatMessagePo {
     @Column(name = "sender_name", nullable = false)
     @Comment("发送人名称")
     private String senderName;
+
+    @Column(name = "model_code")
+    @Comment("模型编码")
+    private String modelCode;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     @Comment("(加密)消息内容")

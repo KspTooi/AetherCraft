@@ -2,13 +2,16 @@ package com.ksptool.ql.biz.model.po;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "chat_thread", indexes = {
     @Index(name = "idx_chat_thread_player_id", columnList = "player_id"),
@@ -34,12 +37,12 @@ public class ChatThreadPo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("Thread拥有方用户")
+    @Comment("Thread拥有方用户ID")
     private UserPo user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    @Comment("Thread拥有方")
+    @Comment("Thread拥有方玩家ID")
     private PlayerPo player;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -87,11 +90,6 @@ public class ChatThreadPo {
     @Comment("预估价值(以CU记)")
     private BigDecimal coinUsage;
 
-    @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("seq ASC")
-    @Comment("消息列表")
-    private List<ChatMessagePo> messages;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_message_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @Comment("最后一条消息ID")
@@ -104,6 +102,11 @@ public class ChatThreadPo {
     @Comment("更新时间")
     @Column(name = "update_time", nullable = false)
     private Date updateTime;
+
+    @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("seq ASC")
+    @Comment("消息列表")
+    private List<ChatMessagePo> messages;
 
     @PrePersist
     protected void onCreate() {

@@ -1,12 +1,10 @@
 package com.ksptool.ql.biz.service;
 
+import com.ksptool.entities.Any;
 import com.ksptool.ql.biz.mapper.ChatMessageRepository;
 import com.ksptool.ql.biz.mapper.ChatThreadRepository;
 import com.ksptool.ql.biz.model.dto.*;
-import com.ksptool.ql.biz.model.po.ChatMessagePo;
-import com.ksptool.ql.biz.model.po.ChatThreadPo;
-import com.ksptool.ql.biz.model.po.NpcPo;
-import com.ksptool.ql.biz.model.po.PlayerPo;
+import com.ksptool.ql.biz.model.po.*;
 import com.ksptool.ql.biz.model.record.CgiCallbackContext;
 import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.MessageFragmentVo;
@@ -149,8 +147,11 @@ public class ChatConversationService {
             //保存用户发来的消息为一条历史记录
             var playerMessage = new ChatMessagePo();
             playerMessage.setThread(threadPo);
+            playerMessage.setUser(Any.of().val("id",player.getUserId()).as(UserPo.class));
+            playerMessage.setPlayer(Any.of().val("id",player.getPlayerId()).as(PlayerPo.class));
             playerMessage.setSenderRole(0); //发送人角色 0:Player 1:Model
             playerMessage.setSenderName(playerName);
+            playerMessage.setModelCode("unknow");
             playerMessage.setContent(css.encryptForCurUser(dto.getMessage())); //保存消息为密文
             playerMessage.setSeq(messagesPos.size() + 1);
             playerMessage.setCreateTime(new Date());
@@ -518,8 +519,11 @@ public class ChatConversationService {
 
                     var messagePo = new ChatMessagePo();
                     messagePo.setThread(chatThreadPo);
+                    messagePo.setUser(Any.of().val("id",ctx.userId()).as(UserPo.class));
+                    messagePo.setPlayer(Any.of().val("id",ctx.playerId()).as(PlayerPo.class));
                     messagePo.setSenderRole(1);
                     messagePo.setSenderName(ccr.getModel().getSeries());
+                    messagePo.setModelCode(ccr.getModel().getCode());
 
                     if(chatThreadPo.getType() == 1){
                         messagePo.setSenderName(ctx.modelName());
