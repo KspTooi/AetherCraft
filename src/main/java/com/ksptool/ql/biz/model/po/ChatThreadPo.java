@@ -1,7 +1,7 @@
 package com.ksptool.ql.biz.model.po;
 
+import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Comment;
@@ -66,9 +66,18 @@ public class ChatThreadPo {
     @Comment("是否已生成过标题 0-未生成 1-已生成")
     private Integer titleGenerated;
 
-    @Column(name = "model_code", length = 50, nullable = false)
-    @Comment("AI模型代码")
+    @JoinColumn(name = "model_variant_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    @ManyToOne(fetch = FetchType.LAZY , cascade = CascadeType.ALL)
+    @Comment("模型变体ID")
+    private ModelVariantPo modelVariant;
+
+    @Column(name = "model_code", length = 64, nullable = false)
+    @Comment("模型代码")
     private String modelCode;
+
+    @Column(name = "model_name", length = 128, nullable = false)
+    @Comment("模型名称")
+    private String modelName;
 
     @Column(name = "active", nullable = false)
     @Comment("是否为当前激活的对话 -1:旁路 0:存档 1:激活 type为1时需处理")
@@ -148,4 +157,30 @@ public class ChatThreadPo {
                 '}';
     }
 
+    public void setModelSchema(ModelVariantSchema schema){
+
+        if(schema == null){
+            throw new IllegalArgumentException("schema为空");
+        }
+        if(schema.getTarget() == null){
+            throw new IllegalArgumentException("schema的target为空");
+        }
+
+        this.modelVariant = schema.getTarget();
+        this.modelCode = schema.getCode();
+        this.modelName = schema.getName();
+    }
+
+    private void setModelName(String modelName) {
+        throw new UnsupportedOperationException("不支持该操作");
+    }
+
+    private void setModelCode(String modelCode) {
+        throw new UnsupportedOperationException("不支持该操作");
+    }
+
+    private void setModelVariant(ModelVariantPo modelVariant) {
+        throw new UnsupportedOperationException("不支持该操作");
+    }
 }
+

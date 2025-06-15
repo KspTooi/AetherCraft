@@ -7,12 +7,12 @@ import java.util.Date;
 @Data
 public class GetThreadListVo {
 
-    public GetThreadListVo(Long id, String title, String lastMessage, String publicInfo, String modelCode, Integer active, Date createTime, Date updateTime, Integer messageCount) {
+    public GetThreadListVo(Long id, String title, String lastMessage, String publicInfo, Long modelVariantId, Integer active, Date createTime, Date updateTime, Integer messageCount) {
         this.id = id;
         this.title = title;
         this.lastMessage = lastMessage;
         this.publicInfo = publicInfo;
-        this.modelCode = modelCode;
+        this.modelVariantId = modelVariantId;
         this.active = active;
         this.createTime = createTime;
         this.updateTime = updateTime;
@@ -31,8 +31,8 @@ public class GetThreadListVo {
     //(明文)会话公开信息
     private String publicInfo;
 
-    //模型代码
-    private String modelCode;
+    //模型变体ID
+    private Long modelVariantId;
 
     //是否为当前激活的对话 0:缓解 1:激活
     private Integer active;

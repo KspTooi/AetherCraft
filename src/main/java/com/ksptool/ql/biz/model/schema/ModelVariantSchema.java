@@ -1,9 +1,12 @@
 package com.ksptool.ql.biz.model.schema;
 
+import com.ksptool.ql.biz.model.po.ModelVariantPo;
 import lombok.Data;
 
 @Data
 public class ModelVariantSchema {
+
+    private ModelVariantPo target;
 
     // 模型ID
     private Long id;

@@ -4,7 +4,7 @@ import Http from "@/commons/Http.ts";
 export interface SendMessageDto {
     threadId?: string;      // 为-1时自动创建新会话, JavaType: Long
     type: number;           // 0:标准会话 1:RP会话 2:增强会话, JavaType: Integer
-    modelCode: string;      // JavaType: String
+    modelVariantId: string; // 模型变体ID, JavaType: Long
     message: string;        // JavaType: String
 }
 
@@ -14,7 +14,7 @@ export interface QueryStreamDto {
 
 export interface RegenerateDto {
     threadId: string;       // JavaType: Long
-    modelCode: string;      // JavaType: String
+    modelVariantId: string; // 模型变体ID, JavaType: Long
     rootMessageId: string;  // JavaType: Long
 }
 

@@ -21,7 +21,7 @@
       <GlowDiv class="chat-content" border="none">
 
         <div class="model-selector-container">
-          <ModelSelector :selected="currentModelCode" @select-model="onSelectMode" :allowType="[0]"/>
+          <ModelSelector :selected="currentModelVariantId" @select-model="onSelectMode" :allowType="[0]"/>
         </div>
 
         <div class="message-box-container">
@@ -103,12 +103,12 @@ const hasTempMessage = ref<boolean>(false)
 const isLoadingMessages = ref<boolean>(false)
 const isCreatingThread = ref<boolean>(false)
 const currentThreadId = ref<string>("")
-const currentModelCode = ref<string>("")
+const currentModelVariantId = ref<string>("")
 
 const threadList = ref<Array<{
   id: string,
   title: string,
-  modelCode: string,
+  modelVariantId: string,
   active: number
 }>>([])
 
@@ -169,7 +169,7 @@ const onMessageSend = async (message: string) => {
       // 如果是正在创建新会话，则threadId传-1，否则使用当前currentThreadId
       threadId: isCreatingThread.value ? '-1' : (currentThreadId.value || '-1'), 
       type: 0, // 标准会话类型, TODO: 后续可能需要根据 RP模式等进行区分
-      modelCode: currentModelCode.value,
+      modelVariantId: currentModelVariantId.value,
       message: message
     };
 
@@ -338,7 +338,7 @@ const reloadMessageList = async (threadId?: string) => {
         pageSize: 100
       };
       const response = await ThreadApi.selectThread(dto);
-      currentModelCode.value = response.modelCode;
+      currentModelVariantId.value = response.modelVariantId;
       currentThreadId.value = response.threadId;
       messages.value = response.messages.rows.map(msg => ({
         id: msg.id,
@@ -405,7 +405,7 @@ const reloadThreadList = async () => {
     threadList.value = response.rows.map(thread => ({
       id: thread.id,
       title: thread.title,
-      modelCode: thread.modelCode,
+      modelVariantId: thread.modelVariantId,
       active: thread.active
     }));
     
@@ -423,7 +423,7 @@ const reloadThreadList = async () => {
 //创建Thread
 const onCreateThread = async () => {
   // 1. 检查是否已选择模型，如果未选择则提示
-  if (!currentModelCode.value) {
+  if (!currentModelVariantId.value) {
     alterRef.value?.showConfirm({
       title: "操作提示",
       content: "请先选择一个模型后再创建新会话。",
@@ -443,8 +443,8 @@ const onCreateThread = async () => {
 };
 
 //选择模型
-const onSelectMode = (modeCode:string)=>{
-  currentModelCode.value = modeCode;
+const onSelectMode = (modelVariantId:string)=>{
+  currentModelVariantId.value = modelVariantId;
 }
 
 //选择会话
@@ -664,7 +664,7 @@ const onMessageRegenerate = async (msgId: string) => {
     // 调用 regenerate API
     const regenerateDto: RegenerateDto = {
       threadId: currentThreadId.value,
-      modelCode: currentModelCode.value, 
+      modelVariantId: currentModelVariantId.value, 
       rootMessageId: "-1" // 传递需要重新生成的消息的ID
     };
     const regenerateResponse = await ConversationApi.regenerate(regenerateDto);

@@ -209,6 +209,9 @@
                     <el-dropdown-item command="edit" :icon="EditIcon">
                       编辑模型
                     </el-dropdown-item>
+                    <el-dropdown-item command="copy" :icon="CopyIcon">
+                      复制模型
+                    </el-dropdown-item>
                     <el-dropdown-item command="params" :icon="SettingIcon">
                       管理参数
                     </el-dropdown-item>
@@ -385,7 +388,7 @@ import type {
 import AdminModelSeriesApi from "@/commons/api/AdminModelVariantApi.ts";
 import type {FormInstance} from 'element-plus';
 import {ElMessage, ElMessageBox} from 'element-plus';
-import {ArrowDown, Delete, Edit, Setting} from '@element-plus/icons-vue';
+import {ArrowDown, Delete, Edit, Setting, CopyDocument} from '@element-plus/icons-vue';
 import dayjs from 'dayjs';
 import ModelVariantParamsModal from '@/views/admin/ModelVariantParamsModal.vue'
 import ApplyParamTemplateModal from '@/views/admin/ApplyParamTemplateModal.vue'
@@ -421,6 +424,7 @@ const loading = ref(false)
 const EditIcon = markRaw(Edit);
 const DeleteIcon = markRaw(Delete);
 const SettingIcon = markRaw(Setting);
+const CopyIcon = markRaw(CopyDocument);
 
 // 模态框相关
 const dialogVisible = ref(false)
@@ -623,6 +627,29 @@ const remove = async (row: GetAdminModelVariantListVo) => {
   }
 }
 
+const copyModelVariant = async (row: GetAdminModelVariantListVo) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要复制模型变体 ${row.name} (${row.code}) 吗？复制后将创建一个名为"${row.name}副本"的新模型变体。`,
+      '确认复制',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+    
+    await AdminModelSeriesApi.copyModelVariant({ id: row.id });
+    ElMessage.success('复制模型变体成功');
+    loadModelSeriesList();
+  } catch (error) {
+    if (error !== 'cancel') {
+      const errorMsg = error instanceof Error ? error.message : '复制失败';
+      ElMessage.error(errorMsg);
+    }
+  }
+}
+
 const handleSelectionChange = (rows: GetAdminModelVariantListVo[]) => {
   selectedRows.value = rows
 }
@@ -665,9 +692,14 @@ const handleTemplateApplied = () => {
 const handleManageCommand = (command: string, row: GetAdminModelVariantListVo) => {
   if (command === 'edit') {
     openUpdateModal(row)
-  } else if (command === 'params') {
+  }
+  if (command === 'copy') {
+    copyModelVariant(row)
+  }
+  if (command === 'params') {
     openParamsModal(row)
-  } else if (command === 'delete') {
+  }
+  if (command === 'delete') {
     remove(row)
   }
 }

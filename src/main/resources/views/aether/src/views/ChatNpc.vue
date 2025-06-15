@@ -18,7 +18,7 @@
       <GlowDiv class="chat-content" border="none">
 
         <div class="model-selector-container">
-          <ModelSelector :selected="curModelCode" @select-model="onSelectMode" :allowType="[0]"/>
+          <ModelSelector :selected="curModelVariantId" @select-model="onSelectMode" :allowType="[0]"/>
         </div>
 
         <div class="message-box-container">
@@ -95,13 +95,13 @@ const selectThreadData = ref<SelectThreadVo | null>(null)
 const selectThreadTotal = ref(0)
 const selectThreadQuery = ref<SelectThreadDto>({
   npcId: "",
-  modelCode:"",
+  modelVariantId:"",
   page: 1,
   pageSize: 1000
 })
 const curNpcId = ref<string>("")   //当前选择的NPC ID
 const curThreadId = ref<string>("") //当前聊天Thread的ID
-const curModelCode = ref<string>("")//当前选择的模型代码
+const curModelVariantId = ref<string>("")//当前选择的模型变体ID
 
 // 定义 ChatMessageBox 需要的消息项类型
 interface MessageBoxItem {
@@ -161,7 +161,7 @@ const getNpcMessageList = async (npcId: string) => {
   try {
     // 设置查询参数
     selectThreadQuery.value.npcId = npcId;
-    selectThreadQuery.value.modelCode = curModelCode.value; // 添加 modelCode 参数
+    selectThreadQuery.value.modelVariantId = curModelVariantId.value; // 添加 modelVariantId 参数
 
     // 调用ThreadApi获取消息列表，返回SelectThreadVo
     const response: SelectThreadVo = await ThreadApi.selectThread(selectThreadQuery.value);
@@ -170,7 +170,7 @@ const getNpcMessageList = async (npcId: string) => {
     selectThreadData.value = response;
     
     // 更新当前模型代码和线程ID
-    curModelCode.value = response.modelCode;
+    curModelVariantId.value = response.modelVariantId;
     curThreadId.value = response.threadId;
     
     // 转换消息格式
@@ -231,7 +231,7 @@ const sendMessage = async (message: string) => {
     const sendMessageDto: SendMessageDto = {
       threadId: curThreadId.value,
       type: 1, // RP会话
-      modelCode: curModelCode.value,
+      modelVariantId: curModelVariantId.value,
       message: message
     };
 
@@ -346,8 +346,8 @@ const onMessageSend = async (message: string) => {
 };
 
 //选择模型
-const onSelectMode = (modeCode:string)=>{
-  curModelCode.value = modeCode;
+const onSelectMode = (modelVariantId:string)=>{
+  curModelVariantId.value = modelVariantId;
   // 可以在这里添加逻辑：如果切换了模型，是否要影响当前会话？
   // 比如：如果当前有会话，提示用户切换模型会新建会话，或者只是更新下次新建会话的模型？
 }
@@ -377,7 +377,7 @@ const onCreateThread = async (npc: GetNpcListVo) => {
   try {
     // 使用新的 ThreadApi.createThread 接口
     const createThreadDto: CreateThreadDto = {
-      modelCode: curModelCode.value,
+      modelVariantId: curModelVariantId.value,
       type: 1, // RP会话
       npcId: npc.id
     };
@@ -430,8 +430,8 @@ const onManageThreads = async (npc: GetNpcListVo) => {
 }
 
 // 处理激活会话事件
-const handleActivateThread = async (npcId: string, threadId: string, modelCode: string) => {
-  console.log(`准备激活会话: npcId=${npcId}, threadId=${threadId}, modelCode=${modelCode}`)
+const handleActivateThread = async (npcId: string, threadId: string, modelVariantId: string) => {
+  console.log(`准备激活会话: npcId=${npcId}, threadId=${threadId}, modelVariantId=${modelVariantId}`)
   
   isLoadingMessages.value = true; // 开始加载
   
@@ -451,7 +451,7 @@ const handleActivateThread = async (npcId: string, threadId: string, modelCode: 
     
     // 更新当前状态
     curNpcId.value = npcId;
-    curModelCode.value = response.modelCode;
+    curModelVariantId.value = response.modelVariantId;
     curThreadId.value = response.threadId;
     
     // 转换消息格式
@@ -656,7 +656,7 @@ const onMessageRegenerate = async (msgId: string) => {
     // 构建重新生成的参数
     const regenerateDto: RegenerateDto = {
       threadId: curThreadId.value,
-      modelCode: curModelCode.value,
+      modelVariantId: curModelVariantId.value,
       rootMessageId: "-1" // 使用-1表示最后一条用户消息
     };
 

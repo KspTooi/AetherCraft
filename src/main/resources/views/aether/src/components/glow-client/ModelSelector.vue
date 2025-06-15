@@ -22,8 +22,8 @@
             <div class="series-name">{{ series.name }}</div>
             <div class="model-item" 
                  v-for="model in series.models" 
-                 :key="model.modelCode"
-                 :class="{ 'active': selected === model.modelCode, 'disabled': !isModelSelectable(model) }"
+                 :key="model.modelVariantId"
+                 :class="{ 'active': selected === model.modelVariantId, 'disabled': !isModelSelectable(model) }"
                  @click="selectModelIfAllowed(model)">
               <span class="model-name-text">{{ model.modelName }}</span>
               <div class="model-tags">
@@ -61,7 +61,7 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 
 // 数据模型（为了兼容现有模板，保持原有字段名）
 interface ModelData {
-  modelCode: string // 模型代码(不展示)
+  modelVariantId: string // 模型变体ID(不展示)
   modelName: string // 模型名称(展示)
   series: string    // 模型系列(分组)
   size: string      // 模型规模
@@ -72,12 +72,12 @@ interface ModelData {
 }
 
 const props = defineProps<{
-  selected: string, // 当前选择的模型代码
+  selected: string, // 当前选择的模型变体ID
   allowType?: number[] // 允许选择的模型类型数组
 }>()
 
 const emits = defineEmits<{
-  (e: "select-model", modelCode: string): void // 选择模型时触发
+  (e: "select-model", modelVariantId: string): void // 选择模型时触发
 }>()
 
 // 状态定义
@@ -88,7 +88,7 @@ const data = ref<ModelData[]>([])
 // 监听外部selected变化
 watch(() => props.selected, (newValue) => {
   if (newValue && data.value.length > 0) {
-    const exists = data.value.some(model => model.modelCode === newValue)
+    const exists = data.value.some(model => model.modelVariantId === newValue)
     if (!exists) {
       loadModelList()
     }
@@ -97,7 +97,7 @@ watch(() => props.selected, (newValue) => {
 
 // 计算当前选中模型的名称
 const selectedModelName = computed(() => {
-  const model = data.value.find(m => m.modelCode === props.selected)
+  const model = data.value.find(m => m.modelVariantId === props.selected)
   return model ? model.modelName : ''
 })
 
@@ -140,7 +140,7 @@ const isModelSelectable = (model: ModelData): boolean => {
 // 选择模型（如果允许）
 const selectModelIfAllowed = (model: ModelData) => {
   if (isModelSelectable(model)) {
-    emits('select-model', model.modelCode)
+    emits('select-model', model.modelVariantId)
     closeDropdown()
   }
 }
@@ -148,7 +148,7 @@ const selectModelIfAllowed = (model: ModelData) => {
 // 数据转换函数
 const convertApiDataToModelData = (apiData: ClientModelVariant[]): ModelData[] => {
   return apiData.map(item => ({
-    modelCode: item.code,
+    modelVariantId: item.id.toString(),
     modelName: item.name,
     series: item.series,
     size: getSizeDisplay(item.scale),
@@ -201,20 +201,20 @@ const loadModelList = async () => {
     // 确保在有模型数据时自动选择
     if (data.value.length > 0) {
       // 如果当前未选择模型或选择的模型不在列表中，自动选择第一个可选的模型
-      const exists = data.value.some(model => model.modelCode === props.selected)
+      const exists = data.value.some(model => model.modelVariantId === props.selected)
       if (!props.selected || !exists) {
         const selectableModel = data.value.find(model => isModelSelectable(model))
         if (selectableModel) {
-          emits('select-model', selectableModel.modelCode)
+          emits('select-model', selectableModel.modelVariantId)
         }
       } else {
         // 检查当前选择的模型是否可选
-        const currentModel = data.value.find(model => model.modelCode === props.selected)
+        const currentModel = data.value.find(model => model.modelVariantId === props.selected)
         if (currentModel && !isModelSelectable(currentModel)) {
           // 如果当前选择的模型不可选，则切换到第一个可选的模型
           const selectableModel = data.value.find(model => isModelSelectable(model))
           if (selectableModel) {
-            emits('select-model', selectableModel.modelCode)
+            emits('select-model', selectableModel.modelVariantId)
           }
         }
       }

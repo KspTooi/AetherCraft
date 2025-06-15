@@ -50,7 +50,6 @@ public class AdminModelVariantController {
         return Result.success("批量切换模型变体状态成功");
     }
 
-
     @PostMapping("getModelVariantList")
     @RequirePermissionRest("admin:model:variant:view")
     public Result<RestPageableView<GetAdminModelVariantListVo>> getModelVariantList(@RequestBody @Valid GetAdminModelVariantListDto dto){
@@ -75,6 +74,13 @@ public class AdminModelVariantController {
     public Result<String> removeModelVariant(@RequestBody @Valid CommonIdDto dto) throws BizException {
         service.removeModelVariant(dto.getId());
         return Result.success("success");
+    }
+
+    @PostMapping("copyModelVariant")
+    @RequirePermissionRest("admin:model:variant:save")
+    public Result<String> copyModelVariant(@RequestBody @Valid CommonIdDto dto) throws BizException {
+        service.copyModelVariant(dto.getId());
+        return Result.success("复制模型变体成功");
     }
 
     /**

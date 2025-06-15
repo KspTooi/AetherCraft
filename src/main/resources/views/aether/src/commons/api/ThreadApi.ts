@@ -5,7 +5,7 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts"; // 假设已存在
 
 // --- DTOs ---
 export interface CreateThreadDto {
-    modelCode: string;      // 模型代码, JavaType: String
+    modelVariantId: string; // 模型变体ID, JavaType: Long
     type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话, JavaType: Integer
     npcId: string;          // NpcId, JavaType: Long
 }
@@ -13,7 +13,7 @@ export interface CreateThreadDto {
 export interface SelectThreadDto extends PageQuery {
     npcId?: string;         // NPC_ID 用于获取该NPC下最近的一次会话, JavaType: Long
     threadId?: string;      // ThreadId 直接获取该Thread下的所有会话, JavaType: Long
-    modelCode?: string;      // 模型代码
+    modelVariantId?: string; // 模型变体ID, JavaType: Long
 }
 
 export interface GetThreadListDto extends PageQuery {
@@ -43,7 +43,7 @@ export interface SelectThreadMessageVo {
 
 export interface SelectThreadVo {
     threadId: string;           // JavaType: Long
-    modelCode: string;          // JavaType: String
+    modelVariantId: string;     // 模型变体ID, JavaType: Long
     messages: RestPageableView<SelectThreadMessageVo>; // JavaType: RestPageableView<SelectThreadMessageVo>
 }
 
@@ -52,7 +52,7 @@ export interface GetThreadListVo {
     title: string;              // (明文)会话标题, JavaType: String
     lastMessage: string;        // 最后一条消息预览, JavaType: String
     publicInfo: string;         // (明文)会话公开信息, JavaType: String
-    modelCode: string;          // 模型代码, JavaType: String
+    modelVariantId: string;     // 模型变体ID, JavaType: Long
     active: number;             // 是否为当前激活的对话 0:缓解 1:激活, JavaType: Integer
     createTime: string;         // 创建时间, JavaType: Date (TS string)
     updateTime: string;         // 更新时间, JavaType: Date (TS string)

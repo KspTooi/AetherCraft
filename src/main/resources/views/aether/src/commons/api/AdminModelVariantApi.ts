@@ -114,6 +114,13 @@ export default {
     },
 
     /**
+     * 复制模型变体
+     */
+    copyModelVariant: async (dto: CommonIdDto): Promise<string> => {
+        return await Http.postEntity<string>('/admin/model/variant/copyModelVariant', dto);
+    },
+
+    /**
      * 应用参数模板到模型变体（支持批量应用和全局/个人参数选择）
      */
     applyModelVariantParamTemplate: async (dto: ApplyModelVariantParamTemplateDto): Promise<string> => {

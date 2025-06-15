@@ -14,7 +14,7 @@ public class SelectThreadDto extends PageQuery {
     //ThreadId 直接获取该Thread下的所有会话
     private Long threadId;
 
-    //模型代码
-    private String modelCode;
+    //模型变体ID
+    private Long modelVariantId;
 
 }

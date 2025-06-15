@@ -38,7 +38,7 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
                     LIMIT 1
                 ), ''),
                 ctp.publicInfo,
-                ctp.modelCode,
+                ctp.modelVariant.id,
                 ctp.active,
                 ctp.createTime,
                 ctp.updateTime,

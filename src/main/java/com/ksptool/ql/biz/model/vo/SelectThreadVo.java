@@ -8,7 +8,8 @@ public class SelectThreadVo {
 
     private Long threadId;
 
-    private String modelCode;
+    //模型变体ID
+    private Long modelVariantId;
 
     private RestPageableView<SelectThreadMessageVo> messages;
 

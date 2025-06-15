@@ -5,8 +5,6 @@ import com.ksptool.ql.biz.mapper.ModelVariantRepository;
 import com.ksptool.ql.biz.mapper.ModelVariantParamRepository;
 import com.ksptool.ql.biz.mapper.ModelVariantParamTemplateRepository;
 import com.ksptool.ql.biz.mapper.ModelVariantParamTemplateValueRepository;
-import com.ksptool.ql.biz.mapper.UserRepository;
-import com.ksptool.ql.biz.mapper.PlayerRepository;
 import com.ksptool.ql.biz.model.dto.AdminToggleModelVariantDto;
 import com.ksptool.ql.biz.model.dto.ApplyModelVariantParamTemplateDto;
 import com.ksptool.ql.biz.model.dto.GetAdminModelVariantListDto;
@@ -21,7 +19,6 @@ import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantDetailsVo;
 import com.ksptool.ql.biz.model.vo.GetAdminModelVariantListVo;
 import com.ksptool.ql.biz.model.vo.GetModelVariantListVo;
-import com.ksptool.ql.biz.service.AuthService;
 import com.ksptool.ql.commons.enums.AiModelVariantEnum;
 import com.ksptool.ql.commons.exception.AuthException;
 import com.ksptool.ql.commons.exception.BizException;
@@ -56,12 +53,6 @@ public class ModelVariantService {
 
     @Autowired
     private ModelVariantParamTemplateValueRepository templateValueRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PlayerRepository playerRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -103,8 +94,8 @@ public class ModelVariantService {
     public void saveModelVariant(SaveAdminModelVariantDto dto) throws BizException {
         if (dto.getId() == null) {
             // 新增
-            if (repository.existsByCode(dto.getCode())) {
-                throw new BizException("模型代码已存在");
+            if (repository.existsByName(dto.getName())) {
+                throw new BizException("模型名称已存在");
             }
 
             ModelVariantPo po = new ModelVariantPo();
@@ -127,8 +118,8 @@ public class ModelVariantService {
         ModelVariantPo po = repository.findById(dto.getId())
                 .orElseThrow(() -> new BizException("要编辑的模型变体不存在"));
 
-        if (repository.existsByCodeAndIdNot(dto.getCode(), dto.getId())) {
-            throw new BizException("模型代码已存在");
+        if (repository.existsByNameAndIdNot(dto.getName(), dto.getId())) {
+            throw new BizException("模型名称已存在");
         }
 
         assign(dto, po);
@@ -139,10 +130,65 @@ public class ModelVariantService {
     public void removeModelVariant(Long id) throws BizException {
         ModelVariantPo po = repository.findById(id)
                 .orElseThrow(() -> new BizException("要删除的模型变体不存在"));
-
         repository.delete(po);
         entityManager.flush();
     }
+
+    @Transactional
+    public void copyModelVariant(Long id) throws BizException {
+
+        // 查询原模型变体
+        ModelVariantPo oldMvPo = repository.findById(id)
+                .orElseThrow(() -> new BizException("要复制的模型变体不存在"));
+
+        // 创建新的模型变体
+        ModelVariantPo newMvPo = new ModelVariantPo();
+        assign(oldMvPo, newMvPo);
+        
+        // 重置ID和时间字段
+        newMvPo.setId(null);
+        newMvPo.setCreateTime(null);
+        newMvPo.setUpdateTime(null);
+        
+        // 修改名称为副本
+        String originalName = oldMvPo.getName();
+        String copyName = originalName + "副本";
+        
+        // 检查副本名称是否已存在，如果存在则添加数字后缀
+        int copyNumber = 1;
+        while (repository.existsByName(copyName)) {
+            copyNumber++;
+            copyName = originalName + "副本" + copyNumber;
+        }
+        newMvPo.setName(copyName);
+        
+        // 设置排序号为原变体+1
+        newMvPo.setSeq(oldMvPo.getSeq() + 1);
+
+        // 复制原变体的全局参数
+        List<ModelVariantParamPo> oldMvParamPos = modelVariantParamRepository.getGlobalParamList(oldMvPo.getId());
+        List<ModelVariantParamPo> newMvParamPos = new ArrayList<>();
+
+        for (ModelVariantParamPo originalParam : oldMvParamPos) {
+            ModelVariantParamPo newParam = new ModelVariantParamPo();
+            assign(originalParam, newParam);
+
+            // 重置ID和时间字段
+            newParam.setId(null);
+            newParam.setCreateTime(null);
+            newParam.setUpdateTime(null);
+            // 设置新的模型变体关联
+            newParam.setModelVariant(newMvPo);
+            newMvParamPos.add(newParam);
+        }
+        newMvPo.setParams(newMvParamPos);
+
+        // 保存新模型变体
+        repository.save(newMvPo);
+
+        //modelVariantParamRepository.saveAll(newMvParamPos);
+    }
+
 
     /**
      * 批量切换模型变体启用状态
@@ -187,8 +233,8 @@ public class ModelVariantService {
         
         // 遍历所有系统内置的模型变体
         for (AiModelVariantEnum variant : AiModelVariantEnum.values()) {
-            // 检查数据库中是否已存在该代码的模型变体
-            if (repository.existsByCode(variant.getCode())) {
+            // 检查数据库中是否已存在该名称的模型变体
+            if (repository.existsByName(variant.getName())) {
                 existCount++;
                 continue;
             }
@@ -263,6 +309,20 @@ public class ModelVariantService {
     }
 
     /**
+     * 根据模型ID获取模型变体Schema（必须存在）
+     * @param modelId 模型ID
+     * @return 模型变体Schema
+     * @throws BizException 当模型变体不存在时抛出异常
+     */
+    public ModelVariantSchema requireModelSchema(Long modelId) throws BizException {
+        ModelVariantPo po = repository.findById(modelId).orElse(null);
+        if (po == null || po.getEnabled() != 1) {
+            throw new BizException("模型变体不存在或当前不可用: " + modelId);
+        }
+        return po.getSchema();
+    }
+
+    /**
      * 应用参数模板到模型变体（支持批量应用和全局/个人参数选择）
      * @param dto 应用参数（包含模板ID、模型变体ID列表、应用范围）
      */
@@ -298,7 +358,7 @@ public class ModelVariantService {
             for (Long modelVariantId : dto.getModelVariantIds()) {
                 // 第一步：清理目标模型变体下已有的全局默认参数
                 List<ModelVariantParamPo> existingGlobalParams = modelVariantParamRepository
-                        .findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+                        .getGlobalParamList(modelVariantId);
                 if (!existingGlobalParams.isEmpty()) {
                     modelVariantParamRepository.deleteAll(existingGlobalParams);
                 }
@@ -350,7 +410,7 @@ public class ModelVariantService {
             for (Long modelVariantId : dto.getModelVariantIds()) {
                 // 获取模型变体的全局参数
                 List<ModelVariantParamPo> globalParams = modelVariantParamRepository
-                        .findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+                        .getGlobalParamList(modelVariantId);
                 
                 // 检查模板中的每个参数键是否在全局参数中存在
                 if (templateValues != null && !templateValues.isEmpty()) {
@@ -443,7 +503,7 @@ public class ModelVariantService {
         List<ModelVariantParamPo> playerParamList = modelVariantParamRepository.findAll(Example.of(query));
 
         //再获取全局参数
-        List<ModelVariantParamPo> globalParamList = modelVariantParamRepository.findByModelVariantIdAndUserIsNullAndPlayerIsNull(modelVariantId);
+        List<ModelVariantParamPo> globalParamList = modelVariantParamRepository.getGlobalParamList(modelVariantId);
 
         //组合参数 个人参数将覆盖全局参数
         var map = new HashMap<String,String>();

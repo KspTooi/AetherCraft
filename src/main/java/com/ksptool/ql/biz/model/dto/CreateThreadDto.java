@@ -7,9 +7,9 @@ import lombok.Data;
 @Data
 public class CreateThreadDto {
 
-    //模型代码
-    @NotBlank
-    private String modelCode;
+    //模型变体ID
+    @NotNull
+    private Long modelVariantId;
 
     //Thread类型 0:标准会话 1:RP会话 2:标准增强会话
     @NotNull

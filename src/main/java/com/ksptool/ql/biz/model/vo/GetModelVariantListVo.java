@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GetModelVariantListVo {
 
+    // 模型ID
+    private Long id;
+
     // 模型代码
     private String code;
 

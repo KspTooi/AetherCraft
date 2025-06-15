@@ -1,17 +1,12 @@
 package com.ksptool.ql.biz.mapper;
 
 import com.ksptool.ql.biz.model.po.ModelVariantParamPo;
-import com.ksptool.ql.biz.model.vo.GetModelVariantParamListVo;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ModelVariantParamRepository extends JpaRepository<ModelVariantParamPo, Long> {
@@ -75,7 +70,7 @@ public interface ModelVariantParamRepository extends JpaRepository<ModelVariantP
             WHERE p.modelVariant.id = :modelVariantId
             AND p.user IS NULL AND p.player IS NULL
             """)
-    List<ModelVariantParamPo> findByModelVariantIdAndUserIsNullAndPlayerIsNull(
+    List<ModelVariantParamPo> getGlobalParamList(
             @Param("modelVariantId") Long modelVariantId
     );
 

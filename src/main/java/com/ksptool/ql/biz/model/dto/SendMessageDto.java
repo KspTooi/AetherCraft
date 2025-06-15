@@ -19,7 +19,8 @@ public class SendMessageDto {
     private Integer type;
 
     @NotNull
-    private String modelCode;
+    //模型变体ID
+    private Long modelVariantId;
 
     @NotNull
     private String message;

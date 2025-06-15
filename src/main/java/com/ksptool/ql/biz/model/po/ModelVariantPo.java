@@ -15,7 +15,8 @@ import static com.ksptool.entities.Entities.as;
 
 @Entity
 @Table(name = "model_variant", indexes = {
-    @Index(name = "idx_model_variant_code", columnList = "code", unique = true),
+    @Index(name = "idx_model_variant_code", columnList = "code"),
+    @Index(name = "idx_model_variant_name", columnList = "name", unique = true),
     @Index(name = "idx_model_variant_enabled", columnList = "enabled"),
     @Index(name = "idx_model_variant_series", columnList = "series"),
     @Index(name = "idx_model_variant_seq", columnList = "seq")
@@ -28,11 +29,11 @@ public class ModelVariantPo {
     @Comment("模型ID")
     private Long id;
 
-    @Column(name = "code", nullable = false, length = 128,unique = true)
+    @Column(name = "code", nullable = false, length = 128)
     @Comment("模型代码")
     private String code;
 
-    @Column(name = "name",nullable = false, length = 128)
+    @Column(name = "name",nullable = false, length = 128,unique = true)
     @Comment("模型名称")
     private String name;
 
@@ -78,12 +79,14 @@ public class ModelVariantPo {
     @Comment("更新时间")
     private Date updateTime;
 
-    @OneToMany(mappedBy = "modelVariant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     //模型变体参数列表
+    @OneToMany(mappedBy = "modelVariant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ModelVariantParamPo> params;
 
     public ModelVariantSchema getSchema() {
-        return as(this, ModelVariantSchema.class);
+        ModelVariantSchema schema = as(this, ModelVariantSchema.class);
+        schema.setTarget(this);
+        return schema;
     }
 
 }

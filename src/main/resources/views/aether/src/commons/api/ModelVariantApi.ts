@@ -2,6 +2,7 @@ import Http from "@/commons/Http.ts";
 
 // 客户端模型变体数据接口
 export interface ClientModelVariant {
+    id: string              //模型ID
     code: string;           // 模型代码
     name: string;           // 模型名称
     type: number;           // 模型类型 0:文本 1:图形 2:多模态

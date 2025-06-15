@@ -95,7 +95,7 @@ public class ChatThreadService {
 
             //如果是NPC会话 则后端自动创建新会话
             if(dto.getNpcId() != null){
-                threadPo = createSelfNpcThread(modelVariantService.requireModelSchema(dto.getModelCode()),dto.getNpcId());
+                threadPo = createSelfNpcThread(modelVariantService.requireModelSchema(dto.getModelVariantId()),dto.getNpcId());
             }
             if(dto.getNpcId() == null){
                 throw new BizException("未能找到活跃会话");
@@ -103,7 +103,7 @@ public class ChatThreadService {
         }
 
         ret.setThreadId(threadPo.getId());
-        ret.setModelCode(threadPo.getModelCode());
+        ret.setModelVariantId(threadPo.getModelVariant().getId());
 
         //分页查询Message
         Page<ChatMessagePo> pPos = chatMessageRepository.getByThreadId(ret.getThreadId(), dto.pageRequest());
@@ -275,7 +275,7 @@ public class ChatThreadService {
             }
 
             //获取Thread绑定的模型及其系列
-            ModelVariantSchema model = modelVariantService.requireModelSchema(threadPo.getModelCode());
+            ModelVariantSchema model = modelVariantService.requireModelSchema(threadPo.getModelVariant().getId());
 
             if(model == null){
                 log.warn("无法为会话 {} 生成标题 原因:Thread未配置modelCode", threadId);
@@ -353,6 +353,7 @@ public class ChatThreadService {
                 .orElseThrow(() -> new BizException("Player不存在或无权访问"));
 
         var userPo = Any.of().val("id",AuthService.requireUserId()).as(UserPo.class);
+        var modelVariantPo = Any.of().val("id", model.getId()).as(ModelVariantPo.class);
         var insert = new ChatThreadPo();
         insert.setType(type); //0:标准会话 1:RP会话 2:标准增强会话
         insert.setUser(userPo);
@@ -362,7 +363,7 @@ public class ChatThreadService {
         insert.setPublicInfo(null);
         insert.setDescription(null);
         insert.setTitleGenerated(0);
-        insert.setModelCode(model.getCode());
+        insert.setModelSchema(model);
         insert.setActive(1);
         insert.setMessages(new ArrayList<>());
         return repository.save(insert);
@@ -381,6 +382,7 @@ public class ChatThreadService {
 
         UserSessionVo player = AuthService.requirePlayer();
         var userPo = Any.of().val("id",player.getUserId()).as(UserPo.class);
+        var modelVariantPo = Any.of().val("id", model.getId()).as(ModelVariantPo.class);
         var insert = new ChatThreadPo();
         insert.setType(1); //0:标准会话 1:RP会话 2:标准增强会话
         insert.setUser(userPo);
@@ -393,7 +395,7 @@ public class ChatThreadService {
         insert.setPublicInfo(prompt.execute());
         insert.setDescription(null);
         insert.setTitleGenerated(1);
-        insert.setModelCode(model.getCode());
+        insert.setModelSchema(model);
         insert.setActive(1);
         insert.setMessages(new ArrayList<>());
         insert.setLastMessage(null);
@@ -423,25 +425,6 @@ public class ChatThreadService {
     }
 
 
-    //创建新的标准会话
-    public ChatThreadPo createThread(long userId,long playerId,String modelCode){
-        var user = Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class);
-        var player = Any.of().val("id",playerId).as(PlayerPo.class);
-        var insert = new ChatThreadPo();
-        insert.setType(0); //0:标准会话 1:RP会话 2:标准增强会话
-        insert.setUser(user);
-        insert.setPlayer(player);
-        insert.setNpc(null);
-        insert.setTitle("新会话");
-        insert.setPublicInfo(null);
-        insert.setDescription(null);
-        insert.setTitleGenerated(0);
-        insert.setModelCode(modelCode);
-        insert.setActive(1);
-        insert.setMessages(new ArrayList<>());
-        return repository.save(insert);
-    }
-
     public int getSelfThreadCount(int type){
         var query = new ChatThreadPo();
         query.setUser(Any.of().val("id",AuthService.getCurrentUserId()).as(UserPo.class));
@@ -449,22 +432,6 @@ public class ChatThreadService {
         query.setType(type);
         return (int)repository.count(Example.of(query));
     }
-
-    //将玩家下的所有会话设定为不活跃
-    public void deActiveAllSelfThread(){
-
-
-
-    }
-
-    //将玩家下某一个NPC下的所有会话设置为不活跃
-    public void deActiveAllNpcSelfThread(long npcId){
-
-
-
-
-    }
-
 
 
 

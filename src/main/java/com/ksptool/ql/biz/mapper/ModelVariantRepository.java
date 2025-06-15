@@ -47,11 +47,11 @@ public interface ModelVariantRepository extends JpaRepository<ModelVariantPo, Lo
             Pageable pageable
     );
 
-    // 检查模型代码是否已存在（用于新增时验证）
-    boolean existsByCode(String code);
+    // 检查模型名称是否已存在（用于新增时验证）
+    boolean existsByName(String name);
 
-    // 检查模型代码是否已存在（排除指定ID，用于编辑时验证）
-    boolean existsByCodeAndIdNot(String code, Long id);
+    // 检查模型名称是否已存在（排除指定ID，用于编辑时验证）
+    boolean existsByNameAndIdNot(String name, Long id);
 
     // 查询所有启用的模型变体，按排序号和创建时间排序（供客户端使用）
     @Query("""

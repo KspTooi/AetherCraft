@@ -72,7 +72,7 @@ public class ChatConversationService {
     public SendMessageVo sendMessage(SendMessageDto dto) throws BizException {
 
         var player = AuthService.requirePlayer();
-        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelVariantId());
 
         ChatThreadPo threadPo = null;
 
@@ -113,7 +113,7 @@ public class ChatConversationService {
 
         //锁定会话
         String streamId = mccq.openStream(threadPo.getId());
-        threadPo.setModelCode(model.getCode());
+        threadPo.setModelSchema(model);
 
         try{
 
@@ -256,9 +256,9 @@ public class ChatConversationService {
             throw new BizException("该会话正在处理中,请等待模型响应完成.");
         }
 
-        var model = modelVariantService.requireModelSchema(dto.getModelCode());
+        var model = modelVariantService.requireModelSchema(dto.getModelVariantId());
         ChatThreadPo threadPo = chatThreadService.getSelfThread(dto.getThreadId());
-        threadPo.setModelCode(model.getCode());
+        threadPo.setModelSchema(model);
 
         //获取根消息
         ChatMessagePo rootMessagePo = null;

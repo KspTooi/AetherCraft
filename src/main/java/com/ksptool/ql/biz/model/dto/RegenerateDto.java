@@ -10,7 +10,8 @@ public class RegenerateDto {
     private Long threadId;
 
     @NotNull
-    private String modelCode;
+    // 模型变体ID
+    private Long modelVariantId;
 
     //根消息(只能是用户消息) -1为最后一条用户消息
     @NotNull

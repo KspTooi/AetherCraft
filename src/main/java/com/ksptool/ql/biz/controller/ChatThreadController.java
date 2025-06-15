@@ -40,7 +40,7 @@ public class ChatThreadController {
             throw new BizException("type错误");
         }
 
-        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelCode());
+        ModelVariantSchema model = modelVariantService.requireModelSchema(dto.getModelVariantId());
         ChatThreadPo threadPo = service.createSelfNpcThread(model, dto.getNpcId());
 
         var vo = new CreateThreadVo();

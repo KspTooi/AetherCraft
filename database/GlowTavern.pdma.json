@@ -4,7 +4,7 @@
   "avatar": "",
   "version": "4.9.4",
   "createdTime": "2025-5-31 18:54:43",
-  "updatedTime": "2025-6-16 03:52:59",
+  "updatedTime": "2025-6-16 05:15:41",
   "dbConns": [],
   "profile": {
     "default": {
@@ -9714,36 +9714,6 @@
             }
           },
           {
-            "id": "a7c98435-bc39-4597-9706-25139642e04c",
-            "shape": "table",
-            "position": {
-              "x": 500,
-              "y": 520
-            },
-            "count": 0,
-            "originKey": "0B0BC34E-1176-41CC-866D-8F006B2E8962",
-            "type": "P",
-            "size": {
-              "width": 450,
-              "height": 380
-            }
-          },
-          {
-            "id": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
-            "shape": "table",
-            "position": {
-              "x": -520,
-              "y": 0
-            },
-            "count": 0,
-            "originKey": "AED91307-6EF9-447A-9D15-337D0C485530",
-            "type": "P",
-            "size": {
-              "width": 320,
-              "height": 470
-            }
-          },
-          {
             "id": "6a8303a1-69ad-4624-8d5b-592a298da684",
             "shape": "erdRelation",
             "source": {
@@ -9781,6 +9751,21 @@
             }
           },
           {
+            "id": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+            "shape": "table",
+            "position": {
+              "x": -970,
+              "y": 0
+            },
+            "count": 0,
+            "originKey": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+            "type": "P",
+            "size": {
+              "width": 320,
+              "height": 280
+            }
+          },
+          {
             "id": "d12000ff-c9b1-4ef0-acf1-6a215520c338",
             "shape": "table",
             "position": {
@@ -9796,18 +9781,33 @@
             }
           },
           {
-            "id": "19a8da11-5421-48b1-a1d4-2d24d690bc53",
+            "id": "aa5249fc-acf2-4c66-9ff1-ce8b2de83c0b",
             "shape": "table",
             "position": {
-              "x": -970,
+              "x": -520,
               "y": 0
             },
             "count": 0,
-            "originKey": "A55CAEAD-E7B4-450D-820C-5664BA25A3AF",
+            "originKey": "AED91307-6EF9-447A-9D15-337D0C485530",
             "type": "P",
             "size": {
               "width": 320,
-              "height": 280
+              "height": 470
+            }
+          },
+          {
+            "id": "a7c98435-bc39-4597-9706-25139642e04c",
+            "shape": "table",
+            "position": {
+              "x": 500,
+              "y": 520
+            },
+            "count": 0,
+            "originKey": "0B0BC34E-1176-41CC-866D-8F006B2E8962",
+            "type": "P",
+            "size": {
+              "width": 450,
+              "height": 380
             }
           }
         ]
