@@ -3,6 +3,7 @@ package com.ksptool.ql.restcgi.service;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.ksptool.ql.commons.exception.BizException;
+import com.ksptool.ql.commons.utils.CallbackHttpClient;
 import com.ksptool.ql.commons.utils.GsonUtils;
 import com.ksptool.ql.restcgi.model.CgiChatParam;
 import com.ksptool.ql.restcgi.model.CgiChatResult;
@@ -13,11 +14,9 @@ import okhttp3.*;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -95,6 +94,10 @@ public class GrokRestCgi implements ModelRestCgi {
 
     @Override
     public void sendMessage(CgiChatParam p, Consumer<CgiChatResult> callback) throws BizException {
+        if(callback == null){
+            throw new BizException("callback为空");
+        }
+
         var req = new GrokRequest(p);
         req.setStream(true);
 
@@ -110,120 +113,75 @@ public class GrokRestCgi implements ModelRestCgi {
                 .post(RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8")))
                 .build();
 
-        // 使用虚拟线程处理SSE响应
-        Thread.startVirtualThread(() -> {
-            try (Response response = p.getHttpClient().newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new BizException("调用Grok API失败: " + response.body().string());
+        CallbackHttpClient client = new CallbackHttpClient(p.getHttpClient());
+        AtomicInteger seq = new AtomicInteger(0);
+        AtomicReference<GrokResponse> lastRet = new AtomicReference<>();
+        StringBuilder allText = new StringBuilder();
+
+        client.onResponse((body) -> {
+            try {
+                if (!body.startsWith("data: ")) {
+                    return;
+                }
+                if(body.contains("[DONE]")){
+                    return;
                 }
 
-                AtomicInteger seq = new AtomicInteger(0);
-                GrokResponse grokResponse = null;
-                StringBuilder responseBuilder = new StringBuilder();
+                String data = body.substring(6);
+                GrokResponse gr = gson.fromJson(data, GrokResponse.class);
+                lastRet.set(gr);
 
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().byteStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-
-                        //log.info(line);
-
-                        if (line.startsWith("data: ")) {
-                            String data = line.substring(6);
-                            if ("[DONE]".equals(data)) {
-                                log.debug("接收到流式响应结束标记");
-                                break;
-                            }
-
-                            try {
-                                grokResponse = gson.fromJson(data, GrokResponse.class);
-                                if (grokResponse.getChoices() != null && !grokResponse.getChoices().isEmpty()) {
-                                    GrokResponse.Choice choice = grokResponse.getChoices().getFirst();
-
-                                    // 检查是否有finish_reason，如果是stop，则跳过
-                                    if ("stop".equals(choice.getFinishReason())) {
-                                        log.debug("接收到完成原因: {}", choice.getFinishReason());
-                                        continue;
-                                    }
-
-                                    // 检查delta中是否有content
-                                    if (choice.getDelta() != null && choice.getDelta().getContent() != null) {
-                                        String deltaContent = choice.getDelta().getContent();
-                                        responseBuilder.append(deltaContent);
-
-                                        // 调用回调，返回type为数据(0)的Result
-                                        if (callback != null) {
-                                            var ccr = new CgiChatResult();
-                                            ccr.setModel(p.getModel());
-                                            ccr.setType(0);
-                                            ccr.setContent(deltaContent);
-                                            ccr.setSeq(seq.getAndIncrement());
-                                            ccr.setException(null);
-                                            ccr.setTokenInput(0);
-                                            ccr.setTokenOutput(0);
-                                            ccr.setTokenThoughtOutput(0);
-                                            callback.accept(ccr);
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) {
-                                log.warn("解析响应数据失败: {}", e.getMessage());
-                            }
-                        }
-                    }
+                if (gr.getChoices() == null || gr.getChoices().isEmpty()) {
+                    return;
                 }
 
-                // 获取完整响应
-                String fullResponse = responseBuilder.toString();
-                if (fullResponse.isEmpty()) {
-                    throw new BizException("Grok API 返回内容为空");
+                GrokResponse.Choice choice = gr.getChoices().getFirst();
+                if (choice.getDelta() == null || choice.getDelta().getContent() == null) {
+                    return;
                 }
 
-                // 记录完整请求和响应
-                log.info("Grok API 流式请求响应 - 模型: {}, 请求: {}, 完整响应长度: {}",
-                        p.getModel().getCode(),
-                        jsonBody.replaceAll("\\s+", ""),
-                        fullResponse.length());
-
-                // 调用回调，返回type为1的Result
-                if (callback != null) {
-                    var ccr = new CgiChatResult();
-                    ccr.setModel(p.getModel());
-                    ccr.setType(1);
-                    ccr.setContent(fullResponse);
-                    ccr.setSeq(seq.get());
-
-                    if (grokResponse != null && grokResponse.getUsage() != null) {
-                        ccr.setTokenInput(grokResponse.getUsage().getPromptTokens());
-                        ccr.setTokenOutput(grokResponse.getUsage().getCompletionTokens());
-                        
-                        // 从completion_tokens_details中获取reasoning_tokens
-                        if (grokResponse.getUsage().getCompletionTokensDetails() != null) {
-                            ccr.setTokenThoughtOutput(grokResponse.getUsage().getCompletionTokensDetails().getReasoningTokens());
-                        }
-                    }
-
-                    callback.accept(ccr);
-                }
+                String text = choice.getDelta().getContent();
+                allText.append(text);
+                CgiChatResult ccr = CgiChatResult.text(p, text, seq.getAndIncrement());
+                callback.accept(ccr);
 
             } catch (Exception e) {
-                log.error("Grok API 请求异常: ", e);
-                // 调用回调，返回type为2的Result
-                if (callback != null) {
-                    var ccr = new CgiChatResult();
-                    ccr.setModel(p.getModel());
-                    ccr.setType(2);
-                    ccr.setContent(e.getMessage());
-                    ccr.setException(e);
-                    ccr.setSeq(-1);
-                    callback.accept(ccr);
-                }
+                log.error(e.getMessage(), e);
+                var error = CgiChatResult.error(p, e.getMessage(), e);
+                callback.accept(error);
             }
         });
+
+        client.onError((e) -> {
+            var error = CgiChatResult.error(p, e.getMessage(), e);
+            callback.accept(error);
+        });
+
+        client.onComplete(() -> {
+            if (allText.isEmpty() || lastRet.get() == null) {
+                var error = CgiChatResult.error(p, "Grok返回内容为空", new BizException("Grok返回内容为空"));
+                callback.accept(error);
+                return;
+            }
+
+            GrokResponse lastGr = lastRet.get();
+            CgiChatResult ccr = CgiChatResult.finish(p, allText.toString(), "", seq.getAndIncrement());
+
+            if (lastGr != null && lastGr.getUsage() != null) {
+                ccr.setTokenInput(lastGr.getUsage().getPromptTokens());
+                ccr.setTokenOutput(lastGr.getUsage().getCompletionTokens());
+                if (lastGr.getUsage().getCompletionTokensDetails() != null) {
+                    ccr.setTokenThoughtOutput(lastGr.getUsage().getCompletionTokensDetails().getReasoningTokens());
+                }
+            }
+            callback.accept(ccr);
+        });
+
+        client.send(request);
     }
+
     @Override
     public Flux<CgiChatResult> sendMessageFlux(CgiChatParam param) {
         return null;
     }
-
-
 }

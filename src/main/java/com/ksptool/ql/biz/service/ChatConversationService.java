@@ -161,13 +161,7 @@ public class ChatConversationService {
             chatThreadRepository.save(threadPo);
 
             //创建起始分片
-            var cf = new ChatFragment();
-            cf.setType(0); //0:起始 1:数据 2:结束 10:错误
-            cf.setPlayerId(player.getPlayerId());
-            cf.setThreadId(threadPo.getId());
-            cf.setContent("conversation start"); //起始消息是用户发送的内容
-            cf.setSeq(0);
-            cf.setStreamId(streamId);
+            var cf = ChatFragment.ofStart(player.getPlayerId(),threadPo.getId(),streamId);
             mccq.receive(cf);
 
             var msg = new CgiChatMessage();
@@ -306,12 +300,7 @@ public class ChatConversationService {
             var player = AuthService.requirePlayer();
 
             //创建起始分片
-            var cf = new ChatFragment();
-            cf.setType(0); //0:起始 1:数据 2:结束 10:错误
-            cf.setPlayerId(player.getPlayerId());
-            cf.setThreadId(threadPo.getId());
-            cf.setSeq(0);
-            cf.setStreamId(streamId);
+            var cf = ChatFragment.ofStart(player.getPlayerId(),threadPo.getId(),streamId);
             mccq.receive(cf);
 
             var msg = new CgiChatMessage();
@@ -491,23 +480,24 @@ public class ChatConversationService {
                     return;
                 }
 
-                //数据类型 - 创建数据片段
+                //返回类型(新) 0:思考片段 1:文本 50:结束 51:错误
+
+                //思考片段类型 - 创建思考数据片段
                 if (ccr.getType() == 0) {
-                    var cf = new ChatFragment();
-                    cf.setType(1);
-                    cf.setSenderName(ctx.modelName());
-                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
-                    cf.setPlayerId(ctx.playerId());
-                    cf.setThreadId(ctx.threadId());
-                    cf.setStreamId(ctx.streamId());
-                    cf.setContent(ccr.getContent());
-                    cf.setSendTime(new Date());
+                    var cf = ChatFragment.ofThought(ccr,ctx);
+                    mccq.receive(cf);
+                    return;
+                }
+
+                //文本片段类型 - 创建文本数据片段
+                if (ccr.getType() == 1) {
+                    var cf = ChatFragment.ofMessage(ccr,ctx);
                     mccq.receive(cf);
                     return;
                 }
 
                 //结束类型
-                if (ccr.getType() == 1) {
+                if (ccr.getType() == 50) {
 
                     ChatThreadPo chatThreadPo = chatThreadRepository.getThread(ctx.threadId());
 
@@ -539,16 +529,7 @@ public class ChatConversationService {
                     chatThreadRepository.save(chatThreadPo);
                     log.info("为Thread:{} 创建新的消息:{}",ctx.threadId(),messagePo.getId());
 
-                    var cf = new ChatFragment();
-                    cf.setType(2);
-                    cf.setSenderName(ctx.modelName());
-                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
-                    cf.setPlayerId(ctx.playerId());
-                    cf.setThreadId(ctx.threadId());
-                    cf.setContent(ccr.getContent());
-                    cf.setMessageId(messagePo.getId());
-                    cf.setStreamId(ctx.streamId());
-                    cf.setSendTime(messagePo.getCreateTime());
+                    var cf = ChatFragment.ofFinish(ccr,ctx,messagePo.getId());
                     mccq.receive(cf);
 
                     // 通知会话已结束
@@ -560,16 +541,8 @@ public class ChatConversationService {
                 }
 
                 //错误类型 - 创建错误片段
-                if (ccr.getType() == 2) {
-                    var cf = new ChatFragment();
-                    cf.setType(10);
-                    cf.setSenderName(ctx.modelName());
-                    cf.setSenderAvatarUrl(ctx.modelAvatarUrl());
-                    cf.setPlayerId(ctx.playerId());
-                    cf.setThreadId(ctx.threadId());
-                    cf.setContent(ccr.getException() != null ? "AI响应错误: " + ccr.getException().getMessage() : "AI响应错误");
-                    cf.setStreamId(ctx.streamId());
-                    cf.setSendTime(new Date());
+                if (ccr.getType() == 51) {
+                    var cf = ChatFragment.ofError(ccr,ctx,ccr.getException());
                     mccq.receive(cf);
 
                     // 通知会话已失败

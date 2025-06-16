@@ -185,9 +185,8 @@ public class MemoryChatControlQueue {
                 Iterator<ChatFragment> fragmentIterator = queue.iterator();
                 while (fragmentIterator.hasNext()) {
                     ChatFragment fragment = fragmentIterator.next();
-                    int newFragmentTtl = fragment.getTtl() - 1;
-                    fragment.setTtl(newFragmentTtl);
-                    if (newFragmentTtl <= 0) {
+                    fragment.decrementTtl();
+                    if (fragment.isExpired()) {
                         // 如果分片 TTL <= 0，移除分片
                         fragmentIterator.remove();
                         log.debug("移除过期分片，StreamId: {}, Fragment Seq: {}", streamId, fragment.getSeq());

@@ -36,7 +36,7 @@ session:
   expires: 86400
 
 application:
-  version: 1.3D-20 # 应用版本号
+  version: 1.3D-21 # 应用版本号
 
 # 加密配置
 encrypt:
