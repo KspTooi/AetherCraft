@@ -392,48 +392,28 @@ public class ChatConversationService {
             var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
             /*
              * 分片类型 0:起始 1:数据 2:结束 10:错误
+             * 分片类型(新) 0:起始 1:结束 2:错误 50:思考片段 51:文本
              * 消费逻辑
              * 1.当首个段`firstFragment`为起始、错误片段时需立即返回内容给客户端
              * 2.当首个段为数据段,尝试获取尽可能多的数据段并将其组装到一个客户端响应中
              * 在消费数据片段时获取到"结束"或"错误"片段时立即返回已组装的客户端响应,并将已获取到的"结束"或"错误"片段重新放入队头
              */
+
+            //起始片段
             if(first.getType() == 0){
-                ret.setType(0);
-                ret.setThreadId(first.getThreadId());
-                ret.setMessageId(-1L);
-                ret.setContent("conversation start");
-                ret.setSeq(0);
-                ret.setSenderRole(null);
-                ret.setSenderName(null);
-                ret.setSenderAvatarUrl(null);
-                ret.setSendTime(null);
-                return ret;
+                return MessageFragmentVo.of(first);
             }
+            //结束片段
             if(first.getType() == 2){
-                ret.setType(2);
-                ret.setThreadId(first.getThreadId());
-                ret.setMessageId(first.getMessageId());
-                ret.setContent("conversation end");
-                ret.setSeq(first.getSeq());
-                ret.setSenderRole(1);
-                ret.setSenderName(first.getSenderName());
-                ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
-                ret.setSendTime(sdf.format(first.getSendTime()));
-                return ret;
+                return MessageFragmentVo.of(first);
             }
+            //错误片段
             if(first.getType() == 10){
-                ret.setType(10);
-                ret.setThreadId(first.getThreadId());
-                ret.setMessageId(first.getMessageId());
-                ret.setContent(StringUtils.isNotBlank(first.getContent()) ? first.getContent() : "模型响应时出现未知错误");
-                ret.setSeq(first.getSeq());
-                ret.setSenderRole(1);
-                ret.setSenderName(first.getSenderName());
-                ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
-                ret.setSendTime(sdf.format(first.getSendTime()));
-                return ret;
+                return MessageFragmentVo.of(first);
             }
 
+            //文本与思考片段
+            
             ret.setThreadId(first.getThreadId());
             ret.setMessageId(-1L);
             ret.setSenderRole(1);
