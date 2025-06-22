@@ -145,8 +145,6 @@ interface MessageInputInstance {
 //处理消息接收回调
 const onMessageReceived = (fragment: MessageFragmentVo) => {
 
-  console.log("fragment:", fragment);
-
   //0:起始 1:结束 2:错误 50:思考片段 51:文本
   if(fragment.type === 0){
     //起始片段不做任何处理
@@ -265,11 +263,11 @@ const onMessageSend = async (message: string) => {
 
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
-    console.log("messages:", messages.value);
 
     //如果创建了新会话 则刷新聊天列表
     if(response.newThreadCreated === 1){
       await chatListRef.value?.loadThreadList();
+      currentThreadId.value = response.threadId;
     }
 
   }catch(error){
@@ -288,71 +286,61 @@ const onMessageSend = async (message: string) => {
 
 };
 
-//轮询拉取响应流
-const pollMessage = async (streamId: string) => {
-  let hasReceivedData = false;
+// 处理消息重新生成
+const onMessageRegenerate = async (msgId: string) => {
+  if (isGenerating.value) return;
 
-  while (isGenerating.value) {
-    try {
-      const queryStreamDto: QueryStreamDto = {
-        streamId: streamId // 使用传入的 streamId
-      };
+  if (messages.value.length === 0) {
+    console.warn('没有可用于重新生成的消息。');
+    return;
+  }
+  
+  console.log(`根据消息上下文重新生成，结束ID为 ${msgId}`);
+  isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
 
-      const segment = await ConversationApi.queryStream(queryStreamDto);
+  try {
+    const lastMessageIndex = messages.value.length - 1;
+    const lastMessage = messages.value[lastMessageIndex];
 
-      await updateTempMsg({
-        id: segment.messageId,
-        name: segment.senderName,
-        avatarPath: segment.senderAvatarUrl,
-        createTime: segment.sendTime
-      });
-
-      if (segment.type === 1) { // 数据片段
-        if (!hasReceivedData) {
-          const tempMessage = messages.value.find(msg => msg.id === '-1');
-          if (tempMessage) tempMessage.content = '';
-          hasReceivedData = true;
-          await appendTempMsg(segment.content || '');
-        } else {
-          await appendTempMsg(segment.content || '');
-        }
-      } else if (segment.type === 2) { // 结束
-        if (segment.content) {
-          if (!hasReceivedData) {
-            const tempMessage = messages.value.find(msg => msg.id === '-1');
-            if (tempMessage) tempMessage.content = segment.content;
-          } else {
-            await appendTempMsg(segment.content);
-          }
-        }
-        isGenerating.value = false;
-        isLoadingMessages.value = false; // 关闭发光条
-        break;
-      } else if (segment.type === 10) { // 错误
-        console.error('AI生成错误:', segment.content);
-        alterRef.value?.showConfirm({
-          title: "回复消息时发生错误",
-          content: segment.content,
-          closeText: "好的",
-        });
-        removeTempMsg();
-        isGenerating.value = false;
-        isLoadingMessages.value = false; // 关闭发光条
-        break;
-      }
-    } catch (error) {
-      console.error('轮询AI响应请求失败:', error);
-      alterRef.value?.showConfirm({
-        title: "轮询AI响应失败",
-        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
-        closeText: "好的",
-      });
-      removeTempMsg();
-      isGenerating.value = false;
-      isLoadingMessages.value = false; // 关闭发光条
-      break;
+    if (lastMessage.senderRole === 1) {
+      messages.value.pop();
+      await nextTick();
     }
 
+    //创建临时消息
+    TempMessageService.createTempMessage(messages);
+
+    // 调用 regenerate API
+    const regenerateDto: RegenerateDto = {
+      threadId: currentThreadId.value,
+      modelVariantId: currentModelVariantId.value, 
+      rootMessageId: "-1" // 传递需要重新生成的消息的ID
+    };
+    await ConversationService.regenerate(regenerateDto, onMessageReceived);
+
+    await nextTick();
+    messageBoxRef.value?.scrollToBottom();
+
+    console.log('后端已确认重新生成请求，开始轮询...');
+
+  } catch (error) {
+    console.error('消息重新生成过程中出错:', error);
+
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
+
+    //提示用户错误
+    alterRef.value?.showConfirm({
+      title: "重新生成消息失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    });
+  }finally{
+    endGenerate();
   }
 };
 
@@ -386,8 +374,9 @@ const onBatchAbort = async () => {
     // 清理前端状态
     isGenerating.value = false;
     isLoadingMessages.value = false; // 关闭发光条
-    removeTempMsg();
-    
+
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
   }
@@ -410,6 +399,7 @@ const reloadMessageList = async (threadId?: string) => {
       currentThreadId.value = response.threadId;
       messages.value = response.messages.rows.map((msg): MessageItemVo => ({
         id: msg.id,
+        status: 3,
         senderName: msg.senderName,
         senderAvatarUrl: msg.senderAvatarUrl,
         senderRole: msg.senderRole,
@@ -475,91 +465,6 @@ const onSelectThread = async (threadId: string) => {
 };
 
 
-
-
-const createTempMsg = async () => {
-  if (hasTempMessage.value) return; // 防止重复创建
-
-  const tempAiMessage: MessageItemVo = {
-    id: '-1', 
-    senderName: '----',
-    senderAvatarUrl: '', 
-    senderRole: 1,
-    content: '正在输入...',
-    contentThoughts: null,
-    createTime: null
-  };
-  messages.value.push(tempAiMessage);
-  hasTempMessage.value = true;
-  await nextTick();
-  messageBoxRef.value?.scrollToBottom();
-}
-
-const appendTempMsg = async (content: string) => {
-  if (!hasTempMessage.value) return;
-
-  const tempMessage = messages.value.find(msg => msg.id === '-1');
-  if (tempMessage) {
-    tempMessage.content += content;
-    await nextTick();
-    messageBoxRef.value?.scrollToBottom();
-  }
-}
-
-const removeTempMsg = () => {
-  if (!hasTempMessage.value) return;
-
-  messages.value = messages.value.filter(msg => msg.id !== '-1');
-  hasTempMessage.value = false;
-}
-
-//更新临时消息
-const updateTempMsg = async (data: {
-  id?: string; // 消息ID (可选, 如果提供则表示转为永久)
-  name?: string; // 名称 (可选)
-  avatarPath?: string; // 头像路径 (可选)
-  createTime: string
-}) => {
-
-  if (!hasTempMessage.value) return;
-
-  const tempMessage = messages.value.find(msg => msg.id === '-1');
-
-  if (tempMessage) {
-    let updated = false;
-
-    // 更新名称 (如果提供了有效的名称)
-    if (data.name) {
-      tempMessage.senderName = data.name;
-      updated = true;
-    }
-
-    // 更新头像 (如果提供了有效的头像路径)
-    if (data.avatarPath) {
-      tempMessage.senderAvatarUrl = data.avatarPath;
-      updated = true;
-    }
-
-    // 检查是否提供了有效的永久ID
-    // (假设有效的永久ID不为空且不等于临时ID '-1')
-    if (data.id && data.id !== '-1') {
-      tempMessage.id = data.id; // 将临时消息ID更新为永久ID
-      hasTempMessage.value = false; // 标记不再有临时消息
-      updated = true;
-    }
-
-    if(data.createTime){
-      tempMessage.createTime = data.createTime;
-      updated = true;
-    }
-    
-    // 如果有任何更新，触发Vue的响应式更新
-    if (updated) {
-       messages.value = [...messages.value];
-    }
-  }
-}
-
 const onMessageRemove = async (msgId: string) => {
 
   if(!confirmRef.value) return;
@@ -596,55 +501,7 @@ const onMessageRemove = async (msgId: string) => {
   }
 };
 
-// 处理消息重新生成
-const onMessageRegenerate = async (msgId: string) => {
-  if (isGenerating.value) return;
 
-  if (messages.value.length === 0) {
-    console.warn('没有可用于重新生成的消息。');
-    return;
-  }
-  
-  console.log(`根据消息上下文重新生成，结束ID为 ${msgId}`);
-  isGenerating.value = true;
-  isLoadingMessages.value = true; // 启用发光条
-
-  try {
-    const lastMessageIndex = messages.value.length - 1;
-    const lastMessage = messages.value[lastMessageIndex];
-
-    if (lastMessage.senderRole === 1) {
-      messages.value.pop();
-      await nextTick();
-    }
-
-    await createTempMsg();
-
-    // 调用 regenerate API
-    const regenerateDto: RegenerateDto = {
-      threadId: currentThreadId.value,
-      modelVariantId: currentModelVariantId.value, 
-      rootMessageId: "-1" // 传递需要重新生成的消息的ID
-    };
-    const regenerateResponse = await ConversationApi.regenerate(regenerateDto);
-
-    console.log('后端已确认重新生成请求，开始轮询...');
-    // 从 regenerateResponse 中获取 streamId
-    if (regenerateResponse && regenerateResponse.streamId) {
-      await pollMessage(regenerateResponse.streamId);
-    } else {
-      console.error('重新生成消息失败: 未收到有效的 streamId');
-      throw new Error('重新生成消息失败: 未收到有效的 streamId');
-    }
-
-  } catch (error) {
-    console.error('消息重新生成过程中出错:', error);
-    alert('重新生成消息时发生网络错误');
-    removeTempMsg();
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
-  }
-};
 
 // 处理消息更新
 const onMessageEdit = async (params: { msgId: string; message: string }) => {
