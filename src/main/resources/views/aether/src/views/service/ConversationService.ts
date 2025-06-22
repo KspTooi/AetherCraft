@@ -37,6 +37,10 @@ const pollMessage = async (streamId: string, callback: (fragment: MessageFragmen
 
 export default {
 
+    
+
+
+
     async sendMessage(param: SendMessageDto, callback: (fragment: MessageFragmentVo) => void): Promise<SendMessageVo> {
         try {
             // 发送消息

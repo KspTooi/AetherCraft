@@ -142,11 +142,10 @@ interface MessageInputInstance {
 const onMessageReceived = (fragment: MessageFragmentVo) => {
 
   //0:起始 1:结束 2:错误 50:思考片段 51:文本
-
   if(fragment.type === 0){
 
   }
-  
+
   if(fragment.type === 1){
 
   }
