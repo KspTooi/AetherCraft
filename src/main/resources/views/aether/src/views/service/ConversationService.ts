@@ -16,12 +16,12 @@ const pollMessage = async (streamId: string, callback: (fragment: MessageFragmen
             // 所有类型的消息片段都调用回调函数
             callback(segment);
 
-            // 检查是否结束
-            if (segment.type === 2) { // 结束片段
+            // 检查是否结束 0:起始 1:结束 2:错误 50:思考片段 51:文本
+            if (segment.type === 1) { // 结束片段
                 isPolling = false;
                 break;
             }
-            if (segment.type === 10) { // 错误片段
+            if (segment.type === 2) { // 错误片段
                 console.error('AI生成错误:', segment.content);
                 isPolling = false;
                 break;
@@ -38,8 +38,6 @@ const pollMessage = async (streamId: string, callback: (fragment: MessageFragmen
 export default {
 
     
-
-
 
     async sendMessage(param: SendMessageDto, callback: (fragment: MessageFragmentVo) => void): Promise<SendMessageVo> {
         try {

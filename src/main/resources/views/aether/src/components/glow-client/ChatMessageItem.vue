@@ -21,9 +21,9 @@
           {{ props.message.createTime }}
         </div>
         <div v-if="props.message.id === '-1'" class="typing-indicator">
-          <span v-if="props.message.status === 0">正在计算</span>
-          <span v-if="props.message.status === 1">正在输入</span>
-          <span v-else>正在输入</span>
+          <span v-if="props.message.status === 0">等待响应</span>
+          <span v-if="props.message.status === 1"><i class="bi bi-heart-pulse-fill" style="margin-right: 6px;"></i>正在计算</span>
+          <span v-if="props.message.status === 2"><i class="bi bi-keyboard" style="margin-right: 6px;"></i>正在输入</span>
           <span class="dot">.</span>
           <span class="dot">.</span>
           <span class="dot">.</span>

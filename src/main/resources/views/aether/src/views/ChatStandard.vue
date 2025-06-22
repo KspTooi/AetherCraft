@@ -80,6 +80,8 @@ import MessageApi from "@/commons/api/MessageApi";
 import type { EditMessageDto } from "@/commons/api/MessageApi";
 import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
 import type { MessageItemVo } from '@/entity/vo/MessageItemVo';
+import TempMessageService from './service/TempMessageService';
+import ConversationService from './service/ConversationService';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -100,6 +102,8 @@ const isCreatingThread = ref<boolean>(false)
 const currentThreadId = ref<string>("")
 const currentModelVariantId = ref<string>("")
 
+//上一条发送的消息内容
+const lastSendMessageContent = ref<string>("");
 
 const messages = ref<MessageItemVo[]>([]);
 
@@ -141,95 +145,147 @@ interface MessageInputInstance {
 //处理消息接收回调
 const onMessageReceived = (fragment: MessageFragmentVo) => {
 
+  console.log("fragment:", fragment);
+
   //0:起始 1:结束 2:错误 50:思考片段 51:文本
   if(fragment.type === 0){
-
+    //起始片段不做任何处理
   }
 
+  //1:结束
   if(fragment.type === 1){
 
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
   }
 
+  //2:错误
   if(fragment.type === 2){
-    
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+
+    //提示用户错误
+    alterRef.value?.showConfirm({
+      title: "回复消息时发生错误",
+      content: fragment.content,
+      closeText: "好的",
+    });
+
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
   }
 
+  //50:思考片段
   if(fragment.type === 50){
-    
+    TempMessageService.appendContentThoughts(messages, fragment.content);
+
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
+
   }
 
+  //51:文本
   if(fragment.type === 51){
+    TempMessageService.appendContent(messages, fragment.content);
 
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
   }
-
+  
 }
 
+const startGenerate = () => {
+  isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
+}
+const endGenerate = () => {
+  isGenerating.value = false;
+  isLoadingMessages.value = false; // 关闭发光条
+}
 
 
 // 处理发送消息
 const onMessageSend = async (message: string) => {
+
+  //如果正在生成 则不发送
   if (isGenerating.value) return;
 
-  isGenerating.value = true;
-  isLoadingMessages.value = true; // 启用发光条
+  //开始生成
+  startGenerate();
 
-  try {
-    // 准备发送消息的参数
-    const sendMessageDto: SendMessageDto = {
-      // 如果是正在创建新会话，则threadId传-1，否则使用当前currentThreadId
-      threadId: isCreatingThread.value ? '-1' : (currentThreadId.value || '-1'), 
-      type: 0, // 标准会话类型, TODO: 后续可能需要根据 RP模式等进行区分
+  //保存上一条发送的消息内容
+  lastSendMessageContent.value = message;
+
+  let threadId = currentThreadId.value;
+
+  if(isCreatingThread.value){
+    threadId = '-1';
+  }
+
+  try{
+
+    const response = await ConversationService.sendMessage({
+      threadId: threadId,
+      type: 0, //0:标准会话 1:RP会话 2:增强会话
       modelVariantId: currentModelVariantId.value,
       message: message
-    };
+    }, onMessageReceived);
 
-    // 发送消息
-    const response = await ConversationApi.sendMessage(sendMessageDto);
-
-    // 如果之前是在创建新会话模式
-    if (isCreatingThread.value) {
-      isCreatingThread.value = false; // 重置状态
-      if (response.newThreadCreated === 1) {
-        await chatListRef.value?.loadThreadList(); // 创建了新会话，刷新列表
-      }
-    }
-
-    // 更新当前会话ID（可能是新创建的，也可能是旧的）
-    currentThreadId.value = response.threadId;
-
-    // 添加用户消息到消息列表
+    //创建用户消息
     const userMessage: MessageItemVo = {
       id: response.messageId,
+      status: 3, //0:等待响应 1:正在计算 2:正在输入 3:结束
       senderName: response.senderName,
       senderAvatarUrl: response.senderAvatarUrl,
       senderRole: 0,
-      content: response.content || message,
+      content: message,
       contentThoughts: null,
       createTime: response.sendTime
-    };
+    }
+
     messages.value.push(userMessage);
+  
+    //创建临时消息
+    TempMessageService.createTempMessage(messages);
 
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
+    console.log("messages:", messages.value);
 
-    // 创建临时消息并开始轮询
-    await createTempMsg();
-    await pollMessage(response.streamId);
+    //如果创建了新会话 则刷新聊天列表
+    if(response.newThreadCreated === 1){
+      await chatListRef.value?.loadThreadList();
+    }
 
-  } catch (error) {
+  }catch(error){
     console.error('发送消息失败:', error);
-    
-    // 发送失败时恢复输入框内容
-    messageInputRef.value?.setContent(message);
-    
+    //发送失败时恢复输入框内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
+    //提示用户错误
     alterRef.value?.showConfirm({
       title: "发送消息失败",
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
+  }finally{
+    endGenerate();
   }
+
 };
 
 //轮询拉取响应流
