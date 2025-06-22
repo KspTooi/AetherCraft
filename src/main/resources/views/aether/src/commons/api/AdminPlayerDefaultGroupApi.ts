@@ -8,16 +8,12 @@ export interface GetPlayerDefaultGroupListVo {
     id: string;             // 记录ID
     code: string;           // 组标识
     name: string;           // 组名称
-    memberCount: number;    // 成员数量 (从 SIZE(g.users) 计算)
-    permissionCount: number;// 权限节点数量 (从 SIZE(g.permissions) 计算)
+    memberCount: number;    // 成员数量
+    permissionCount: number;// 权限节点数量
     isSystem: boolean;      // 是否系统内置组
     status: number;         // 组状态：0-禁用，1-启用
     createTime: string;     // 记录创建时间
 }
-
-// --- DTO Definitions ---
-
-// getPlayerDefaultGroupList 使用通用的 PageQuery DTO，此处无需重复定义
 
 export interface RemovePlayerDefaultGroupDto {
     ids: string[];          // 要移除的 PlayerDefaultGroup 记录 ID 列表

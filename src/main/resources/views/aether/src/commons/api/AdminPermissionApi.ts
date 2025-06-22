@@ -20,7 +20,7 @@ export interface GetPermissionListVo {
     code: string;         // 权限代码
     name: string;         // 权限名称
     description: string;  // 权限描述
-    isSystem: number;     // 是否为系统权限（1-是，0-否）
+    isSystem: number;     // 是否为系统权限 1:是 0:否
 }
 
 export interface GetPermissionDetailsVo {
@@ -29,7 +29,7 @@ export interface GetPermissionDetailsVo {
     name: string;         // 权限名称
     description: string;  // 权限描述
     sortOrder: number;    // 排序顺序
-    isSystem: number;     // 是否为系统权限（1-是，0-否）
+    isSystem: number;     // 是否为系统权限 1:是 0:否
     createTime: string;   // 创建时间
     updateTime: string;   // 修改时间
 }

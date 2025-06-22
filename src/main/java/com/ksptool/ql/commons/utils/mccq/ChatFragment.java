@@ -82,6 +82,40 @@ public class ChatFragment {
         return ttl <= 0;
     }
 
+    /**
+     * 判断分片是否为起始片段
+     */
+    public boolean isStart(){
+        return this.type == 0;
+    }
+
+    /**
+     * 判断分片是否为结束片段
+     */
+    public boolean isEnd(){
+        return this.type == 1;
+    }
+
+    /**
+     * 判断分片是否为错误片段
+     */
+    public boolean isError(){
+        return this.type == 2;
+    }
+
+    /**
+     * 判断分片是否为思考片段
+     */
+    public boolean isThinking(){
+        return this.type == 50;
+    }
+
+    /**
+     * 判断分片是否为文本片段
+     */
+    public boolean isText(){
+        return this.type == 51;
+    }
 
     public static ChatFragment ofThought(CgiChatResult ccr, CgiCallbackContext ctx){
 

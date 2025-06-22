@@ -51,7 +51,7 @@
         </div>
         
         <!-- 空列表状态 -->
-        <div v-else-if="threads.length === 0" class="empty-list">
+        <div v-else-if="threadList.length === 0" class="empty-list">
           <i class="bi bi-chat-square-text"></i>
           <div class="empty-text">还没有会话记录</div>
           <GlowButton
@@ -65,14 +65,14 @@
         <!-- 会话列表 -->
         <div v-else class="thread-list">
           <div 
-            v-for="thread in threads" 
+            v-for="thread in threadList" 
             :key="thread.id"
             @click="handleThreadClick(thread.id)"
             :class="['thread-item', { active: thread.id == activeThreadId }]"
           >
             <div class="thread-content">
               <div class="thread-title">{{ thread.title }}</div>
-              <div class="thread-model">{{ thread.modelCode }}</div>
+              <div class="thread-model">{{ thread.modelVariantName }}</div>
             </div>
             
             <div class="thread-actions">
@@ -95,6 +95,15 @@
         </div>
       </div>
     </GlowDiv>
+
+    <!-- 确认框组件 -->
+    <GlowConfirm ref="confirmRef" />
+
+    <!-- 错误提示框组件 -->
+    <GlowAlert ref="alterRef" />
+
+    <!-- 输入框组件 -->
+    <GlowConfirmInput ref="inputRef" />
   </div>
 </template>
 
@@ -103,7 +112,12 @@ import { ref, inject, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import GlowButton from "@/components/glow-ui/GlowButton.vue"
 import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue"
+import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
+import GlowAlert from "@/components/glow-ui/GlowAlert.vue"
+import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
+import ThreadApi, { type GetThreadListVo, type EditThreadTitleDto } from '@/commons/api/ThreadApi'
+import type CommonIdDto from '@/entity/dto/CommonIdDto'
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -111,24 +125,18 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 // 事件定义
 const emit = defineEmits<{
   (e: 'select-thread', threadId: string): void;
-  (e: 'delete-thread', threadId: string): void;
-  (e: 'update-title', threadId: string,oldTitle: string): void;
   (e: 'create-thread'): void;
 }>()
 
+//列表数据
+const threadList = ref<GetThreadListVo[]>([])
+
 const props = defineProps<{
-  data:{
-    id:string,
-    title:string,
-    modelCode:string,
-  }[]
   selected: string //当前选择的会话ID
-  loading?: boolean
 }>()
 
 // 状态
-const loading = computed(() => props.loading ?? false)
-const threads = computed(() => props.data)
+const loading = ref(false)
 
 // 计算属性：活动会话ID
 const activeThreadId = computed(() => props.selected)
@@ -136,6 +144,11 @@ const activeThreadId = computed(() => props.selected)
 // 移动端相关状态
 const isMobile = ref(window.innerWidth <= 768)
 const mobileMenuOpen = ref(false)
+
+// 组件引用
+const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
+const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null)
+const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
 // 处理点击会话
 const handleThreadClick = (threadId: string) => {
@@ -150,16 +163,79 @@ const handleThreadClick = (threadId: string) => {
 }
 
 // 处理编辑会话标题
-const handleEditThread = (threadId: string) => {
-  const thread = threads.value.find(t => t.id === threadId);
-  if (thread) {
-    emit('update-title', threadId, thread.title);
+const handleEditThread = async (threadId: string) => {
+  if (!inputRef.value) return
+
+  const thread = threadList.value.find(t => t.id === threadId)
+  if (!thread) return
+
+  try {
+    const result = await inputRef.value.showInput({
+      title: '编辑会话标题',
+      defaultValue: thread.title,
+      placeholder: '请输入新的标题',
+      confirmText: '保存',
+      cancelText: '取消'
+    })
+
+    if (!result || !result.confirmed || !result.value || result.value === thread.title) {
+      return
+    }
+
+    // 使用API更新标题
+    const dto: EditThreadTitleDto = {
+      threadId: threadId,
+      title: result.value
+    }
+    await ThreadApi.editThreadTitle(dto)
+
+    // 更新本地数据
+    thread.title = result.value
+
+  } catch (error) {
+    console.error('更新标题失败:', error)
+    alterRef.value?.showConfirm({
+      title: "更新标题失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    })
   }
 }
 
 // 处理删除会话
-const handleDeleteThread = (threadId: string) => {
-  emit('delete-thread', threadId)
+const handleDeleteThread = async (threadId: string) => {
+  if (!confirmRef.value) return
+
+  try {
+    const confirmed = await confirmRef.value.showConfirm({
+      title: '删除会话',
+      content: '确定要删除这个会话吗？删除后无法恢复',
+      confirmText: '删除',
+      cancelText: '取消'
+    })
+
+    if (!confirmed) return
+
+    // 使用API删除会话
+    const dto: CommonIdDto = { id: threadId }
+    await ThreadApi.removeThread(dto)
+    
+    // 从本地列表中移除
+    threadList.value = threadList.value.filter(t => t.id !== threadId)
+    
+    // 如果删除的是当前选中的会话，通知父组件创建新会话
+    if (threadId === activeThreadId.value) {
+      emit('create-thread')
+    }
+
+  } catch (error) {
+    console.error('删除会话失败:', error)
+    alterRef.value?.showConfirm({
+      title: "删除会话失败",
+      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
+      closeText: "好的",
+    })
+  }
 }
 
 // 处理创建新会话
@@ -184,9 +260,31 @@ const closeMobileMenu = () => {
   mobileMenuOpen.value = false
 }
 
+const loadThreadList = async () => {
+
+  loading.value = true
+
+  // 获取标准会话列表
+  const ret = await ThreadApi.getThreadList({
+    type: 0,
+    page: 1,
+    pageSize: 1000
+  })
+
+  threadList.value = ret.rows
+  loading.value = false
+}
+
 // 组件挂载时设置窗口大小监听
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize)
+  await loadThreadList()
+
+  //找到当前激活的会话
+  const activeThread = threadList.value.find(t => t.active === 1)
+  if(activeThread){
+    emit('select-thread', activeThread.id)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -196,7 +294,8 @@ onBeforeUnmount(() => {
 // 暴露方法给父组件
 defineExpose({
   closeMobileMenu,
-  toggleMobileMenu
+  toggleMobileMenu,
+  loadThreadList
 })
 </script>
 

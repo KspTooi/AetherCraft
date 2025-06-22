@@ -86,11 +86,12 @@ import ConversationApi from '@/commons/api/ConversationApi';
 import MessageApi, { type EditMessageDto } from '@/commons/api/MessageApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
+import type { MessageItemVo } from '@/entity/vo/MessageItemVo';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 const router = useRouter();
-const messageData = ref<MessageBoxItem[]>([])
+const messageData = ref<MessageItemVo[]>([])
 const selectThreadData = ref<SelectThreadVo | null>(null)
 const selectThreadTotal = ref(0)
 const selectThreadQuery = ref<SelectThreadDto>({
@@ -102,16 +103,6 @@ const selectThreadQuery = ref<SelectThreadDto>({
 const curNpcId = ref<string>("")   //当前选择的NPC ID
 const curThreadId = ref<string>("") //当前聊天Thread的ID
 const curModelVariantId = ref<string>("")//当前选择的模型变体ID
-
-// 定义 ChatMessageBox 需要的消息项类型
-interface MessageBoxItem {
-  id: string; 
-  name: string; 
-  avatarPath: string;
-  role: 'user' | 'model'; // 明确类型
-  content: string; 
-  createTime: string;
-}
 
 // 消息框引用
 const messageBoxRef = ref<MessageBoxInstance | null>(null);
@@ -175,12 +166,13 @@ const getNpcMessageList = async (npcId: string) => {
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
-    messageData.value = messageList.map((msg): MessageBoxItem => ({
+    messageData.value = messageList.map((msg): MessageItemVo => ({
       id: msg.id,
-      name: msg.senderName,
-      avatarPath: msg.senderAvatarUrl,
-      role: msg.senderRole === 0 ? 'user' : 'model',
+      senderName: msg.senderName,
+      senderAvatarUrl: msg.senderAvatarUrl,
+      senderRole: msg.senderRole,
       content: msg.content,
+      contentThoughts: msg.contentThoughts,
       createTime: msg.createTime
     }));
     
@@ -244,12 +236,13 @@ const sendMessage = async (message: string) => {
     });
 
     // 添加用户消息到消息列表
-    const userMessage: MessageBoxItem = {
+    const userMessage: MessageItemVo = {
       id: response.messageId,
-      name: response.senderName,
-      avatarPath: response.senderAvatarUrl,
-      role: 'user',
+      senderName: response.senderName,
+      senderAvatarUrl: response.senderAvatarUrl,
+      senderRole: 0,
       content: response.content,
+      contentThoughts: null,
       createTime: response.sendTime
     };
     
@@ -456,12 +449,13 @@ const handleActivateThread = async (npcId: string, threadId: string, modelVarian
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
-    messageData.value = messageList.map((msg): MessageBoxItem => ({
+    messageData.value = messageList.map((msg): MessageItemVo => ({
       id: msg.id,
-      name: msg.senderName,
-      avatarPath: msg.senderAvatarUrl,
-      role: msg.senderRole === 0 ? 'user' : 'model',
+      senderName: msg.senderName,
+      senderAvatarUrl: msg.senderAvatarUrl,
+      senderRole: msg.senderRole,
       content: msg.content,
+      contentThoughts: msg.contentThoughts,
       createTime: msg.createTime
     }));
     
@@ -491,14 +485,15 @@ const handleActivateThread = async (npcId: string, threadId: string, modelVarian
 const createTempMsg = async () => {
   if (hasTempMessage.value) return; // 防止重复创建
 
-  // 确保临时消息符合 MessageBoxItem 类型
-  const tempAiMessage: MessageBoxItem = {
+  // 确保临时消息符合 MessageItemVo 类型
+  const tempAiMessage: MessageItemVo = {
     id: '-1', 
-    name: '-----', // 调整名称以区分
-    avatarPath: '', 
-    role: 'model', // 类型已明确为 'model'
+    senderName: '-----', // 调整名称以区分
+    senderAvatarUrl: '', 
+    senderRole: 1, // 1表示模型
     content: '',
-    createTime: ""
+    contentThoughts: null,
+    createTime: null
   };
   messageData.value.push(tempAiMessage);
   hasTempMessage.value = true;
@@ -541,13 +536,13 @@ const updateTempMsg = async (data: {
 
     // 更新名称 (如果提供了有效的名称)
     if (data.name) {
-      tempMessage.name = data.name;
+      tempMessage.senderName = data.name;
       updated = true;
     }
 
     // 更新头像 (如果提供了有效的头像路径)
     if (data.avatarPath) {
-      tempMessage.avatarPath = data.avatarPath;
+      tempMessage.senderAvatarUrl = data.avatarPath;
       updated = true;
     }
 
@@ -644,7 +639,7 @@ const onMessageRegenerate = async (msgId: string) => {
     // 检查最后一条消息是否为AI消息，如果是则删除
     if (messageData.value.length > 0) {
       const lastMessage = messageData.value[messageData.value.length - 1];
-      if (lastMessage.role === 'model') {
+      if (lastMessage.senderRole === 1) {
         // 删除最后一条AI消息
         messageData.value.pop();
       }

@@ -1,38 +1,67 @@
 <template>
-  <div :class="['message', 'message-hover-effect', props.message.role === 'user' ? 'user' : 'assistant']">
-    <div class="message-header">
-      <div class="avatar" :class="{ 'no-image': !props.message.avatarPath }">
-        <img v-if="props.message.avatarPath" :src="props.message.avatarPath" :alt="props.message.name">
-        <i v-else class="bi bi-person"></i>
-      </div>
+  <div :class="['message', 'message-hover-effect', props.message.senderRole === 0 ? 'user' : 'assistant']">
+    
+    <div class="message-avatar" :class="{ 'no-image': !props.message.senderAvatarUrl }">
+      <img v-if="props.message.senderAvatarUrl" :src="props.message.senderAvatarUrl" :alt="props.message.senderName">
+      <i v-if="!props.message.senderAvatarUrl" class="bi bi-person"></i>
     </div>
+    
     <div class="message-content">
-      <div class="name">
-        {{ props.message.name }}
-        <span class="time">{{ props.message.createTime }}</span>
-        <span v-if="props.message.id === '-1'" class="typing-indicator">
-          <span>正在输入</span>
+
+      <div class="content-header">
+
+        <div v-show="props.message.contentThoughts" class="expand-thinking-btn" @click="toggleThinking" :class="{ 'active': isThinkingExpanded }">
+          <i :class="isThinkingExpanded ? 'bi bi-heart-pulse-fill' : 'bi bi-heart'"></i>
+        </div>
+
+        <div class="name">
+          {{ props.message.senderName }}
+        </div>
+        <div class="time">
+          {{ props.message.createTime }}
+        </div>
+        <div v-if="props.message.id === '-1'" class="typing-indicator">
+          <span v-if="props.message.status === 0">正在计算</span>
+          <span v-if="props.message.status === 1">正在输入</span>
+          <span v-else>正在输入</span>
           <span class="dot">.</span>
           <span class="dot">.</span>
           <span class="dot">.</span>
-        </span>
+        </div>
       </div>
-      <!-- Original Text / Markdown View -->
-      <div v-if="!isEditing" class="text" :class="{ 'user': props.message.role === 'user' }">
-        <div v-if="props.message.role === 'user'">{{ props.message.content }}</div>
-        <div v-else v-html="renderMarkdown(props.message.content)"></div>
+
+      <div class="content-body">
+
+        <div class="thinking-content" v-if="isThinkingExpanded">
+          {{ props.message.contentThoughts }}
+        </div>
+
+        <div v-if="!isEditing" class="text" :class="{ 'user': props.message.senderRole === 0 }">
+          <div v-if="props.message.senderRole === 0">{{ props.message.content }}</div>
+          <div v-if="props.message.senderRole !== 0" v-html="renderMarkdown(props.message.content)"></div>
+        </div>
+  
+        <div v-if="isEditing" 
+             ref="editableContentRef" 
+             class="text editable-content" 
+             :contenteditable="true" 
+             @keydown.enter.exact.prevent="handleConfirmEdit" 
+             @keydown.esc.exact.prevent="handleCancelEdit"
+             v-text="props.message.content" 
+        ></div>
       </div>
-      <!-- Editing View (using contenteditable div) -->
-      <div v-else 
-           ref="editableContentRef" 
-           class="text editable-content" 
-           :contenteditable="true" 
-           @blur="handleBlur" 
-           @keydown.enter.exact.prevent="handleConfirmEdit" 
-           @keydown.esc.exact.prevent="handleCancelEdit"
-           v-text="props.message.content" 
-      ></div>
+
+      <div class="content-footer" v-show="isEditing" style="display: flex; gap: 8px; margin-top: 8px;">
+        <GlowButton class="edit-btn" @click="handleConfirmEdit" title="确认编辑 (Enter)">
+          <i class="bi bi-check-lg"></i>确认编辑
+        </GlowButton>
+        <GlowButton class="edit-btn" @click="handleCancelEdit" title="取消编辑 (Esc)" theme="danger" :corners="['bottom-right']">
+          <i class="bi bi-x-lg"></i>取消编辑
+        </GlowButton>
+      </div>
+
     </div>
+    
     <!-- Only show actions for non-temporary messages -->
     <div v-if="props.message.id !== '-1'" class="message-actions">
       <!-- View Mode Actions -->
@@ -58,19 +87,6 @@
           <i class="bi bi-trash"></i>
         </button>
       </template>
-      <!-- Edit Mode Actions -->
-      <template v-else>
-         <button class="message-confirm-btn" 
-                @click="handleConfirmEdit"
-                title="确认编辑 (Enter)">
-          <i class="bi bi-check-lg"></i>
-        </button>
-        <button class="message-cancel-btn" 
-                @click="handleCancelEdit"
-                title="取消编辑 (Esc)">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </template>
     </div>
   </div>
 </template>
@@ -78,7 +94,9 @@
 <script setup lang="ts">
 import { ref, inject, nextTick } from 'vue'
 import { marked } from 'marked'
-import { GLOW_THEME_INJECTION_KEY, type GlowThemeColors } from '../glow-ui/GlowTheme'
+import { GLOW_THEME_INJECTION_KEY, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
+import GlowButton from '@/components/glow-ui/GlowButton.vue'
+import type { MessageItemVo } from '@/entity/vo/MessageItemVo'
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY) || {} as GlowThemeColors
@@ -87,18 +105,14 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY) || {} as GlowThe
 const isEditing = ref(false)
 const editableContentRef = ref<HTMLDivElement | null>(null)
 
+//显示思路
+const isThinkingExpanded = ref(false)
+
 // 定义组件props
 const props = defineProps<{
-  message:{
-    id: string, //消息记录ID(-1为临时消息)
-    name: string, //发送者名称
-    avatarPath: string //头像路径
-    role: string //消息类型：0-用户消息，1-AI消息
-    content: string //消息内容
-    createTime: string | null //消息时间（后端已格式化的时间字符串）
-  }
-  disabled: boolean //如果为true 则无法点击 编辑、删除按钮
-  allowRegenerate?: boolean
+  message: MessageItemVo                 //消息数据
+  disabled: boolean                      //如果为true 则无法点击 编辑、删除按钮
+  allowRegenerate?: boolean              //是否允许重新生成
 }>()
 
 const emit = defineEmits<{
@@ -161,30 +175,6 @@ const handleCancelEdit = () => {
   // The div will automatically revert to showing the original content via v-text when re-rendered
 };
 
-// 处理失焦 (Optional: Decide behavior - cancel or confirm?)
-// For now, let's just cancel editing on blur unless handled by Enter/Esc
-const handleBlur = (event: FocusEvent) => {
-  // Check if the blur was caused by clicking the confirm/cancel buttons
-  // relatedTarget is the element receiving focus
-  const relatedTarget = event.relatedTarget as HTMLElement | null;
-  if (
-    relatedTarget && 
-    (relatedTarget.classList.contains('message-confirm-btn') || 
-     relatedTarget.classList.contains('message-cancel-btn'))
-  ) {
-     // Don't cancel if focus moved to confirm/cancel buttons
-    return; 
-  }
-  
-  // If still in editing mode after a short delay (allowing button clicks)
-  // We cancel editing. Alternatively, you could confirm here.
-  setTimeout(() => { 
-      if (isEditing.value) { 
-          handleCancelEdit();
-      }
-  }, 100); // Small delay
-};
-
 // 处理消息删除
 const handleDelete = (messageId: string) => {
   emit('delete-message', messageId)
@@ -195,9 +185,13 @@ const handleRegenerate = () => {
   emit('regenerate', props.message.id);
 };
 
+// 切换思考显示状态
+const toggleThinking = () => {
+  isThinkingExpanded.value = !isThinkingExpanded.value;
+};
+
 // 暴露方法给父组件
 defineExpose({
-  
 })
 </script>
 
@@ -221,26 +215,22 @@ defineExpose({
   user-select: none; /* 默认整个消息区域不可选中 */
 }
 
-.message .message-header {
+.message .message-avatar {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   user-select: none; /* 头像区域不可选中 */
-}
-
-.message .message-header .avatar {
   width: 28px;
   height: 28px;
   background: rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
   overflow: hidden;
-  display: flex;
   align-items: center;
   justify-content: center;
   user-select: none; /* 头像不可选中 */
 }
 
-.message .message-header .avatar img {
+.message .message-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -248,7 +238,7 @@ defineExpose({
   pointer-events: none; /* 防止拖拽 */
 }
 
-.message .message-header .avatar.no-image {
+.message .message-avatar.no-image {
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
   user-select: none; /* 默认头像图标不可选中 */
@@ -269,10 +259,35 @@ defineExpose({
   user-select: none; /* 名称和时间区域不可选中 */
 }
 
-.message .message-content .name .time {
+.message .message-content .time {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.4);
   user-select: none; /* 时间不可选中 */
+}
+
+.message .message-content .content-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  user-select: none;
+}
+
+.message .message-content .content-header .name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.message .message-content .content-header .time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  user-select: none;
+}
+
+.message .message-content .content-body {
+  /* 根据需要添加样式，目前保持默认流式布局 */
 }
 
 .message .message-content .text {
@@ -455,7 +470,7 @@ defineExpose({
     padding: 4px 10px 4px 1px;
   }
   
-  .message .message-header .avatar {
+  .message .message-avatar {
     width: 24px;
     height: 24px;
   }
@@ -487,47 +502,7 @@ defineExpose({
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* Edit/Confirm/Cancel Button Styles (reuse existing if possible or add specific) */
-.message .message-confirm-btn,
-.message .message-cancel-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  padding: 4px;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.2s;
-  user-select: none; /* 按钮不可选中 */
-}
 
-.message .message-confirm-btn:hover,
-.message .message-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.message .message-confirm-btn {
-  color: rgba(75, 210, 143, 0.7); /* Greenish */
-}
-
-.message .message-confirm-btn:hover {
-  color: rgba(75, 210, 143, 1);
-}
-
-.message .message-cancel-btn {
-  color: rgba(255, 107, 107, 0.7); /* Reddish */
-}
-
-.message .message-cancel-btn:hover {
-  color: rgba(255, 107, 107, 1);
-}
-
-/* Ensure actions are always visible in edit mode */
-.message.editing .message-actions { 
-  visibility: visible; 
-  opacity: 1; 
-}
 
 /* Regenerate Button Style */
 .message .message-regenerate-btn {
@@ -552,4 +527,35 @@ defineExpose({
    opacity: 0.3 !important;
    cursor: not-allowed !important;
 }
+
+.edit-btn {
+  padding: 0 8px 0 8px;
+  min-height: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+/* 思考按钮样式 */
+.expand-thinking-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.expand-thinking-btn:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.expand-thinking-btn.active {
+  color: v-bind("theme.boxGlowColor");
+  text-shadow: 0 0 8px v-bind("theme.boxGlowColor"), 0 0 16px v-bind("theme.boxGlowColor");
+  transform: scale(1.1);
+}
+
 </style>

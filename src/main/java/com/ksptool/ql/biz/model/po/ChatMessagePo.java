@@ -54,21 +54,49 @@ public class ChatMessagePo {
     @Comment("(加密)消息内容")
     private String content;
 
+    @Column(name = "content_thoughts", columnDefinition = "TEXT")
+    @Comment("(加密)思考内容")
+    private String contentThoughts;
+
     @Column(name = "seq", nullable = false)
     @Comment("消息序号")
     private Integer seq;
 
-    @Column(name = "token_input", nullable = false)
-    @Comment("TOKEN使用量(用户输入)")
-    private Integer tokenInput;
+    @Column(name = "cost_token_input")
+    @Comment("消息TOKEN使用总量(输入)")
+    private Integer costTokenInput;
 
-    @Column(name = "token_output", nullable = false)
-    @Comment("TOKEN使用量(模型输出)")
-    private Integer tokenOutput;
+    @Column(name = "cost_token_output")
+    @Comment("消息TOKEN使用总量(输出)")
+    private Integer costTokenOutput;
 
-    @Column(name = "token_thoughts", nullable = false)
-    @Comment("TOKEN使用量(模型思考)")
-    private Integer tokenThoughts;
+    @Column(name = "token_input_text", nullable = false)
+    @Comment("消息TOKEN使用量(输入文本)")
+    private Integer tokenInputText;
+
+    @Column(name = "token_input_image", nullable = false)
+    @Comment("消息TOKEN使用量(输入图片)")
+    private Integer tokenInputImage;
+
+    @Column(name = "token_input_audio", nullable = false)
+    @Comment("消息TOKEN使用量(输入音频)")
+    private Integer tokenInputAudio;
+
+    @Column(name = "token_output_text", nullable = false)
+    @Comment("消息TOKEN使用量(输出文本)")
+    private Integer tokenOutputText;
+
+    @Column(name = "token_output_image", nullable = false)
+    @Comment("消息TOKEN使用量(输出图片)")
+    private Integer tokenOutputImage;
+
+    @Column(name = "token_output_audio", nullable = false)
+    @Comment("消息TOKEN使用量(输出音频)")
+    private Integer tokenOutputAudio;
+
+    @Column(name = "token_output_thoughts", nullable = false)
+    @Comment("消息TOKEN使用量(输出思考)")
+    private Integer tokenOutputThoughts;
 
     @Column(name = "create_time", nullable = false)
     @Comment("创建时间")
@@ -87,15 +115,33 @@ public class ChatMessagePo {
         if(updateTime == null){
             updateTime = new Date();
         }
-        if(tokenInput == null){
-            tokenInput = 0;
+        if(costTokenInput == null){
+            costTokenInput = 0;
         }
-        if(tokenOutput == null){
-            tokenOutput = 0;
+        if(costTokenOutput == null){
+            costTokenOutput = 0;
         }
-        if(tokenThoughts == null){
-            tokenThoughts = 0;
+        if(tokenInputText == null){
+            tokenInputText = 0;
         }
+        if(tokenInputImage == null){
+            tokenInputImage = 0;
+        }
+        if(tokenInputAudio == null){
+            tokenInputAudio = 0;
+        }
+        if(tokenOutputText == null){
+            tokenOutputText = 0;
+        }
+        if(tokenOutputImage == null){ 
+            tokenOutputImage = 0;
+        }
+        if(tokenOutputAudio == null){
+            tokenOutputAudio = 0;
+        }
+        if(tokenOutputThoughts == null){
+            tokenOutputThoughts = 0;
+        }  
     }
 
     @PreUpdate
@@ -103,19 +149,11 @@ public class ChatMessagePo {
         updateTime = new Date();
     }
 
+
     @Override
     public String toString() {
         return "ChatMessagePo{" +
                 "id=" + id +
-                ", senderRole=" + senderRole +
-                ", senderName='" + senderName + '\'' +
-                ", seq=" + seq +
-                ", tokenInput=" + tokenInput +
-                ", tokenOutput=" + tokenOutput +
-                ", tokenThoughts=" + tokenThoughts +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
                 '}';
     }
-
 }

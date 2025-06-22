@@ -1,18 +1,16 @@
 import type RestPageableView from '@/entity/RestPageableView';
 import Http from '@/commons/Http';
 import type PageQuery from '@/entity/PageQuery';
-import type CommonIdDto from '@/entity/dto/CommonIdDto'; // 假设 CommonIdDto 在此路径
-
-// --- DTOs ---
+import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
 export interface GetAdminPlayerListDto extends PageQuery {
     playerName: string | null; // 人物名
     username: string | null;   // 用户名
-    status: number | null | undefined; // 人物状态 (允许 undefined 以适配 el-select clearable)
+    status: number | null | undefined; // 人物状态
 }
 
 export interface EditAdminPlayerDto {
-    id: string;                 // 人物ID (NotNull)
+    id: string;                 // 人物ID
     avatarUrl?: string;        // 头像路径
     gender?: number;           // 性别 0:男 1:女 2:不愿透露 (管理台只能修改为0 1 2)
     publicInfo?: string;       // 个人信息
@@ -20,19 +18,17 @@ export interface EditAdminPlayerDto {
     era?: string;              // 年代
     contentFilterLevel?: number; // 内容过滤等级
     status?: number;           // 状态: 1:不活跃 3:已删除 (后台仅允许设置这两个状态)
-    groupIds?: string[];       // 访问组IDS (Long[] -> string[])
+    groupIds?: string[];       // 访问组IDS
 }
 
-
-// --- VOs ---
 
 export interface GetAdminPlayerListVo {
     id: string;         // 主键ID
     name: string;       // 人物名称
     username: string;   // 所有者
-    balance: string;    // 余额 (BigDecimal -> string)
+    balance: string;    // 余额
     status: number;    // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
-    createTime: string; // 诞生日期 (Date -> string)
+    createTime: string; // 诞生日期
     groupCount: number; // 访问组数量
 }
 
@@ -43,16 +39,16 @@ export interface GetAdminPlayerDetailsVo {
     gender?: number;           // 性别 0:男 1:女 2:不愿透露 4:自定义(男性) 5:自定义(女性) 6:自定义(其他)
     username: string;           // 所有者
     publicInfo?: string;       // 个人信息
-    balance: string;            // 余额 (BigDecimal -> string)
+    balance: string;            // 余额
     language?: string;          // 语言
     era?: string;              // 年代
     contentFilterLevel?: number; // 内容过滤等级
     status: number;            // 状态: 0:正在使用 1:不活跃 2:等待删除 3:已删除
-    removalRequestTime?: string; // 移除申请提交时间 (Date -> string)
-    removedTime?: string;      // 角色移除时间 (Date -> string)
-    lastActiveTime?: string;   // 最后激活时间 (Date -> string)
-    createTime: string;         // 诞生日期 (Date -> string)
-    groupIds: string[];       // 拥有的访问组ID (Long[] -> string[])
+    removalRequestTime?: string; // 移除申请提交时间
+    removedTime?: string;      // 角色移除时间
+    lastActiveTime?: string;   // 最后激活时间
+    createTime: string;         // 诞生日期
+    groupIds: string[];       // 拥有的访问组ID
 }
 
 
@@ -69,7 +65,6 @@ export default {
      * 获取后台玩家详情
      */
     getPlayerDetails: async (dto: CommonIdDto): Promise<GetAdminPlayerDetailsVo> => {
-        // 后端返回 Result<GetAdminPlayerDetailsVo>, Http.postEntity 处理解包
         return await Http.postEntity<GetAdminPlayerDetailsVo>('/admin/player/getPlayerDetails', dto);
     },
 
@@ -77,7 +72,6 @@ export default {
      * 编辑后台玩家信息
      */
     editPlayer: async (dto: EditAdminPlayerDto): Promise<string> => {
-        // 后端返回 Result<String>, Http.postEntity 处理解包
         return await Http.postEntity<string>('/admin/player/editPlayer', dto);
     },
 

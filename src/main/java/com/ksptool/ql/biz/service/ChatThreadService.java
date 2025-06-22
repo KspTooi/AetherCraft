@@ -119,6 +119,7 @@ public class ChatThreadService {
             vo.setSenderAvatarUrl("");
             vo.setSenderRole(po.getSenderRole());
             vo.setContent(css.decryptForCurUser(po.getContent()));
+            vo.setContentThoughts(css.decryptForCurUser(po.getContentThoughts()));
             vo.setCreateTime(sdf.format(po.getCreateTime()));
 
             //处理头像 发送人角色 0:Player 1:Model

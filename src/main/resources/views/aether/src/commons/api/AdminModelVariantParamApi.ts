@@ -3,36 +3,32 @@ import Http from '@/commons/Http';
 import type PageQuery from '@/entity/PageQuery';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
-// --- DTOs ---
-
 export interface GetModelVariantParamListDto extends PageQuery {
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
+    modelVariantId: string; // 模型变体ID，必填
     keyword?: string | null; // 模糊筛选参数键或描述
 }
 
 export interface GetModelVariantParamDetailsDto {
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
+    modelVariantId: string; // 模型变体ID，必填
     paramKey: string; // 参数键，必填
     global: number; // 是否为全局默认参数，必填 0:否 1:是
 }
 
 export interface SaveModelVariantParamDto {
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
+    modelVariantId: string; // 模型变体ID，必填
     paramKey: string; // 参数键，必填
     paramVal: string; // 参数值，必填
     type: number; // 参数类型，必填 0:string, 1:int, 2:boolean等
     description?: string; // 参数描述
-    global: number; // 是否为全局默认参数，必填 0:否 1:是 (Integer)
+    global: number; // 是否为全局默认参数，必填 0:否 1:是
     seq?: number; // 排序号
 }
 
 export interface RemoveModelVariantParamDto {
-    modelVariantId: string; // 模型变体ID，必填 (Long -> string)
+    modelVariantId: string; // 模型变体ID，必填
     paramKey: string; // 参数键，必填
     global: number; // 是否为全局默认参数，必填 0:否 1:是
 }
-
-// --- VOs ---
 
 export interface GetModelVariantParamListVo {
     paramKey: string; // 参数键
@@ -41,23 +37,23 @@ export interface GetModelVariantParamListVo {
     type: number; // 参数类型 0:string, 1:int, 2:boolean等
     description: string | null; // 参数描述
     seq: number; // 排序号
-    createTime: string; // 创建时间 (Date -> string，后端自动格式化)
-    updateTime: string; // 更新时间 (Date -> string，后端自动格式化)
+    createTime: string; // 创建时间
+    updateTime: string; // 更新时间
 }
 
 export interface GetModelVariantParamDetailsVo {
-    id: string; // 参数ID (Long -> string)
-    modelVariantId: string; // 模型变体ID (Long -> string)
-    paramKey: string; // 参数键
-    paramVal: string; // 参数值
-    type: number; // 参数类型 0:string, 1:int, 2:boolean等
+    id: string;                // 参数ID
+    modelVariantId: string;    // 模型变体ID
+    paramKey: string;          // 参数键
+    paramVal: string;           // 参数值
+    type: number;               // 参数类型 0:string, 1:int, 2:boolean
     description: string | null; // 参数描述
     global: number; // 是否为全局默认参数 0:否 1:是
-    userId: string | null; // 用户ID，为空表示全局默认参数 (Long -> string)
-    playerId: string | null; // 玩家ID，为空表示全局默认参数 (Long -> string)
+    userId: string | null; // 用户ID，为空表示全局默认参数
+    playerId: string | null; // 玩家ID，为空表示全局默认参数
     seq: number; // 排序号
-    createTime: string; // 创建时间 (Date -> string，后端自动格式化)
-    updateTime: string; // 更新时间 (Date -> string，后端自动格式化)
+    createTime: string; // 创建时间
+    updateTime: string; // 更新时间
 }
 
 export default {

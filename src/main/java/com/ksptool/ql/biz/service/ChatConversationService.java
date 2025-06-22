@@ -389,7 +389,6 @@ public class ChatConversationService {
             //消费消息队列中该Thread的消息片段
             var first = mccq.next(dto.getStreamId());
 
-            var sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
             /*
              * 分片类型 0:起始 1:数据 2:结束 10:错误
              * 分片类型(新) 0:起始 1:结束 2:错误 50:思考片段 51:文本
@@ -400,45 +399,48 @@ public class ChatConversationService {
              */
 
             //起始片段
-            if(first.getType() == 0){
+            if(first.isStart()){
                 return MessageFragmentVo.of(first);
             }
             //结束片段
-            if(first.getType() == 2){
+            if(first.isEnd()){
                 return MessageFragmentVo.of(first);
             }
             //错误片段
-            if(first.getType() == 10){
+            if(first.isError()){
                 return MessageFragmentVo.of(first);
             }
 
             //文本与思考片段
-            
-            ret.setThreadId(first.getThreadId());
-            ret.setMessageId(-1L);
-            ret.setSenderRole(1);
-            ret.setSeq(first.getSeq());
-            ret.setContent("----");
-            ret.setType(first.getType());
-            ret.setSenderName(first.getSenderName());
-            ret.setSenderAvatarUrl(first.getSenderAvatarUrl());
-            ret.setSendTime(sdf.format(first.getSendTime()));
+            ret = MessageFragmentVo.of(first);
 
-            StringBuilder content = new StringBuilder(first.getContent());
-
-            //处理消息片段
+            //批处理消息片段
             while (mccq.hasNext(dto.getStreamId())){
                 ChatFragment next = mccq.next(dto.getStreamId());
 
-                if(next.getType() == 10 || next.getType() == 2){
+                //下一个片段是结束或错误则跳过批处理并将该片段重新放入队头
+                if(ret.isError() || ret.isEnd()){
                     mccq.receive(next);
                     break;
                 }
 
-                content.append(next.getContent());
+                //下个片段与当前片段均为思考片段
+                if(ret.isThinking() && next.isThinking()){
+                    ret.appendContent(next.getContent());
+                    continue;
+                }
+
+                //下个片段与当前片段均为文本片段
+                if(ret.isText() && next.isText()){
+                    ret.appendContent(next.getContent());
+                    continue;
+                }
+
+                //下个片段与当前片段类型不一致 跳出批处理并重新将该片段放入队头
+                mccq.receive(next);
+                break;
             }
 
-            ret.setContent(content.toString());
             return ret;
 
         }catch (TimeoutException e){
@@ -463,21 +465,21 @@ public class ChatConversationService {
                 //返回类型(新) 0:思考片段 1:文本 50:结束 51:错误
 
                 //思考片段类型 - 创建思考数据片段
-                if (ccr.getType() == 0) {
+                if (ccr.isThinking()) {
                     var cf = ChatFragment.ofThought(ccr,ctx);
                     mccq.receive(cf);
                     return;
                 }
 
                 //文本片段类型 - 创建文本数据片段
-                if (ccr.getType() == 1) {
+                if (ccr.isText()) {
                     var cf = ChatFragment.ofMessage(ccr,ctx);
                     mccq.receive(cf);
                     return;
                 }
 
-                //结束类型
-                if (ccr.getType() == 50) {
+                //结束类型 
+                if (ccr.isFinish()) {
 
                     ChatThreadPo chatThreadPo = chatThreadRepository.getThread(ctx.threadId());
 
@@ -487,6 +489,7 @@ public class ChatConversationService {
                         return;
                     }
 
+                    // 保存消息记录
                     var messagePo = new ChatMessagePo();
                     messagePo.setThread(chatThreadPo);
                     messagePo.setUser(Any.of().val("id",ctx.userId()).as(UserPo.class));
@@ -500,15 +503,17 @@ public class ChatConversationService {
                     }
 
                     messagePo.setContent(css.encrypt(ccr.getContent(),ctx.userId()));
+                    messagePo.setContentThoughts(css.encrypt(ccr.getContentThought(),ctx.userId()));
                     messagePo.setSeq(chatMessageRepository.getCountByThreadId(ctx.threadId()) + 1);
-                    messagePo.setTokenInput(ccr.getTokenInput());
-                    messagePo.setTokenOutput(ccr.getTokenOutput());
-                    messagePo.setTokenThoughts(ccr.getTokenThoughtOutput());
+                    messagePo.setCostTokenInput(ccr.getTokenInput());
+                    messagePo.setCostTokenOutput(ccr.getTokenOutput());
+                    messagePo.setTokenOutputThoughts(ccr.getTokenThoughtOutput());
                     chatMessageRepository.save(messagePo);
                     chatThreadPo.setLastMessage(messagePo);
                     chatThreadRepository.save(chatThreadPo);
                     log.info("为Thread:{} 创建新的消息:{}",ctx.threadId(),messagePo.getId());
 
+                    // 创建结束片段
                     var cf = ChatFragment.ofFinish(ccr,ctx,messagePo.getId());
                     mccq.receive(cf);
 

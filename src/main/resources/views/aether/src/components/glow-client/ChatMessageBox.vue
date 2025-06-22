@@ -34,15 +34,7 @@ import { ref, inject, onMounted, nextTick, watch } from 'vue'
 import GlowDiv from "@/components/glow-ui/GlowDiv.vue"
 import ChatMessageItem from "@/components/glow-client/ChatMessageItem.vue"
 import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '../glow-ui/GlowTheme'
-
-interface Message {
-  id: string, //消息记录ID(-1为临时消息)
-  name: string, //发送者名称
-  avatarPath: string //头像路径
-  role: string //消息类型：0-用户消息，1-AI消息
-  content: string //消息内容
-  createTime: string | null//消息时间
-}
+import type { MessageItemVo } from '@/entity/vo/MessageItemVo'
 
 // 获取 glow 主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -51,14 +43,14 @@ const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 const messagesContainer = ref<HTMLDivElement | null>(null)
 
 // 消息列表数据 (内部状态)
-const messages = ref<Message[]>([])
+const messages = ref<MessageItemVo[]>([])
 
 // 内部loading状态，用于控制发光条的延迟消失
 const internalLoading = ref<boolean>(false)
 
 // 定义组件props
 const props = defineProps<{
-  data?: Message[];
+  data?: MessageItemVo[];
   isGenerating?: boolean;
   loading?: boolean;
 }>()
@@ -142,14 +134,14 @@ defineExpose({
 })
 
 // 添加一个新的函数来判断是否应该显示重新生成按钮
-const shouldAllowRegenerate = (msg: Message, index: number): boolean => {
+const shouldAllowRegenerate = (msg: MessageItemVo, index: number): boolean => {
   // 只有最后一条消息才可能显示重新生成按钮
   if (index !== messages.value.length - 1) {
     return false;
   }
   
   // 如果只有一条消息且这条消息是NPC消息，则不显示重新生成按钮
-  if (messages.value.length === 1 && (msg.role === 'model' || msg.role === '1')) {
+  if (messages.value.length === 1 && msg.senderRole === 1) {
     return false;
   }
   

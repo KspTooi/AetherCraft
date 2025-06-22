@@ -3,8 +3,8 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts"; // 假设已存在
 
 // --- DTOs ---
 export interface EditMessageDto {
-    messageId: string;      // 消息ID, JavaType: Long
-    content: string;        // 消息内容, JavaType: String
+    messageId: string;      // 消息ID
+    content: string;        // 消息内容
 }
 
 export default {

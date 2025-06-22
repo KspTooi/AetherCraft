@@ -31,25 +31,27 @@ public interface ChatThreadRepository extends JpaRepository<ChatThreadPo, Long>,
                 ctp.id,
                 ctp.title,
                 COALESCE((
-                    SELECT m.content 
-                    FROM ChatMessagePo m 
-                    WHERE m.thread.id = ctp.id 
-                    ORDER BY m.seq DESC 
+                    SELECT m.content
+                    FROM ChatMessagePo m
+                    WHERE m.thread.id = ctp.id
+                    ORDER BY m.seq DESC
                     LIMIT 1
                 ), ''),
                 ctp.publicInfo,
-                ctp.modelVariant.id,
+                mv.id,
+                mv.name,
                 ctp.active,
                 ctp.createTime,
                 ctp.updateTime,
                 CAST((
-                    SELECT COUNT(m2.id) 
-                    FROM ChatMessagePo m2 
+                    SELECT COUNT(m2.id)
+                    FROM ChatMessagePo m2
                     WHERE m2.thread.id = ctp.id
                 ) AS INTEGER)
             )
             FROM ChatThreadPo ctp
             LEFT JOIN ctp.npc npc
+            LEFT JOIN ctp.modelVariant mv
             WHERE
             ctp.player.id = :playerId
             AND ctp.user.id = :userId

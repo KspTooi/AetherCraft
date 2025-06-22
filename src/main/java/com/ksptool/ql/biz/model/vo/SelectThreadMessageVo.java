@@ -19,6 +19,9 @@ public class SelectThreadMessageVo {
     //消息内容
     private String content;
 
+    //消息思考内容
+    private String contentThoughts;
+
     //消息发送时间 yyyy年mm月dd日 HH:mm:ss
     private String createTime;
 

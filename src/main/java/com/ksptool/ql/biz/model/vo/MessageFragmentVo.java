@@ -36,6 +36,36 @@ public class MessageFragmentVo {
     //发送时间 yyyy年MM月dd日 HH:mm:ss
     private String sendTime;
 
+    public void appendContent(String content){
+        this.content += content;
+    }
+
+    //是否为起始片段
+    public boolean isStart(){
+        return this.type == 0;
+    }
+
+    //是否为结束片段
+    public boolean isEnd(){
+        return this.type == 1;
+    }
+
+    //是否为错误片段
+    public boolean isError(){
+        return this.type == 2;
+    }
+
+    //是否为思考片段
+    public boolean isThinking(){
+        return this.type == 50;
+    }
+
+    //是否为文本片段
+    public boolean isText(){
+        return this.type == 51;
+    }
+
+    //创建消息片段
     public static MessageFragmentVo of(ChatFragment cf){
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");

@@ -3,38 +3,34 @@ import Http from '@/commons/Http';
 import type PageQuery from '@/entity/PageQuery';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 
-// --- DTOs ---
-
 export interface GetModelVariantParamTemplateListDto extends PageQuery {
     keyword?: string | null; // 模糊筛选模板名称
 }
 
 export interface GetModelVariantParamTemplateDetailsDto {
-    templateId: string; // 模板ID，必填 (Long -> string)
+    templateId: string; // 模板ID，必填
 }
 
 export interface SaveModelVariantParamTemplateDto {
-    templateId?: string; // 模板ID，新增时为null，编辑时必填 (Long -> string)
+    templateId?: string; // 模板ID，新增时为null，编辑时必填
     name: string; // 模板名称，必填
 }
 
-// --- VOs ---
-
 export interface GetModelVariantParamTemplateListVo {
-    id: string; // 模板ID (Long -> string)
+    id: string; // 模板ID
     name: string; // 模板名称
     valueCount: number; // 模板包含的参数数量 (原paramCount)
-    createTime: string; // 创建时间 (Date -> string，后端自动格式化)
-    updateTime: string; // 更新时间 (Date -> string，后端自动格式化)
+    createTime: string; // 创建时间
+    updateTime: string; // 更新时间
 }
 
 export interface GetModelVariantParamTemplateDetailsVo {
-    id: string; // 模板ID (Long -> string)
+    id: string; // 模板ID
     name: string; // 模板名称
-    userId: string; // 所属用户ID (Long -> string)
-    playerId: string; // 所属玩家ID (Long -> string)
-    createTime: string; // 创建时间 (Date -> string，后端自动格式化)
-    updateTime: string; // 更新时间 (Date -> string，后端自动格式化)
+    userId: string; // 所属用户ID
+    playerId: string; // 所属玩家ID
+    createTime: string; // 创建时间
+    updateTime: string; // 更新时间
 }
 
 export default {

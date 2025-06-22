@@ -10,12 +10,9 @@
 
       <ChatThreadList ref="chatListRef"
                       class="chat-sidebar"
-                      :data="threadList"
                       :selected="currentThreadId"
                       @create-thread="onCreateThread"
                       @select-thread="onSelectThread"
-                      @delete-thread="onDeleteThread"
-                      @update-title="onUpdateThreadTitle"
       />
 
       <GlowDiv class="chat-content" border="none">
@@ -74,17 +71,15 @@ import { GLOW_THEME_INJECTION_KEY, defaultTheme, type GlowThemeColors } from '@/
 import GlowConfirm from "@/components/glow-ui/GlowConfirm.vue"
 import GlowConfirmInput from "@/components/glow-ui/GlowConfirmInput.vue"
 import GlowAlert from "@/components/glow-ui/GlowAlert.vue"
-import Http from "@/commons/Http";
 import ThreadApi from "@/commons/api/ThreadApi";
 import ConversationApi from "@/commons/api/ConversationApi";
-import type { GetThreadListDto, GetThreadListVo } from "@/commons/api/ThreadApi";
-import type { SendMessageDto, QueryStreamDto, RegenerateDto, AbortConversationDto } from "@/commons/api/ConversationApi";
-import type RestPageableView from "@/entity/RestPageableView";
-import type { SelectThreadDto, EditThreadTitleDto } from "@/commons/api/ThreadApi";
+import type { SendMessageDto, QueryStreamDto, RegenerateDto, AbortConversationDto, MessageFragmentVo } from "@/commons/api/ConversationApi";
+import type { SelectThreadDto } from "@/commons/api/ThreadApi";
 import type CommonIdDto from "@/entity/dto/CommonIdDto";
 import MessageApi from "@/commons/api/MessageApi";
 import type { EditMessageDto } from "@/commons/api/MessageApi";
 import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
+import type { MessageItemVo } from '@/entity/vo/MessageItemVo';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
@@ -105,21 +100,8 @@ const isCreatingThread = ref<boolean>(false)
 const currentThreadId = ref<string>("")
 const currentModelVariantId = ref<string>("")
 
-const threadList = ref<Array<{
-  id: string,
-  title: string,
-  modelVariantId: string,
-  active: number
-}>>([])
 
-const messages = ref<Array<{
-  id: string, //消息记录ID(-1为临时消息)
-  name: string, //发送者名称
-  avatarPath: string //头像路径
-  role: string //消息类型：0-用户消息，1-AI消息
-  content: string //消息内容
-  createTime: string | null//消息时间
-}>>([]);
+const messages = ref<MessageItemVo[]>([]);
 
 // 确认框引用
 const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
@@ -129,7 +111,6 @@ const alterRef = ref<InstanceType<typeof GlowAlert> | null>(null)
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 
 onMounted(async () => {
-  await reloadThreadList();
   await reloadMessageList();
 })
 
@@ -156,6 +137,36 @@ interface MessageInputInstance {
   setContent: (message: string) => void;
 }
 
+
+//处理消息接收回调
+const onMessageReceived = (fragment: MessageFragmentVo) => {
+
+  //0:起始 1:结束 2:错误 50:思考片段 51:文本
+
+  if(fragment.type === 0){
+
+  }
+  
+  if(fragment.type === 1){
+
+  }
+
+  if(fragment.type === 2){
+    
+  }
+
+  if(fragment.type === 50){
+    
+  }
+
+  if(fragment.type === 51){
+
+  }
+
+}
+
+
+
 // 处理发送消息
 const onMessageSend = async (message: string) => {
   if (isGenerating.value) return;
@@ -180,7 +191,7 @@ const onMessageSend = async (message: string) => {
     if (isCreatingThread.value) {
       isCreatingThread.value = false; // 重置状态
       if (response.newThreadCreated === 1) {
-        await reloadThreadList(); // 创建了新会话，刷新列表
+        await chatListRef.value?.loadThreadList(); // 创建了新会话，刷新列表
       }
     }
 
@@ -188,14 +199,16 @@ const onMessageSend = async (message: string) => {
     currentThreadId.value = response.threadId;
 
     // 添加用户消息到消息列表
-    messages.value.push({
+    const userMessage: MessageItemVo = {
       id: response.messageId,
-      name: response.senderName,
-      avatarPath: response.senderAvatarUrl,
-      role: 'user',
+      senderName: response.senderName,
+      senderAvatarUrl: response.senderAvatarUrl,
+      senderRole: 0,
       content: response.content || message,
+      contentThoughts: null,
       createTime: response.sendTime
-    });
+    };
+    messages.value.push(userMessage);
 
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
@@ -340,12 +353,13 @@ const reloadMessageList = async (threadId?: string) => {
       const response = await ThreadApi.selectThread(dto);
       currentModelVariantId.value = response.modelVariantId;
       currentThreadId.value = response.threadId;
-      messages.value = response.messages.rows.map(msg => ({
+      messages.value = response.messages.rows.map((msg): MessageItemVo => ({
         id: msg.id,
-        name: msg.senderName,
-        avatarPath: msg.senderAvatarUrl,
-        role: msg.senderRole === 0 ? 'user' : 'model',
+        senderName: msg.senderName,
+        senderAvatarUrl: msg.senderAvatarUrl,
+        senderRole: msg.senderRole,
         content: msg.content,
+        contentThoughts: msg.contentThoughts,
         createTime: msg.createTime
       }));
       isCreatingThread.value = false; // Loaded a specific thread, so not in create mode
@@ -366,59 +380,9 @@ const reloadMessageList = async (threadId?: string) => {
     } finally {
       isLoadingMessages.value = false; // 结束加载
     }
-  } else {
-    // --- Logic for when no threadId is provided (load default or prepare for new) ---
-    if (threadList.value.length === 0) {
-      console.warn("会话列表为空，尝试加载默认会话或准备新会话。可能需要先加载会话列表。");
-      // This case might imply UI should show a very empty state or a prompt to create a model if none exists
-      // For now, we will proceed to check for default, then set to creating new thread.
-    }
-
-    const defaultThread = threadList.value.find(t => t.active === 1);
-    if (defaultThread) {
-      currentThreadId.value = defaultThread.id;
-      await reloadMessageList(defaultThread.id); // Recursive call with the specific default thread ID
-    } else {
-      console.log("未找到默认激活的会话。进入新会话创建模式。");
-      isCreatingThread.value = true;
-      messages.value = [];
-      currentThreadId.value = "";
-      // currentModelCode.value should ideally be set or confirmed before this point if isCreatingThread is true
-      // If no model is selected, onMessageSend will likely fail or use a default.
-      // We already have a check in onCreateThread for model selection.
-    }
   }
 };
 
-//加载会话列表
-const reloadThreadList = async () => {
-  try {
-    // 准备请求参数
-    const dto: GetThreadListDto = {
-      type: 0, // 标准会话类型
-      page: 1,    // 页码，从PageQuery.ts定义
-      pageSize: 100   // 每页数量，从PageQuery.ts定义 // TODO: 或许需要更大的pageSize或完整列表
-    };
-
-    const response: RestPageableView<GetThreadListVo> = await ThreadApi.getThreadList(dto);
-    
-    threadList.value = response.rows.map(thread => ({
-      id: thread.id,
-      title: thread.title,
-      modelVariantId: thread.modelVariantId,
-      active: thread.active
-    }));
-    
-  } catch (error) {
-    console.error('加载会话列表失败:', error);
-    alterRef.value?.showConfirm({
-        title: "加载会话列表失败",
-        content: `请检查网络连接或联系管理员。错误详情: ${error}`,
-        closeText: "好的",
-    });
-    threadList.value = []; // 出错时清空列表
-  }
-};
 
 //创建Thread
 const onCreateThread = async () => {
@@ -449,85 +413,25 @@ const onSelectMode = (modelVariantId:string)=>{
 
 //选择会话
 const onSelectThread = async (threadId: string) => {
+  console.log("选择会话:", threadId);
   currentThreadId.value = threadId;
   chatListRef.value?.closeMobileMenu();
   await reloadMessageList(threadId); 
 };
 
-//删除会话
-const onDeleteThread = async (threadId: string) => {
-  try {
-    const confirmed = await confirmRef.value?.showConfirm({
-      title: '删除会话',
-      content: '确定要删除这个会话吗？删除后无法恢复',
-      confirmText: '删除',
-      cancelText: '取消'
-    });
 
-    if (!confirmed) return;
-
-    // 使用新的API
-    const dto: CommonIdDto = { id: threadId };
-    await ThreadApi.removeThread(dto);
-    await reloadThreadList(); // 重新加载列表以反映删除
-
-    isCreatingThread.value = true;
-    messages.value = [];
-    currentThreadId.value = "";
-
-  } catch (error) {
-    console.error('删除会话失败:', error);
-    alterRef.value?.showConfirm({
-      title: "删除会话失败",
-      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
-      closeText: "好的",
-    });
-  }
-};
-
-//更新会话标题
-const onUpdateThreadTitle = async (threadId: string, oldTitle: string) => {
-  try {
-    const result = await inputRef.value?.showInput({
-      title: '编辑会话标题',
-      defaultValue: oldTitle,
-      placeholder: '请输入新的标题',
-      confirmText: '保存',
-      cancelText: '取消'
-    });
-
-    if (!result || !result.confirmed || !result.value || result.value === oldTitle) {
-      return;
-    }
-
-    // 使用新的API
-    const dto: EditThreadTitleDto = {
-      threadId: threadId,
-      title: result.value
-    };
-    await ThreadApi.editThreadTitle(dto);
-
-    await reloadThreadList(); // 重新加载列表以反映标题更新
-  } catch (error) {
-    console.error('更新标题失败:', error);
-    alterRef.value?.showConfirm({
-      title: "更新标题失败",
-      content: `请检查网络连接或联系管理员。错误详情: ${error}`,
-      closeText: "好的",
-    });
-  }
-};
 
 
 const createTempMsg = async () => {
   if (hasTempMessage.value) return; // 防止重复创建
 
-  const tempAiMessage = {
+  const tempAiMessage: MessageItemVo = {
     id: '-1', 
-    name: '----',
-    avatarPath: '', 
-    role: 'model',
+    senderName: '----',
+    senderAvatarUrl: '', 
+    senderRole: 1,
     content: '正在输入...',
+    contentThoughts: null,
     createTime: null
   };
   messages.value.push(tempAiMessage);
@@ -571,13 +475,13 @@ const updateTempMsg = async (data: {
 
     // 更新名称 (如果提供了有效的名称)
     if (data.name) {
-      tempMessage.name = data.name;
+      tempMessage.senderName = data.name;
       updated = true;
     }
 
     // 更新头像 (如果提供了有效的头像路径)
     if (data.avatarPath) {
-      tempMessage.avatarPath = data.avatarPath;
+      tempMessage.senderAvatarUrl = data.avatarPath;
       updated = true;
     }
 
@@ -654,7 +558,7 @@ const onMessageRegenerate = async (msgId: string) => {
     const lastMessageIndex = messages.value.length - 1;
     const lastMessage = messages.value[lastMessageIndex];
 
-    if (lastMessage.role === 'model') {
+    if (lastMessage.senderRole === 1) {
       messages.value.pop();
       await nextTick();
     }

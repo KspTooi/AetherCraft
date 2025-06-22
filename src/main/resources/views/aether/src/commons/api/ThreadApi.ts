@@ -5,58 +5,60 @@ import type CommonIdDto from "@/entity/dto/CommonIdDto.ts"; // 假设已存在
 
 // --- DTOs ---
 export interface CreateThreadDto {
-    modelVariantId: string; // 模型变体ID, JavaType: Long
-    type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话, JavaType: Integer
-    npcId: string;          // NpcId, JavaType: Long
+    modelVariantId: string; // 模型变体ID
+    type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+    npcId: string;          // NpcId
 }
 
 export interface SelectThreadDto extends PageQuery {
-    npcId?: string;         // NPC_ID 用于获取该NPC下最近的一次会话, JavaType: Long
-    threadId?: string;      // ThreadId 直接获取该Thread下的所有会话, JavaType: Long
-    modelVariantId?: string; // 模型变体ID, JavaType: Long
+    npcId?: string;         // NPC_ID 用于获取该NPC下最近的一次会话
+    threadId?: string;      // ThreadId 直接获取该Thread下的所有会话
+    modelVariantId?: string; // 模型变体ID
 }
 
 export interface GetThreadListDto extends PageQuery {
-    type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话, JavaType: Integer
-    npcId?: string;         // NpcID 当type为1时必填, JavaType: Long
-    title?: string;         // 标题 模糊查询, JavaType: String
+    type: number;           // Thread类型 0:标准会话 1:RP会话 2:标准增强会话
+    npcId?: string;         // NpcID 当type为1时必填
+    title?: string;         // 标题 模糊查询
 }
 
 export interface EditThreadTitleDto {
-    threadId: string;       // 会话ID, JavaType: Long
-    title: string;          // 新标题, JavaType: String
+    threadId: string;       // 会话ID
+    title: string;          // 新标题
 }
 
 // --- VOs ---
 export interface CreateThreadVo {
-    threadId: string;           // JavaType: Long
+    threadId: string;           // 会话ID
 }
 
 export interface SelectThreadMessageVo {
-    id: string;                 // JavaType: Long
-    senderName: string;         // 发送人名称, JavaType: String
-    senderAvatarUrl: string;    // 发送人头像, JavaType: String
-    senderRole: number;         // 发送人角色 0:Player 1:Model, JavaType: Integer
-    content: string;            // 消息内容, JavaType: String
-    createTime: string;         // 消息发送时间 yyyy年mm月dd日 HH:mm:ss, JavaType: String
+    id: string;                 // 消息ID
+    senderName: string;         // 发送人名称
+    senderAvatarUrl: string;    // 发送人头像
+    senderRole: number;         // 发送人角色 0:Player 1:Model
+    content: string;            // 消息内容
+    contentThoughts: string;    // 消息思考内容
+    createTime: string;         // 消息发送时间 yyyy年mm月dd日 HH:mm:ss
 }
 
 export interface SelectThreadVo {
-    threadId: string;           // JavaType: Long
-    modelVariantId: string;     // 模型变体ID, JavaType: Long
-    messages: RestPageableView<SelectThreadMessageVo>; // JavaType: RestPageableView<SelectThreadMessageVo>
+    threadId: string;           // 会话ID
+    modelVariantId: string;     // 模型变体ID
+    messages: RestPageableView<SelectThreadMessageVo>; // 消息列表
 }
 
 export interface GetThreadListVo {
-    id: string;                 // ThreadId, JavaType: Long
-    title: string;              // (明文)会话标题, JavaType: String
-    lastMessage: string;        // 最后一条消息预览, JavaType: String
-    publicInfo: string;         // (明文)会话公开信息, JavaType: String
-    modelVariantId: string;     // 模型变体ID, JavaType: Long
-    active: number;             // 是否为当前激活的对话 0:缓解 1:激活, JavaType: Integer
-    createTime: string;         // 创建时间, JavaType: Date (TS string)
-    updateTime: string;         // 更新时间, JavaType: Date (TS string)
-    messageCount: number;       // 消息数量, JavaType: Integer
+    id: string;                 // ThreadId
+    title: string;              // (明文)会话标题
+    lastMessage: string;        // 最后一条消息预览
+    publicInfo: string;         // (明文)会话公开信息
+    modelVariantId: string;     // 模型变体ID
+    modelVariantName: string;   // 模型变体名称
+    active: number;             // 是否为当前激活的对话 0:缓解 1:激活
+    createTime: string;         // 创建时间
+    updateTime: string;         // 更新时间
+    messageCount: number;       // 消息数量
 }
 
 

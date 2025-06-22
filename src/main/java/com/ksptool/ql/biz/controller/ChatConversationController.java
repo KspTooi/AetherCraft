@@ -28,9 +28,6 @@ public class ChatConversationController {
     @Autowired
     private ChatConversationService service;
 
-    @Autowired
-    private ModelVariantService modelVariantService;
-
     @PrintLog(sensitiveFields = {"data.message","data.title","data.senderName","data.senderAvatarUrl","data.content","data.streamId"})
     @PostMapping("/sendMessage")
     public Result<SendMessageVo> sendMessage(@RequestBody @Valid SendMessageDto dto) throws BizException {

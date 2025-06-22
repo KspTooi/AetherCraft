@@ -1,5 +1,7 @@
 package com.ksptool.ql.restcgi.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.ksptool.ql.biz.model.schema.ModelVariantSchema;
 import lombok.Data;
 
@@ -117,6 +119,46 @@ public class CgiChatResult {
         return ccr;
     }
 
+    /**
+     * 判断返回类型是否为思考片段
+     */
+    public boolean isThinking(){
+        return this.type == 0;
+    }
+
+    /**
+     * 判断返回类型是否为文本片段
+     */
+    public boolean isText(){
+        return this.type == 1;
+    }
+
+    /**
+     * 判断返回类型是否为结束片段
+     */
+    public boolean isFinish(){
+        return this.type == 50;
+    }
+
+    /**
+     * 判断返回类型是否为错误片段
+     */
+    public boolean isError(){
+        return this.type == 51;
+    }
+
+    /**
+     * 获取模型代码
+     */
+    public String getModelCode(){
+        if(this.model == null){
+            return "Unknown";
+        }
+        if(StringUtils.isBlank(this.model.getCode())){
+            return "Unknown";
+        }
+        return this.model.getCode();
+    }
 
 
 }
