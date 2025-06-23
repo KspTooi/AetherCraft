@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, nextTick } from 'vue'
+import { ref, inject, nextTick, watch } from 'vue'
 import { marked } from 'marked'
 import { GLOW_THEME_INJECTION_KEY, type GlowThemeColors } from '@/components/glow-ui/GlowTheme'
 import GlowButton from '@/components/glow-ui/GlowButton.vue'
@@ -124,6 +124,23 @@ const emit = defineEmits<{
   (e: 'delete-message', msgId: string): void;
   (e: 'regenerate', msgId: string): void;
 }>()
+
+
+watch(props.message, (newVal) => {
+
+  //思考有内容但正文为空时，展开思考
+  if(newVal.contentThoughts && !newVal.content){
+    isThinkingExpanded.value = true;
+    return;
+  }
+
+  //正文有内容时，不展开思考
+  if(newVal.content){
+    isThinkingExpanded.value = false;
+    return;
+  }
+
+})
 
 // 渲染Markdown
 const renderMarkdown = (content: string) => {
@@ -556,6 +573,18 @@ defineExpose({
   color: v-bind("theme.boxGlowColor");
   text-shadow: 0 0 8px v-bind("theme.boxGlowColor"), 0 0 16px v-bind("theme.boxGlowColor");
   transform: scale(1.1);
+}
+
+.thinking-content {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  word-break: break-word;
+  user-select: text;
+  cursor: text; 
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid v-bind("theme.boxBorderColor");
+  color: rgba(255, 255, 255, 0.644);
 }
 
 </style>
