@@ -268,6 +268,7 @@ const onMessageSend = async (message: string) => {
     if(response.newThreadCreated === 1){
       await chatListRef.value?.loadThreadList();
       currentThreadId.value = response.threadId;
+      isCreatingThread.value = false;
     }
 
   }catch(error){
@@ -461,6 +462,7 @@ const onSelectThread = async (threadId: string) => {
   console.log("选择会话:", threadId);
   currentThreadId.value = threadId;
   chatListRef.value?.closeMobileMenu();
+  isCreatingThread.value = false;
   await reloadMessageList(threadId); 
 };
 

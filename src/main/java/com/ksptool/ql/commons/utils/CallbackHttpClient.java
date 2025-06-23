@@ -44,7 +44,9 @@ public class CallbackHttpClient {
                 
                 if (!response.isSuccessful()) {
                     if (onError != null) {
-                        onError.accept(new BizException("HTTP request failed: " + response.code() + " " + response.message()));
+                        var body = response.body();
+                        var bodyString = body == null ? "" : body.string();
+                        onError.accept(new BizException("HTTP request failed: " + response.code() + " " + response.message() + ":"+bodyString));
                     }
                     return;
                 }

@@ -27,10 +27,7 @@ public class TestMemoryChatControlQueue {
 
         for(var i = 0; i < 100; i++) {
             ChatFragment cf = new ChatFragment();
-            cf.setType(1);
-            cf.setPlayerId(1);
-            cf.setThreadId(threadId);
-            cf.setContent("hhh");
+
             mccq.receive(cf);
         }
 
