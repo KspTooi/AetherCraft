@@ -122,6 +122,11 @@ export default {
         if (tempMessage === null) {
             return;
         }
+
+        if(tempMessage.content === null){
+            tempMessage.content = '';
+        }
+
         tempMessage.content += content;
         tempMessage.status = 2; //0:等待响应 1:正在计算 2:正在输入
         ref.value = [...ref.value];
@@ -137,6 +142,11 @@ export default {
         if (tempMessage === null) {
             return;
         }
+
+        if(tempMessage.contentThoughts === null){
+            tempMessage.contentThoughts = '';
+        }
+
         tempMessage.contentThoughts += contentThoughts;
         tempMessage.status = 1; //0:等待响应 1:正在计算 2:正在输入
         ref.value = [...ref.value];
