@@ -160,6 +160,8 @@ const onMessageReceived = (fragment: MessageFragmentVo) => {
       avatarPath: fragment.senderAvatarUrl,
       createTime: fragment.sendTime
     });
+    
+    endGenerate();
   }
 
   //2:错误
@@ -176,6 +178,7 @@ const onMessageReceived = (fragment: MessageFragmentVo) => {
 
     //恢复上一条发送的消息内容
     messageInputRef.value?.setContent(lastSendMessageContent.value);
+    endGenerate();
   }
 
   //50:思考片段
@@ -281,8 +284,6 @@ const onMessageSend = async (message: string) => {
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
-  }finally{
-    endGenerate();
   }
 
 };
@@ -339,8 +340,6 @@ const onMessageRegenerate = async (msgId: string) => {
       content: `请检查网络连接或联系管理员。错误详情: ${error}`,
       closeText: "好的",
     });
-  }finally{
-    endGenerate();
   }
 };
 
