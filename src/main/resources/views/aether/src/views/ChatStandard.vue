@@ -312,13 +312,12 @@ const onMessageRegenerate = async (msgId: string) => {
     //创建临时消息
     TempMessageService.createTempMessage(messages);
 
-    // 调用 regenerate API
-    const regenerateDto: RegenerateDto = {
+    // 使用ConversationService重新生成消息
+    await ConversationService.regenerate({
       threadId: currentThreadId.value,
       modelVariantId: currentModelVariantId.value, 
-      rootMessageId: "-1" // 传递需要重新生成的消息的ID
-    };
-    await ConversationService.regenerate(regenerateDto, onMessageReceived);
+      rootMessageId: "-1"
+    }, onMessageReceived);
 
     await nextTick();
     messageBoxRef.value?.scrollToBottom();

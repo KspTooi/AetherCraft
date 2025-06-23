@@ -24,7 +24,7 @@
         <div class="message-box-container">
           <ChatMessageBox
              ref="messageBoxRef" 
-             :data="messageData" 
+             :data="messages" 
              :isGenerating="isGenerating"
              :loading="isLoadingMessages"
              @update-message="onMessageEdit"
@@ -87,11 +87,12 @@ import MessageApi, { type EditMessageDto } from '@/commons/api/MessageApi';
 import type CommonIdDto from '@/entity/dto/CommonIdDto';
 import GlowMobileSupport from "@/components/glow-ui/GlowMobileSupport.vue";
 import type { MessageItemVo } from '@/entity/vo/MessageItemVo';
+import TempMessageService from './service/TempMessageService';
 
 // 获取主题
 const theme = inject<GlowThemeColors>(GLOW_THEME_INJECTION_KEY, defaultTheme)
 const router = useRouter();
-const messageData = ref<MessageItemVo[]>([])
+const messages = ref<MessageItemVo[]>([])
 const selectThreadData = ref<SelectThreadVo | null>(null)
 const selectThreadTotal = ref(0)
 const selectThreadQuery = ref<SelectThreadDto>({
@@ -124,6 +125,8 @@ const confirmRef = ref<InstanceType<typeof GlowConfirm> | null>(null)
 const inputRef = ref<InstanceType<typeof GlowConfirmInput> | null>(null)
 // 会话管理模态框引用
 const roleThreadsModalRef = ref<InstanceType<typeof ChatNpcThreadsModal> | null>(null)
+//上一条发送的消息内容
+const lastSendMessageContent = ref<string>("");
 
 // 定义消息框实例类型
 interface MessageBoxInstance {
@@ -166,14 +169,15 @@ const getNpcMessageList = async (npcId: string) => {
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
-    messageData.value = messageList.map((msg): MessageItemVo => ({
+    messages.value = messageList.map((msg): MessageItemVo => ({
       id: msg.id,
       senderName: msg.senderName,
       senderAvatarUrl: msg.senderAvatarUrl,
       senderRole: msg.senderRole,
       content: msg.content,
       contentThoughts: msg.contentThoughts,
-      createTime: msg.createTime
+      createTime: msg.createTime,
+      status: 3 //0:等待响应 1:正在计算 2:正在输入 3:结束
     }));
     
     // 更新总数
@@ -185,7 +189,7 @@ const getNpcMessageList = async (npcId: string) => {
     
   } catch (error) {
     console.error(`获取NPC ${npcId} 消息列表失败:`, error);
-    messageData.value = [];
+    messages.value = [];
     selectThreadData.value = null;
     selectThreadTotal.value = 0;
     
@@ -199,8 +203,95 @@ const getNpcMessageList = async (npcId: string) => {
   }
 }
 
+
+const startGenerate = () => {
+  isGenerating.value = true;
+  isLoadingMessages.value = true; // 启用发光条
+}
+const endGenerate = () => {
+  isGenerating.value = false;
+  isLoadingMessages.value = false; // 关闭发光条
+}
+
+
+//处理消息接收回调
+const onMessageReceived = (fragment: MessageFragmentVo) => {
+
+  //0:起始 1:结束 2:错误 50:思考片段 51:文本
+  if(fragment.type === 0){
+    //起始片段不做任何处理
+  }
+
+  //1:结束
+  if(fragment.type === 1){
+
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
+
+    endGenerate();
+  }
+
+  //2:错误
+  if(fragment.type === 2){
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+
+    //提示用户错误
+    alterRef.value?.showConfirm({
+      title: "回复消息时发生错误",
+      content: fragment.content,
+      closeText: "好的",
+    });
+
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
+    endGenerate();
+  }
+
+  //50:思考片段
+  if(fragment.type === 50){
+    TempMessageService.appendContentThoughts(messages, fragment.content);
+
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
+
+  }
+
+  //51:文本
+  if(fragment.type === 51){
+    TempMessageService.appendContent(messages, fragment.content);
+
+    //更新临时消息状态
+    TempMessageService.updateTempMessage(messages, {
+      id: fragment.messageId,
+      name: fragment.senderName,
+      avatarPath: fragment.senderAvatarUrl,
+      createTime: fragment.sendTime
+    });
+  }
+
+}
+
+
+
 const sendMessage = async (message: string) => {
+
   if (isGenerating.value) return // 如果正在生成，则不处理新的发送请求
+
+  //开始生成
+  startGenerate();
+  lastSendMessageContent.value = message;
+
 
   if (!curThreadId.value) {
     // 发送失败时恢复输入框内容
@@ -214,30 +305,22 @@ const sendMessage = async (message: string) => {
     return;
   }
 
-  // 设置加载状态
-  isGenerating.value = true;
-  isLoadingMessages.value = true; // 启用发光条
 
   try {
-    // 构建发送消息的参数
-    const sendMessageDto: SendMessageDto = {
-      threadId: curThreadId.value,
-      type: 1, // RP会话
-      modelVariantId: curModelVariantId.value,
-      message: message
-    };
-
-    // 创建AI临时消息
-    await createTempMsg();
 
     // 使用ConversationService发送消息
-    const response = await ConversationService.sendMessage(sendMessageDto, (fragment: MessageFragmentVo) => {
-      handleMessageFragment(fragment);
-    });
+    const response = await ConversationService.sendMessage({
+      threadId: curThreadId.value, 
+      type: 1, 
+      modelVariantId: curModelVariantId.value, 
+      message: message
+    }, onMessageReceived);
 
+    
     // 添加用户消息到消息列表
     const userMessage: MessageItemVo = {
       id: response.messageId,
+      status: 3, //0:等待响应 1:正在计算 2:正在输入 3:结束
       senderName: response.senderName,
       senderAvatarUrl: response.senderAvatarUrl,
       senderRole: 0,
@@ -245,15 +328,12 @@ const sendMessage = async (message: string) => {
       contentThoughts: null,
       createTime: response.sendTime
     };
-    
-    // 在临时消息之前插入用户消息
-    const tempIndex = messageData.value.findIndex(msg => msg.id === '-1');
-    if (tempIndex !== -1) {
-      messageData.value.splice(tempIndex, 0, userMessage);
-    } else {
-      messageData.value.push(userMessage);
-    }
-    
+
+    messages.value.push(userMessage);
+
+    //创建临时消息
+    TempMessageService.createTempMessage(messages);
+
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
 
@@ -268,68 +348,11 @@ const sendMessage = async (message: string) => {
       content: `${error}`,
       closeText: "好的",
     });
-    
-    // 清理临时消息和状态
-    removeTempMsg();
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
-  }
-};
-
-// 处理消息片段
-const handleMessageFragment = async (fragment: MessageFragmentVo) => {
-  console.log('收到消息片段:', fragment);
-
-  // 更新临时消息的元数据
-  await updateTempMsg({
-    id: fragment.messageId !== '-1' ? fragment.messageId : undefined,
-    name: fragment.senderName,
-    avatarPath: fragment.senderAvatarUrl,
-    createTime: fragment.sendTime
-  });
-
-  if (fragment.type === 0) { // 起始片段
-    // 起始片段，保持"正在输入..."状态
-    return;
-  }
-  
-  if (fragment.type === 1) { // 数据片段
-    // 如果是第一次收到数据，清空"正在输入..."
-    const tempMessage = messageData.value.find(msg => msg.id === '-1');
-    if (tempMessage && tempMessage.content === '正在输入...') {
-      tempMessage.content = '';
-    }
-    
-    // 追加内容
-    await appendTempMsg(fragment.content || '');
-    
-  } else if (fragment.type === 2) { // 结束片段
-    // 如果结束时还有内容，追加它
-    if (fragment.content) {
-      const tempMessage = messageData.value.find(msg => msg.id === '-1');
-      if (tempMessage && tempMessage.content === '正在输入...') {
-        tempMessage.content = fragment.content;
-      } else {
-        await appendTempMsg(fragment.content);
-      }
-    }
-    
-    // 结束生成状态
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
-    
-  } else if (fragment.type === 10) { // 错误片段
-    console.error('AI生成错误:', fragment.content);
-    alterRef.value?.showConfirm({
-      title: "回复消息时发生错误",
-      content: fragment.content,
-      closeText: "好的",
-    });
-    
-    // 清理临时消息和状态
-    removeTempMsg();
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
+    endGenerate();
   }
 };
 
@@ -341,8 +364,6 @@ const onMessageSend = async (message: string) => {
 //选择模型
 const onSelectMode = (modelVariantId:string)=>{
   curModelVariantId.value = modelVariantId;
-  // 可以在这里添加逻辑：如果切换了模型，是否要影响当前会话？
-  // 比如：如果当前有会话，提示用户切换模型会新建会话，或者只是更新下次新建会话的模型？
 }
 
 //选择NPC
@@ -362,7 +383,7 @@ const onCreateThread = async (npc: GetNpcListVo) => {
   npcListRef.value?.setSelectedNpc(npc.id);
 
   // 清空当前消息列表和状态
-  messageData.value = []; 
+  messages.value = []; 
   isGenerating.value = false;
   hasTempMessage.value = false; 
   curNpcId.value = npc.id; // 设置当前NPC ID
@@ -398,7 +419,7 @@ const onCreateThread = async (npc: GetNpcListVo) => {
     })
     
     // 清空聊天相关状态
-    messageData.value = [];
+    messages.value = [];
     curNpcId.value = "";
     curThreadId.value = "";
   }
@@ -449,9 +470,10 @@ const handleActivateThread = async (npcId: string, threadId: string, modelVarian
     
     // 转换消息格式
     const messageList = response.messages.rows || [];
-    messageData.value = messageList.map((msg): MessageItemVo => ({
+    messages.value = messageList.map((msg): MessageItemVo => ({
       id: msg.id,
       senderName: msg.senderName,
+      status: 3, //0:等待响应 1:正在计算 2:正在输入 3:结束
       senderAvatarUrl: msg.senderAvatarUrl,
       senderRole: msg.senderRole,
       content: msg.content,
@@ -468,7 +490,7 @@ const handleActivateThread = async (npcId: string, threadId: string, modelVarian
     
   } catch (error) {
     console.error(`激活会话失败: npcId=${npcId}, threadId=${threadId}`, error);
-    messageData.value = [];
+    messages.value = [];
     selectThreadData.value = null;
     selectThreadTotal.value = 0;
     
@@ -479,94 +501,6 @@ const handleActivateThread = async (npcId: string, threadId: string, modelVarian
     });
   } finally {
     isLoadingMessages.value = false; // 结束加载
-  }
-}
-
-const createTempMsg = async () => {
-  if (hasTempMessage.value) return; // 防止重复创建
-
-  // 确保临时消息符合 MessageItemVo 类型
-  const tempAiMessage: MessageItemVo = {
-    id: '-1', 
-    senderName: '-----', // 调整名称以区分
-    senderAvatarUrl: '', 
-    senderRole: 1, // 1表示模型
-    content: '',
-    contentThoughts: null,
-    createTime: null
-  };
-  messageData.value.push(tempAiMessage);
-  hasTempMessage.value = true;
-  await nextTick();
-  messageBoxRef.value?.scrollToBottom();
-}
-
-const appendTempMsg = async (content: string) => {
-  if (!hasTempMessage.value) return;
-
-  const tempMessage = messageData.value.find(msg => msg.id === '-1');
-  if (tempMessage) {
-    tempMessage.content += content;
-    await nextTick();
-    messageBoxRef.value?.scrollToBottom();
-  }
-}
-
-const removeTempMsg = () => {
-  if (!hasTempMessage.value) return;
-
-  messageData.value = messageData.value.filter(msg => msg.id !== '-1');
-  hasTempMessage.value = false;
-}
-
-//更新临时消息
-const updateTempMsg = async (data: {
-  id?: string; // 消息ID (可选, 如果提供则表示转为永久)
-  name?: string; // 名称 (可选)
-  avatarPath?: string; // 头像路径 (可选)
-  createTime?: string; // 时间 可选
-}) => {
-
-  if (!hasTempMessage.value) return;
-
-  const tempMessage = messageData.value.find(msg => msg.id === '-1');
-
-  if (tempMessage) {
-    let updated = false;
-
-    // 更新名称 (如果提供了有效的名称)
-    if (data.name) {
-      tempMessage.senderName = data.name;
-      updated = true;
-    }
-
-    // 更新头像 (如果提供了有效的头像路径)
-    if (data.avatarPath) {
-      tempMessage.senderAvatarUrl = data.avatarPath;
-      updated = true;
-    }
-
-    // 更新时间
-    if (data.createTime) {
-      tempMessage.createTime = data.createTime;
-      updated = true;
-    }
-
-    // 检查是否提供了有效的永久ID
-    // (假设有效的永久ID不为空且不等于临时ID '-1')
-    if (data.id && data.id !== '-1') {
-      tempMessage.id = data.id; // 将临时消息ID更新为永久ID
-      hasTempMessage.value = false; // 标记不再有临时消息
-      updated = true;
-    }
-    
-    // 如果有任何更新，触发Vue的响应式更新
-    if (updated) {
-       messageData.value = [...messageData.value];
-       // 一般更新元数据不需要滚动，除非UI布局因此改变
-       // await nextTick(); 
-       // messageBoxRef.value?.scrollToBottom();
-    }
   }
 }
 
@@ -596,7 +530,7 @@ const onMessageRemove = async (msgId: string) => {
     await MessageApi.removeMessage(removeDto);
 
     // API 调用成功，从本地消息列表移除
-    const index = messageData.value.findIndex(msg => msg.id === msgId);
+    const index = messages.value.findIndex(msg => msg.id === msgId);
     
     // 未在本地找到消息 (理论上不应发生，除非数据不同步)
     if (index === -1) {
@@ -604,7 +538,7 @@ const onMessageRemove = async (msgId: string) => {
        return;
     }
     
-    messageData.value.splice(index, 1);
+    messages.value.splice(index, 1);
     console.log(`Message ${msgId} removed successfully.`);
 
   } catch (error) {
@@ -631,34 +565,29 @@ const onMessageRegenerate = async (msgId: string) => {
     return;
   }
 
+  startGenerate();
+
+  //删除最后一条AI消息
+  const lastMessageIndex = messages.value.length - 1;
+  const lastMessage = messages.value[lastMessageIndex];
+
+  if(lastMessage.senderRole === 1){
+    messages.value.pop();
+    await nextTick();
+  }
+
+  //创建临时消息
+  TempMessageService.createTempMessage(messages);
+
+
   try {
-    // 设置生成状态
-    isGenerating.value = true;
-    isLoadingMessages.value = true; // 启用发光条
-
-    // 检查最后一条消息是否为AI消息，如果是则删除
-    if (messageData.value.length > 0) {
-      const lastMessage = messageData.value[messageData.value.length - 1];
-      if (lastMessage.senderRole === 1) {
-        // 删除最后一条AI消息
-        messageData.value.pop();
-      }
-    }
-
-    // 创建AI临时消息
-    await createTempMsg();
-
-    // 构建重新生成的参数
-    const regenerateDto: RegenerateDto = {
-      threadId: curThreadId.value,
-      modelVariantId: curModelVariantId.value,
-      rootMessageId: "-1" // 使用-1表示最后一条用户消息
-    };
 
     // 使用ConversationService重新生成消息
-    const response = await ConversationService.regenerate(regenerateDto, (fragment: MessageFragmentVo) => {
-      handleMessageFragment(fragment);
-    });
+    const response = await ConversationService.regenerate({
+      threadId: curThreadId.value,
+      modelVariantId: curModelVariantId.value, 
+      rootMessageId: "-1"
+    }, onMessageReceived);
 
     console.log('重新生成请求已发送:', response);
 
@@ -669,11 +598,11 @@ const onMessageRegenerate = async (msgId: string) => {
       content: `${error}`,
       closeText: "好的",
     });
-    
-    // 清理临时消息和状态
-    removeTempMsg();
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
+    endGenerate();
   }
 };
 
@@ -688,9 +617,9 @@ const onMessageEdit = async (params: { msgId: string; message: string }) => {
     await MessageApi.editMessage(editDto);
 
     // API 调用成功，更新本地消息列表
-    const messageIndex = messageData.value.findIndex(msg => msg.id === params.msgId);
+    const messageIndex = messages.value.findIndex(msg => msg.id === params.msgId);
     if (messageIndex !== -1) {
-      messageData.value[messageIndex].content = params.message;
+      messages.value[messageIndex].content = params.message;
     }
     console.log(`Message ${params.msgId} updated successfully.`);
   } catch (error) {
@@ -727,9 +656,11 @@ const onBatchAbort = async () => {
     // 即使后端调用失败，也要清理前端状态
   } finally {
     // 清理前端状态
-    isGenerating.value = false;
-    isLoadingMessages.value = false; // 关闭发光条
-    removeTempMsg();
+    endGenerate();
+    //删除临时消息
+    TempMessageService.deleteTempMessage(messages);
+    //恢复上一条发送的消息内容
+    messageInputRef.value?.setContent(lastSendMessageContent.value);
     
     await nextTick();
     messageBoxRef.value?.scrollToBottom();
